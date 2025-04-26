@@ -1,0 +1,35 @@
+# Compiled output
+/dist
+/out-tsc
+
+# Dependencies
+/node_modules
+
+# Testing
+/coverage
+
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Angular specific files that can be regenerated
+angular.json
+package-lock.json
+
+# Environment files - keep only example or template
+src/environments/environment*.ts
+!src/environments/environment.example.ts
+
+# Logs
+*.log
+
+# Temporary files
+*~
