@@ -1,0 +1,83 @@
+<div class="account-content">
+    <div class="login-wrapper bg-img">
+        <div class="login-content authent-content">
+            <form>
+                <div class="login-userset">
+                    <div class="login-logo logo-normal">
+                       <img src="assets/img/logo.png" alt="img">
+                   </div>
+                   <a [routerLink] = "routes.adminDashboard" class="login-logo logo-white">
+                       <img src="assets/img/logo-white.png"  alt="">
+                   </a>
+                   <div class="login-userheading">
+                       <h3>Sign In</h3>
+                       <h4>Access the Dreamspos panel using your email and passcode.</h4>
+                   </div>
+                   <div class="mb-3">
+                       <label class="form-label">Email<span class="text-danger">*</span></label>
+                       <div class="input-group">
+                           <input type="text" class="form-control border-end-0">
+                           <span class="input-group-text border-start-0">
+                            <i class="ti ti-mail"></i>
+                        </span>
+                       </div>
+                   </div>
+                   <div class="mb-3">
+                       <label class="form-label">Password<span class="text-danger">*</span></label>
+                       <div class="pass-group">
+                        <input [type]="password[1] ? 'text' : 'password' " class="pass-input form-control">
+                        <span class="ti toggle-password text-gray-9" [ngClass]=" password[1] ? 'ti-eye' : 'ti-eye-off'" (click)="togglePassword(1)"></span>
+                    </div>
+                   </div>
+                   <div class="form-login authentication-check">
+                       <div class="row">
+                           <div class="col-12 d-flex align-items-center justify-content-between">
+                               <div class="custom-control custom-checkbox custom-class-check">
+                                   <label class="checkboxs ps-4 mb-0 pb-0 line-height-1">
+                                       <input type="checkbox" class="form-control">
+                                       <span class="checkmarks"></span>Remember me
+                                   </label>
+                               </div>
+                               <div class="text-end">
+                                   <a class="text-orange fs-16 fw-medium" [routerLink] = "routes.forgotPassword">Forgot Password?</a>
+                               </div>
+                           </div>                                    
+                       </div>
+                   </div>
+                   <div class="form-login">
+                       <button type="button" class="btn btn-login" (click)="navigation()">Sign In</button>
+                   </div>
+                   <div class="signinform">
+                       <h4>New on our platform?<a [routerLink] = "routes.register" class="hover-a"> Create an account</a></h4>
+                   </div>
+                   <div class="form-setlogin or-text">
+                       <h4>OR</h4>
+                   </div>
+                   <div class="form-sociallink mt-2">
+                       <ul class="d-flex">
+                           <li>
+                               <a href="javascript:void(0);" class="facebook-logo">
+                                   <img src="assets/img/icons/facebook-logo.svg" alt="Facebook">
+                               </a>
+                           </li>
+                           <li>
+                               <a href="javascript:void(0);">
+                                   <img src="assets/img/icons/google.png" alt="Google">
+                               </a>
+                           </li>
+                           <li>
+                               <a href="javascript:void(0);" class="apple-logo">
+                                   <img src="assets/img/icons/apple-logo.svg" alt="Apple">
+                               </a>
+                           </li>
+                           
+                       </ul>
+                       <div class="my-4 d-flex justify-content-center align-items-center copyright-text">
+                           <p>Copyright © 2025 DreamsPOS</p>
+                       </div>
+                   </div>
+               </div>
+            </form>
+        </div>
+    </div>
+</div>

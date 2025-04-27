@@ -1,0 +1,19 @@
+{
+  "data": [
+    {
+      "product": "Nike Jordan",
+      "sku": "PT002",
+      "code": "HG3FK",
+      "isSelected": false,
+      "img": "assets/img/products/stock-img-03.png"
+    },
+    {
+      "product": "Apple Series 5 Watch",
+      "sku": "PT003",
+      "code": "TEUIU7",
+      "isSelected": false,
+      "img": "assets/img/products/stock-img-02.png"
+    }
+  ],
+  "totalData": 2
+}

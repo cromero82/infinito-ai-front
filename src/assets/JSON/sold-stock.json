@@ -1,0 +1,95 @@
+{
+  "data": [
+    {
+      "img": "stock-img-01.png",
+      "sku": "PT001",
+      "productName": "Lenovo IdeaPad 3",
+      "unitPrice": 6000,
+      "quantity": 100,
+      "taxValue": 300,
+      "total": 300
+    },
+    {
+      "img": "stock-img-06.png",
+      "sku": "PT002",
+      "productName": "Beats Pro",
+      "unitPrice": 10,
+      "quantity": 140,
+      "taxValue": 10,
+      "total": 1600
+    },
+    {
+      "img": "stock-img-02.png",
+      "sku": "PT003",
+      "productName": "Nike Jordan",
+      "unitPrice": 8,
+      "quantity": 300,
+      "taxValue": 80,
+      "total": 880
+    },
+    {
+      "img": "stock-img-03.png",
+      "sku": "PT004",
+      "productName": "Apple Series 5 Watch",
+      "unitPrice": 10,
+      "quantity": 450,
+      "taxValue": 100,
+      "total": 1200
+    },
+    {
+      "img": "stock-img-04.png",
+      "sku": "PT005",
+      "productName": "Amazon Echo Dot",
+      "unitPrice": 5,
+      "quantity": 320,
+      "taxValue": 400,
+      "total": 400
+    },
+    {
+      "img": "stock-img-05.png",
+      "sku": "PT006",
+      "productName": "Sanford Chair Sofa",
+      "unitPrice": 7,
+      "quantity": 650,
+      "taxValue": 220,
+      "total": 2240
+    },
+    {
+      "img": "expire-product-01.png",
+      "sku": "PT007",
+      "productName": "Red Premium Satchel",
+      "unitPrice": 15,
+      "quantity": 700,
+      "taxValue": 90,
+      "total": 900
+    },
+    {
+      "img": "expire-product-02.png",
+      "sku": "PT008",
+      "productName": "iPhone 14 Pro",
+      "unitPrice": 12,
+      "quantity": 630,
+      "taxValue": 680,
+      "total": 6480
+    },
+    {
+      "img": "expire-product-03.png",
+      "sku": "PT009",
+      "productName": "Gaming Chair",
+      "unitPrice": 10,
+      "quantity": 410,
+      "taxValue": 200,
+      "total": 2000
+    },
+    {
+      "img": "expire-product-04.png",
+      "sku": "PT010",
+      "productName": "Borealis Backpack",
+      "unitPrice": 20,
+      "quantity": 550,
+      "taxValue": 400,
+      "total": 900
+    }
+  ],
+  "totalData": 10
+}

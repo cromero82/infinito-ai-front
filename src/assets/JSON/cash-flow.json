@@ -1,0 +1,105 @@
+{
+    "data": [
+        {
+          "date": "24 Dec 2024",
+          "bankAccount": "HBSC - 3298784309485",
+          "description": "Cash receipts from sales",
+          "credit": "$1000",
+          "debit": "$0.00",
+          "accountBalance": "$1000",
+          "totalBalance": "$889898",
+          "paymentMethod": "Stripe"
+        },
+        {
+          "date": "10 Dec 2024",
+          "bankAccount": "SWIZ - 5475878970090",
+          "description": "Cash payments to employees",
+          "credit": "$0.00",
+          "debit": "$1500",
+          "accountBalance": "$1500",
+          "totalBalance": "$9899",
+          "paymentMethod": "Paypal"
+        },
+        {
+          "date": "27 Nov 2024",
+          "bankAccount": "SWIZ - 3255465758698",
+          "description": "Purchase of POS equipment",
+          "credit": "$1800",
+          "debit": "$0.00",
+          "accountBalance": "$1800",
+          "totalBalance": "$35656",
+          "paymentMethod": "Cash"
+        },
+        {
+          "date": "18 Nov 2024",
+          "bankAccount": "IBO - 4353689870544",
+          "description": "Sale of old equipment",
+          "credit": "$1000",
+          "debit": "$1000",
+          "accountBalance": "$1000",
+          "totalBalance": "$1562",
+          "paymentMethod": "Paypal"
+        },
+        {
+          "date": "06 Nov 2024",
+          "bankAccount": "NBC - 4324356677889",
+          "description": "Loan received (short-term)",
+          "credit": "$800",
+          "debit": "$0.00",
+          "accountBalance": "$800",
+          "totalBalance": "$6896",
+          "paymentMethod": "Cash"
+        },
+        {
+          "date": "25 Oct 2024",
+          "bankAccount": "NBC - 2343547586900",
+          "description": "Repayment of long-term loan",
+          "credit": "$0.00",
+          "debit": "$750",
+          "accountBalance": "$0.00",
+          "totalBalance": "$8963",
+          "paymentMethod": "Cash"
+        },
+        {
+          "date": "14 Oct 2024",
+          "bankAccount": "IBO - 3453647664889",
+          "description": "Owner’s equity contribution",
+          "credit": "$1300",
+          "debit": "$0.00",
+          "accountBalance": "$1300",
+          "totalBalance": "$4568",
+          "paymentMethod": "Paypal"
+        },
+        {
+          "date": "03 Oct 2024",
+          "bankAccount": "SWIZ - 3354456565687",
+          "description": "Cash payments for operating",
+          "credit": "$1100",
+          "debit": "$0.00",
+          "accountBalance": "$1100",
+          "totalBalance": "$5899",
+          "paymentMethod": "Stripe"
+        },
+        {
+          "date": "20 Sep 2024",
+          "bankAccount": "SWIZ - 3456565767787",
+          "description": "Cash payments to suppliers",
+          "credit": "$2300",
+          "debit": "$0.00",
+          "accountBalance": "$2300",
+          "totalBalance": "$4568",
+          "paymentMethod": "Stripe"
+        },
+        {
+          "date": "10 Sep 2024",
+          "bankAccount": "IBO - 3434565776768",
+          "description": "Cash receipts from sales",
+          "credit": "$1700",
+          "debit": "$0.00",
+          "accountBalance": "$1700",
+          "totalBalance": "$4568",
+          "paymentMethod": "Cash"
+        }
+      ],
+    "totalData":10
+}

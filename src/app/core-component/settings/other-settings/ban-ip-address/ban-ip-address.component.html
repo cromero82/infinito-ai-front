@@ -1,0 +1,264 @@
+
+<div class="page-header settings-pg-header">
+  <div class="add-item d-flex">
+    <div class="page-title">
+      <h4>Settings</h4>
+      <h6>Manage your settings on portal</h6>
+    </div>
+  </div>
+  <ul class="table-top-head">
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" title="Refresh"  matTooltip="Refresh"  matTooltipPosition="above"> <i  class=" ti ti-refresh"></i></a>
+    </li>
+    <li>
+      <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" title="Collapse" id="collapse-header" matTooltip="Collapse"   matTooltipPosition="above" > @if (!isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }
+      @if (isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }</a>
+    </li>
+  </ul>
+</div>
+<div class="row">
+  <div class="col-xl-12">
+    <div class="settings-wrapper d-flex">
+      <app-settings-sidebar></app-settings-sidebar>
+
+      <div class="card flex-fill mb-0 w-50">
+        <div class="card-header">
+          <h4>Ban IP Address</h4>
+        </div>
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card table-list-card m-3">
+              <div class="card-header page-header d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-0">
+                <div class="search-set">
+                  <div class="search-input">
+                    <a href="javascript:void(0);" class="btn btn-searchset"><i class="feather icon-search feather-search"></i></a>
+                    <div class="dataTables_filter">
+                      <label>
+                        <input type="search" class="form-control" placeholder="Search" />
+                        </label>
+                      </div>
+                    </div>
+    
+                </div>
+                  <div class="page-btn">
+                    <a href="javascript:void(0);" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-banip"><i data-feather="plus-circle" class="ti ti-circle-plus me-1"></i>Add Ban IP Address</a>
+                  </div>
+              </div>
+              <div class="card-body">												
+                <div class="table-responsive no-pagination pb-0">
+                  <table class="table datatable mb-0">
+                    <thead class="thead-light">
+                      <tr>
+                        <th>IP Address<i class="ti ti-arrows-up-down fs-11 fw-medium ms-1"></i></th>
+                        <th>Reason</th>
+                        <th>Created On<i class="ti ti-arrows-up-down fs-11 fw-medium ms-1"></i></th>
+                        <th class="no-sort text-end"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>																	
+                        <td class="text-gray-9 fw-medium">211.11.0.25</td>
+                        <td>
+                          <p>You can get on-demand services in 
+                            order to find a nearby service.</p>
+                        </td>
+                        <td>25 Apr 2025</td>
+                        <td class="action-table-data justify-content-end">
+                          <div class="edit-delete-action">
+                            <a class="me-2 p-2" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#edit-banip">
+                              <i data-feather="edit" class="feather icon-edit"></i>
+                            </a>
+                            <a data-bs-toggle="modal" data-bs-target="#delete-modal" class="p-2" href="javascript:void(0);">
+                              <i data-feather="trash-2" class="feather icon-trash-2"></i>
+                            </a>
+                          </div>
+                          
+                        </td>
+                      </tr>
+                      <tr>																	
+                        <td class="text-gray-9 fw-medium">211.03.0.11</td>
+                        <td>
+                          <p>Extract pricing information at inventory levels.</p>
+                        </td>
+                        <td>18 Mar 2025</td>
+                        <td class="action-table-data justify-content-end">
+                          <div class="edit-delete-action">
+                            <a class="me-2 p-2" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#edit-banip">
+                              <i data-feather="edit" class="feather icon-edit"></i>
+                            </a>
+                            <a data-bs-toggle="modal" data-bs-target="#delete-modal" class="p-2" href="javascript:void(0);">
+                              <i data-feather="trash-2" class="feather icon-trash-2"></i>
+                            </a>
+                          </div>
+                          
+                        </td>
+                      </tr>
+                      <tr>																	
+                        <td class="text-gray-9 fw-medium">211.24.0.17</td>
+                        <td>
+                          <p>Fetching data for competitors to gain competitive advantage.</p>
+                        </td>
+                        <td>06 Feb 2025</td>
+                        <td class="action-table-data justify-content-end">
+                          <div class="edit-delete-action">
+                            <a class="me-2 p-2" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#edit-banip">
+                              <i data-feather="edit" class="feather icon-edit"></i>
+                            </a>
+                            <a data-bs-toggle="modal" data-bs-target="#delete-modal" class="p-2" href="javascript:void(0);">
+                              <i data-feather="trash-2" class="feather icon-trash-2"></i>
+                            </a>
+                          </div>
+                          
+                        </td>
+                      </tr>	
+                      <tr>																	
+                        <td class="text-gray-9 fw-medium">211.12.0.34</td>
+                        <td>
+                          <p>Temporarily block to protect user accounts from internet fraudsters.</p>
+                        </td>
+                        <td>02 Jan 2025</td>
+                        <td class="action-table-data justify-content-end">
+                          <div class="edit-delete-action">
+                            <a class="me-2 p-2" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#edit-banip">
+                              <i data-feather="edit" class="feather icon-edit"></i>
+                            </a>
+                            <a data-bs-toggle="modal" data-bs-target="#delete-modal" class="p-2" href="javascript:void(0);">
+                              <i data-feather="trash-2" class="feather icon-trash-2"></i>
+                            </a>
+                          </div>
+                          
+                        </td>
+                      </tr>																		
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+
+  		<!-- Add BanIp -->
+      <div class="modal fade" id="add-banip">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="page-wrapper-new p-0">
+              <div class="content">
+                <div class="modal-header">
+                  <div class="page-title">
+                    <h4>Add Ban IP Address</h4>
+                  </div>
+                  <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <form>
+                    <div class="row">
+                      <div class="col-lg-12">
+                        <div class="mb-3">
+                          <label class="form-label">IP Address<span class="text-danger ms-1">*</span></label>
+                          <input type="text" class="form-control">
+                        </div>
+                      </div>
+                      <div class="col-lg-12">
+                        <div class="form-group summer-description-box transfer">
+                          <label class="form-label">Description</label>
+                          
+<ngx-editor [editor]="editor">
+  <ngx-editor-menu [editor]="editor" [toolbar]="toolbar" >
+  </ngx-editor-menu>
+</ngx-editor>
+
+                          <p>Maximum 60 Characters</p>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn me-2 btn-secondary fs-13 fw-medium p-2 px-3 shadow-none" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-primary fs-13 fw-medium p-2 px-3" data-bs-dismiss="modal">Add Ban IP Address</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /Add BanIp -->
+  
+      <!-- Edit BanIp -->
+      <div class="modal fade" id="edit-banip">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="page-wrapper-new p-0">
+              <div class="content">
+                <div class="modal-header">
+                  <div class="page-title">
+                    <h4>Edit Ban IP Address</h4>
+                  </div>
+                  <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <form>
+                    <div class="row">
+                      <div class="col-lg-12">
+                        <div class="mb-3">
+                          <label class="form-label">IP Address<span class="text-danger ms-1">*</span></label>
+                          <input type="text" class="form-control" value="211.11.0.25">
+                        </div>
+                      </div>
+                      <div class="col-lg-12">
+                        <div class="form-group summer-description-box transfer">
+                          <label class="form-label">Description</label>
+                          
+<ngx-editor [editor]="editor1">
+  <ngx-editor-menu [editor]="editor1" [toolbar]="toolbar" >
+  </ngx-editor-menu>
+</ngx-editor>
+
+                          <p>Maximum 60 Characters</p>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn me-2 btn-secondary fs-13 fw-medium p-2 px-3 shadow-none" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-primary fs-13 fw-medium p-2 px-3" data-bs-dismiss="modal">Save Changes</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /Edit BanIp -->
+  
+          <!-- delete modal -->
+          <div class="modal fade" id="delete-modal">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="page-wrapper-new p-0">
+                  <div class="content p-5 px-3 text-center">
+                      <span class="rounded-circle d-inline-flex p-2 bg-danger-transparent mb-2"><i class="ti ti-trash fs-24 text-danger"></i></span>
+                      <h4 class="fs-20 fw-bold mb-2 mt-1">Delete Ban IP Address</h4>
+                      <p class="mb-0 fs-16">Are you sure you want to delete ban IP address?</p>
+                      <div class="modal-footer-btn mt-3 d-flex justify-content-center">
+                        <button type="button" class="btn me-2 btn-secondary fs-13 fw-medium p-2 px-3 shadow-none" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary fs-13 fw-medium p-2 px-3" data-bs-dismiss="modal">Yes Delete</button>
+                      </div>						
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>

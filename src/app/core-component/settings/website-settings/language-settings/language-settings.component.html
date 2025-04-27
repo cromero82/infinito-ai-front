@@ -1,0 +1,467 @@
+<div class="page-header settings-pg-header">
+  <div class="add-item d-flex">
+    <div class="page-title">
+      <h4>Settings</h4>
+      <h6>Manage your settings on portal</h6>
+    </div>
+  </div>
+  <ul class="table-top-head">
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Refresh" matTooltipPosition="above"><i
+      class="ti ti-refresh"></i></a>
+    </li>
+    <li>
+      <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Collapse" matTooltipPosition="above"
+        id="collapse-header"> @if (!isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }
+      @if (isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }</a>
+    </li>
+  </ul>
+</div>
+<div class="row">
+  <div class="col-xl-12">
+    <div class="settings-wrapper d-flex">
+      <app-settings-sidebar></app-settings-sidebar>
+      <div class="card flex-fill mb-0 w-50">
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+          <h4>Language</h4>
+          <div class="page-btn d-flex align-items-center ms-0">
+            <div class="select-language">
+              <mat-select class="custom-mat-select select" placeholder="Select Language">
+                <mat-option value="1">Select Language</mat-option>
+                <mat-option value="1">English</mat-option>
+                <mat-option value="1">Arabic</mat-option>
+                <mat-option value="1">Chinese</mat-option>
+              </mat-select>
+            </div>
+            <a href="javascript:void(0);" class="btn btn-primary ms-3" data-bs-toggle="modal" data-bs-target="#add-language">Add Translation</a>
+          </div>
+        </div>
+        <div class="card-body pb-0">
+          <div class="row">
+            <div class="col-lg-12">
+              <div class="card table-list-card">
+                <div class="card-body">
+                  <div class="table-top">
+                    <div class="search-set">
+                      <div class="search-input">
+                        <a href="javascript:void(0);" class="btn btn-searchset"><i class="feather icon-search feather-search"></i></a>
+                        <div class="dataTables_filter">
+                          <label>
+                            <input [(ngModel)]="searchDataValue" [ngModelOptions]="{standalone: true}" (ngModelChange)="searchData(searchDataValue)"
+                              type="search" class="form-control" placeholder="Search" />
+                            </label>
+                          </div>
+                        </div>
+                    </div>
+                    <div class="search-path">
+                      <div class="d-flex align-items-center">
+                        <a class="btn btn-secondary" href="javascript:void(0);">
+                          <i data-feather="filter" class="filter-icon"></i>
+                          Import Sample
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="table-responsive no-pagination">
+                    <table class="table datatable">
+                      <thead class="thead-light">
+                        <tr>
+                          <th class="no-sort">
+                            <label class="checkboxs">
+                              <input type="checkbox" id="select-all">
+                              <span class="checkmarks"></span>
+                            </label>
+                          </th>
+                          <th>Language</th>
+                          <th>Code</th>
+                          <th>RTL</th>
+                          <th>Default</th>
+                          <th>Total</th>
+                          <th>Done</th>
+                          <th>Progress</th>
+                          <th>Status</th>
+                          <th class="no-sort"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>
+                            <label class="checkboxs">
+                              <input type="checkbox">
+                              <span class="checkmarks"></span>
+                            </label>
+                          </td>
+                          <td>
+                            <div class="language-name d-flex align-items-center">
+                              <img src="assets/img/icons/flag-01.svg" class="me-2" alt="Img">
+                              English
+                            </div>
+                          </td>
+                          <td>
+                            en
+                          </td>
+                          <td>
+                            <div class="status-toggle modal-status d-flex justify-content-between align-items-center">
+                              <input type="checkbox" id="user1" class="check" checked="">
+                              <label for="user1" class="checktoggle"></label>
+                            </div>						
+                          </td>
+                          <td>
+                            <div class="status-toggle modal-status d-flex justify-content-between align-items-center">
+                              <input type="checkbox" id="users1" class="check" checked="">
+                              <label for="users1" class="checktoggle"></label>
+                            </div>						
+                          </td>
+                          <td>2145</td>
+                          <td>1815</td>
+                          <td>
+                            <div class="d-flex align-items-center">
+                              <div class="circle-progress" data-value="80">
+                                <span class="progress-left">
+                                  <span class="progress-bar border-warning" [ngStyle]="{'transform':'rotate(108deg)'}"></span>
+                                </span>
+                                <span class="progress-right">
+                                  <span class="progress-bar border-warning" [ngStyle]="{'transform':'rotate(178deg)'}"></span>
+                                </span>
+                                
+                              </div>
+                              <div class="progress-value ms-2">80%</div>
+                            </div>
+                          </td>
+                          <td>
+                            <div class="status-toggle modal-status d-flex justify-content-between align-items-center">
+                              <input type="checkbox" id="status1" class="check" checked="">
+                              <label for="status1" class="checktoggle"></label>
+                            </div>	
+                          </td>
+                          <td class="action-table-data">
+                            <div class="edit-delete-action">
+                              <a [routerLink]="routes.languageSettingsweb" class="btn border text-dark bg-white me-2">Web</a>
+                              <a href="javascript:void(0);" class="btn border text-dark bg-white me-2">App</a>
+                              <a href="javascript:void(0);" class="btn border text-dark bg-white me-2">Admin</a>
+                              <a href="javascript:void(0);" class="me-2 language-import">
+                                <i data-feather="download" class="feather icon-download"></i>
+                              </a>
+                              <a href="javascript:void(0);">
+                                <i data-feather="trash-2" class="feather icon-trash-2"></i>
+                              </a>
+                            </div>
+                          </td>
+                        </tr>	
+                        <tr>
+                          <td>
+                            <label class="checkboxs">
+                              <input type="checkbox">
+                              <span class="checkmarks"></span>
+                            </label>
+                          </td>
+                          <td>
+                            <div class="language-name d-flex align-items-center">
+                              <img src="assets/img/icons/flag-02.svg" class="me-2" alt="Img">
+                              German
+                            </div>
+                          </td>
+                          <td>
+                            Ar
+                          </td>
+                          <td>
+                            <div class="status-toggle modal-status d-flex justify-content-between align-items-center">
+                              <input type="checkbox" id="user2" class="check" checked="">
+                              <label for="user2" class="checktoggle"></label>
+                            </div>						
+                          </td>
+                          <td>
+                            <div class="status-toggle modal-status d-flex justify-content-between align-items-center">
+                              <input type="checkbox" id="users2" class="check" checked="">
+                              <label for="users2" class="checktoggle"></label>
+                            </div>						
+                          </td>
+                          <td>2045</td>
+                          <td>2045</td>
+                          <td>
+                            <div class="d-flex align-items-center">
+                              <div class="circle-progress" data-value="70">
+                                <span class="progress-left">
+                                  <span class="progress-bar border-cyan" [ngStyle]="{'transform':'rotate(78deg)'}"></span>
+                                </span>
+                                <span class="progress-right">
+                                  <span class="progress-bar border-cyan" [ngStyle]="{'transform':'rotate(178deg)'}"></span>
+                                </span>
+                                
+                              </div>
+                              <div class="progress-value ms-2">70%</div>
+                            </div>																
+                          </td>
+                          <td>
+                            <div class="status-toggle modal-status d-flex justify-content-between align-items-center">
+                              <input type="checkbox" id="status2" class="check" checked="">
+                              <label for="status2" class="checktoggle"></label>
+                            </div>	
+                          </td>
+                          <td class="action-table-data">
+                            <div class="edit-delete-action">
+                              <a [routerLink]="routes.languageSettingsweb" class="btn border text-dark bg-white me-2">Web</a>
+                              <a href="javascript:void(0);" class="btn border text-dark bg-white me-2">App</a>
+                              <a href="javascript:void(0);" class="btn border text-dark bg-white me-2">Admin</a>
+                              <a href="javascript:void(0);" class="me-2 language-import">
+                                <i data-feather="download" class="feather icon-download"></i>
+                              </a>
+                              <a href="javascript:void(0);">
+                                <i data-feather="trash-2" class="feather icon-trash-2"></i>
+                              </a>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label class="checkboxs">
+                              <input type="checkbox">
+                              <span class="checkmarks"></span>
+                            </label>
+                          </td>
+                          <td>
+                            <div class="language-name d-flex align-items-center">
+                              <img src="assets/img/icons/flag-03.svg" class="me-2" alt="Img">
+                              Arabic
+                            </div>
+                          </td>
+                          <td>
+                            zh
+                          </td>
+                          <td>
+                            <div class="status-toggle modal-status d-flex justify-content-between align-items-center">
+                              <input type="checkbox" id="user3" class="check" checked="">
+                              <label for="user3" class="checktoggle"></label>
+                            </div>						
+                          </td>
+                          <td>
+                            <div class="status-toggle modal-status d-flex justify-content-between align-items-center">
+                              <input type="checkbox" id="users3" class="check" checked="">
+                              <label for="users3" class="checktoggle"></label>
+                            </div>						
+                          </td>
+                          <td>2245</td>
+                          <td>295</td>
+                          <td>
+                            <div class="d-flex align-items-center">
+                              <div class="circle-progress" data-value="50">
+                                <span class="progress-left">
+                                  <span class="progress-bar border-purple" ></span>
+                                </span>
+                                <span class="progress-right">
+                                  <span class="progress-bar border-purple" [ngStyle]="{'transform':'rotate(178deg)'}"></span>
+                                </span>
+                                
+                              </div>
+                              <div class="progress-value ms-2">50%</div>
+                            </div>
+                          </td>
+                          <td>
+                            <div class="status-toggle modal-status d-flex justify-content-between align-items-center">
+                              <input type="checkbox" id="status3" class="check" checked="">
+                              <label for="status3" class="checktoggle"></label>
+                            </div>	
+                          </td>
+                          <td class="action-table-data">
+                            <div class="edit-delete-action">
+                              <a [routerLink]="routes.languageSettingsweb" class="btn border text-dark bg-white me-2">Web</a>
+                              <a href="javascript:void(0);" class="btn border text-dark bg-white me-2">App</a>
+                              <a href="javascript:void(0);" class="btn border text-dark bg-white me-2">Admin</a>
+                              <a href="javascript:void(0);" class="me-2 language-import">
+                                <i data-feather="download" class="feather icon-download"></i>
+                              </a>
+                              <a href="javascript:void(0);">
+                                <i data-feather="trash-2" class="feather icon-trash-2"></i>
+                              </a>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <label class="checkboxs">
+                              <input type="checkbox">
+                              <span class="checkmarks"></span>
+                            </label>
+                          </td>
+                          <td>
+                            <div class="language-name d-flex align-items-center">
+                              <img src="assets/img/icons/flag-04.svg" class="me-2" alt="Img">
+                              French
+                            </div>
+                          </td>
+                          <td>
+                            hi
+                          </td>
+                          <td>
+                            <div class="status-toggle modal-status d-flex justify-content-between align-items-center">
+                              <input type="checkbox" id="user4" class="check" checked="">
+                              <label for="user4" class="checktoggle"></label>
+                            </div>						
+                          </td>
+                          <td>
+                            <div class="status-toggle modal-status d-flex justify-content-between align-items-center">
+                              <input type="checkbox" id="users4" class="check" checked="">
+                              <label for="users4" class="checktoggle"></label>
+                            </div>						
+                          </td>
+                          <td>2535</td>
+                          <td>1145</td>
+                          <td>
+                            <div class="d-flex align-items-center">
+                              <div class="circle-progress" data-value="30">
+                                <span class="progress-left">
+                                  <span class="progress-bar border-danger" ></span>
+                                </span>
+                                <span class="progress-right">
+                                  <span class="progress-bar border-danger" [ngStyle]="{'transform':'rotate(108deg)'}"></span>
+                                </span>
+                                
+                              </div>
+                              <div class="progress-value ms-2">30%</div>
+                            </div>
+                          </td>
+                          <td>
+                            <div class="status-toggle modal-status d-flex justify-content-between align-items-center">
+                              <input type="checkbox" id="status4" class="check" checked="">
+                              <label for="status4" class="checktoggle"></label>
+                            </div>	
+                          </td>
+                          <td class="action-table-data">
+                            <div class="edit-delete-action">
+                              <a [routerLink]="routes.languageSettingsweb" class="btn border text-dark bg-white me-2">Web</a>
+                              <a href="javascript:void(0);" class="btn border text-dark bg-white me-2">App</a>
+                              <a href="javascript:void(0);" class="btn border text-dark bg-white me-2">Admin</a>
+                              <a href="javascript:void(0);" class="me-2 language-import">
+                                <i data-feather="download" class="feather icon-download"></i>
+                              </a>
+                              <a href="javascript:void(0);">
+                                <i data-feather="trash-2" class="feather icon-trash-2"></i>
+                              </a>
+                            </div>
+                          </td>
+                        </tr>																		
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  		<!-- Language -->
+      <div class="modal fade" id="add-language">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <div class="page-title">
+                <h4>Language Setup</h4>
+              </div>
+              <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <form action="language-settings-web.html">
+              <div class="modal-body">
+                <div class="card table-list-card">
+                  <div class="card-body">
+                    <div class="table-top">
+                      <div class="search-set">
+                        <div class="search-input">
+                          <a href="javascript:void(0);" class="btn btn-searchset"><i class="feather icon-search feather-search"></i></a>
+                          <div class="dataTables_filter">
+                            <label>
+                              <input [(ngModel)]="searchDataValue" [ngModelOptions]="{standalone: true}" (ngModelChange)="searchData(searchDataValue)"
+                                type="search" class="form-control" placeholder="Search" />
+                              </label>
+                            </div>
+                          </div>
+                      </div>
+                      <div class="d-flex align-items-center">
+                        <div class="back-btn">
+                          <a href="language-settings.html" class="btn btn-secondary me-3"><i data-feather="arrow-left" class="filter-icon me-2"></i>Back to Translations </a>
+                        </div>
+                        <div class="page-btn me-2">
+                          <a href="javascript:void(0);" class="d-flex align-items-center selected-language"><img src="assets/img/icons/flag-03.svg" class="me-2" alt="Img">Arabic</a>
+                        </div>
+                        <div>
+                          <span class="d-block fs-10">Progress</span>
+                          <div class="d-flex align-items-center">
+                            <div class="progress progress-xs" style="width: 90px;">
+                              <div class="progress-bar bg-orange rounded" role="progressbar" style="width: 80%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <span class="d-inline-flex fs-12 ms-2">80%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="table-responsive no-pagination">
+                      <table class="table datatable">
+                        <thead class="thead-light">
+                          <tr>
+                            <th>English</th>
+                            <th>Arabic</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>Products</td>
+                            <td><div><input type="text" class="form-control" value="منتجات"></div></td>
+                          </tr>																		
+                          <tr>
+                            <td>Expired Products</td>
+                            <td><div><input type="text" class="form-control" value="المنتجات منتهية الصلاحية"></div></td>
+                          </tr>																		
+                          <tr>
+                            <td>Low Stocks</td>
+                            <td><div><input type="text" class="form-control" value="مخزونات منخفضة"></div></td>
+                          </tr>																		
+                          <tr>
+                            <td>Category</td>
+                            <td><div><input type="text" class="form-control" value="فئة"></div></td>
+                          </tr>																		
+                          <tr>
+                            <td>Sub Category</td>
+                            <td><div><input type="text" class="form-control" value="الفئة الفرعية"></div></td>
+                          </tr>																		
+                          <tr>
+                            <td>Brand</td>
+                            <td><div><input type="text" class="form-control" value="ماركة"></div></td>
+                          </tr>																		
+                          <tr>
+                            <td>Unit</td>
+                            <td><div><input type="text" class="form-control" value="وحدة"></div></td>
+                          </tr>																		
+                          <tr>
+                            <td>Warranties</td>
+                            <td><div><input type="text" class="form-control" value="الضمانات"></div></td>
+                          </tr>																		
+                          <tr>
+                            <td>Print Barcode</td>
+                            <td><div><input type="text" class="form-control" value="طباعة الباركود"></div></td>
+                          </tr>																		
+                          <tr>
+                            <td>Print QR Code</td>
+                            <td><div><input type="text" class="form-control" value="طباعة رمز الاستجابة السريعة"></div></td>
+                          </tr>																		
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <!-- /Language -->

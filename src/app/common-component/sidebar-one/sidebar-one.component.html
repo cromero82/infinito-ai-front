@@ -1,0 +1,215 @@
+<div class="sidebar" id="sidebar" (mouseover)="miniSideBarMouseHover('over')" (mouseout)="miniSideBarMouseHover('out')">
+  <div class="sidebar-logo">
+    <a [routerLink]="routes.index" class="logo logo-normal">
+      <img src="assets/img/logo.svg" alt="Img">
+    </a>
+    <a [routerLink]="routes.index" class="logo logo-white">
+      <img src="assets/img/logo-white.svg" alt="Img">
+    </a>
+    <a [routerLink]="routes.index" class="logo-small">
+      <img src="assets/img/logo-small.png" alt="Img">
+    </a>
+    <a id="toggle_btn" href="javascript:void(0);" (click)="toggleSidebar()" [ngClass]="{'d-none': page === 'pos'}">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevrons-left feather-16"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
+    </a>
+  </div>
+  <div class="modern-profile p-3 pb-0">
+    <div class="text-center rounded bg-light p-3 mb-4 user-profile">
+      <div class="avatar avatar-lg online mb-3">
+        <img src="assets/img/customer/customer15.jpg" alt="Img" class="img-fluid rounded-circle">
+      </div>
+      <h6 class="fs-14 fw-bold mb-1">Adrian Herman</h6>
+      <p class="fs-12 mb-0">System Admin</p>
+    </div>
+    <div class="sidebar-nav mb-3">
+      <ul class="nav nav-tabs nav-tabs-solid nav-tabs-rounded nav-justified bg-transparent" role="tablist">
+        <li class="nav-item"><a class="nav-link active border-0" href="javascript:void(0);">Menu</a></li>
+        <li class="nav-item"><a class="nav-link border-0" href="chat.html">Chats</a></li>
+        <li class="nav-item"><a class="nav-link border-0" href="email.html">Inbox</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="sidebar-header p-3 pb-0 pt-2">
+    <div class="text-center rounded bg-light p-2 mb-4 sidebar-profile d-flex align-items-center">
+      <div class="avatar avatar-md onlin">
+        <img src="assets/img/customer/customer15.jpg" alt="Img" class="img-fluid rounded-circle">
+      </div>
+      <div class="text-start sidebar-profile-info ms-2">
+        <h6 class="fs-14 fw-bold mb-1">Adrian Herman</h6>
+        <p class="fs-12">System Admin</p>
+      </div>
+    </div>
+    <div class="d-flex align-items-center justify-content-between menu-item mb-3">
+      <div>
+        <a [routerLink]="routes.index" class="btn btn-sm btn-icon bg-light">
+          <i class="ti ti-layout-grid-remove"></i>
+        </a>
+      </div>
+      <div>
+        <a [routerLink]="routes.chat" class="btn btn-sm btn-icon bg-light">
+          <i class="ti ti-brand-hipchat"></i>
+        </a>
+      </div>
+      <div>
+        <a [routerLink]="routes.email" class="btn btn-sm btn-icon bg-light position-relative">
+          <i class="ti ti-message"></i>
+        </a>
+      </div>
+      <div class="notification-item">
+        <a [routerLink]="routes.activities" class="btn btn-sm btn-icon bg-light position-relative">
+          <i class="ti ti-bell"></i>
+          <span class="notification-status-dot"></span>
+        </a>
+      </div>
+      <div class="me-0">
+        <a [routerLink]="routes.generalSettings" class="btn btn-sm btn-icon bg-light">
+          <i class="ti ti-settings"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+  <ng-scrollbar>
+  <div class="sidebar-inner slimscroll">
+      <div id="sidebar-menu" class="sidebar-menu">
+        <ul>
+          @for (mainTittle of side_bar_data; track mainTittle) {
+          <li class="submenu-open">
+            <h6 class="submenu-hdr">{{ mainTittle.tittle }}</h6>
+            <ul>
+              @for (menu of mainTittle?.menu; track menu) {
+                @if (menu?.hasSubRoute === false) {
+                <li routerLinkActive="active">
+                  <a class="sub-active" (click)="expandSubMenus(menu)" [routerLink]="menu?.route">
+                    @if (menu.icon){
+                      <i class="fs-16 feather" [class]="'icon-' + menu.icon"></i>
+                    }
+                    @if (menu.icon2){
+                    <i class="fs-16 ti" [class]="'ti-' + menu.icon2"></i>
+                    }
+                    <span>{{ menu?.menuValue }}</span>
+                    @if(menu?.menuValue==='Changelog'){
+                    <span class="badge bg-primary badge-xs text-white fs-10 ms-2">v2.0.9</span>
+                    }
+                  </a>
+                </li>
+                }
+                @if (menu.hasSubRoute === true) {
+                <li class="submenu">
+                  <a class="sub-active" href="javascript:void(0)" (click)="expandSubMenus(menu)"
+                    [ngClass]="{ 'subdrop': menu.showSubRoute === true}"
+                    [class.active]="base === menu.base1 || base === menu.base || page === menu.page">
+                    @if (menu.icon){
+                      <i class="fs-16 feather" [class]="'icon-' + menu.icon"></i>
+                    }
+                    @if (menu.icon2){
+                    <i class="fs-16 ti" [class]="'ti-' + menu.icon2"></i>
+                    }
+                    <span>{{ menu.menuValue }}</span>
+                    <span class="menu-arrow"></span>
+                  </a>
+                  <ul [ngClass]="
+                          menu.showSubRoute === true
+                            ? 'd-block'
+                            : 'd-none'
+                        ">
+                    @for (subMenus of menu.subMenus; track subMenus) {
+                    <li>
+                      <a [routerLink]="subMenus.route" routerLinkActive="active">{{ subMenus.menuValue }}</a>
+                    </li>
+                    }
+                  </ul>
+                </li>
+                }
+                @if (menu.hasSubRouteTwo === true) {
+                <li class="submenu">
+                  <a href="javascript:void(0);"  (click)="expandSubMenus(menu)" [ngClass]="{ 'subdrop': menu.showSubRoute === true}"
+                    [class.active]="base === menu.base">
+                    @if (menu.icon){
+                      <i class="feather" [class]="'icon-' + menu.icon"></i>
+                    }
+                    @if (menu.icon2){
+                    <i class="fs-16 ti" [class]="'ti-' + menu.icon2"></i>
+                    }
+                    <span>
+                      {{menu.menuValue }}</span><span class="menu-arrow"></span></a>
+                  <ul [ngClass]="menu.showSubRoute === true ? 'show-sub-menu' : 'hide-sub-menu'">
+                    @for (subMenus of menu.subMenus; track subMenus) {
+                    @if (subMenus.customSubmenuTwo === false) {
+                    <li><a [routerLink]="subMenus.route" routerLinkActive="active">{{ subMenus.menuValue }}</a></li>
+                    }
+                    @if (subMenus.customSubmenuTwo === true) {
+                    <li class="submenu submenu-two">
+                      <a href="javascript:void(0);"
+                        [class.active]="page === subMenus.page1 || page === subMenus.page2 || page === subMenus.page3 || page === subMenus.page4 || page === subMenus.page5 || page === subMenus.page6 || page === subMenus.page7 || page === subMenus.page8"
+                        (click)="openSubmenuOne(subMenus)" [ngClass]="{'subdrop' : openSubmenuOneItem === subMenus}">
+                        {{ subMenus.menuValue }}
+                        <span class="menu-arrow inside-submenu"></span>
+                      </a>
+                      <ul [ngClass]="openSubmenuOneItem === subMenus ? 'd-block' : 'd-none'">
+                        @for (subMenuTwo of subMenus.subMenusTwo; track subMenuTwo) {
+                        <li>
+                          <a [routerLink]="subMenuTwo.route" routerLinkActive="active">{{ subMenuTwo.menuValue
+                            }}</a>
+                        </li>
+                        }
+                      </ul>
+                    </li>
+                    }
+                    }
+                  </ul>
+                </li> 
+                }
+                @if (menu.hasSubRouteThree === true) {
+                <li class="submenu">
+                  <a href="javascript:void(0);" (click)="multiLevelOne()"
+                    [ngClass]="{'subdrop' : multiLevel1 === true}">
+                    @if (menu.icon2){
+                    <i class="ti" [class]="'ti-' + menu.icon2"></i>
+                    }
+                      {{menu.menuValue}}
+                      <span class="menu-arrow"></span></a>
+                  <ul [ngClass]="multiLevel1 ? 'd-block' : 'd-none'">
+                    @for (subMenus of menu.subMenus; track subMenus) {
+                    @if (subMenus.customSubmenuThree === false) {
+                    <li><a href="javascript:void(0);">{{ subMenus.menuValue }}</a></li>
+                    }
+                    @if (subMenus.customSubmenuThree === true) {
+                    <li class="submenu submenu-two"><a href="javascript:void(0);" (click)="multiLevelTwo()"
+                        [ngClass]="{'subdrop' : multiLevel2 === true}">{{
+                        subMenus.menuValue }}<span class="menu-arrow inside-submenu"></span></a>
+                      <ul [ngClass]="multiLevel2 ? 'd-block' : 'd-none'">
+                        @for (subMenuTwo of subMenus.subMenusTwo; track subMenuTwo) {
+                        @if (subMenuTwo.customSubmenuFour === false) {
+                        <li><a href="javascript:void(0);">{{ subMenuTwo.menuValue }}</a></li>
+                        }
+                        @if (subMenuTwo.customSubmenuFour === true) {
+                        <li class="submenu submenu-two submenu-three">
+                          <a href="javascript:void(0);" (click)="multiLevelThree()"
+                            [ngClass]="{'subdrop' : multiLevel3 === true}">
+                            {{ subMenuTwo.menuValue }}
+                            <span class="menu-arrow inside-submenu inside-submenu-two"></span>
+                          </a>
+                          <ul [ngClass]="multiLevel3 ? 'd-block' : 'd-none'">
+                            @for (subMenusThree of subMenuTwo.subMenusThree; track subMenusThree) {
+                            <li><a href="javascript:void(0);">{{ subMenusThree.menuValue }}</a></li>
+                            }
+                          </ul>
+                        </li>
+                        }
+                        }
+                      </ul>
+                    </li>
+                    }
+                    }
+                  </ul>
+                </li>
+                }
+              }
+            </ul>
+          </li>
+          }
+        </ul>
+      </div>
+    </div>
+  </ng-scrollbar>
+</div>

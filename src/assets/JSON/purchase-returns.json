@@ -1,0 +1,116 @@
+{
+  "data":[
+      {
+        "img":"stock-img-01.png",
+        "date": "24 Dec 2024",
+        "supplierName": "Electro Mart",
+        "reference": "PT001",
+        "status": "Received",
+        "total": "$1000",
+        "paid": "$1000",
+        "due": "$0.00",
+        "paymentStatus": "Paid"
+      },
+      {
+        "img":"stock-img-06.png",
+        "date": "10 Dec 2024",
+        "supplierName": "Quantum Gadgets",
+        "reference": "PT002",
+        "status": "Pending",
+        "total": "$1500",
+        "paid": "$0.00",
+        "due": "$1500",
+        "paymentStatus": "Unpaid"
+      },
+      {
+        "img":"stock-img-02.png",
+        "date": "27 Nov 2024",
+        "supplierName": "Prime Bazaar",
+        "reference": "PT003",
+        "status": "Received",
+        "total": "$1500",
+        "paid": "$1800",
+        "due": "$0.00",
+        "paymentStatus": "Paid"
+      },
+      {
+        "img":"stock-img-03.png",
+        "date": "18 Nov 2024",
+        "supplierName": "Gadget World",
+        "reference": "PT004",
+        "status": "Received",
+        "total": "$2000",
+        "paid": "$1000",
+        "due": "$1000",
+        "paymentStatus": "Overdue"
+      },
+      {
+        "img":"stock-img-04.png",
+        "date": "06 Nov 2024",
+        "supplierName": "Volt Vault",
+        "reference": "PT005",
+        "status": "Received",
+        "total": "$800",
+        "paid": "$800",
+        "due": "$0.00",
+        "paymentStatus": "Paid"
+      },
+      {
+        "img":"stock-img-05.png",
+        "date": "25 Oct 2024",
+        "supplierName": "Elite Retail",
+        "reference": "PT006",
+        "status": "Pending",
+        "total": "$750",
+        "paid": "$0.00",
+        "due": "$750",
+        "paymentStatus": "Unpaid"
+      },
+      {
+        "img":"expire-product-01.png",
+        "date": "14 Oct 2024",
+        "supplierName": "Prime Mart",
+        "reference": "PT007",
+        "status": "Received",
+        "total": "$1300",
+        "paid": "$1300",
+        "due": "$0.00",
+        "paymentStatus": "Paid"
+      },
+      {
+        "img":"expire-product-02.png",
+        "date": "14 Oct 2024",
+        "supplierName": "NeoTech Store",
+        "reference": "PT008",
+        "status": "Received",
+        "total": "$1100",
+        "paid": "$1100",
+        "due": "$0.00",
+        "paymentStatus": "Paid"
+      },
+      {
+        "img":"expire-product-03.png",
+        "date": "20 Sep 2024",
+        "supplierName": "Urban Mart",
+        "reference": "PT009",
+        "status": "Pending",
+        "total": "$2300",
+        "paid": "$2300",
+        "due": "$0.00",
+        "paymentStatus": "Paid"
+      },
+      {
+        "img":"expire-product-04.png",
+        "date": "10 Sep 2024",
+        "supplierName": "Travel Mart",
+        "reference": "PT010",
+        "status": "Pending",
+        "total": "$1700",
+        "paid": "$1700",
+        "due": "$0.00",
+        "paymentStatus": "Paid"
+      }
+    ],
+    "totalData":10
+    
+}

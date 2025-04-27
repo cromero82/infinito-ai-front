@@ -1,0 +1,96 @@
+// mat sorter
+.mat-sort-header-container {
+  justify-content: space-between;
+  .mat-sort-header-arrow {
+    opacity: 0.54 !important;
+    transform: translateY(0px) !important;
+    .mat-sort-header-stem {
+      display: none;
+    }
+    .mat-sort-header-indicator {
+      opacity: 1;
+      color: black;
+      font-weight: bold;
+
+      // Hide default arrow as its composed of left, right and middle
+      .mat-sort-header-pointer-left,
+      .mat-sort-header-pointer-right,
+      .mat-sort-header-pointer-middle {
+        display: none;
+      }
+    }
+    &::after {
+      right: 0.5em;
+      content: "\f107";
+      color: #babfc7;
+      font-family: "Font Awesome 5 Free";
+      top: 0px;
+      font-size: 12px;
+      opacity: 1;
+      position: absolute;
+    }
+    &::before {
+      right: 0.5em;
+      content: "\f106";
+      color: #babfc7;
+      font-family: "Font Awesome 5 Free";
+      top: -9px;
+      font-size: 12px;
+      opacity: 1;
+      position: absolute;
+    }
+  }
+}
+[aria-sort="ascending"] {
+  .mat-sort-header-arrow {
+    &::before {
+      color: #000;
+    }
+  }
+}
+[aria-sort="descending"] {
+  .mat-sort-header-arrow {
+    &::after {
+      color: #000;
+    }
+  }
+}
+table tbody tr td .product-img img {
+  border: 0;
+  width: 32px;
+  height: 32px;
+}
+.file-manager .all-files .table tbody tr td a.product-img img {
+  width: 32px;
+  height: 32px;
+  border: 0;
+}
+.table th{
+  border-top:none;
+}
+.table thead th{
+  vertical-align: bottom;
+  border-bottom: 1px solid #dee2e6;
+}
+app-custom-pagination .pagination li a {
+  background: var(--Stroke, rgba(145, 158, 171, 0.3));
+  border-radius: 85px !important;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5B6670;
+}
+app-custom-pagination .pagination li a:hover{
+  background: #FF9F43;
+  color: #ffffff;
+}
+app-custom-pagination .pagination li{
+  margin:0 5px;
+}
+// app-custom-pagination .pagination .entries{
+//   display: none;
+// }
+
+// mat sorter **

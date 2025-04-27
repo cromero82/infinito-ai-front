@@ -1,0 +1,170 @@
+
+<div class="page-header settings-pg-header">
+  <div class="add-item d-flex">
+    <div class="page-title">
+      <h4>Settings</h4>
+      <h6>Manage your settings on portal</h6>
+    </div>
+  </div>
+  <ul class="table-top-head">
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Refresh" matTooltipPosition="above"><i
+      class="ti ti-refresh"></i></a>
+    </li>
+    <li>
+      <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Collapse" matTooltipPosition="above"
+        id="collapse-header"> @if (!isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }
+      @if (isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }</a>
+    </li>
+  </ul>
+</div>
+<div class="row">
+  <div class="col-xl-12">
+    <div class="settings-wrapper d-flex">
+      <app-settings-sidebar></app-settings-sidebar>
+      <div class="card flex-fill mb-0">
+        <form >
+          <div class="card-header">
+            <h4>Invoice Settings</h4>
+          </div>
+          <div class="card-body ">
+            <ul class="logo-company">
+              <li>
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="logo-info me-0 mb-3 mb-md-0">
+                      <h6>Invoice Logo</h6>
+                      <p>Upload Logo of your Company to display in Invoice</p>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="profile-pic-upload mb-0 me-0">
+                      <div class="new-employee-field">
+                        <div class="mb-3 mb-md-0">
+                          <div class="image-upload mb-0">
+                            <input type="file">
+                            <div class="image-uploads">
+                              <h4><i data-feather="upload"></i>Upload Photo</h4>
+                            </div>
+                          </div>
+                          <span>For better preview recommended size is 450px x 450px. Max size 5mb.</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="new-logo ms-auto">
+                      <a href="javascript:void(0);"><img src="assets/img/logo-small.png" alt="Logo"></a>
+                    </div>
+                  </div>
+                </div>																								
+              </li>
+            </ul>
+            <div class="localization-info">
+              <div class="row align-items-center">
+                <div class="col-sm-4">
+                  <div class="setting-info">
+                    <h6>Invoice Prefix</h6>
+                    <p>Add prefix to your invoice</p>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="localization-select">
+                    <input type="text" class="form-control" value="INV -">
+                  </div>
+                </div>
+              </div>
+              <div class="row align-items-center">
+                <div class="col-sm-4">
+                  <div class="setting-info">
+                    <h6>Invoice Due</h6>
+                    <p>Select due date  to display in Invoice</p>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="localization-select d-flex align-items-center fixed-width">
+                    <mat-select class="custom-mat-select select" placeholder="5">
+                      <mat-option value="1">5</mat-option>
+                      <mat-option value="1">6</mat-option>
+                      <mat-option value="1">7</mat-option>
+                    </mat-select>
+                    <span class="ms-2">Days</span>
+                  </div>
+                </div>
+              </div>
+              <div class="row align-items-center">
+                <div class="col-sm-4">
+                  <div class="setting-info">
+                    <h6>Invoice Round Off</h6>
+                    <p>Value Roundoff in Invoice</p>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="localization-select d-flex align-items-center width-custom">
+                    <div class="status-toggle modal-status d-flex justify-content-between align-items-center me-3">
+                      <input type="checkbox" id="user3" class="check" checked>
+                      <label for="user3" class="checktoggle"></label>
+                    </div>
+                    <mat-select class="custom-mat-select select" placeholder="Round Off Up">
+                      <mat-option value="1">Round Off Up</mat-option>
+                    </mat-select>
+                  </div>
+                </div>
+              </div>
+              <div class="row align-items-center">
+                <div class="col-sm-4">
+                  <div class="setting-info">
+                    <h6>Show Company Details</h6>
+                    <p>Show / Hide Company Details in Invoice</p>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="localization-select d-flex align-items-center">
+                    <div class="status-toggle modal-status d-flex justify-content-between align-items-center me-3">
+                      <input type="checkbox" id="user4" class="check" checked>
+                      <label for="user4" class="checktoggle"></label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-4">
+                  <div class="setting-info">
+                    <h6>Invoice Header Terms</h6>
+                  </div>
+                </div>
+                <div class="col-sm-8">
+                  <div class="mb-3">
+                    <textarea  rows="4" class="form-control" placeholder="Type your message"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-4">
+                  <div class="setting-info">
+                    <h6>Invoice Footer Terms</h6>
+                  </div>
+                </div>
+                <div class="col-sm-8">
+                  <div class="mb-3">
+                    <textarea  rows="4" class="form-control" placeholder="Type your message"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-flex align-items-center justify-content-end">
+              <button type="button" class="btn btn-secondary me-2" >Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+          </div>
+          
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>

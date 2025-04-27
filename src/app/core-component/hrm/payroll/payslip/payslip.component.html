@@ -1,0 +1,140 @@
+<div class="page-header">
+    <div class="add-item d-flex">
+        <div class="page-title">
+            <h4>Payslip</h4>
+        </div>
+    </div>
+    <ul class="table-top-head">
+        <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Pdf"><img src="assets/img/icons/pdf.svg" alt="img"></a>
+        </li>
+        <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Refresh" matTooltipPosition="above"><i
+            class="ti ti-refresh"></i></a>
+          </li>
+          <li>
+            <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Collapse"
+              matTooltipPosition="above" id="collapse-header"> @if (!isCollapsed) {
+              <i class="ti ti-chevron-up"></i>
+            }
+            @if (isCollapsed) {
+              <i class="ti ti-chevron-up"></i>
+            }</a>
+          </li>
+    </ul>
+    <div class="page-btn">
+        <a [routerLink]="routes.invoice" class="btn btn-secondary"><i data-feather="arrow-left" class="feather icon-arrow-left me-2"></i>Back to Payroll</a>
+    </div>
+</div>
+
+
+<!-- Invoices -->
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Payslip for the Month of Jan 2025</h4>
+            <div class="d-flex align-items-center justify-content-end">
+                <button type="button" class="btn btn-primary me-2"><i class="ti ti-mail me-2"></i>Send Email</button>
+                <button type="button" class="btn btn-secondary me-2"><i class="ti ti-download me-2"></i>Download</button>
+                <button type="button" class="btn btn-danger"><i class="ti ti-printer me-2"></i>Print</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <p class="mb-1">Employee Name : <span class="text-gray-9">Carl Evans</span></p>
+                    <p>Employee ID :  <span class="text-gray-9">EMP001</span></p>
+                </div>
+            </div>
+            <div class="col-md-6 text-end">
+                <div class="mb-3">
+                    <p class="mb-1">Location :  <span class="text-gray-9">USA</span></p>
+                    <p>Pay Period :   <span class="text-gray-9">Jan 2025</span></p>
+                </div>
+            </div>
+        </div>
+        <div>
+            <div class="card">
+                <div class="row p-3">
+                    <div class="col-6">
+                        <h4>Earnings</h4>
+                    </div>
+                    <div class="col-6">
+                        <h4>Deductions</h4>
+                    </div>
+                </div>
+                <div class="table-responsive mb-3">
+                    <div>
+                        
+                    </div>
+                    <table class="table">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Pay Type</th>
+                                <th>Amount</th>
+                                <th>Pay Type</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Basic Salary</td>
+                                <td>$32,000</td>
+                                <td>PF</td>
+                                <td>$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>HRA Allowance</td>
+                                <td>$0.00</td>
+                                <td>Professional  Tax</td>
+                                <td>$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>Conveyance</td>
+                                <td>$0.00</td>
+                                <td>TDS</td>
+                                <td>$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>Medical Allowance</td>
+                                <td>$0.00</td>
+                                <td>Loans & Others</td>
+                                <td>$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>Bonus</td>
+                                <td>$0.00</td>
+                                <td>Bonus</td>
+                                <td>$0.00</td>
+                            </tr>
+                            <tr>
+                                <td><h6>Total Earnings</h6></td>
+                                <td><h6>$32,000</h6></td>
+                                <td><h6>Total Deductions</h6></td>
+                                <td><h6>$0.00</h6></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center border-bottom mb-3">
+            <div class="mb-3 me-3">
+                <h6 class="mb-2">Net Salary</h6>
+                <p>Inwords</p>
+            </div>
+            <div class="mb-3">
+                <h6 class="mb-2">$32,000</h6>
+                <p>Thirty Two Thousand Only</p>
+            </div>
+        </div>
+        <div class="text-center">
+            <div class="mb-3">
+                <img src="assets/img/logo.svg" class="img-fluid" alt="logo">
+            </div>
+            <p>81, Randall Drive,Hornchurch <br>
+                RM126TA.</p>
+        </div>
+    </div>
+</div>
+<!-- /Invoices -->

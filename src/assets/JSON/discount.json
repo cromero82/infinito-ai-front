@@ -1,0 +1,50 @@
+{
+    "data":[
+        {
+          "name": "Weekend Deal",
+          "value": "70 (Percentage)",
+          "discountPlan": "Standard",
+          "validity": "22 May 2025 - 24 Jun 2025",
+          "days": "Sat,Sun",
+          "products": "All Products",
+          "status": "Active"
+        },
+        {
+          "name": "Loyalty Reward",
+          "value": "40 (Flat)",
+          "discountPlan": "Membership",
+          "validity": "16 Apr 2025 - 16 May 2025",
+          "days": "Mon,Tue,Thu,Fri",
+          "products": "Specific Products",
+          "status": "Active"
+        },
+        {
+          "name": "Flash Sale",
+          "value": "60 (Percentage)",
+          "discountPlan": "Standard",
+          "validity": "20 Mar 2025 - 20 Apr 2025",
+          "days": "Thu,Fri,Sat,Sun",
+          "products": "All Products",
+          "status": "Active"
+        },
+        {
+          "name": "Super Saver",
+          "value": "80 (Percentage)",
+          "discountPlan": "Standard",
+          "validity": "15 Feb 2025 - 15 Apr 2025",
+          "days": "Mon,Tue,Wed",
+          "products": "All Products",
+          "status": "Active"
+        },
+        {
+          "name": "Surprise Savings",
+          "value": "50 (Flat)",
+          "discountPlan": "Standard",
+          "validity": "24 Jan 2025 - 24 Mar 2025",
+          "days": "Mon,Tue,Thu,Sat",
+          "products": "Specific Products",
+          "status": "Active"
+        }
+    ],
+    "totalData":10      
+}

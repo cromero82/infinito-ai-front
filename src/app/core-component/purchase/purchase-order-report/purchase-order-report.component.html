@@ -1,0 +1,165 @@
+<div class="page-header">
+  <div class="add-item d-flex">
+    <div class="page-title">
+      <h4>Purchase order report</h4>
+      <h6>Manage your Purchase order report</h6>
+    </div>
+  </div>
+  <ul class="table-top-head">
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Pdf" matTooltipPosition="above"><img
+      src="assets/img/icons/pdf.svg" alt="img"></a>
+    </li>
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Excel" matTooltipPosition="above"><img
+      src="assets/img/icons/excel.svg" alt="img"></a>
+    </li>
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Refresh" matTooltipPosition="above"><i
+      class="ti ti-refresh"></i></a>
+    </li>
+    <li>
+      <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Collapse"
+        matTooltipPosition="above" id="collapse-header"> @if (!isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }
+      @if (isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }</a>
+    </li>
+  </ul>
+</div>
+
+<!-- /product list -->
+<div class="card">
+  <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+    <div class="search-set">
+      <div class="search-input">
+        <a href="javascript:void(0);" class="btn btn-searchset"><i class="feather icon-search feather-search"></i></a>
+        <div class="dataTables_filter">
+          <label>
+            <input [(ngModel)]="searchDataValue" [ngModelOptions]="{standalone: true}" (ngModelChange)="searchData(searchDataValue)" type="search"
+              class="form-control" placeholder="Search..." />
+            </label>
+          </div>
+        </div>
+    </div>
+    <div class="d-flex table-dropdown my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+        <div class="dropdown me-2">
+        <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+        Product
+        </a>
+        <ul class="dropdown-menu  dropdown-menu-end p-3">
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Lenovo IdeaPad 3</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Beats Pro </a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Nike Jordan</a>
+          </li>										
+        </ul>
+      </div>
+  
+      <div class="dropdown">
+        <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+          Sort By : Last 7 Days
+        </a>
+        <ul class="dropdown-menu  dropdown-menu-end p-3">
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+
+    <div class="table-responsive">
+      <table matSort (matSortChange)="sortData($event)" class="table datanew">
+        <thead>
+          <tr>
+            <th class="no-sort">
+                <label class="checkboxs"  (click)="selectAll(initChecked)">
+                  <input type="checkbox" id="select-all" [(ngModel)]="initChecked" >
+                  <span class="checkmarks"></span>
+                </label>
+              </th>
+            <th mat-sort-header="productName">Product Name</th>
+            <th mat-sort-header="purchasedAmount">Purchased amount</th>
+            <th mat-sort-header="purchasedQty">Purchased QTY</th>
+            <th mat-sort-header="instockQty">Instock QTY</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (data of tableData; track data) {
+            <tr>
+                <td>
+                  <label class="checkboxs">
+                    <input type="checkbox" [(ngModel)]="data.isSelected">
+                    <span class="checkmarks"></span>
+                  </label>
+                </td>
+                <td class="d-flex align-items-center p-3 px-2">
+                  <a class="avatar avatar-md me-2">
+                    <img src="assets/img/products/{{data.img}}" alt="product">
+                  </a>
+                  <a href="javascript:void(0);">{{data.productName}}</a>
+                </td>
+              <td>{{data.purchasedAmount}}</td>
+              <td>{{data.purchasedQty}}</td>
+              <td>{{data.instockQty}}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-custom-pagination></app-custom-pagination>
+  </div>
+</div>
+<!-- /product list -->
+
+<div class="searchpart">
+  <div class="searchcontent">
+    <div class="searchhead">
+      <h3>Search </h3>
+      <a id="closesearch"><i class="fa fa-times-circle" aria-hidden="true"></i></a>
+    </div>
+    <div class="searchcontents">
+      <div class="searchparts">
+        <input type="text" placeholder="search here">
+        <a class="btn btn-searchs">Search</a>
+      </div>
+      <div class="recentsearch">
+        <h2>Recent Search</h2>
+        <ul>
+          <li>
+            <h6><i class="fa fa-search me-2"></i> Settings</h6>
+          </li>
+          <li>
+            <h6><i class="fa fa-search me-2"></i> Report</h6>
+          </li>
+          <li>
+            <h6><i class="fa fa-search me-2"></i> Invoice</h6>
+          </li>
+          <li>
+            <h6><i class="fa fa-search me-2"></i> Sales</h6>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,85 @@
+{
+  "data": [
+    {
+      "image": "stock-img-01.png",
+      "subCategory": "Laptop",
+      "category": "Computers",
+      "categoryCode": "CT001",
+      "description": "Efficient Productivity",
+      "status": "Active"
+    },
+    {
+      "image": "stock-img-07.png",
+      "subCategory": "Desktop",
+      "category": "Computers",
+      "categoryCode": "CT002",
+      "description": "Compact Design",
+      "status": "Active"
+    },
+    {
+      "image": "stock-img-02.png",
+      "subCategory": "Sneakers",
+      "category": "Shoe",
+      "categoryCode": "CT003",
+      "description": "Dynamic Grip",
+      "status": "Active"
+    },
+    {
+      "image": "stock-img-08.png",
+      "subCategory": "Formals",
+      "category": "Shoe",
+      "categoryCode": "CT004",
+      "description": "Stylish Comfort",
+      "status": "Active"
+    },
+    {
+      "image": "stock-img-06.png",
+      "subCategory": "Wearables",
+      "category": "Electronics",
+      "categoryCode": "CT005",
+      "description": "Seamless Connectivity",
+      "status": "Active"
+    },
+    {
+      "image": "stock-img-04.png",
+      "subCategory": "Speakers",
+      "category": "Electronics",
+      "categoryCode": "CT006",
+      "description": "Reliable Sound",
+      "status": "Active"
+    },
+    {
+      "image": "expire-product-01.png",
+      "subCategory": "Handbags",
+      "category": "Bags",
+      "categoryCode": "CT007",
+      "description": "Compact Carry",
+      "status": "Active"
+    },
+    {
+      "image": "expire-product-04.png",
+      "subCategory": "Travel",
+      "category": "Bags",
+      "categoryCode": "CT008",
+      "description": "Travel Ready",
+      "status": "Active"
+    },
+    {
+      "image": "stock-img-05.png",
+      "subCategory": "Sofa",
+      "category": "Furniture",
+      "categoryCode": "CT009",
+      "description": "Cozy Comfort",
+      "status": "Active"
+    },
+    {
+      "image": "expire-product-03.png",
+      "subCategory": "Chair",
+      "category": "Furniture",
+      "categoryCode": "CT0010",
+      "description": "Stylish Comfort",
+      "status": "Active"
+    }
+  ],
+  "totalData": 10
+}

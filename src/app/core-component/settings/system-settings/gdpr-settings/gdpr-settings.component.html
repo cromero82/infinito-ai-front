@@ -1,0 +1,136 @@
+<div class="page-header settings-pg-header">
+  <div class="add-item d-flex">
+    <div class="page-title">
+      <h4>Settings</h4>
+      <h6>Manage your settings on portal</h6>
+    </div>
+  </div>
+  <ul class="table-top-head">
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Refresh" matTooltipPosition="above"><i
+      class="ti ti-refresh"></i></a>
+    </li>
+    <li>
+      <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Collapse"
+        matTooltipPosition="above" id="collapse-header"> @if (!isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }
+      @if (isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }</a>
+    </li>
+  </ul>
+</div>
+<div class="row">
+  <div class="col-xl-12">
+    <div class="settings-wrapper d-flex">
+      <app-settings-sidebar></app-settings-sidebar>
+      <div class="card flex-fill mb-0">
+        <form>
+          <div class="card-header">
+            <h4>GDPR Cookies</h4>
+          </div>
+          <div class="card-body">
+            <div class="localization-info">
+              <div class="row">
+                <div class="col-sm-4">
+                  <div class="setting-info">
+                    <h6>Cookies Consent Text</h6>
+                  </div>
+                </div>
+                <div class="col-sm-8">
+                  <div class="mb-3">
+                    <textarea  rows="4" class="form-control" placeholder="Type your message"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="row align-items-center">
+                <div class="col-sm-4">
+                  <div class="setting-info">
+                    <h6>Cookies Position</h6>
+                    <p>Your can configure the type</p>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="localization-select">
+                    <mat-select class="custom-mat-select select" placeholder="Left">
+                      <mat-option value="1">Left</mat-option>
+                      <mat-option value="1">Center</mat-option>
+                      <mat-option value="1">Right</mat-option>
+                    </mat-select>
+                  </div>
+                </div>
+              </div>
+              <div class="row align-items-center">
+                <div class="col-sm-4">
+                  <div class="setting-info">
+                    <h6>Agree Button Text</h6>
+                    <p>Your can configure the text here</p>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="localization-select d-flex align-items-center">
+                    <div class="mb-3">
+                      <input type="text" class="form-control" value="Agree">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row align-items-center">
+                <div class="col-sm-4">
+                  <div class="setting-info">
+                    <h6>Decline Button Text</h6>
+                    <p>Your can configure the text here</p>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="localization-select d-flex align-items-center">
+                    <div class="mb-3">
+                      <input type="text" class="form-control" value="Decline">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row align-items-center">
+                <div class="col-sm-4">
+                  <div class="setting-info">
+                    <h6>Show Decline Button</h6>
+                    <p>Your can configure the text here</p>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="localization-select d-flex align-items-center">
+                    <div class="status-toggle modal-status d-flex justify-content-between align-items-center me-3">
+                      <input type="checkbox" id="user4" class="check" checked>
+                      <label for="user4" class="checktoggle"></label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row align-items-center">
+                <div class="col-sm-4">
+                  <div class="setting-info">
+                    <h6>Link for Cookies Page</h6>
+                    <p>Your can configure the link here</p>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="localization-select d-flex align-items-center w-100">
+                    <div class="mb-3 w-100">
+                      <input type="text" class="form-control">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-flex align-items-center justify-content-end">
+              <button type="button" class="btn btn-secondary me-2">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,95 @@
+{
+  "data": [
+    {
+      "img": "supplier-06.png",
+      "reference": "INV/PO2025",
+      "id": "SU001",
+      "supplier": "Apex Computers",
+      "totalItems": 10,
+      "amount": "$1000",
+      "paymentMethod": "Cash",
+      "status": "Received"
+    },
+    {
+      "img": "supplier-07.png",
+      "reference": "INV/PO2031",
+      "id": "SU002",
+      "supplier": "Beats Headphones",
+      "totalItems": 15,
+      "amount": "$1500",
+      "paymentMethod": "Paypal",
+      "status": "Pending"
+    },
+    {
+      "img": "supplier-10.png",
+      "reference": "INV/PO2042",
+      "id": "SU003",
+      "supplier": "Dazzle Shoes",
+      "totalItems": 22,
+      "amount": "$1500",
+      "paymentMethod": "Paypal",
+      "status": "Received"
+    },
+    {
+      "img": "supplier-01.png",
+      "reference": "INV/PO2033",
+      "id": "SU004",
+      "supplier": "Best Accessories",
+      "totalItems": 14,
+      "amount": "$2000",
+      "paymentMethod": "Stripe",
+      "status": "Ordered"
+    },
+    {
+      "img": "supplier-02.png",
+      "reference": "INV/PO2042",
+      "id": "SU005",
+      "supplier": "A-Z Store",
+      "totalItems": 12,
+      "amount": "$800",
+      "paymentMethod": "Paypal",
+      "status": "Received"
+    },
+    {
+      "img": "supplier-04.png",
+      "reference": "INV/PO2011",
+      "id": "SU006",
+      "supplier": "Hatimi Hardwares",
+      "totalItems": 45,
+      "amount": "$750",
+      "paymentMethod": "Cash",
+      "status": "Pending"
+    },
+    {
+      "img": "supplier-03.png",
+      "reference": "INV/PO2014",
+      "id": "SU007",
+      "supplier": "Aesthetic Bags",
+      "totalItems": 21,
+      "amount": "$1300",
+      "paymentMethod": "Credit Card",
+      "status": "Received"
+    },
+    {
+      "img": "supplier-05.png",
+      "reference": "INV/PO2047",
+      "id": "SU009",
+      "supplier": "Sigma Chairs",
+      "totalItems": 25,
+      "amount": "$2300",
+      "paymentMethod": "Credit Card",
+      "status": "Ordered"
+    },
+    {
+      "img": "supplier-09.png",
+      "reference": "INV/PO2017",
+      "id": "SU010",
+      "supplier": "Zenith Bags",
+      "totalItems": 15,
+      "amount": "$1700",
+      "paymentMethod": "Stripe",
+      "status": "Pending"
+    }
+  ],
+  "totalData": 10
+}

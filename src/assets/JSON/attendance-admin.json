@@ -1,0 +1,127 @@
+{
+    "data": [
+      {
+        "employee": "Carl Evans",
+        "designation": "Designer",
+        "status": "Present",
+        "clockIn": "09:00 AM",
+        "clockOut": "07:15 PM",
+        "production": "09h 00m",
+        "break": "0h 45m",
+        "overtime": "0h 20m",
+        "totalHours": "09h 20m",
+        "img": "user-01.jpg"
+      },
+      {
+        "employee": "Minerva Rameriz",
+        "designation": "Administrator",
+        "status": "Present",
+        "clockIn": "09:15 AM",
+        "clockOut": "07:12 PM",
+        "production": "09h 00m",
+        "break": "01h 15m",
+        "overtime": "0h 12m",
+        "totalHours": "09h 12m",
+        "img": "user-28.jpg"
+      },
+      {
+        "employee": "Robert Lamon",
+        "designation": "Developer",
+        "status": "Present",
+        "clockIn": "09:40 AM",
+        "clockOut": "07:00 PM",
+        "production": "08h 45m",
+        "break": "01h 00m",
+        "overtime": "00h 00m",
+        "totalHours": "08h 45m",
+        "img": "user-12.jpg"
+      },
+      {
+        "employee": "Patricia Lewis",
+        "designation": "HR Manager",
+        "status": "Present",
+        "clockIn": "09:45 AM",
+        "clockOut": "08:10 PM",
+        "production": "09h 12m",
+        "break": "00h 50m",
+        "overtime": "00h 14m",
+        "totalHours": "09h 14m",
+        "img": "user-05.jpg"
+      },
+      {
+        "employee": "Mark Joslyn",
+        "designation": "Designer",
+        "status": "Absent",
+        "clockIn": "-",
+        "clockOut": "-",
+        "production": "-",
+        "break": "-",
+        "overtime": "-",
+        "totalHours": "-",
+        "img": "user-05.jpg"
+      },
+      {
+        "employee": "Marsha Betts",
+        "designation": "Developer",
+        "status": "Present",
+        "clockIn": "09:17 AM",
+        "clockOut": "07:34 PM",
+        "production": "09h 26m",
+        "break": "01h 20m",
+        "overtime": "00h 26m",
+        "totalHours": "09h 26m",
+        "img": "user-20.jpg"
+      },
+      {
+        "employee": "Daniel Jude",
+        "designation": "Administrator",
+        "status": "Absent",
+        "clockIn": "-",
+        "clockOut": "-",
+        "production": "-",
+        "break": "-",
+        "overtime": "-",
+        "totalHours": "-",
+        "img": "user-06.jpg"
+      },
+      {
+        "employee": "Emma Bates",
+        "designation": "HR Assistant",
+        "status": "Present",
+        "clockIn": "09:42 AM",
+        "clockOut": "07:20 PM",
+        "production": "09h 17m",
+        "break": "01h 00m",
+        "overtime": "00h 17m",
+        "totalHours": "09h 17m",
+        "img": "user-03.jpg"
+      },
+      {
+        "employee": "Richard Fralick",
+        "designation": "Designer",
+        "status": "Present",
+        "clockIn": "09:18 AM",
+        "clockOut": "07:11 PM",
+        "production": "09h 32m",
+        "break": "01h 15m",
+        "overtime": "00h 32m",
+        "totalHours": "09h 32m",
+        "img": "user-30.jpg"
+      },
+      {
+        "employee": "Michelle Robison",
+        "designation": "HR Manager",
+        "status": "Present",
+        "clockIn": "09:30 AM",
+        "clockOut": "08:10 PM",
+        "production": "09h 00m",
+        "break": "00h 34m",
+        "overtime": "00h 20m",
+        "totalHours": "09h 20m",
+        "img": "user-04.jpg"
+      }
+    ]
+    ,
+    "totalData": 10
+  }
+  

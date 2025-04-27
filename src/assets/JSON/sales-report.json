@@ -1,0 +1,115 @@
+{
+  "data": [
+    {
+      "productName": "Lenovo 3rd Generation",
+      "img": "assets/img/products/stock-img-01.png",
+      "SKU": "PT001",
+      "category": "Computers",
+      "brand": "Amazon",
+      "soldQty": "20",
+      "soldAmount": "$1000",
+      "isSelected": false,
+      "instockQty": "100"
+    },
+    {
+      "productName": "Bold V3.2",
+      "img": "assets/img/products/stock-img-06.png",
+      "SKU": "PT002",
+      "category": "Accessories",
+      "brand": "Apple",
+      "soldQty": "15",
+      "soldAmount": "$1200",
+      "isSelected": false,
+      "instockQty": "150"
+    },
+    {
+      "productName": "Nike Jordan",
+      "img": "assets/img/products/stock-img-02.png",
+      "SKU": "PT003",
+      "category": "Shoe",
+      "brand": "Apple",
+      "soldQty": "18",
+      "soldAmount": "$2000",
+      "isSelected": false,
+      "instockQty": "170"
+    },
+    {
+      "productName": "Apple Series 5 Watch",
+      "img": "assets/img/products/stock-img-03.png",
+      "SKU": "PT004",
+      "category": "Accessories",
+      "brand": "Arlime",
+      "soldQty": "25",
+      "soldAmount": "$300",
+      "isSelected": false,
+      "instockQty": "120"
+    },
+    {
+      "productName": "Amazon Echo Dot",
+      "img": "assets/img/products/stock-img-01.png",
+      "SKU": "PT005",
+      "category": "Accessories",
+      "brand": "Beats",
+      "soldQty": "10",
+      "soldAmount": "$500",
+      "isSelected": false,
+      "instockQty": "80"
+    },
+    {
+      "productName": "Lobar Handy",
+      "img": "assets/img/products/stock-img-05.png",
+      "SKU": "PT006",
+      "category": "Furnitures",
+      "brand": "Dior",
+      "soldQty": "28",
+      "soldAmount": "$200",
+      "isSelected": false,
+      "instockQty": "200"
+    },
+    {
+      "productName": "Red Premium Handy",
+      "img": "assets/img/products/expire-product-01.png",
+      "SKU": "PT007",
+      "category": "Accessories",
+      "brand": "Lenovo",
+      "soldQty": "30",
+      "soldAmount": "$120",
+      "isSelected": false,
+      "instockQty": "230"
+    },
+    {
+      "productName": "Iphone 14 Pro",
+      "img": "assets/img/products/expire-product-02.png",
+      "SKU": "PT008",
+      "category": "Phone",
+      "brand": "Modern Wave",
+      "soldQty": "35",
+      "soldAmount": "$2300",
+      "isSelected": false,
+      "instockQty": "370"
+    },
+    {
+      "productName": "Black Slim 200",
+      "img": "assets/img/products/expire-product-03.png",
+      "SKU": "PT009",
+      "category": "Furnitures",
+      "brand": "Nike",
+      "soldQty": "12",
+      "soldAmount": "$400",
+      "isSelected": false,
+      "instockQty": "260"
+    },
+    {
+      "productName": "Woodcraft Sandal",
+      "img": "assets/img/products/expire-product-04.png",
+      "SKU": "PT010",
+      "category": "Bags",
+      "brand": "The North Face",
+      "soldQty": "38",
+      "soldAmount": "$230",
+      "isSelected": false,
+      "instockQty": "340"
+    }
+  ],
+  "totalData": 10
+}

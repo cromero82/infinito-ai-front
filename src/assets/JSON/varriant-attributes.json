@@ -1,0 +1,66 @@
+{
+    "data": [
+        {
+          "variant": "size",
+          "values": ["XS", "S", "M", "L", "XL"],
+          "createdOn": "24 Dec 2024",
+          "status": "Active"
+        },
+        {
+          "variant": "color",
+          "values": ["Red", "Blue", "Green"],
+          "createdOn": "10 Dec 2024",
+          "status": "Active"
+        },
+        {
+          "variant": "capacity",
+          "values": ["Small", "Medium", "Large"],
+          "createdOn": "27 Nov 2024",
+          "status": "Active"
+        },
+        {
+          "variant": "material",
+          "values": ["Cotton", "Leather", "Synthetic"],
+          "createdOn": "18 Nov 2024",
+          "status": "Active"
+        },
+        {
+          "variant": "weight",
+          "values": ["Light", "Heavy"],
+          "createdOn": "06 Nov 2024",
+          "status": "Active"
+        },
+        {
+          "variant": "style",
+          "values": ["Casual", "Formal", "Sporty"],
+          "createdOn": "25 Oct 2024",
+          "status": "Active"
+        },
+        {
+          "variant": "pattern",
+          "values": ["Solid", "Striped", "Printed"],
+          "createdOn": "14 Oct 2024",
+          "status": "Active"
+        },
+        {
+          "variant": "memory",
+          "values": ["8 GB", "16 GB", "36 GB"],
+          "createdOn": "03 Oct 2024",
+          "status": "Active"
+        },
+        {
+          "variant": "storage",
+          "values": ["128 GB", "256 GB", "512 GB", "1TB"],
+          "createdOn": "20 Sep 2024",
+          "status": "Active"
+        },
+        {
+          "variant": "length",
+          "values": ["Short", "Regular", "Long"],
+          "createdOn": "10 Sep 2024",
+          "status": "Active"
+        }
+      ]
+      ,
+    "totalData": 10
+}

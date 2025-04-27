@@ -1,0 +1,158 @@
+
+				<!-- Page Header -->
+				<div class="page-header">
+					<div class="row">
+						<div class="col-sm-12">
+							<h3 class="page-title">Sortable JS</h3>
+						</div>
+					</div>
+				</div>
+				<!-- /Page Header -->
+
+                <!-- Start::row-1 -->
+                <div class="row">
+                    <div class="col-xl-5">
+                        <div class="card custom-card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    Basic Drag&Drop
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="basic-box" cdkDrag>
+                                    Drag me around
+                                  </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-7">
+                        <div class="card custom-card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    Drag&Drop sorting
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div cdkDropList class="example-list1" (cdkDropListDropped)="drop($event)">
+                                    @for (movie of movies; track movie) {
+                                      <div class="example-box1" cdkDrag>{{movie}}</div>
+                                    }
+                                  </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                <!--End::row-1 -->
+
+                <!-- Start:: row-2 -->
+                <div class="row">
+                    <div class="col-xl-12">
+                        <div class="card custom-card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    Drag&Drop connected sorting
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-xl-6">
+                                        <div class="example-container2">
+                                            <h2 class="mb-3">To do</h2>
+                                          
+                                            <div
+                                              cdkDropList
+                                              #todoList="cdkDropList"
+                                              [cdkDropListData]="todo"
+                                              [cdkDropListConnectedTo]="[doneList]"
+                                              class="example-list2"
+                                              (cdkDropListDropped)="drop1($event)">
+                                              @for (item of todo; track item) {
+                                                <div class="example-box2" cdkDrag>{{item}}</div>
+                                              }
+                                            </div>
+                                          </div>
+                                    </div>
+                                    <div class="col-xl-6">
+                                        <div class="example-container2">
+                                            <h2 class="mb-3">Done</h2>
+                                            <div
+                                              cdkDropList
+                                              #doneList="cdkDropList"
+                                              [cdkDropListData]="done"
+                                              [cdkDropListConnectedTo]="[todoList]"
+                                              class="example-list2"
+                                              (cdkDropListDropped)="drop1($event)">
+                                              @for (item of done; track item) {
+                                                <div class="example-box2" cdkDrag>{{item}}</div>
+                                              }
+                                            </div>
+                                          </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End:: row-2 -->
+
+                <!-- Start:: row-3 -->
+                <div class="row">
+                    <div class="col-xl-12">
+                        <div class="card custom-card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    Drag&Drop horizontal sorting
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div cdkDropList cdkDropListOrientation="horizontal" class="example-list3" (cdkDropListDropped)="drop3($event)">
+                                    @for (timePeriod of timePeriods; track timePeriod) {
+                                      <div class="example-box3" cdkDrag>{{timePeriod}}</div>
+                                    }
+                                  </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End:: row-3 -->
+
+                <!-- Start:: row-4 -->
+                <div class="row">
+                    <div class="col-xl-7">
+                        <div class="card custom-card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    Drag&Drop horizontal wrapping list
+                                </div>
+                            </div>
+                            <div class="card-body" id="sortable-grid">
+                                <div cdkDropList cdkDropListOrientation="mixed" class="example-list4" (cdkDropListDropped)="drop4($event)">
+                                    @for (item of items; track item) {
+                                    <div class="example-box4" cdkDrag>{{item}}</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-5">
+                        <div class="card custom-card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    Drag&Drop disabled
+                                </div>
+                            </div>
+                            <div class="card-body" id="sortable-grid">
+                                <div cdkDropList class="example-list5" (cdkDropListDropped)="drop5($event)">
+                                    @for (item of items1; track item) {
+                                    <div
+                                        class="example-box5"
+                                        cdkDrag
+                                        [cdkDragDisabled]="item.disabled">{{item.value}}</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End:: row-4 -->

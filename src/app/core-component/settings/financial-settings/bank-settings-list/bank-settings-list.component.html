@@ -1,0 +1,357 @@
+<div class="page-header settings-pg-header">
+  <div class="add-item d-flex">
+    <div class="page-title">
+      <h4>Settings</h4>
+      <h6>Manage your settings on portal</h6>
+    </div>
+  </div>
+  <ul class="table-top-head">
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" title="Refresh" matTooltip="Refresh"
+        matTooltipPosition="above"><i class="ti ti-refresh"></i></a>
+      </li>
+      <li>
+        <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" title="Collapse" matTooltip="Collapse"
+          matTooltipPosition="above" id="collapse-header"> @if (!isCollapsed) {
+          <i class="ti ti-chevron-up"></i>
+        }
+        @if (isCollapsed) {
+          <i class="ti ti-chevron-up"></i>
+        }</a>
+      </li>
+    </ul>
+  </div>
+  <div class="row">
+    <div class="col-xl-12">
+      <div class="settings-wrapper d-flex">
+        <app-settings-sidebar></app-settings-sidebar>
+        <div class="settings-page-wrap w-50">
+          <div class="setting-title">
+            <h4>Bank Account</h4>
+          </div>
+          <div class="page-header bank-settings justify-content-end">
+            <a [routerLink] = "routes.bankSettingsList" class="btn-list me-2 active"><i
+            class="feather icon-list feather-user"></i></a>
+            <a [routerLink] = "routes.bankSettingsGrid" class="btn-grid"><i
+            class="feather icon-grid feather-user"></i></a>
+            <div class="page-btn">
+              <a href="javascript:void(0);" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-account"><i
+              class="ti ti-circle-plus me-2"></i>Add New Account</a>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-12">
+              <div class="card table-list-card">
+                <div class="card-body">
+                  <div class="table-top">
+                    <div class="search-set">
+                      <div class="search-input">
+                        <a href="javascript:void(0);" class="btn btn-searchset"><i
+                        class="feather icon-search feather-search"></i></a>
+                        <div class="dataTables_filter">
+                          <label>
+                            <input [(ngModel)]="searchDataValue" [ngModelOptions]="{standalone: true}"
+                              (ngModelChange)="searchData(searchDataValue)" type="search"
+                              class="form-control" placeholder="Search..." />
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="search-path">
+                        <div class="d-flex align-items-center">
+                          <a class="btn btn-filter" id="filter_search" (click)="openFilter()" [ngClass]="{'setclose': filter === true}">
+                            <i class="feather icon-filter filter-icon"></i>
+                            <span><img src="assets/img/icons/closes.svg" alt="img"></span>
+                          </a>
+                        </div>
+                      </div>
+                      <div class="form-sort">
+                        <i class="feather icon-sliders info-img"></i>
+                        <mat-select [(ngModel)]="selectedValue1" [ngModelOptions]="{standalone: true}"
+                          class="select space-select" placeholder="Sort by Date">
+                          @for (data of selectedList1; track data) {
+                            <mat-option [value]="data.value">
+                              {{data.value}}
+                            </mat-option>
+                          }
+                        </mat-select>
+                      </div>
+                    </div>
+                    <!-- /Filter -->
+                    <div class="card" id="filter_inputs" [ngClass]="{'d-block': filter, 'd-none': !filter}">
+                      <div class="card-body pb-0">
+                        <div class="row">
+                          <div class="col-lg-4 col-sm-6 col-12">
+                            <div class="input-blocks">
+                              <i class="feather icon-user info-img"></i>
+                              <mat-select [(ngModel)]="selectedValue2"
+                                [ngModelOptions]="{standalone: true}" class="space-select select"
+                                placeholder="Choose Name">
+                                @for (data of selectedList2; track data) {
+                                  <mat-option
+                                    [value]="data.value">
+                                    {{data.value}}
+                                  </mat-option>
+                                }
+                              </mat-select>
+                            </div>
+                          </div>
+                          <div class="col-lg-4 col-sm-6 col-12">
+                            <div class="input-blocks">
+                              <i class="feather icon-edit-2 info-img"></i>
+                              <mat-select [(ngModel)]="selectedValue3"
+                                [ngModelOptions]="{standalone: true}" class="space-select select"
+                                placeholder="Choose Bank">
+                                @for (data of selectedList3; track data) {
+                                  <mat-option
+                                    [value]="data.value">
+                                    {{data.value}}
+                                  </mat-option>
+                                }
+                              </mat-select>
+                            </div>
+                          </div>
+                          <div class="col-lg-3 col-sm-6 col-12 ms-auto">
+                            <div class="input-blocks">
+                              <a class="btn btn-filters ms-auto"> <i
+                              class="feather icon-search feather-search"></i> Search </a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- /Filter -->
+                    <div class="table-responsive" (matSortChange)="sortData($event)" matSort
+                      matSortActive="Sno" matSortDirection="asc" matSortDisableClear>
+                      <table class="table  datanew">
+                        <thead>
+                          <tr>
+                            <th class="no-sort">
+                              <label class="checkboxs" (click)="selectAll(initChecked)">
+                                <input type="checkbox"  [(ngModel)]="initChecked">
+                                <span class="checkmarks"></span>
+                              </label>
+                            </th>
+                            <th mat-sort-header="name">Name</th>
+                            <th mat-sort-header="bank">Bank</th>
+                            <th mat-sort-header="branch">Branch</th>
+                            <th mat-sort-header="accountNo">Account No</th>
+                            <th mat-sort-header="ifsc">IFSC</th>
+                            <th mat-sort-header="createdOn">Created On</th>
+                            <th class="no-sort">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (data of tableData; track data) {
+                            <tr>
+                              <td>
+                                <label class="checkboxs">
+                                  <input type="checkbox">
+                                  <span class="checkmarks"></span>
+                                </label>
+                              </td>
+                              <td>
+                                {{data.name}}
+                              </td>
+                              <td>
+                                {{data.bank}}
+                              </td>
+                              <td>
+                                {{data.branch}}
+                              </td>
+                              <td>{{data.accountNo}}</td>
+                              <td>{{data.ifsc}}</td>
+                              <td>{{data.createdOn}}</td>
+                              <td class="action-table-data">
+                                <div class="edit-delete-action">
+                                  <a class="me-2 p-2" href="javascript:void(0);" data-bs-toggle="modal"
+                                    data-bs-target="#edit-account">
+                                    <i class="feather icon-edit feather-edit"></i>
+                                  </a>
+                                  <a class="confirm-text p-2" href="javascript:void(0);"
+                                    (click)="confirmColor()">
+                                    <i class="feather icon-trash-2 feather-trash-2"></i>
+                                  </a>
+                                </div>
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                    <app-custom-pagination></app-custom-pagination>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Add Bank Account -->
+    <div class="modal fade" id="add-account">
+      <div class="modal-dialog modal-dialog-centered custom-modal-two">
+        <div class="modal-content">
+          <div class="page-wrapper-new p-0">
+            <div class="content">
+              <div class="modal-header border-0 custom-modal-header custom-class-modal">
+                <div class="page-title">
+                  <h4>Add Bank Account</h4>
+                </div>
+                <div
+                  class="status-toggle modal-status d-flex justify-content-between align-items-center ms-auto me-2">
+                  <input type="checkbox" id="user1" class="check" checked>
+                  <label for="user1" class="checktoggle"> </label>
+                </div>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body custom-modal-body">
+                <form>
+                  <div class="row">
+                    <div class="col-lg-12">
+                      <div class="mb-3">
+                        <label class="form-label">Bank Name <span> *</span></label>
+                        <input type="text" class="form-control">
+                      </div>
+                    </div>
+                    <div class="col-lg-12">
+                      <div class="mb-3">
+                        <label class="form-label">Account Number <span> *</span></label>
+                        <input type="text" class="form-control">
+                      </div>
+                    </div>
+                    <div class="col-lg-12">
+                      <div class="mb-3">
+                        <label class="form-label">Account Name <span> *</span></label>
+                        <input type="text" class="form-control">
+                      </div>
+                    </div>
+                    <div class="col-lg-12">
+                      <div class="mb-3">
+                        <label class="form-label">Branch <span> *</span></label>
+                        <input type="text" class="form-control">
+                      </div>
+                    </div>
+                    <div class="col-lg-12">
+                      <div class="mb-3">
+                        <label class="form-label">IFSC <span> *</span></label>
+                        <input type="text" class="form-control">
+                      </div>
+                    </div>
+                    <div class="col-lg-12">
+                      <div
+                        class="status-toggle modal-status d-flex justify-content-between align-items-center mb-3">
+                        <span class="status-label">Status</span>
+                        <input type="checkbox" id="user2" class="check" checked="">
+                        <label for="user2" class="checktoggle"></label>
+                      </div>
+                    </div>
+                    <div class="col-lg-12">
+                      <div
+                        class="status-toggle modal-status d-flex justify-content-between align-items-center">
+                        <span class="status-label">Make as default</span>
+                        <input type="checkbox" id="user3" class="check" checked="">
+                        <label for="user3" class="checktoggle"></label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="modal-footer-btn">
+                    <button type="button" class="btn btn-cancel me-2"
+                    data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-submit">Submit</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /Add Bank Account -->
+
+    <!-- Edit Bank Account -->
+    <div class="modal fade" id="edit-account">
+      <div class="modal-dialog modal-dialog-centered custom-modal-two">
+        <div class="modal-content">
+          <div class="page-wrapper-new p-0">
+            <div class="content">
+              <div class="modal-header border-0 custom-modal-header">
+                <div class="page-title">
+                  <h4>Edit Bank Account</h4>
+                </div>
+                <div
+                  class="status-toggle modal-status d-flex justify-content-between align-items-center ms-auto me-2">
+                  <input type="checkbox" id="user4" class="check" checked>
+                  <label for="user4" class="checktoggle"> </label>
+                </div>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body custom-modal-body">
+                <form>
+                  <div class="row">
+                    <div class="col-lg-12">
+                      <div class="mb-3">
+                        <label class="form-label">Bank Name <span> *</span></label>
+                        <input type="text" class="form-control" value="HDFC">
+                      </div>
+                    </div>
+                    <div class="col-lg-12">
+                      <div class="mb-3">
+                        <label class="form-label">Account Number <span> *</span></label>
+                        <input type="text" class="form-control" value="**** **** 1832">
+                      </div>
+                    </div>
+                    <div class="col-lg-12">
+                      <div class="mb-3">
+                        <label class="form-label">Account Name <span> *</span></label>
+                        <input type="text" class="form-control" value="Mathew">
+                      </div>
+                    </div>
+                    <div class="col-lg-12">
+                      <div class="mb-3">
+                        <label class="form-label">Branch <span> *</span></label>
+                        <input type="text" class="form-control" value="Bringham">
+                      </div>
+                    </div>
+                    <div class="col-lg-12">
+                      <div class="mb-3">
+                        <label class="form-label">IFSC <span> *</span></label>
+                        <input type="text" class="form-control" value="124547">
+                      </div>
+                    </div>
+                    <div class="col-lg-12">
+                      <div
+                        class="status-toggle modal-status d-flex justify-content-between align-items-center mb-3">
+                        <span class="status-label">Status</span>
+                        <input type="checkbox" id="user5" class="check" checked="">
+                        <label for="user5" class="checktoggle"></label>
+                      </div>
+                    </div>
+                    <div class="col-lg-12">
+                      <div
+                        class="status-toggle modal-status d-flex justify-content-between align-items-center">
+                        <span class="status-label">Make as default</span>
+                        <input type="checkbox" id="user6" class="check" checked="">
+                        <label for="user6" class="checktoggle"></label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="modal-footer-btn">
+                    <button type="button" class="btn btn-cancel me-2"
+                    data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-submit">Save Changes</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /Edit Bank Account -->

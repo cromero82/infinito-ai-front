@@ -1,0 +1,96 @@
+{
+    "data": [
+        {
+           
+            "modules": "Employee",
+            "create": "",
+            "edit": "",
+            "delete": "",
+            "view": "",
+            "allowAll": ""
+        },
+        {
+            
+            "modules": "Holidays",
+            "create": "",
+            "edit": "",
+            "delete": "",
+            "view": "",
+            "allowAll": ""
+        },
+        {
+           
+            "modules": "Leaves",
+            "create": "",
+            "edit": "",
+            "delete": "",
+            "view": "",
+            "allowAll": ""
+        },
+        {
+            
+            "modules": "Events",
+            "create": "",
+            "edit": "",
+            "delete": "",
+            "view": "",
+            "allowAll": ""
+        },
+        {
+           
+            "modules": "Sales",
+            "create": "",
+            "edit": "",
+            "delete": "",
+            "view": "",
+            "allowAll": ""
+        },
+        {
+           
+            "modules": "Training",
+            "create": "",
+            "edit": "",
+            "delete": "",
+            "view": "",
+            "allowAll": ""
+        },
+        {
+           
+            "modules": "Reports",
+            "create": "",
+            "edit": "",
+            "delete": "",
+            "view": "",
+            "allowAll": ""
+        },
+        {
+           
+            "modules": "Tickets",
+            "create": "",
+            "edit": "",
+            "delete": "",
+            "view": "",
+            "allowAll": ""
+        },
+        {
+           
+            "modules": "Holidays",
+            "create": "",
+            "edit": "",
+            "delete": "",
+            "view": "",
+            "allowAll": ""
+        },
+        {
+           
+            "modules": "Payroll",
+            "create": "",
+            "edit": "",
+            "delete": "",
+            "view": "",
+            "allowAll": ""
+        }
+        
+    ],
+    "totalData": 5
+}

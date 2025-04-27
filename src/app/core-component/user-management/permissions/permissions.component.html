@@ -1,0 +1,189 @@
+<div class="page-header">
+  <div class="add-item d-flex">
+    <div class="page-title">
+      <h4>Permission</h4>
+      <h6>Manage your permissions</h6>
+    </div>
+  </div>
+  <ul class="table-top-head">
+    <li>
+      <a
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title="Pdf"
+        matTooltip="Pdf"
+        matTooltipPosition="above"
+        ><img src="assets/img/icons/pdf.svg" alt="img"
+      /></a>
+    </li>
+    <li>
+      <a
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title="Excel"
+        matTooltip="Excel"
+        matTooltipPosition="above"
+        ><img src="assets/img/icons/excel.svg" alt="img"
+      /></a>
+    </li>
+    <li>
+      <a
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title="Print"
+        matTooltip="Print"
+        matTooltipPosition="above"
+        ><i class="feather icon-printer feather-rotate-ccw"></i
+      ></a>
+    </li>
+    <li>
+      <a
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title="Refresh"
+        matTooltip="Refresh"
+        matTooltipPosition="above"
+        ><i class="ti ti-refresh"></i
+      ></a>
+    </li>
+    <li>
+      <a
+        (click)="toggleCollapse()" [class.active]="isCollapsed"
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title="Collapse"
+        matTooltip="Collapse"
+        matTooltipPosition="above"
+        id="collapse-header"
+        > @if (!isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }
+      @if (isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }</a>
+    </li>
+    <li>
+      <div class="page-btn">
+        <button type="button" [routerLink]="routes.rolesPermission" class="btn btn-primary"><i data-feather="arrow-left" class="feather icon-arrow-left me-2 text-white"></i> Back to Roles</button>
+      </div>
+    </li>
+  </ul>
+</div>
+<!-- /product list -->
+<div class="card table-list-card">
+  <div class="card-body">
+    <div class="table-top">
+      <div class="search-set">
+        <div class="search-input">
+          <a href="javascript:void(0);" class="btn btn-searchset"
+            ><i class="feather icon-search feather-search"></i
+          ></a>
+          <div class="dataTables_filter">
+            <label>
+              <input
+                [(ngModel)]="searchDataValue" [ngModelOptions]="{standalone: true}"
+                (ngModelChange)="searchData(searchDataValue)"
+                type="search"
+                class="form-control"
+                placeholder="Search"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex align-items-center">
+          <p class="mb-0 fw-medium text-gray-9 me-1">Role:</p>
+          <p>Admin</p>
+        </div>
+      </div>
+        <div class="table-responsive">
+          <table
+            class="table datanew"
+            (matSortChange)="sortData($event)"
+            matSort
+            matSortActive="Sno"
+            matSortDirection="asc"
+            matSortDisableClear
+            >
+            <thead class="thead-light">
+              <tr>
+                <th class="no-sort">
+              <label class="checkboxs" (click)="selectAll(initChecked)">
+                <input
+                  type="checkbox"
+                  id="select-all"
+                  [(ngModel)]="initChecked"
+                />
+                <span class="checkmarks"></span>
+              </label>
+            </th>
+                <th mat-sort-header="module">Modules</th>
+                <th class="no-sort">Allow all</th>
+                <th mat-sort-header="create">Read</th>
+                <th mat-sort-header="write">Write</th>
+                <th mat-sort-header="create">Create</th>
+                <th mat-sort-header="delete">Delete</th>
+                <th mat-sort-header="edit">Import</th>
+                <th mat-sort-header="view">Export</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (data of tableData; track data) {
+                <tr>
+                  <td>
+              <label class="checkboxs">
+                <input type="checkbox" [(ngModel)]="data.isSelected" />
+                <span class="checkmarks"></span>
+              </label>
+            </td>
+                  <td>{{ data.modules }}</td>
+                  <td>
+              <label class="checkboxs">
+                <input type="checkbox" [(ngModel)]="data.isSelected" />
+                <span class="checkmarks"></span>
+              </label>
+            </td>
+                  <td>
+              <label class="checkboxs">
+                <input type="checkbox" [(ngModel)]="data.isSelected" />
+                <span class="checkmarks"></span>
+              </label>
+            </td>
+                  <td>
+              <label class="checkboxs">
+                <input type="checkbox" [(ngModel)]="data.isSelected" />
+                <span class="checkmarks"></span>
+              </label>
+            </td>
+                  <td>
+              <label class="checkboxs">
+                <input type="checkbox" [(ngModel)]="data.isSelected" />
+                <span class="checkmarks"></span>
+              </label>
+            </td>
+                  <td>
+              <label class="checkboxs">
+                <input type="checkbox" [(ngModel)]="data.isSelected" />
+                <span class="checkmarks"></span>
+              </label>
+            </td>
+                  <td>
+              <label class="checkboxs">
+                <input type="checkbox" [(ngModel)]="data.isSelected" />
+                <span class="checkmarks"></span>
+              </label>
+            </td>
+                  <td>
+              <label class="checkboxs">
+                <input type="checkbox" [(ngModel)]="data.isSelected" />
+                <span class="checkmarks"></span>
+              </label>
+            </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- /product list -->

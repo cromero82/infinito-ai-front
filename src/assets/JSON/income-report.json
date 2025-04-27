@@ -1,0 +1,97 @@
+{
+    "data": [
+        {
+          "reference": "INV849",
+          "date": "24 Dec 2024",
+          "store": "Electro Mart",
+          "category": "Foreign investment",
+          "notes": "Categorize income derived",
+          "amount": "$200",
+          "paymentMethod": "Stripe"
+        },
+        {
+          "reference": "INV848",
+          "date": "10 Dec 2024",
+          "store": "Quantum Gadgets",
+          "category": "Product Export",
+          "notes": "Services that have been verified",
+          "amount": "$50",
+          "paymentMethod": "Paypal"
+        },
+        {
+          "reference": "INV847",
+          "date": "27 Nov 2024",
+          "store": "Prime Bazaar",
+          "category": "Installation",
+          "notes": "POS Installation for Store",
+          "amount": "$800",
+          "paymentMethod": "Cash"
+        },
+        {
+          "reference": "INV846",
+          "date": "18 Nov 2024",
+          "store": "Gadget World",
+          "category": "Product Sales",
+          "notes": "Services that have been verified",
+          "amount": "$100",
+          "paymentMethod": "Paypal"
+        },
+        {
+          "reference": "INV845",
+          "date": "06 Nov 2024",
+          "store": "Volt Vault",
+          "category": "Local Sale",
+          "notes": "Travel fare for client meeting",
+          "amount": "$700",
+          "paymentMethod": "Cash"
+        },
+        {
+          "reference": "INV844",
+          "date": "25 Oct 2024",
+          "store": "Elite Retail",
+          "category": "Service Fees",
+          "notes": "Services that have been verified",
+          "amount": "$1000",
+          "paymentMethod": "Cash"
+        },
+        {
+          "reference": "INV843",
+          "date": "14 Oct 2024",
+          "store": "Prime Mart",
+          "category": "Return/Refund Income",
+          "notes": "Flight tickets for meetings",
+          "amount": "$1200",
+          "paymentMethod": "Paypal"
+        },
+        {
+          "reference": "INV842",
+          "date": "03 Oct 2024",
+          "store": "NeoTech Store",
+          "category": "Foreign investment",
+          "notes": "Services that have been verified",
+          "amount": "$750",
+          "paymentMethod": "Stripe"
+        },
+        {
+          "reference": "INV841",
+          "date": "20 Sep 2024",
+          "store": "Urban Mart",
+          "category": "Product Export",
+          "notes": "Categorize income derived in office",
+          "amount": "$450",
+          "paymentMethod": "Stripe"
+        },
+        {
+          "reference": "INV840",
+          "date": "10 Sep 2024",
+          "store": "Travel Mart",
+          "category": "Return/Refund Income",
+          "notes": "Services that have been verified",
+          "amount": "$530",
+          "paymentMethod": "Cash"
+        }
+      ]
+      ,
+    "totalData": 10
+  }
+  

@@ -1,0 +1,327 @@
+<div class="page-header">
+    <div class="add-item d-flex">
+        <div class="page-title">
+            <h4>Subscriptions</h4>
+            <h6>Manage your subscriptions</h6>
+        </div>
+    </div>
+    <ul class="table-top-head">
+        <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Pdf"><img src="assets/img/icons/pdf.svg" alt="img"></a>
+        </li>
+        <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Excel"><img src="assets/img/icons/excel.svg" alt="img"></a>
+        </li>
+        <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Refresh" matTooltip="Refresh" matTooltipPosition="above">
+              <i class="ti ti-refresh"></i>
+            </a>
+          </li>
+          <li>
+            <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" title="Collapse" matTooltip="Collapse" atTooltipPosition="above" id="collapse-header">
+               @if (!isCollapsed) {
+              <i class="ti ti-chevron-up"></i>
+            }
+            @if (isCollapsed) {
+              <i class="ti ti-chevron-up"></i>
+            }</a>
+          </li>
+    </ul>
+</div>
+
+<div class="row">
+    <div class="col-xl-3 col-md-6 d-flex">
+        <div class="card flex-fill">
+            <div class="card-body ">
+                <div class="border-bottom pb-3 mb-3">
+                    <div class="row align-items-center">
+                        <div class="col-7">
+                            <div>
+                                <p class="text-truncate mb-1">Total Transaction</p>
+                                <h5>$5,340</h5>
+                            </div>
+                        </div>
+                        <div class="col-5">
+                            <div class="peity-chart">
+                                <apx-chart
+                                [series]="Areachart.series"
+                                [chart]="Areachart.chart"
+                                [colors]="Areachart.colors"
+                                [fill]="Areachart.fill"
+                                [xaxis]="Areachart.xaxis"
+                                [stroke]="Areachart.stroke"
+                                [tooltip]="Areachart.tooltip"
+                                [dataLabels]="Areachart.dataLabels"
+                                ></apx-chart>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex">
+                    <p class="d-flex align-items-center text-truncate">
+                        <span class="text-primary fs-12 d-flex align-items-center me-1">
+                        <i class="ti ti-arrow-wave-right-up me-1"></i>+19.01%</span>from
+                        last week
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 d-flex">
+        <div class="card flex-fill">
+            <div class="card-body ">
+                <div class="border-bottom pb-3 mb-3">
+                    <div class="row align-items-center">
+                        <div class="col-7">
+                            <div>
+                                <p class="text-truncate mb-1">Total Subscribers</p>
+                                <h5>600</h5>
+                            </div>
+                        </div>
+                        <div class="col-5">
+                            <div class="peity-chart">
+                                <apx-chart
+                  [series]="Areachart2.series"
+                  [chart]="Areachart2.chart"
+                  [colors]="Areachart2.colors"
+                  [fill]="Areachart2.fill"
+                  [xaxis]="Areachart2.xaxis"
+                  [stroke]="Areachart2.stroke"
+                  [tooltip]="Areachart2.tooltip"
+                  [dataLabels]="Areachart2.dataLabels"
+                ></apx-chart>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex">
+                    <p class="d-flex align-items-center text-truncate">
+                        <span class="text-primary fs-12 d-flex align-items-center me-1">
+                        <i class="ti ti-arrow-wave-right-up me-1"></i>+19.01%</span>from
+                        last week
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 d-flex">
+        <div class="card flex-fill">
+            <div class="card-body ">
+                <div class="border-bottom pb-3 mb-3">
+                    <div class="row align-items-center">
+                        <div class="col-7">
+                            <div>
+                                <p class="text-truncate mb-1">Active Subscribers</p>
+                                <h5>560</h5>
+                            </div>
+                        </div>
+                        <div class="col-5">
+                            <div class="peity-chart">
+                                <apx-chart
+                                [series]="Areachart3.series"
+                                [chart]="Areachart3.chart"
+                                [colors]="Areachart3.colors"
+                                [fill]="Areachart3.fill"
+                                [xaxis]="Areachart3.xaxis"
+                                [stroke]="Areachart3.stroke"
+                                [tooltip]="Areachart3.tooltip"
+                                [dataLabels]="Areachart3.dataLabels"
+                              ></apx-chart>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex">
+                    <p class="d-flex align-items-center text-truncate">
+                        <span class="text-primary fs-12 d-flex align-items-center me-1">
+                        <i class="ti ti-arrow-wave-right-up me-1"></i>+19.01%</span>from
+                        last week
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 d-flex">
+        <div class="card flex-fill">
+            <div class="card-body ">
+                <div class="border-bottom pb-3 mb-3">
+                    <div class="row align-items-center">
+                        <div class="col-7">
+                            <div>
+                                <p class="text-truncate mb-1">Expired Subscribers</p>
+                                <h5>40</h5>
+                            </div>
+                        </div>
+                        <div class="col-5">
+                            <div class="peity-chart">
+                                <apx-chart
+                                [series]="Areachart4.series"
+                                [chart]="Areachart4.chart"
+                                [colors]="Areachart4.colors"
+                                [fill]="Areachart4.fill"
+                                [xaxis]="Areachart4.xaxis"
+                                [stroke]="Areachart4.stroke"
+                                [tooltip]="Areachart4.tooltip"
+                                [dataLabels]="Areachart4.dataLabels"
+                              ></apx-chart>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex">
+                    <p class="d-flex align-items-center text-truncate">
+                        <span class="text-primary fs-12 d-flex align-items-center me-1">
+                        <i class="ti ti-arrow-wave-right-up me-1"></i>+19.01%</span>from
+                        last week
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- /product list -->
+<div class="card table-list-card">
+    <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+        <div class="search-set">
+            <div class="search-input">
+                <a href="javascript:void(0);" class="btn btn-searchset"><i class="feather icon-search feather-search"></i></a>
+                <div class="dataTables_filter">
+                  <label>
+                    <input [(ngModel)]="searchDataValue" [ngModelOptions]="{standalone: true}" (ngModelChange)="searchData(searchDataValue)"
+                      type="search" class="form-control" placeholder="Search" />
+                    </label>
+                  </div>
+                </div>
+        </div>
+        <div class="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+            <div class="dropdown me-2">
+                <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                    Select Plan
+                </a>
+                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Advanced (Monthly)</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Basic (Yearly)</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Enterprise (Monthly)</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="dropdown me-2">
+                <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                    Status
+                </a>
+                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Paid</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Unpaid</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="dropdown">
+                <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                    Sort By : Last 7 Days
+                </a>
+                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="custom-datatable-filter table-responsive">
+            <table class="table datatable">
+                <thead class="thead-light">
+                    <tr>
+                        
+ <th class="no-sort">
+    <label class="checkboxs" (click)="selectAll(initChecked)">
+      <input type="checkbox" id="select-all" [(ngModel)]="initChecked">
+      <span class="checkmarks"></span>
+    </label>
+  </th>
+                        <th>Subscriber</th>
+                        <th>Plan</th>
+                        <th>Billing Cycle</th>
+                        <th>Payment Method</th>
+                        <th>Amount</th>
+                        <th>Created Date</th>
+                        <th>Expiring On</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (data of tableData; track data) {
+                    <tr>
+                        <td>
+                            <label class="checkboxs">
+                              <input type="checkbox" [(ngModel)]="data.isSelected">
+                              <span class="checkmarks"></span>
+                            </label>
+                          </td>
+                      <td>
+                                              <div class="d-flex align-items-center file-name-icon">
+                                                  <a href="javascript:void(0);" class="avatar avatar-md border rounded-circle">
+                                                      <img src="assets/img/company/{{data?.Image}}" class="img-fluid" alt="img">
+                                                  </a>
+                                                  <div class="ms-2">
+                                                      <h6 class="fw-medium"><a href="javascript:void(0);">{{data.CompanyName}}</a></h6>
+                                                  </div>
+                                              </div>
+                                          </td>
+                      <td>{{data.Plan}}</td>
+                                          <td>{{data.BillCycle}} days</td>
+                                          <td>{{data.PaymentMethod}}</td>
+                                          <td>${{data.Amount}}</td>
+  
+                                          <td>{{data.CreatedDate}}</td>
+                                          <td>{{data.ExpiringDate}}</td>
+                                          <td>
+                                              <span class="badge d-inline-flex align-items-center badge-xs" [ngClass]="data.Status === 'Paid'? 'badge-success':'badge-danger'">
+                                                  <i class="ti ti-point-filled me-1"></i>{{data.Status}}
+                                              </span>
+                                          </td>
+                                          <td>
+                                            <div class="action-icon d-inline-flex">
+                                                <a href="javascript:void(0);" class="me-2 p-2 d-flex align-items-center border rounded" data-bs-toggle="modal" data-bs-target="#view_invoice"><i class="ti ti-file-invoice"></i></a>
+                                                <a href="javascript:void(0);" class="me-2 d-flex align-items-center border rounded p-2"><i class="ti ti-download"></i></a>
+                                                <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#delete_modal" class="d-flex align-items-center p-2 border rounded"><i class="ti ti-trash"></i></a>
+                                            </div>
+                                          </td>
+                    </tr>
+                    }
+                    @if (tableData.length === 0) {
+                    <tr>
+                      <td colspan="10">
+                        <h5 class="no-record">No matching records found</h5>
+                      </td>
+                    </tr>
+                    }
+                  </tbody>
+            </table>
+        </div>
+        <app-custom-pagination/>
+    </div>
+</div>
+<!-- /product list -->

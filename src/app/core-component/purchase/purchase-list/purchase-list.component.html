@@ -1,0 +1,797 @@
+<div class="page-header transfer">
+  <div class="add-item d-flex">
+    <div class="page-title">
+      <h4>Purchase List</h4>
+      <h6>Manage your purchases</h6>
+    </div>
+  </div>
+  <ul class="table-top-head">
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Pdf" matTooltipPosition="above"><img
+      src="assets/img/icons/pdf.svg" alt="img"></a>
+    </li>
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Excel" matTooltipPosition="above"><img
+      src="assets/img/icons/excel.svg" alt="img"></a>
+    </li>
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Refresh" matTooltipPosition="above"><i
+      class="ti ti-refresh"></i></a>
+    </li>
+    <li>
+      <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Collapse"
+        matTooltipPosition="above" id="collapse-header"> @if (!isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }
+      @if (isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }</a>
+    </li>
+  </ul>
+  <div class="d-flex purchase-pg-btn">
+    <div class="page-btn">
+      <a href="javascript:void(0);" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-units"><i
+      class="ti ti-circle-plus me-2"></i>Add Purchase</a>
+    </div>
+    <div class="page-btn import">
+      <a href="javascript:void(0);" class="btn btn-secondary color" data-bs-toggle="modal" data-bs-target="#view-notes"><i
+      class="feather icon-download me-2"></i>Import Purchase</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- /product list -->
+<div class="card table-list-card">
+  <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+    <div class="search-set">
+      <div class="search-input">
+        <a href="javascript:void(0);" class="btn btn-searchset"><i class="feather icon-search feather-search"></i></a>
+        <div class="dataTables_filter">
+          <label>
+            <input [(ngModel)]="searchDataValue" [ngModelOptions]="{standalone: true}" (ngModelChange)="searchData(searchDataValue)"
+              type="search" class="form-control" placeholder="Search" />
+            </label>
+          </div>
+        </div>
+    </div>
+    <div class="d-flex table-dropdown my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+      <div class="dropdown me-2">
+        <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+        Supplier
+        </a>
+        <ul class="dropdown-menu  dropdown-menu-end p-3">
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Electro Mart</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Quantum Gadgets</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Prime Bazaar</a>
+          </li>
+        </ul>
+      </div>				
+      <div class="dropdown me-2">
+        <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+          Status
+        </a>
+        <ul class="dropdown-menu  dropdown-menu-end p-3">
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Received</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Pending</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Ordered</a>
+          </li>
+        </ul>
+      </div>
+      <div class="dropdown me-2">
+        <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+        Payment Status
+        </a>
+        <ul class="dropdown-menu  dropdown-menu-end p-3">
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Paid</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Unpaid</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Overdue</a>
+          </li>
+        </ul>
+      </div>
+      <div class="dropdown">
+        <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+          Sort By : Last 7 Days
+        </a>
+        <ul class="dropdown-menu  dropdown-menu-end p-3">
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  
+  </div>
+  <div class="card-body">
+    <div class="table-responsive product-list">
+      <table matSort (matSortChange)="sortData($event)" class="table  datanew list">
+        <thead>
+          <tr>
+            <th class="no-sort">
+              <label class="checkboxs">
+                <input type="checkbox" id="select-all" (click)="selectAll(initChecked)">
+                <span class="checkmarks" [(ngModel)]="initChecked" ></span>
+              </label>
+              </th>
+            <th mat-sort-header="supplierName">Supplier Name</th>
+            <th mat-sort-header="reference">Reference</th>
+            <th mat-sort-header="date">Date</th>
+            <th mat-sort-header="status">Status</th>
+            <th mat-sort-header="grandTotal">Grand Total</th>
+            <th mat-sort-header="paid">Paid</th>
+            <th mat-sort-header="due">Due</th>
+            <th mat-sort-header="createdBy">Created by</th>
+            <th class="no-sort">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (data of tableData; track data) {
+            <tr>
+              <td>
+                <label class="checkboxs">
+                  <input type="checkbox" [(ngModel)]="data.isSelected">
+                  <span class="checkmarks"></span>
+                </label>
+              </td>
+              <td>{{data.supplierName}}</td>
+              <td>{{data.reference}} </td>
+              <td>{{data.date}}</td>
+              <td><span class="badges status-badge fs-10 p-1 px-2 rounded-1" [ngClass]="data.status==='Pending'?'badge-pending':data.status==='Ordered'?'bg-warning':''">{{data.status}}</span></td>
+              <td>{{data.total}}</td>
+              <td>{{data.paid}}</td>
+              <td>{{data.due}}</td>
+              <td>
+                <span class="p-1 pe-2 rounded-1   fs-10" [ngClass]="data.paymentStatus==='Paid'?'bg-success-transparent':data.paymentStatus==='Unpaid'?'bg-danger-transparent':'bg-warning-transparent'">
+                  <i class="ti ti-point-filled me-1 fs-11"></i>{{data.paymentStatus}}
+                </span>
+              </td>
+              <td class="action-table-data">
+                <div class="edit-delete-action">
+                  <a class="me-2 p-2" href="javascript:void(0);">
+                    <i  class="feather icon-eye"></i>
+                  </a>
+                  <a class="me-2 p-2" data-bs-toggle="modal" data-bs-target="#edit-units">
+                    <i class="feather icon-edit"></i>
+                  </a>
+                  <a data-bs-toggle="modal" data-bs-target="#delete-modal" class="p-2" href="javascript:void(0);">
+                    <i class="feather icon-trash-2"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-custom-pagination></app-custom-pagination>
+  </div>
+</div>
+<!-- /product list -->
+<!-- Add Purchase -->
+<div class="modal fade" id="add-units">
+  <div class="modal-dialog purchase modal-dialog-centered stock-adjust-modal">
+    <div class="modal-content">
+      <div class="page-wrapper-new p-0">
+        <div class="content">
+          <div class="modal-header border-0 custom-modal-header">
+            <div class="page-title">
+              <h4>Add Purchase</h4>
+            </div>
+            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body custom-modal-body">
+            <form>
+              <div class="row">
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                  <div class="input-blocks add-product">
+                    <label>Supplier Name</label>
+                    <div class="row">
+                      <div class="col-lg-10 col-sm-10 col-10">
+                        <mat-select [(ngModel)]="selectedValue6"
+                          [ngModelOptions]="{standalone: true}" class="select"
+                          placeholder="Select Customer">
+                          <mat-option value="Select Customer">Select Customer</mat-option>
+                          <mat-option value="Apex Computers">Apex Computers</mat-option>
+                          <mat-option value="Dazzle Shoes">Dazzle Shoes</mat-option>
+                          <mat-option value="Best Accessories">Best Accessories</mat-option>
+                        </mat-select>
+                      </div>
+                      <div class="col-lg-2 col-sm-2 col-2 ps-0">
+                        <div class="add-icon tab">
+                          <a href="javascript:void(0);"><i
+                          class="ti ti-circle-plus feather-plus-circles"></i></a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                  <div class="input-blocks">
+                    <label>Purchase Date</label>
+
+                    <div class="input-groupicon calender-input date-input1">
+                      <i class="feather icon-calendar info-img mt-1"></i>
+                      <input type="text" class="datetimepicker form-control" bsDatepicker container=".date-input1" placeholder="Choose">
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                  <div class="input-blocks">
+                    <label>Product Name</label>
+                    <mat-select [(ngModel)]="selectedValue7" [ngModelOptions]="{standalone: true}"
+                      class="select" placeholder="Choose">
+                      <mat-option value="Choose">Choose</mat-option>
+                      <mat-option value="Shoe">Shoe</mat-option>
+                      <mat-option value="Mobile">Mobile</mat-option>
+                    </mat-select>
+                  </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                  <div class="input-blocks">
+                    <label>Reference No</label>
+                    <input type="text" class="form-control">
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-12">
+                  <div class="input-blocks">
+                    <label>Product Name</label>
+                    <input type="text" class="form-control p-2" placeholder="Please type product code and select">
+                  </div>
+                </div>
+                <div class="col-lg-12">
+                  <div class="modal-body-table">
+                    <div class="table-responsive">
+                      <table class="table">
+                        <thead>
+                          <tr>
+                            <th>Product Name</th>
+                            <th>QTY</th>
+                            <th>Purchase Price($) </th>
+                            <th>Discount($) </th>
+                            <th>Tax %</th>
+                            <th>Tax Amount($)</th>
+                            <th class="text-end">Unit Cost($)</th>
+                            <th class="text-end">Total Cost ($) </th>
+                            <th></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>
+                              <div class="productimgname">
+                                <a href="javascript:void(0);"
+                                  class="product-img stock-img">
+                                  <img src="assets/img/products/stock-img-02.png"
+                                    alt="product">
+                                  </a>
+                                  <a href="javascript:void(0);">Nike Jordan</a>
+                                </div>
+                              </td>
+                              <td>
+                                <div class="product-quantity">
+                                  <span class="quantity-btn" (click)="reducePos(1)"><i
+                                  class="feather icon-minus-circle plus-circle"></i></span>
+                                  <input type="text" class="quntity-input" value="10" [value]="cartValue[1]">
+                                  <span class="quantity-btn" (click)="addPos(1)"><i
+                                  class="ti ti-circle-plus feather-search"></i></span>
+                                </div>
+                              </td>
+                              <td>2000</td>
+                              <td>500.00</td>
+                              <td>0.00</td>
+                              <td>0.00</td>
+                              <td>0.00</td>
+                              <td>1500</td>
+                              <td>
+                                <a class="delete-set"><img
+                                src="assets/img/icons/delete.svg" alt="svg"></a>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                  </div>
+                  <div class="row">
+                    <div class="col-lg-3 col-md-6 col-sm-12">
+                      <div class="input-blocks">
+                        <label>Order Tax</label>
+                        <input type="text" class="form-control p-2" value="0">
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-12">
+                      <div class="input-blocks">
+                        <label>Discount</label>
+                        <input type="text" class="form-control p-2" value="0">
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-12">
+                      <div class="input-blocks">
+                        <label>Shipping</label>
+                        <input type="text" class="form-control p-2" value="0">
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-12">
+                      <div class="input-blocks">
+                        <label>Status</label>
+                        <mat-select [(ngModel)]="selectedValue8"
+                          [ngModelOptions]="{standalone: true}" class="select"
+                          placeholder="Choose">
+                          <mat-option value="Choose">Choose</mat-option>
+                          <mat-option value="Received">Received</mat-option>
+                          <mat-option value="Pending">Pending</mat-option>
+                        </mat-select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-12">
+                  <div class="input-blocks summer-description-box">
+                    <label>Notes</label>
+                    <ngx-editor [editor]="editor">
+                      <ngx-editor-menu [editor]="editor" [toolbar]="toolbar" >
+                      </ngx-editor-menu>
+                   </ngx-editor>
+                  </div>
+                </div>
+                <div class="col-lg-12">
+                  <div class="modal-footer-btn">
+                    <button type="button" class="btn btn-cancel me-2"
+                    data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-submit">Submit</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /Add Purchase -->
+
+  <!-- Edit Purchase -->
+  <div class="modal fade" id="edit-units">
+    <div class="modal-dialog purchase modal-dialog-centered stock-adjust-modal">
+      <div class="modal-content">
+        <div class="page-wrapper-new p-0">
+          <div class="content">
+            <div class="modal-header border-0 custom-modal-header">
+              <div class="page-title">
+                <h4>Edit Purchase</h4>
+              </div>
+              <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body custom-modal-body">
+              <form>
+                <div>
+                  <div class="row">
+                    <div class="col-lg-3 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Supplier Name</label>
+                        <div class="row">
+                          <div class="col-lg-10 col-sm-10 col-10">
+                            <mat-select [(ngModel)]="selectedValue9"
+                              [ngModelOptions]="{standalone: true}" class="select"
+                              placeholder="Choose">
+                              <mat-option value="Dazzle Shoes">Dazzle Shoes</mat-option>
+                              <mat-option value="Apex Computers">Apex Computers</mat-option>
+                              <mat-option value="Beats Headphones">Beats
+                              Headphones</mat-option>
+                            </mat-select>
+                          </div>
+                          <div class="col-lg-2 col-sm-2 col-2 ps-0">
+                            <div class="add-icon tab">
+                              <a href="javascript:void(0);"><i
+                              class="ti ti-circle-plus feather-plus-circles"></i></a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Purchase Date </label>
+                        <div class="input-groupicon date-input2">
+                          <i class="feather icon-calendar info-img"></i>
+                          <input type="text" placeholder="19 Jan 2023" class="datetimepicker form-control"
+                            bsDatepicker container=".date-input2">
+                            <div class="addonset">
+                              <img src="assets/img/icons/calendars.svg" alt="img">
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="input-blocks">
+                          <label>Product Name</label>
+                          <mat-select [(ngModel)]="selectedValue10"
+                            [ngModelOptions]="{standalone: true}" class="select"
+                            placeholder="Choose">
+                            <mat-option value="Nike Jordan">Nike Jordan</mat-option>
+                          </mat-select>
+                        </div>
+                      </div>
+                      <div class="col-lg-3 col-sm-6 col-12">
+                        <div class="input-blocks">
+                          <label>Reference No.</label>
+                          <input type="text" value="010203">
+                        </div>
+                      </div>
+                      <div class="col-lg-12 col-sm-6 col-12">
+                        <div class="input-blocks">
+                          <label>Product</label>
+                          <div class="input-groupicon">
+                            <input type="text" placeholder="Scan/Search Product by code and select">
+                            <div class="addonset">
+                              <img src="assets/img/icons/scanners.svg" alt="img">
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-lg-12">
+                        <div class="modal-body-table">
+                          <div class="table-responsive">
+                            <table class="table">
+                              <thead>
+                                <tr>
+                                  <th>Product Name</th>
+                                  <th>QTY</th>
+                                  <th>Purchase Price($) </th>
+                                  <th>Discount($) </th>
+                                  <th>Tax %</th>
+                                  <th>Tax Amount($)</th>
+                                  <th class="text-end">Unit Cost($)</th>
+                                  <th class="text-end">Total Cost ($) </th>
+                                  <th></th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  <td>
+                                    <div class="productimgname">
+                                      <a href="javascript:void(0);"
+                                        class="product-img stock-img">
+                                        <img src="assets/img/products/stock-img-02.png"
+                                          alt="product">
+                                        </a>
+                                        <a href="javascript:void(0);">Nike Jordan</a>
+                                      </div>
+                                    </td>
+                                    <td>
+                                      <div class="product-quantity">
+                                        <span class="quantity-btn" (click)="reducePos(1)"><i
+                                        class="feather icon-minus-circle plus-circle"></i></span>
+                                        <input type="text" class="quntity-input" value="10" [value]="cartValue[1]">
+                                        <span class="quantity-btn" (click)="addPos(1)"><i
+                                        class="ti ti-circle-plus feather-search"></i></span>
+                                      </div>
+                                    </td>
+                                    <td>2000</td>
+                                    <td>500.00</td>
+                                    <td>0.00</td>
+                                    <td>0.00</td>
+                                    <td>0.00</td>
+                                    <td>1500</td>
+                                    <td>
+                                      <a class="delete-set"><img
+                                      src="assets/img/icons/delete.svg" alt="svg"></a>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="col-lg-12 float-md-right">
+                          <div class="total-order">
+                            <ul>
+                              <li>
+                                <h4>Order Tax</h4>
+                                <h5>$ 0.00</h5>
+                              </li>
+                              <li>
+                                <h4>Discount</h4>
+                                <h5>$ 0.00</h5>
+                              </li>
+                              <li>
+                                <h4>Shipping</h4>
+                                <h5>$ 0.00</h5>
+                              </li>
+                              <li class="total">
+                                <h4>Grand Total</h4>
+                                <h5>$1500.00</h5>
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="col-lg-3 col-sm-6 col-12">
+                          <div class="input-blocks">
+                            <label>Order Tax</label>
+                            <input type="text" class="form-control p-2" value="0">
+                          </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6 col-12">
+                          <div class="input-blocks">
+                            <label>Discount</label>
+                            <input type="text" class="form-control p-2" value="0">
+                          </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6 col-12">
+                          <div class="input-blocks">
+                            <label>Shipping</label>
+                            <input type="text" class="form-control p-2" value="0">
+                          </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6 col-12">
+                          <div class="input-blocks">
+                            <label>Status</label>
+                            <mat-select [(ngModel)]="selectedValue11"
+                              [ngModelOptions]="{standalone: true}" class="select"
+                              placeholder="Choose">
+                              <mat-option value="Sent">Sent</mat-option>
+                              <mat-option value="Ordered">Ordered</mat-option>
+                            </mat-select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-lg-12">
+                      <div class="input-blocks summer-description-box">
+                        <label>Description</label>
+                        <ngx-editor [editor]="editor1">
+                          <ngx-editor-menu [editor]="editor1" [toolbar]="toolbar" >
+                          </ngx-editor-menu>
+                       </ngx-editor>
+                      </div>
+                    </div>
+                    <div class="col-lg-12">
+                      <div class="modal-footer-btn">
+                        <button type="button" class="btn btn-cancel me-2"
+                        data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-submit">Save Changes</button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /Edit Purchase -->
+
+      <!-- Import Purchase -->
+      <div class="modal fade" id="view-notes">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="page-wrapper-new p-0">
+              <div class="content">
+                <div class="modal-header border-0 custom-modal-header">
+                  <div class="page-title">
+                    <h4>Import Purchase</h4>
+                  </div>
+                  <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body custom-modal-body">
+                  <form>
+                    <div class="row">
+                      <div class="col-lg-6 col-sm-6 col-12">
+                        <div class="input-blocks">
+                          <label>Supplier Name</label>
+                          <div class="row">
+                            <div class="col-lg-10 col-sm-10 col-10">
+                              <mat-select [(ngModel)]="selectedValue12"
+                                [ngModelOptions]="{standalone: true}" class="select"
+                                placeholder="Choose">
+                                <mat-option value="Choose">Choose</mat-option>
+                                <mat-option value="Apex Computers">Apex Computers</mat-option>
+                                <mat-option value="Apex Computers">Apex Computers</mat-option>
+                              </mat-select>
+                            </div>
+                            <div class="col-lg-2 col-sm-2 col-2 ps-0">
+                              <div class="add-icon tab">
+                                <a href="javascript:void(0);"><i
+                                class="ti ti-circle-plus feather-plus-circles"></i></a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 col-sm-6 col-12">
+                        <div class="input-blocks">
+                          <label>Purchase Status </label>
+                          <mat-select [(ngModel)]="selectedValue13" [ngModelOptions]="{standalone: true}"
+                            class="select" placeholder="Choose">
+                            <mat-option value="Choose">Choose</mat-option>
+                            <mat-option value="Received">Received</mat-option>
+                            <mat-option value="Ordered">Ordered</mat-option>
+                            <mat-option value="Pending">Pending</mat-option>
+                          </mat-select>
+                        </div>
+                      </div>
+                      <div class="col-lg-12 col-sm-6 col-12">
+                        <div class="row">
+                          <div>
+                            <!-- <div class="input-blocks download">
+                            <a class="btn btn-submit">Download Sample File</a>
+                          </div> -->
+                          <div class="modal-footer-btn download-file">
+                            <a href="javascript:void(0)" class="btn btn-submit">Download Sample
+                            File</a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-12">
+                      <div class="input-blocks image-upload-down">
+                        <label> Upload CSV File</label>
+                        <div class="image-upload download">
+                          <input type="file">
+                          <div class="image-uploads">
+                            <img src="assets/img/download-img.png" alt="img">
+                            <h4>Drag and drop a <span>file to upload</span></h4>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Order Tax</label>
+                        <input type="text" value="0">
+                      </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Discount</label>
+                        <input type="text" value="0">
+                      </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Shipping</label>
+                        <input type="text" value="0">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="input-blocks summer-description-box transfer">
+                    <label>Description</label>
+                    <div id="summernote3">
+                    </div>
+                    <p>Maximum 60 Characters</p>
+                  </div>
+                  <div class="modal-footer-btn">
+                    <button type="button" class="btn btn-cancel me-2"
+                    data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-submit">Submit</button>
+                  </div>
+                </form>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /Import Purchase -->
+
+     		<!-- delete modal -->
+		 <div class="modal fade" id="delete-modal">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="page-wrapper-new p-0">
+						<div class="content p-5 px-3 text-center">
+								<span class="rounded-circle d-inline-flex p-2 bg-danger-transparent mb-2"><i class="ti ti-trash fs-24 text-danger"></i></span>
+								<h4 class="fs-20 fw-bold mb-2 mt-1">Delete Purchase</h4>
+								<p class="mb-0 fs-16">Are you sure you want to delete purchase?</p>
+								<div class="modal-footer-btn mt-3 d-flex justify-content-center">
+									<button type="button" class="btn me-2 btn-secondary fs-13 fw-medium p-2 px-3 shadow-none" data-bs-dismiss="modal">Cancel</button>
+									<button type="submit" class="btn btn-submit fs-13 fw-medium p-2 px-3" data-bs-dismiss="modal">Yes Delete</button>
+								</div>						
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+    	<!-- Add Supplier -->
+	<div class="modal fade" id="add_customer">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<div class="page-title">
+						<h4>Add Supplier</h4>
+					</div>
+					<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<form action="purchase-list.html">
+					<div class="modal-body">
+						<div>
+							<label class="form-label">Supplier<span class="text-danger">*</span></label>
+							<input type="text" class="form-control">
+						</div>												
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn me-2 btn-secondary fs-13 fw-medium p-2 px-3 shadow-none" data-bs-dismiss="modal">Cancel</button>
+						<button  type="submit" class="btn btn-primary fs-13 fw-medium p-2 px-3">Add Supplier</button>
+					</div>						
+				</form>
+			</div>
+		</div>
+	</div>
+	<!-- /Add Supplier -->
+
+  	<!-- Add Supplier -->
+	<div class="modal fade" id="add_customer">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<div class="page-title">
+						<h4>Add Supplier</h4>
+					</div>
+					<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<form>
+					<div class="modal-body">
+						<div>
+							<label class="form-label">Supplier<span class="text-danger">*</span></label>
+							<input type="text" class="form-control">
+						</div>												
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn me-2 btn-secondary fs-13 fw-medium p-2 px-3 shadow-none" data-bs-dismiss="modal">Cancel</button>
+						<button  type="submit" class="btn btn-primary fs-13 fw-medium p-2 px-3">Add Supplier</button>
+					</div>						
+				</form>
+			</div>
+		</div>
+	</div>
+	<!-- /Add Supplier -->

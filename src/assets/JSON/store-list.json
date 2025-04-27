@@ -1,0 +1,76 @@
+{
+    "data": [
+        {
+          "storeName": "Electro Mart",
+          "userName": "johnsmith",
+          "email": "electromart@example.com",
+          "phone": "+12498345785",
+          "status": "Active"
+        },
+        {
+          "storeName": "Quantum Gadgets",
+          "userName": "janedoe",
+          "email": "quantum@example.com",
+          "phone": "+13178964582",
+          "status": "Active"
+        },
+        {
+          "storeName": "Prime Bazaar",
+          "userName": "sarahlee",
+          "email": "primebazaar@example.com",
+          "phone": "+12796183487",
+          "status": "Active"
+        },
+        {
+          "storeName": "Gadget World",
+          "userName": "alexbrown",
+          "email": "gadgetworld@example.com",
+          "phone": "+17538647943",
+          "status": "Active"
+        },
+        {
+          "storeName": "Volt Vault",
+          "userName": "jesswhite",
+          "email": "voltvault@example.com",
+          "phone": "+13798132475",
+          "status": "Active"
+        },
+        {
+          "storeName": "Elite Retail",
+          "userName": "emilydavis",
+          "email": "eliteretail@example.com",
+          "phone": "+17596341894",
+          "status": "Active"
+        },
+        {
+          "storeName": "Prime Mart",
+          "userName": "tomharris",
+          "email": "primemart@example.com",
+          "phone": "+12973548678",
+          "status": "Active"
+        },
+        {
+          "storeName": "NeoTech Store",
+          "userName": "sarahjohnson",
+          "email": "neotech@example.com",
+          "phone": "+13147858357",
+          "status": "Active"
+        },
+        {
+          "storeName": "Urban Mart",
+          "userName": "laurawilson",
+          "email": "urbanmart@example.com",
+          "phone": "+11978348626",
+          "status": "Active"
+        },
+        {
+          "storeName": "Travel Mart",
+          "userName": "robertwhite",
+          "email": "travelmart@example.com",
+          "phone": "+12678934561",
+          "status": "Active"
+        }
+      ]
+      ,
+    "totalData": 10
+  }

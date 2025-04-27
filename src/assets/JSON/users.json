@@ -1,0 +1,95 @@
+{
+  "data": [
+    {
+      "img": "user-47.png",
+      "userName": "Henry Bryant",
+      "phone": "+12163547758",
+      "email": "henry@example.com",
+      "role": "Admin",
+      "createdOn": "19 Jan 2023",
+      "status": "Active"
+    },
+    {
+      "img": "user-02.jpg",
+      "userName": "Jenny Ellisose",
+      "phone": "+11367529510",
+      "email": "jenny@example.com",
+      "role": "Manager",
+      "createdOn": "23 Jan 2023",
+      "status": "Active"
+    },
+    {
+      "img": "user-43.png",
+      "userName": "Leon Baxter",
+      "phone": "+15362789414",
+      "email": "leon@example.com",
+      "role": "Salesman",
+      "createdOn": "07 Feb 2023",
+      "status": "Active"
+    },
+    {
+      "img": "user-35.jpg",
+      "userName": "Karen Flores",
+      "phone": "+18513094627",
+      "email": "karen@example.com",
+      "role": "Supervisor",
+      "createdOn": "18 Feb 2023",
+      "status": "Active"
+    },
+    {
+      "img": "user-44.png",
+      "userName": "Michael Dawson",
+      "phone": "+14678219025",
+      "email": "michael@example.com",
+      "role": "Store Keeper",
+      "createdOn": "16 Mar 2023",
+      "status": "Active"
+    },
+    {
+      "img": "user-37.jpg",
+      "userName": "Karen Galvan",
+      "phone": "+10913278319",
+      "email": "karen@example.com",
+      "role": "Purchase",
+      "createdOn": "29 Mar 2023",
+      "status": "Active"
+    },
+    {
+      "img": "user-48.png",
+      "userName": "Thomas Ward",
+      "phone": "+19125852947",
+      "email": "thomas@example.com",
+      "role": "Delivery Biker",
+      "createdOn": "03 Apr 2023",
+      "status": "Active"
+    },
+    {
+      "img": "user-38.jpg",
+      "userName": "Aliza Duncan",
+      "phone": "+13671835209",
+      "email": "aliza@example.com",
+      "role": "Maintenance",
+      "createdOn": "13 Apr 2023",
+      "status": "Active"
+    },
+    {
+      "img": "user-45.png",
+      "userName": "James Higham",
+      "phone": "+19756194733",
+      "email": "james@example.com",
+      "role": "Quality Analyst",
+      "createdOn": "17 May 2023",
+      "status": "Active"
+    },
+    {
+      "img": "user-40.jpg",
+      "userName": "Jada Robinson",
+      "phone": "+19167850925",
+      "email": "robinson@example.com",
+      "role": "Accountant",
+      "createdOn": "21 May 2023",
+      "status": "Active"
+    }
+  ],
+  "totalData": 10
+}

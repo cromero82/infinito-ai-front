@@ -1,0 +1,48 @@
+<div class="account-content">
+    <div class="row login-wrapper m-0">
+        <div class="col-lg-6 p-0">
+            <div class="login-content">
+                <form class="digit-group">
+                    <div class="login-userset">
+                        <div class="login-logo logo-normal">
+                            <img src="assets/img/logo.svg" alt="img">
+                        </div>
+                        <a [routerLink]="routes.index" class="login-logo logo-white">
+                            <img src="assets/img/logo-white.svg"  alt="Img">
+                        </a>
+                        <div>
+                            <div class="login-userheading">
+                                <h3>Email OTP Verification</h3>
+                                <h4>OTP sent to your Email Address ending ******doe&#64;example.com</h4>
+                            </div>
+                            <div class="text-center otp-input">
+                                <div class="d-flex align-items-center mb-3">
+                                    <p-inputotp class="" [(ngModel)]="value" />
+                                </div>
+                                <div>
+                                    <div class="badge bg-danger-transparent mb-3">
+                                        <p class="d-flex align-items-center "><i class="ti ti-clock me-1"></i>09:59</p>
+                                    </div>
+                                    <div class="mb-3 d-flex justify-content-center">
+                                        <p class="text-gray-9">Didn't get the OTP? <a href="javascript:void(0);" class="text-primary">Resend OTP</a></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <button type="submit" class="btn btn-primary w-100" (click)="navigation()">Verify & Proceed</button>
+                            </div>
+                        </div>
+                        <div class="my-4 d-flex justify-content-center align-items-center copyright-text">
+                            <p>Copyright &copy; 2025 DreamsPOS</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-lg-6 p-0">
+            <div class="login-img">
+                <img src="assets/img/authentication/authentication-06.svg" alt="img">
+            </div>
+        </div>
+    </div>
+</div>

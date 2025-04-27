@@ -1,0 +1,87 @@
+{
+    "data":[
+        {
+          "expenseName": "Electricity Payment",
+          "category": "Utilities",
+          "description": "Electricity Bill",
+          "date": "24 Dec 2024",
+          "amount": "$200",
+          "status": "Approved"
+        },
+        {
+          "expenseName": "Stationery Purchase",
+          "category": "Office Supplies",
+          "description": "Stationery items for office",
+          "date": "10 Dec 2024",
+          "amount": "$50",
+          "status": "Pending"
+        },
+        {
+          "expenseName": "AC Repair Service",
+          "category": "Repairs & Maintenance",
+          "description": "AC Repair for Office",
+          "date": "27 Nov 2024",
+          "amount": "$800",
+          "status": "Approved"
+        },
+        {
+          "expenseName": "Social Media Promotion",
+          "category": "Marketing",
+          "description": "Social Media Ads Campaign",
+          "date": "18 Nov 2024",
+          "amount": "$100",
+          "status": "Approved"
+        },
+        {
+          "expenseName": "Client Meeting",
+          "category": "Travel Expenses",
+          "description": "Travel fare for client meeting",
+          "date": "06 Nov 2024",
+          "amount": "$700",
+          "status": "Approved"
+        },
+        {
+          "expenseName": "Team Lunch",
+          "category": "Employee Benefits",
+          "description": "Team Lunch at Restaurant",
+          "date": "25 Oct 2024",
+          "amount": "$1000",
+          "status": "Pending"
+        },
+        {
+          "expenseName": "Business Flight Ticket",
+          "category": "Travel Expenses",
+          "description": "Flight tickets for meetings",
+          "date": "14 Oct 2024",
+          "amount": "$1200",
+          "status": "Approved"
+        },
+        {
+          "expenseName": "Chair Purchase",
+          "category": "Office Supplies",
+          "description": "Ergonomic chairs for staff",
+          "date": "03 Oct 2024",
+          "amount": "$750",
+          "status": "Approved"
+        },
+        {
+          "expenseName": "Plumbing Service",
+          "category": "Repairs & Maintenance",
+          "description": "Plumbing repairs in office",
+          "date": "20 Sep 2024",
+          "amount": "$450",
+          "status": "Approved"
+        },
+        {
+          "expenseName": "Internet Bill Payment",
+          "category": "Utilities",
+          "description": "Monthly internet subscription",
+          "date": "10 Sep 2024",
+          "amount": "$300",
+          "status": "Pending"
+        }
+      ]
+      ,
+    "totalData": 10
+  }
+  

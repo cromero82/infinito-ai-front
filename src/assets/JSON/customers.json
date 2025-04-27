@@ -1,0 +1,96 @@
+{
+    "data":[
+        {
+          "code": "CU001",
+          "img": "user-33.png",
+          "customer": "Carl Evans",
+          "email": "carlevans@example.com",
+          "phone": "+12163547758",
+          "country": "Germany",
+          "status": "Active"
+        },
+        {
+          "code": "CU002",
+          "img": "user-02.jpg",
+          "customer": "Minerva Rameriz",
+          "email": "rameriz@example.com",
+          "phone": "+11367529510",
+          "country": "Japan",
+          "status": "Active"
+        },
+        {
+          "code": "CU003",
+          "img": "user-34.jpg",
+          "customer": "Robert Lamon",
+          "email": "robert@example.com",
+          "phone": "+15362789414",
+          "country": "USA",
+          "status": "Active"
+        },
+        {
+          "code": "CU004",
+          "img": "user-35.jpg",
+          "customer": "Patricia Lewis",
+          "email": "patricia@example.com",
+          "phone": "+18513094627",
+          "country": "Austria",
+          "status": "Active"
+        },
+        {
+          "code": "CU005",
+          "img": "user-36.jpg",
+          "customer": "Mark Joslyn",
+          "email": "markjoslyn@example.com",
+          "phone": "+14678219025",
+          "country": "Turkey",
+          "status": "Active"
+        },
+        {
+          "code": "CU006",
+          "img": "user-37.jpg",
+          "customer": "Marsha Betts",
+          "email": "marshabetts@example.com",
+          "phone": "+10913278319",
+          "country": "Mexico",
+          "status": "Active"
+        },
+        {
+          "code": "CU007",
+          "img": "user-28.jpg",
+          "customer": "Daniel Jude",
+          "email": "daieljude@example.com",
+          "phone": "+19125852947",
+          "country": "France",
+          "status": "Active"
+        },
+        {
+          "code": "CU008",
+          "img": "user-38.jpg",
+          "customer": "Emma Bates",
+          "email": "emmabates@example.com",
+          "phone": "+13671835209",
+          "country": "Greece",
+          "status": "Active"
+        },
+        {
+          "code": "CU009",
+          "img": "user-39.jpg",
+          "customer": "Richard Fralick",
+          "email": "richard@example.com",
+          "phone": "+19756194733",
+          "country": "Italy",
+          "status": "Active"
+        },
+        {
+          "code": "CU010",
+          "img": "user-40.jpg",
+          "customer": "Michelle Robison",
+          "email": "robinson@example.com",
+          "phone": "+19167850925",
+          "country": "China",
+          "status": "Active"
+        }
+      ]
+      ,
+    "totalData": 10
+  }

@@ -1,0 +1,216 @@
+<div class="attendance-header">
+  <div class="attendance-content">
+    <img src="./assets/img/icons/hand01.svg" class="hand-img" alt="img" />
+    <h3>Good Morning, <span>John Smilga</span></h3>
+  </div>
+  <div>
+    <ul class="table-top-head employe">
+      <li>
+        <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Pdf" matTooltipPosition="above"><img
+        src="assets/img/icons/pdf.svg" alt="img"></a>
+      </li>
+      <li>
+        <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Excel" matTooltipPosition="above"><img
+        src="assets/img/icons/excel.svg" alt="img"></a>
+      </li>
+      <li>
+        <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Refresh" matTooltipPosition="above"
+          title="Refresh"><i class="ti ti-refresh"></i></a>
+      </li>
+      <li>
+        <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" title="Collapse"
+          matTooltip="Collapse" matTooltipPosition="above" id="collapse-header"> @if (!isCollapsed) {
+          <i class="ti ti-chevron-up"></i>
+          }
+          @if (isCollapsed) {
+          <i class="ti ti-chevron-up"></i>
+          }</a>
+      </li>
+    </ul>
+  </div>
+</div>
+<div class="row">
+  <div class="col-xl-4 col-lg-12 d-flex">
+    <div class="card w-100 border-0">
+      <div class="card-body">
+        <h5 class="mb-3 pb-3 border-bottom d-flex justify-content-between align-items-center fs-18">Attendance<span class="text-purple fs-14">22 Aug 2023</span></h5>
+        <div class="d-flex align-items-center mb-3">
+          <div class="me-2">
+            <img src="./assets/img/icons/time-big.svg" alt="time-img">
+          </div>
+          <div>
+            <h2>05:45:22</h2>
+            <p>Current Time</p>
+          </div>
+        </div>
+        <div class="d-flex align-items-center">
+          <a href="javascript:void(0);" class="btn btn-primary w-100 me-2">Clock Out</a>
+          <a href="javascript:void(0);" class="btn btn-secondary me-2 w-100">Break</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-8 col-lg-12 d-flex">
+    <div class="card w-100 border-0">
+      <div class="card-body">
+        <h5 class="border-bottom pb-3 mb-3">Days Overview This Month</h5>
+        <div class="row gy-3">
+          <div class="col-lg-2 col-md-3 col-sm-4 text-center">
+            <div>
+              <span class="d-flex align-items-center justify-content-center avatar avatar-xl bg-primary-transparent fw-bold fs-20 mb-2 mx-auto">31</span>
+              <p class="fs-14">Total Working <br> Days</p>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3 col-sm-4 text-center">
+            <div>
+              <span class="d-flex align-items-center justify-content-center avatar avatar-xl bg-danger-transparent fw-bold fs-20 mb-2 mx-auto">05</span>
+              <p class="fs-14">Abesent <br>Days</p>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3 col-sm-4 text-center">
+            <div>
+              <span class="d-flex align-items-center justify-content-center avatar avatar-xl bg-purple-transparent text-purple fw-bold fs-20 mb-2 mx-auto">28</span>
+              <p class="fs-14">Present <br>Days</p>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3 col-sm-4 text-center">
+            <div>
+              <span class="d-flex align-items-center justify-content-center avatar avatar-xl bg-warning-transparent fw-bold fs-20 mb-2 mx-auto">02</span>
+              <p class="fs-14">Half<br> Days</p>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3 col-sm-4 text-center">
+            <div>
+              <span class="d-flex align-items-center justify-content-center avatar avatar-xl bg-cyan-transparent text-cyan fw-bold fs-20 mb-2 mx-auto">01</span>
+              <p class="fs-14">Late <br>Days</p>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3 col-sm-4 text-center">
+            <div>
+              <span class="d-flex align-items-center justify-content-center avatar avatar-xl bg-success-transparent text-success fw-bold fs-20 mb-2 mx-auto">02</span>
+              <p class="fs-14">Holidays</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- /product list -->
+<div class="card table-list-card">
+  <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+    <div class="search-set">
+      <div class="search-input">
+        <a href="javascript:void(0);" class="btn btn-searchset"
+          ><i class="feather icon-search feather-search"></i
+        ></a>
+        <div class="dataTables_filter">
+          <label>
+            <input
+              [(ngModel)]="searchDataValue"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="searchData(searchDataValue)"
+              type="search"
+              class="form-control"
+              placeholder="Search"
+            />
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="d-flex table-dropdown my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+      <div class="dropdown me-2">
+        <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+          Select Status
+        </a>
+        <ul class="dropdown-menu  dropdown-menu-end p-3">
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Present</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Absent</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Holiday</a>
+          </li>
+        </ul>
+      </div>
+      <div class="dropdown">
+        <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+          Sort By : Last 7 Days
+        </a>
+        <ul class="dropdown-menu  dropdown-menu-end p-3">
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="card-body pb-0">
+    <div class="table-responsive">
+      <table class="table datanew" (matSortChange)="sortData($event)" matSort matSortActive="Sno" matSortDirection="asc"
+        matSortDisableClear>
+        <thead class="thead-light">
+          <tr>
+            <th mat-sort-header="date">Date</th>
+            <th mat-sort-header="status">Status</th>
+            <th mat-sort-header="clockin">Clock In</th>
+            <th mat-sort-header="clockout">Clock Out</th>
+            <th mat-sort-header="production">Production</th>
+            <th mat-sort-header="break">Break</th>
+            <th mat-sort-header="overtime">Overtime</th>
+            <th mat-sort-header="progress">Progress</th>
+            <th>Total Hours</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (data of tableData; track data; let i = $index) {
+          <tr>
+            <td>{{ data.date }}</td>
+            <td>
+              <span class="badge  d-inline-flex align-items-center badge-xs" [ngClass]="{
+                'badge-success': data.status === 'Present',
+                'bg-danger': data.status === 'Absent',
+                'badge-purple ': data.status === 'Holiday'
+              }"><i class="ti ti-point-filled me-1"></i>{{ data.status }}</span>
+            </td>
+            <td>{{ data.clockIn }}</td>
+            <td>{{ data.clockOut }}</td>
+            <td>{{ data.production }}</td>
+            <td>{{ data.break }}</td>
+            <td>{{ data.overTime }}</td>
+            <td>
+              <div *ngIf="data.status==='Present'" class="progress attendance bg-secondary-transparent">
+                <div class="progress-bar progress-bar-success" role="progressbar" style="width: 60%"></div>
+                <div class="progress-bar progress-bar-warning" role="progressbar" style="width: 20%"></div>
+                <div class="progress-bar progress-bar-danger" role="progressbar" style="width: 10%"></div>
+              </div>
+              <div *ngIf="data.status==='Absent'|| data.status==='Holiday'" class="progress attendance bg-secondary-transparent">	
+              </div>
+            </td>
+            
+            <td>{{ data.totalHours }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+
+    </div>
+    <app-custom-pagination></app-custom-pagination>
+  </div>
+</div>

@@ -1,0 +1,788 @@
+<!-- Header -->
+<div [hidden]="page==='pos' || page === 'pos-2' || page === 'pos-3' || page === 'pos-4' || page === 'pos-5'" class="header">
+  <div class="main-header">
+  <!-- Logo -->
+  <div class="header-left active" (mouseover)="miniSideBarMouseHover('over')" (mouseout)="miniSideBarMouseHover('out')" >
+    <a [routerLink]="routes.index" class="logo logo-normal">
+      <img src="assets/img/logo.png" alt="">
+    </a>
+    <a [routerLink]="routes.index" class="logo logo-white">
+      <img src="assets/img/logo-white.png" alt="">
+    </a>
+    <a [routerLink]="routes.index" class="logo-small">
+      <img src="assets/img/logo-small.png" alt="">
+    </a>
+    <a id="toggle_btn" href="javascript:void(0);" (click)="toggleSidebar()" [ngClass]="{'d-none': page === 'pos'}">
+      <i class="feather icon-chevrons-left fs-14"></i>
+    </a>
+  </div>
+  <!-- /Logo -->
+
+  <a id="mobile_btn" class="mobile_btn" (click)="togglesMobileSideBar()" [ngClass]="{'d-none': page === 'pos'}">
+    <span class="bar-icon">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+  </a>
+
+  <!-- Header Menu -->
+  <ul class="nav user-menu">
+
+    <!-- Search -->
+    <li class="nav-item nav-searchinputs">
+      <div class="top-nav-search">
+        <a href="javascript:void(0);" class="responsive-search">
+          <i class="feather icon-search"></i>
+        </a>
+        <form action="#" class="dropdown">
+          <div class="searchinputs input-group dropdown-toggle" id="dropdownMenuClickable" data-bs-toggle="dropdown"
+            data-bs-auto-close="outside">
+            <input type="text" placeholder="Search">
+            <div class="search-addon">
+              <span><i class="ti ti-search"></i></span>
+            </div>
+            <span class="input-group-text">
+              <kbd class="d-flex align-items-center"><img src="assets/img/icons/command.svg" alt="img" class="me-1">K</kbd>
+            </span>
+          </div>
+          <div class="dropdown-menu search-dropdown" aria-labelledby="dropdownMenuClickable">
+            <div class="search-info">
+              <h6><span><i class="feather icon-search me-2"></i></span>Recent Searches
+              </h6>
+              <ul class="search-tags">
+                <li><a href="javascript:void(0);">Products</a></li>
+                <li><a href="javascript:void(0);">Sales</a></li>
+                <li><a href="javascript:void(0);">Applications</a></li>
+              </ul>
+            </div>
+            <div class="search-info">
+              <h6><span><i data-feather="help-circle" class="feather icon-help-circle me-2 feather-16"></i></span>Help</h6>
+              <p>How to Change Product Volume from 0 to 200 on Inventory management</p>
+              <p>Change Product Name</p>
+            </div>
+            <div class="search-info">
+              <h6><span><i data-feather="user" class="feather icon-user me-2 feather-16 feather-16"></i></span>Customers</h6>
+              <ul class="customers">
+                <li><a href="javascript:void(0);">Aron Varu<img src="assets/img/profiles/avator1.jpg" alt="Img" class="img-fluid"></a></li>
+                <li><a href="javascript:void(0);">Jonita<img src="assets/img/profiles/avatar-01.jpg" alt="Img" class="img-fluid"></a></li>
+                <li><a href="javascript:void(0);">Aaron<img src="assets/img/profiles/avatar-10.jpg" alt="Img" class="img-fluid"></a></li>
+              </ul>
+            </div>
+          </div>
+        </form>
+      </div>
+    </li>
+    <!-- /Search -->
+
+
+    <!-- Select Store -->
+    <li class="nav-item dropdown has-arrow main-drop select-store-dropdown">
+      <a href="javascript:void(0);" class="dropdown-toggle nav-link select-store" data-bs-toggle="dropdown">
+        <span class="user-info">
+          <span class="user-letter">
+            <img src="assets/img/store/store-01.png" alt="Store Logo" class="img-fluid">
+          </span>
+          <span class="user-detail">
+            <span class="user-name">Freshmart</span>
+          </span>
+        </span>
+      </a>
+      <div class="dropdown-menu dropdown-menu-right">
+        <a href="javascript:void(0);" class="dropdown-item">
+          <img src="assets/img/store/store-01.png" alt="Store Logo" class="img-fluid">Freshmart
+        </a>
+        <a href="javascript:void(0);" class="dropdown-item">
+          <img src="assets/img/store/store-02.png" alt="Store Logo" class="img-fluid"> Grocery Apex
+        </a>
+        <a href="javascript:void(0);" class="dropdown-item">
+          <img src="assets/img/store/store-03.png" alt="Store Logo" class="img-fluid"> Grocery Bevy
+        </a>
+        <a href="javascript:void(0);" class="dropdown-item">
+          <img src="assets/img/store/store-04.png" alt="Store Logo" class="img-fluid"> Grocery Eden
+        </a>
+      </div>
+    </li>
+    <!-- /Select Store -->
+
+    <li class="nav-item dropdown link-nav">
+      <a href="javascript:void(0);" class="btn btn-primary btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+        <i class="ti ti-circle-plus me-1"></i>Add New
+      </a>
+      <div class="dropdown-menu dropdown-xl dropdown-menu-center">
+        <div class="row g-2">
+          <div class="col-md-2">
+            <a [routerLink]="routes.categoryList" class="link-item">
+              <span class="link-icon">
+                <i class="ti ti-brand-codepen"></i>
+              </span>
+              <p>Category</p>
+            </a>
+          </div>
+          <div class="col-md-2">
+            <a [routerLink]="routes.addProduct" class="link-item">
+              <span class="link-icon">
+                <i class="ti ti-square-plus"></i>
+              </span>
+              <p>Product</p>
+            </a>
+          </div>
+          <div class="col-md-2">
+            <a [routerLink]="routes.categoryList" class="link-item">
+              <span class="link-icon">
+                <i class="ti ti-shopping-bag"></i>
+              </span>
+              <p>Purchase</p>
+            </a>
+          </div>
+          <div class="col-md-2">
+            <a [routerLink]="routes.salesList" class="link-item">
+              <span class="link-icon">
+                <i class="ti ti-shopping-cart"></i>
+              </span>
+              <p>Sale</p>
+            </a>
+          </div>
+          <div class="col-md-2">
+            <a [routerLink]="routes.expenseList"   class="link-item">
+              <span class="link-icon">
+                <i class="ti ti-file-text"></i>
+              </span>
+              <p>Expense</p>
+            </a>
+          </div>
+          <div class="col-md-2">
+            <a [routerLink]="routes.quotationList" class="link-item">
+              <span class="link-icon">
+                <i class="ti ti-device-floppy"></i>
+              </span>
+              <p>Quotation</p>
+            </a>
+          </div>
+          <div class="col-md-2">
+            <a [routerLink]="routes.createSalesReturns" class="link-item">
+              <span class="link-icon">
+                <i class="ti ti-copy"></i>
+              </span>
+              <p>Return</p>
+            </a>
+          </div>
+          <div class="col-md-2">
+            <a [routerLink]="routes.users" class="link-item">
+              <span class="link-icon">
+                <i class="ti ti-user"></i>
+              </span>
+              <p>User</p>
+            </a>
+          </div>
+          <div class="col-md-2">
+            <a [routerLink]="routes.customers" class="link-item">
+              <span class="link-icon">
+                <i class="ti ti-users"></i>
+              </span>
+              <p>Customer</p>
+            </a>
+          </div>
+          <div class="col-md-2">
+            <a [routerLink]="routes.salesReport" class="link-item">
+              <span class="link-icon">
+                <i class="ti ti-shield"></i>
+              </span>
+              <p>Biller</p>
+            </a>
+          </div>
+          <div class="col-md-2">
+            <a [routerLink]="routes.suppliers" class="link-item">
+              <span class="link-icon">
+                <i class="ti ti-user-check"></i>
+              </span>
+              <p>Supplier</p>
+            </a>
+          </div>
+          <div class="col-md-2">
+            <a [routerLink]="routes.stockTransfer" class="link-item">
+              <span class="link-icon">
+                <i class="ti ti-truck"></i>
+              </span>
+              <p>Transfer</p>
+            </a>
+          </div>
+        </div>
+      </div>
+    </li>
+    
+    <li class="nav-item pos-nav">
+      <a [routerLink]="routes.pos" class="btn btn-dark btn-md d-inline-flex align-items-center">
+        <i class="ti ti-device-laptop me-1"></i>POS
+      </a>
+    </li>
+
+    <!-- Flag -->
+    <li class="nav-item dropdown has-arrow flag-nav nav-item-box">
+      <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="javascript:void(0);"
+        role="button">
+        <img src="assets/img/flags/us-flag.svg" alt="Language" class="img-fluid">
+      </a>
+      <div class="dropdown-menu dropdown-menu-right">
+        <a href="javascript:void(0);" class="dropdown-item">
+          <img src="assets/img/flags/english.svg" alt="Img" height="16">English
+        </a>
+        <a href="javascript:void(0);" class="dropdown-item">
+          <img src="assets/img/flags/arabic.svg" alt="Img" height="16">Arabic
+        </a>
+      </div>
+    </li>
+    <!-- /Flag -->
+
+
+    <li class="nav-item nav-item-box">
+      <a href="javascript:void(0);" id="btnFullscreen" (click)="fullscreen()">
+        <i class="ti ti-maximize"></i>
+      </a>
+    </li>
+    <li class="nav-item nav-item-box">
+      <a [routerLink] = "routes.email">
+        <i class="ti ti-mail"></i>
+        <span class="badge rounded-pill">1</span>
+      </a>
+    </li>
+
+    
+    <!-- Notifications -->
+    <li class="nav-item dropdown nav-item-box">
+      <a href="javascript:void(0);" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
+        <i class="ti ti-bell"></i>
+      </a>
+      <div class="dropdown-menu notifications">
+        <div class="topnav-dropdown-header">
+          <h5 class="notification-title">Notifications</h5>
+          <a href="javascript:void(0)" class="clear-noti">Mark all as read</a>
+        </div>
+        <div class="noti-content">
+          <ul class="notification-list">
+            <li class="notification-message">
+              <a [routerLink]="routes.activities">
+                <div class="media d-flex">
+                  <span class="avatar flex-shrink-0">
+                    <img alt="Img" src="assets/img/profiles/avatar-13.jpg">
+                  </span>
+                  <div class="flex-grow-1">
+                    <p class="noti-details"><span class="noti-title">James Kirwin</span> confirmed his order.  Order No: #78901.Estimated delivery: 2 days</p>
+                    <p class="noti-time">4 mins ago</p>
+                  </div>
+                </div>
+              </a>
+            </li>
+            <li class="notification-message">
+              <a [routerLink]="routes.activities">
+                <div class="media d-flex">
+                  <span class="avatar flex-shrink-0">
+                    <img alt="Img" src="assets/img/profiles/avatar-03.jpg">
+                  </span>
+                  <div class="flex-grow-1">
+                    <p class="noti-details"><span class="noti-title">Leo Kelly</span> cancelled his order scheduled for  17 Jan 2025</p>
+                    <p class="noti-time">10 mins ago</p>
+                  </div>
+                </div>
+              </a>
+            </li>
+            <li class="notification-message">
+              <a [routerLink]="routes.activities" class="recent-msg">
+                <div class="media d-flex">
+                  <span class="avatar flex-shrink-0">
+                    <img alt="Img" src="assets/img/profiles/avatar-17.jpg">
+                  </span>
+                  <div class="flex-grow-1">
+                    <p class="noti-details">Payment of $50 received for Order #67890 from <span class="noti-title">Antonio Engle</span></p>
+                    <p class="noti-time">05 mins ago</p>
+                  </div>
+                </div>
+              </a>
+            </li>
+            <li class="notification-message">
+              <a [routerLink]="routes.activities" class="recent-msg">
+                <div class="media d-flex">
+                  <span class="avatar flex-shrink-0">
+                    <img alt="Img" src="assets/img/profiles/avatar-02.jpg">
+                  </span>
+                  <div class="flex-grow-1">
+                    <p class="noti-details"><span class="noti-title">Andrea</span> confirmed his order.  Order No: #73401.Estimated delivery: 3 days</p>
+                    <p class="noti-time">4 mins ago</p>
+                  </div>
+                </div>
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="topnav-dropdown-footer d-flex align-items-center gap-3">
+          <a href="javascript:void(0);" class="btn btn-secondary btn-md w-100">Cancel</a>
+          <a [routerLink]="routes.activities" class="btn btn-primary btn-md w-100">View all</a>
+        </div>
+      </div>
+    </li>
+    <!-- /Notifications -->
+
+    <li class="nav-item nav-item-box">
+      <a [routerLink] = "routes.generalSettings"><i class="ti ti-settings"></i></a>
+    </li>
+    <li class="nav-item dropdown has-arrow main-drop profile-nav">
+      <a href="javascript:void(0);" class="nav-link userset" data-bs-toggle="dropdown">
+        <span class="user-info p-0">
+          <span class="user-letter">
+            <img src="assets/img/profiles/avator1.jpg" alt="Img" class="img-fluid">
+          </span>
+        </span>
+      </a>
+      <div class="dropdown-menu menu-drop-user">
+        <div class="profileset d-flex align-items-center">
+          <span class="user-img me-2">
+            <img src="assets/img/profiles/avator1.jpg" alt="Img">
+          </span>
+          <div>
+            <h6 class="fw-medium">John Smilga</h6>
+            <p>Admin</p>
+          </div>
+        </div>
+        <a class="dropdown-item" [routerLink]="routes.profile"><i class="ti ti-user-circle me-2"></i>MyProfile</a>
+        <a class="dropdown-item" [routerLink]="routes.salesReport"><i class="ti ti-file-text me-2"></i>Reports</a>
+        <a class="dropdown-item" [routerLink]="routes.generalSettings"><i class="ti ti-settings-2 me-2"></i>Settings</a>
+        <hr class="my-2">
+        <a class="dropdown-item logout pb-0" [routerLink]="routes.signIn"><i class="ti ti-logout me-2"></i>Logout</a>
+      </div>
+    </li>
+  </ul>
+  <!-- /Header Menu -->
+
+  <!-- Mobile Menu -->
+  <div class="dropdown mobile-user-menu">
+    <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i
+        class="fa fa-ellipsis-v"></i></a>
+    <div class="dropdown-menu dropdown-menu-right">
+      <a class="dropdown-item" [routerLink] = "routes.profile">My Profile</a>
+      <a class="dropdown-item" [routerLink] = "routes.generalSettings">Settings</a>
+      <a class="dropdown-item" [routerLink] = "routes.signIn">Logout</a>
+    </div>
+  </div>
+  <!-- /Mobile Menu -->
+</div>
+</div>
+<!-- /Header -->
+
+
+<!-- Pos Header -->
+<div class="header pos-header" *ngIf="page==='pos' || page === 'pos-2' || page === 'pos-3' || page === 'pos-4' || page === 'pos-5'">
+			
+  <!-- Logo -->
+   <div class="header-left active">
+    <a [routerLink]="routes.index" class="logo logo-normal">
+      <img src="assets/img/logo.png"  alt="Img">
+    </a>
+    <a [routerLink]="routes.index" class="logo logo-white">
+      <img src="assets/img/logo-white.png"  alt="Img">
+    </a>
+    <a [routerLink]="routes.index" class="logo-small">
+      <img src="assets/img/logo-small.png"  alt="Img">
+    </a>
+  </div>
+  <!-- /Logo -->
+  
+  <a id="mobile_btn" class="mobile_btn d-none" href="#sidebar">
+    <span class="bar-icon">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+  </a>
+  
+  <!-- Header Menu -->
+  <ul class="nav user-menu">
+
+    <!-- Search -->
+    <li class="nav-item time-nav">
+      <span class="bg-teal text-white d-inline-flex align-items-center"><img src="assets/img/icons/clock-icon.svg" alt="img" class="me-2">09:25:32</span>
+    </li>
+    <!-- /Search -->
+    
+    <li class="nav-item pos-nav">
+      <a [routerLink]="routes.index" class="btn btn-purple btn-md d-inline-flex align-items-center">
+        <i class="ti ti-world me-1"></i>Dashboard
+      </a>
+    </li>
+
+    <!-- Select Store -->
+    <li class="nav-item dropdown has-arrow main-drop select-store-dropdown">
+      <a href="javascript:void(0);" class="dropdown-toggle nav-link select-store"
+        data-bs-toggle="dropdown">
+        <span class="user-info">
+          <span class="user-letter">
+            <img src="assets/img/store/store-01.png" alt="Store Logo" class="img-fluid">
+          </span>
+          <span class="user-detail">
+            <span class="user-name">Freshmart</span>
+          </span>
+        </span>
+      </a>
+      <div class="dropdown-menu dropdown-menu-right">
+        <a href="javascript:void(0);" class="dropdown-item">
+          <img src="assets/img/store/store-01.png" alt="Store Logo" class="img-fluid">Freshmart
+        </a>
+        <a href="javascript:void(0);" class="dropdown-item">
+          <img src="assets/img/store/store-02.png" alt="Store Logo" class="img-fluid">Grocery Apex
+        </a>
+        <a href="javascript:void(0);" class="dropdown-item">
+          <img src="assets/img/store/store-03.png" alt="Store Logo" class="img-fluid">Grocery Bevy
+        </a>
+        <a href="javascript:void(0);" class="dropdown-item">
+          <img src="assets/img/store/store-04.png" alt="Store Logo" class="img-fluid">Grocery Eden
+        </a>
+      </div>
+    </li>
+    <!-- /Select Store -->
+    
+    <li class="nav-item nav-item-box">
+      <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#calculator" class="bg-orange border-orange text-white"><i class="ti ti-calculator"></i></a>
+    </li>
+    <li class="nav-item nav-item-box">
+      <a href="javascript:void(0);" id="btnFullscreen" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Maximize" (click)="fullscreen()">
+        <i class="ti ti-maximize"></i>
+      </a>
+    </li>
+    <li class="nav-item nav-item-box" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Cash Register">
+      <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#cash-register"><i class="ti ti-cash"></i></a>
+    </li>
+    <li class="nav-item nav-item-box" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Print Last Reciept">
+      <a href="javascript:void(0);"><i class="ti ti-printer"></i></a>
+    </li>
+    <li class="nav-item nav-item-box" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Today’s Sale">
+      <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#today-sale"><i class="ti ti-progress"></i></a>
+    </li>
+    <li class="nav-item nav-item-box" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Today’s Profit">
+      <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#today-profit"><i class="ti ti-chart-infographic"></i></a>
+    </li>
+    <li class="nav-item nav-item-box" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="POS Settings">
+      <a [routerLink]="routes.posSettings"><i class="ti ti-settings"></i></a>
+    </li>
+    <li class="nav-item dropdown has-arrow main-drop profile-nav">
+      <a href="javascript:void(0);" class="nav-link userset" data-bs-toggle="dropdown">
+        <span class="user-info p-0">
+          <span class="user-letter">
+            <img src="assets/img/profiles/avator1.jpg" alt="Img" class="img-fluid">
+          </span>
+        </span>
+      </a>
+      <div class="dropdown-menu menu-drop-user">
+        <div class="profilename">
+          <div class="profileset">
+            <span class="user-img"><img src="assets/img/profiles/avator1.jpg" alt="Img">
+              <span class="status online"></span></span>
+            <div class="profilesets">
+              <h6>John Smilga</h6>
+              <h5>Super Admin</h5>
+            </div>
+          </div>
+          <hr class="m-0">
+          <a class="dropdown-item" [routerLink]="routes.profile"><i class="me-2" data-feather="user"></i>My
+            Profile</a>
+          <a class="dropdown-item" [routerLink]="routes.generalSettings"><i class="me-2" data-feather="settings"></i>Settings</a>
+          <hr class="m-0">
+          <a class="dropdown-item logout pb-0" [routerLink]="routes.signIn"><img src="assets/img/icons/log-out.svg" class="me-2" alt="img">Logout</a>
+        </div>
+      </div>
+    </li>
+  </ul>
+  <!-- /Header Menu -->
+  
+  <!-- Mobile Menu -->
+  <div class="dropdown mobile-user-menu">
+    <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+    <div class="dropdown-menu dropdown-menu-right">
+      <a class="dropdown-item" [routerLink]="routes.profile" >My Profile</a>
+      <a class="dropdown-item" [routerLink]="routes.generalSettings" >Settings</a>
+      <a class="dropdown-item" [routerLink]="routes.signIn" >Logout</a>
+    </div>
+  </div>
+  <!-- /Mobile Menu -->
+</div>
+<!-- /Pos Header -->
+
+		 <!-- Calculator -->
+     <div class="modal fade pos-modal" id="calculator" tabindex="-1"  aria-hidden="true">
+			<div class="modal-dialog modal-md modal-dialog-centered" role="document">
+				<div class="modal-content">
+					<div class="modal-body p-0">
+						<div class="calculator-wrap">
+							<div class="p-3">
+								<div class="d-flex align-items-center">
+									<h3>Calculator</h3>
+									<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+										<span aria-hidden="true">×</span>
+									</button>
+								</div>							
+								<div>
+									<input class="input" type="text" [(ngModel)]="inputValue"
+                  (keydown)="onKeyPress($event)" placeholder="0" readonly>
+								</div>
+							</div>
+							<div class="calculator-body d-flex justify-content-between">
+								<div class="text-center">
+                  <button class="btn btn-clear" (click)="clear()">C</button>
+                  <button class="btn btn-number" (click)="addValue('7')">7</button>
+                  <button class="btn btn-number" (click)="addValue('4')">4</button>
+                  <button class="btn btn-number" (click)="addValue('1')">1</button>
+                  <button class="btn btn-number" (click)="addValue(',')">,</button>
+								</div>
+								<div class="text-center">
+                  <button class="btn btn-expression" (click)="addValue('/')">÷</button>
+                  <button class="btn btn-number" (click)="addValue('8')">8</button>
+                  <button class="btn btn-number" (click)="addValue('5')">5</button>
+                  <button class="btn btn-number" (click)="addValue('2')">2</button>
+                  <button class="btn btn-number" (click)="addValue('0')">0</button>								
+								</div>
+								<div class="text-center">
+                  
+                  <button class="btn btn-expression" (click)="addValue('%')">%</button>
+                  <button class="btn btn-number" (click)="addValue('9')">9</button>
+                  <button class="btn btn-number" (click)="addValue('6')">6</button>
+                  <button class="btn btn-number" (click)="addValue('3')">3</button>
+                  <button class="btn btn-number" (click)="addValue('.')">.</button>								
+								</div>
+								<div class="text-center">
+                  <button class="btn btn-clear" (click)="backspace()"><i class="ti ti-backspace"></i></button>
+                  <button class="btn btn-expression" (click)="addValue('*')">x</button>
+                  <button class="btn btn-expression" (click)="addValue('-')">-</button>
+                  <button class="btn btn-expression" (click)="addValue('+')">+</button>
+                  <button class="btn btn-clear" (click)="solve()">=</button>						
+								</div>
+							</div>							
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /Calculator -->
+
+    		<!-- Cash Register Details -->
+		<div class="modal fade pos-modal" id="cash-register" tabindex="-1"  aria-hidden="true">
+			<div class="modal-dialog modal-md modal-dialog-centered" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						 <h5 class="modal-title">Cash Register Details</h5>
+						<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">×</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<div class="table-responsive">
+							<table class="table table-striped border">
+								<tr>
+									<td>Cash in Hand</td>
+									<td class="text-gray-9 fw-medium text-end">$45689</td>
+								</tr>
+								<tr>
+									<td>Total Sale Amount</td>
+									<td class="text-gray-9 fw-medium text-end">$565597.88</td>
+								</tr>
+								<tr>
+									<td>Total Payment</td>
+									<td class="text-gray-9 fw-medium text-end">$566867.97</td>
+								</tr>
+								<tr>
+									<td>Cash Payment</td>
+									<td class="text-gray-9 fw-medium text-end">$3355.84</td>
+								</tr>
+								<tr>
+									<td>Total Sale Return</td>
+									<td class="text-gray-9 fw-medium text-end">$1959</td>
+								</tr>
+								<tr>
+									<td>Total Expense</td>
+									<td class="text-gray-9 fw-medium text-end">$0</td>
+								</tr>
+								<tr>
+									<td class="text-gray-9 fw-bold bg-secondary-transparent">Total Cash</td>
+									<td class="text-gray-9 fw-bold text-end bg-secondary-transparent">$587130.97</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+					<div class="modal-footer d-flex justify-content-end gap-2 flex-wrap">
+						<button type="button" class="btn btn-md btn-primary" data-bs-dismiss="modal">Cancel</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /Cash Register Details -->
+
+
+    		<!-- Today's Sale -->
+		<div class="modal fade pos-modal" id="today-sale" tabindex="-1"  aria-hidden="true">
+			<div class="modal-dialog modal-md modal-dialog-centered" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						 <h5 class="modal-title">Today's Sale</h5>
+						<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">×</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<div class="table-responsive">
+							<table class="table table-striped border">
+								<tr>
+									<td>Total Sale Amount</td>
+									<td class="text-gray-9 fw-medium text-end">$565597.88</td>
+								</tr>
+								<tr>
+									<td>Cash Payment</td>
+									<td class="text-gray-9 fw-medium text-end">$3355.84</td>
+								</tr>
+								<tr>
+									<td>Credit Card Payment</td>
+									<td class="text-gray-9 fw-medium text-end">$1959</td>
+								</tr>
+								<tr>
+									<td>Cheque Payment:</td>
+									<td class="text-gray-9 fw-medium text-end">$0</td>
+								</tr>
+								<tr>
+									<td>Deposit Payment</td>
+									<td class="text-gray-9 fw-medium text-end">$565597.88</td>
+								</tr>
+								<tr>
+									<td>Points Payment</td>
+									<td class="text-gray-9 fw-medium text-end">$3355.84</td>
+								</tr>
+								<tr>
+									<td>Gift Card Payment</td>
+									<td class="text-gray-9 fw-medium text-end">$565597.88</td>
+								</tr>
+								<tr>
+									<td>Scan & Pay</td>
+									<td class="text-gray-9 fw-medium text-end">$3355.84</td>
+								</tr>
+								<tr>
+									<td>Pay Later</td>
+									<td class="text-gray-9 fw-medium text-end">$3355.84</td>
+								</tr>
+								<tr>
+									<td>Total Payment</td>
+									<td class="text-gray-9 fw-medium text-end">$565597.88</td>
+								</tr>
+								<tr>
+									<td>Total Sale Return</td>
+									<td class="text-gray-9 fw-medium text-end">$565597.88</td>
+								</tr>
+								<tr>
+									<td>Total Expense:</td>
+									<td class="text-gray-9 fw-medium text-end">$565597.88</td>
+								</tr>
+								<tr>
+									<td class="text-gray-9 fw-bold bg-secondary-transparent">Total Cash</td>
+									<td class="text-gray-9 fw-bold text-end bg-secondary-transparent">$587130.97</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+					<div class="modal-footer d-flex justify-content-end gap-2 flex-wrap">
+						<button type="button" class="btn btn-md btn-primary" data-bs-dismiss="modal">Cancel</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /Today's Sale -->
+
+
+    		<!-- Today's Profit -->
+		<div class="modal fade pos-modal" id="today-profit" tabindex="-1"  aria-hidden="true">
+			<div class="modal-dialog modal-md modal-dialog-centered" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						 <h5 class="modal-title">Today's Profit</h5>
+						<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true" class="close">×</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<div class="row justify-content-center g-3 mb-3">
+							<div class="col-lg-4 col-md-6 d-flex">
+								<div class="border border-success bg-success-transparent br-8 p-3 flex-fill">
+									<p class="fs-16 text-gray-9 mb-1">Total Sale</p>
+									<h3 class="text-success">$89954</h3>
+								</div>
+							</div>
+							<div class="col-lg-4 col-md-6 d-flex">
+								<div class="border border-danger bg-danger-transparent br-8 p-3 flex-fill">
+									<p class="fs-16 text-gray-9 mb-1">Expense</p>
+									<h3 class="text-danger">$89954</h3>
+								</div>
+							</div>
+							<div class="col-lg-4 col-md-6 d-flex">
+								<div class="border border-info bg-info-transparent br-8 p-3 flex-fill">
+									<p class="fs-16 text-gray-9 mb-1">Total Profit	</p>
+									<h3 class="text-info">$2145</h3>
+								</div>
+							</div>
+						</div>
+						<div class="table-responsive">
+							<table class="table table-striped border">
+								<tr>
+									<td>Product Revenue</td>
+									<td class="text-gray-9 fw-medium text-end">$565597.88</td>
+								</tr>
+								<tr>
+									<td>Product Cost</td>
+									<td class="text-gray-9 fw-medium text-end">$3355.84</td>
+								</tr>
+								<tr>
+									<td>Expense</td>
+									<td class="text-gray-9 fw-medium text-end">$1959</td>
+								</tr>
+								<tr>
+									<td>Total Stock Adjustment</td>
+									<td class="text-gray-9 fw-medium text-end">$0</td>
+								</tr>
+								<tr>
+									<td>Deposit Payment</td>
+									<td class="text-gray-9 fw-medium text-end">$565597.88</td>
+								</tr>
+								<tr>
+									<td>Total Purchase Shipping Cost</td>
+									<td class="text-gray-9 fw-medium text-end">$3355.84</td>
+								</tr>
+								<tr>
+									<td>Total Sell Discount</td>
+									<td class="text-gray-9 fw-medium text-end">$565597.88</td>
+								</tr>
+								<tr>
+									<td>Total Sell Return</td>
+									<td class="text-gray-9 fw-medium text-end">$3355.84</td>
+								</tr>
+								<tr>
+									<td>Closing Stock</td>
+									<td class="text-gray-9 fw-medium text-end">$3355.84</td>
+								</tr>
+								<tr>
+									<td>Total Sales</td>
+									<td class="text-gray-9 fw-medium text-end">$565597.88</td>
+								</tr>
+								<tr>
+									<td>Total Sale Return</td>
+									<td class="text-gray-9 fw-medium text-end">$565597.88</td>
+								</tr>
+								<tr>
+									<td>Total Expense</td>
+									<td class="text-gray-9 fw-medium text-end">$565597.88</td>
+								</tr>
+								<tr>
+									<td class="text-gray-9 fw-bold bg-secondary-transparent">Total Cash</td>
+									<td class="text-gray-9 fw-bold text-end bg-secondary-transparent">$587130.97</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+					<div class="modal-footer d-flex justify-content-end gap-2 flex-wrap">
+						<button type="button" class="btn btn-md btn-primary" data-bs-dismiss="modal">Cancel</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /Today's Profit -->

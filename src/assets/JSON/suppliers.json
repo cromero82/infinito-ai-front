@@ -1,0 +1,96 @@
+{
+    
+    "data": [
+        {
+            "img": "supplier-01.png",
+            "code": "SU001",
+            "supplier": "Apex Computers",
+            "email": "apexcomputers@example.com",
+            "phone": "+15964712634",
+            "country": "Germany",
+            "status": "Active"
+        },
+        {
+            "img": "supplier-02.png",
+            "code": "SU002",
+            "supplier": "Beats Headphones",
+            "email": "beatsheadphone@example.com",
+            "phone": "+16372895190",
+            "country": "Japan",
+            "status": "Active"
+        },
+        {
+            "img": "supplier-03.png",
+            "code": "SU003",
+            "supplier": "Dazzle Shoes",
+            "email": "dazzleshoes@example.com",
+            "phone": "+17589201739",
+            "country": "USA",
+            "status": "Active"
+        },
+        {
+            "img": "supplier-04.png",
+            "code": "SU004",
+            "supplier": "Best Accessories",
+            "email": "bestaccessories@example.com",
+            "phone": "+18934092467",
+            "country": "Austria",
+            "status": "Active"
+        },
+        {
+            "img": "supplier-05.png",
+            "code": "SU005",
+            "supplier": "A-Z Store",
+            "email": "a2zstore@example.com",
+            "phone": "+12568749035",
+            "country": "Turkey",
+            "status": "Active"
+        },
+        {
+            "img": "supplier-06.png",
+            "code": "SU006",
+            "supplier": "Hatimi Hardwares",
+            "email": "hatimihardware@example.com",
+            "phone": "+19054674627",
+            "country": "Mexico",
+            "status": "Active"
+        },
+        {
+            "img": "supplier-07.png",
+            "code": "SU007",
+            "supplier": "Aesthetic Bags",
+            "email": "aestheticbags@example.com",
+            "phone": "+18943670365",
+            "country": "France",
+            "status": "Active"
+        },
+        {
+            "img": "supplier-08.png",
+            "code": "SU008",
+            "supplier": "Alpha Mobiles",
+            "email": "alphamobiles@example.com",
+            "phone": "+16473894103",
+            "country": "Greece",
+            "status": "Active"
+        },
+        {
+            "img": "supplier-09.png",
+            "code": "SU009",
+            "supplier": "Sigma Chairs",
+            "email": "sigmachair@example.com",
+            "phone": "+17590274536",
+            "country": "Italy",
+            "status": "Active"
+        },
+        {
+            "img": "supplier-10.png",
+            "code": "SU010",
+            "supplier": "Zenith Bags",
+            "email": "zenithbags@example.com",
+            "phone": "+12564098473",
+            "country": "China",
+            "status": "Active"
+        }
+    ],
+    "totalData": 10
+}

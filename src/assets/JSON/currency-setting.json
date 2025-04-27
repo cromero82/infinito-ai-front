@@ -1,0 +1,47 @@
+{
+    "data": [
+      {
+       
+        "currencyName": "Euro",
+        "currencyCode": "EUR",
+        "currencySymbol": "€",
+        "exchangerate": "Default",
+        "isSelected": false,
+        "createdOn": "12 Jul 2023"
+        
+      },
+      {
+       
+        "currencyName": "England Pound",
+        "currencyCode": "GBP",
+        "currencySymbol": "£",
+        "exchangerate": "Default",
+        "isSelected": false,
+        "createdOn": "14 Jul 2023"
+        
+      },
+      {
+       
+        "currencyName": "India Rupee",
+        "currencyCode": "INR",
+        "currencySymbol": "₹",
+        "exchangerate": "76.154",
+        "isSelected": false,
+        "createdOn": "14 Mar 2023"
+        
+      },
+      {
+       
+        "currencyName": "US Dollar",
+        "currencyCode": "USD",
+        "currencySymbol": "$",
+        "exchangerate": "Default",
+        "isSelected": false,
+        "createdOn": "10 Jan 2023"
+      
+      }
+     
+    ],
+    "totalData": 4
+  }
+  

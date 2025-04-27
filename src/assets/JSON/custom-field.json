@@ -1,0 +1,27 @@
+{
+    "data": [
+        
+            {
+                
+                "module": "Expense",
+                "label": "Name",
+                "type": "Text",
+                "defaultvalue": "Name",
+                "isSelected": false,
+                "required": "Required"
+            },
+            {
+                "module": "Transaction",
+                "label": "Comment",
+                "type": "Textarea",
+                "defaultvalue": "Enter Comments",
+                "isSelected": false,
+                "required": "Required"
+                
+            }
+        
+     
+    ],
+    "totalData": 2
+  }
+  

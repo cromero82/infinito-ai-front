@@ -1,0 +1,1442 @@
+<div class="page-header">
+  <div class="add-item d-flex">
+    <div class="page-title">
+      <h4>Todo</h4>
+      <h6>Manage Your Todo</h6>
+    </div>
+  </div>
+  <ul class="table-top-head">
+    <li>
+      <a [routerLink]="routes.toDo" class="todo-grid-view active"><i data-feather="grid" class="feather-rotate-ccw text-white feather icon-grid"></i></a>
+    </li>
+    <li>
+      <a [routerLink]="routes.toDoList" class="todo-list-view"><i data-feather="list" class="feather-rotate-ccw feather icon-list"></i></a>
+    </li>
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" title="Refresh" matTooltip="Refresh" matTooltipPosition="above">
+        <i class="ti ti-refresh"></i>
+      </a>
+    </li>
+    <li>
+      <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" title="Collapse" matTooltip="Collapse" atTooltipPosition="above" id="collapse-header">
+         @if (!isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }
+      @if (isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }</a>
+    </li>
+  </ul>
+  <div class="page-btn">
+    <a href="javascript:void(0);" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#note-units"><i data-feather="plus-circle" class="ti ti-circle-plus me-1"></i>Create New</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="row gy-3 mb-3">
+      <div class="col-sm-4">
+        <div class="d-flex align-items-center">
+          <h4>Total Todo</h4>
+          <span class="badge badge-dark rounded-pill badge-xs ms-2">+1</span>
+        </div>
+      </div>
+      <div class="col-sm-8">
+        <div class="d-flex align-items-center justify-content-end">
+          <p class="mb-0 me-3 pe-3 border-end fs-14">Total Task : <span class="text-dark"> 55 </span></p>
+          <p class="mb-0 me-3 pe-3 border-end fs-14">Pending : <span class="text-dark"> 15 </span></p>
+          <p class="mb-0 fs-14">Completed : <span class="text-dark"> 40 </span></p>
+        </div>
+      </div>
+    </div>
+    <div class="mb-3">
+      <button class="btn bg-primary-transparent border-dashed border-primary w-100 text-start" data-bs-toggle="modal" data-bs-target="#note-units">
+        <i class="ti ti-plus me-2"></i>New task
+      </button>
+    </div>
+    <div class="row border-bottom mb-3">
+      <div class="col-lg-6">
+        <div class="d-flex align-items-center flex-wrap row-gap-3 mb-3">
+          <h6 class="me-2">Priority</h6>
+          <ul class="nav nav-pills border d-inline-flex p-1 rounded bg-light todo-tabs" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link btn btn-sm btn-icon py-3 d-flex align-items-center justify-content-center w-auto active" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-selected="true">All</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link btn btn-sm btn-icon py-3 d-flex align-items-center justify-content-center w-auto" data-bs-toggle="pill" data-bs-target="#pills-contact" type="button" role="tab" aria-selected="false">High</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link btn btn-sm btn-icon py-3 d-flex align-items-center justify-content-center w-auto" data-bs-toggle="pill" data-bs-target="#pills-medium" type="button" role="tab" aria-selected="false">Medium</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link btn btn-sm btn-icon py-3 d-flex align-items-center justify-content-center w-auto" data-bs-toggle="pill" data-bs-target="#pills-low" type="button" role="tab" aria-selected="false">Low</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="d-flex align-items-center justify-content-lg-end flex-wrap row-gap-3 mb-3">
+          <div class="input-icon w-120 position-relative me-2">
+            <span class="input-icon-addon">
+              <i class="ti ti-calendar text-gray-9"></i>
+            </span>
+            <input type="text" class="form-control datetimepicker" placeholder="Due Date">
+          </div>
+          <div class="dropdown me-2">
+            <a href="javascript:void(0);" class="dropdown-toggle btn btn-white d-inline-flex align-items-center" data-bs-toggle="dropdown">
+              All Tags
+            </a>
+            <ul class="dropdown-menu  dropdown-menu-end p-3">
+              <li>
+                <a href="javascript:void(0);" class="dropdown-item rounded-1">All Tags</a>
+              </li>
+              <li>
+                <a href="javascript:void(0);" class="dropdown-item rounded-1">Internal</a>
+              </li>
+              <li>
+                <a href="javascript:void(0);" class="dropdown-item rounded-1">Projects</a>
+              </li>
+              <li>	
+                <a href="javascript:void(0);" class="dropdown-item rounded-1">Meetings</a>
+              </li>
+              <li>	
+                <a href="javascript:void(0);" class="dropdown-item rounded-1">Reminder</a>
+              </li>
+              <li>	
+                <a href="javascript:void(0);" class="dropdown-item rounded-1">Research</a>
+              </li>
+            </ul>
+          </div>
+          <div class="d-flex align-items-center">
+            <span class="d-inline-flex me-2">Sort By : </span>
+            <div class="dropdown">
+              <a href="javascript:void(0);" class="dropdown-toggle btn btn-white d-inline-flex align-items-center border-0 bg-transparent p-0 text-dark" data-bs-toggle="dropdown">
+                Created Date
+              </a>
+              <ul class="dropdown-menu  dropdown-menu-end p-3">
+                <li>
+                  <a href="javascript:void(0);" class="dropdown-item rounded-1">Created Date</a>
+                </li>
+                <li>
+                  <a href="javascript:void(0);" class="dropdown-item rounded-1">Priority</a>
+                </li>
+                <li>
+                  <a href="javascript:void(0);" class="dropdown-item rounded-1">Due Date</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content" id="pills-tabContent">
+      <div class="tab-pane fade show active" id="pills-home" role="tabpanel">
+        <div class="accordion todo-accordion" id="accordionExample">
+          <div class="accordion-item border-0 mb-3">
+            <div class="row align-items-center mb-3 row-gap-3">
+              <div class="col-lg-4 col-sm-6">
+                <div class="accordion-header" id="headingTwo">
+                  <div class="accordion-button" data-bs-toggle="collapse" data-bs-target="#collapseTwos" aria-controls="collapseTwos">
+                    <div class="d-flex align-items-center w-100">
+                      <div class="me-2">
+                        <a href="javascript:void(0);">
+                          <span><i class="fas fa-chevron-down"></i></span>
+                        </a>
+                      </div>
+                      <div class="d-flex align-items-center">
+                        <span><i class="ti ti-square-rounded text-danger me-2"></i></span>
+                        <h5 class="fw-semibold">Urgent</h5>
+                        <span class="badge bg-light rounded-pill ms-2">32</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-8 col-sm-6">
+                <div class="d-flex align-items-center justify-content-sm-end">
+                  <a href="javascript:void(0);" class="btn btn-light me-2" data-bs-toggle="modal" data-bs-target="#note-units"><i class="ti ti-circle-plus me-2"></i>Add New</a>
+                  <a href="javascript:void(0);" class="btn btn-outline-light border">See All <i class="ti ti-arrow-right ms-2"></i></a>
+                </div>
+              </div>
+            </div>
+            <div id="collapseTwos" class="accordion-collapse collapse show" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+              <div class="accordion-body">
+                <div class="list-group list-group-flush border-bottom pb-2">
+                  <div class="list-group-item list-item-hover shadow-sm rounded mb-2 p-3">
+                    <div class="row align-items-center row-gap-3">
+                      <div class="col-lg-6 col-md-7">
+                        <div class="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3" [ngClass]="{'todo-strike-content':isStrike[0]}">
+                          <span class="me-2 d-flex align-items-center"><i class="ti ti-grid-dots text-dark"></i></span>
+                          <div class="form-check form-check-md me-2">
+                            <input class="form-check-input" type="checkbox" (click)="strike(0)">
+                          </div>
+                          <span class="me-2 d-flex align-items-center rating-select"><i class="ti ti-star-filled filled"></i></span>
+                          <div class="strike-info">
+                            <h4 class="fs-14">Update calendar and schedule</h4>
+                          </div>
+                          <span class="badge bg-transparent-dark text-dark border border-dark rounded ms-2"><i class="ti ti-calendar me-1"></i>15 Jan 2025</span>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 col-md-5">
+                        <div class="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <span class="badge badge-info me-3">Social</span>
+                          <span class="badge badge-soft-pink badge-xs shadow-none d-inline-flex align-items-center me-3"><i class="fas fa-circle fs-6 me-1"></i>Onhold</span>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-list-stacked avatar-group-sm">
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-13.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-14.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-15.jpg" alt="img">
+                              </span>
+                            </div>
+                            <div class="dropdown ms-2">
+                              <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                                <i class="ti ti-dots-vertical"></i>
+                              </a>
+                              <ul class="dropdown-menu dropdown-menu-end p-3">
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#edit-note-units"><i class="ti ti-edit me-2"></i>Edit</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#delete-note-units"><i class="ti ti-trash me-2"></i>Delete</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#view-note-units"><i class="ti ti-eye me-2"></i>View</a>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="list-group-item list-item-hover shadow-sm rounded mb-2 p-3">
+                    <div class="row align-items-center row-gap-3">
+                      <div class="col-lg-6 col-md-7">
+                        <div class="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3">
+                          <span class="me-2 d-flex align-items-center"><i class="ti ti-grid-dots text-dark"></i></span>
+                          <div class="form-check form-check-md me-2">
+                            <input class="form-check-input" type="checkbox">
+                          </div>
+                          <span class="me-2 rating-select d-flex align-items-center"><i class="ti ti-star"></i></span>
+                          <div class="strike-info">
+                            <h4 class="fs-14">Respond to any pending messages</h4>
+                          </div>
+                          <span class="badge bg-transparent-dark text-dark border border-dark rounded ms-2"><i class="ti ti-calendar me-1"></i>25 May 2024</span>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 col-md-5">
+                        <div class="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <span class="badge badge-purple me-3">Meeting</span>
+                          <span class="badge badge-soft-info badge-xs shadow-none d-inline-flex align-items-center me-3"><i class="fas fa-circle fs-6 me-1"></i>Pending</span>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-list-stacked avatar-group-sm">
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-20.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-21.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-22.jpg" alt="img">
+                              </span>
+                            </div>
+                            <div class="dropdown ms-2">
+                              <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                                <i class="ti ti-dots-vertical"></i>
+                              </a>
+                              <ul class="dropdown-menu dropdown-menu-end p-3">
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#edit-note-units"><i class="ti ti-edit me-2"></i>Edit</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#delete-note-units"><i class="ti ti-trash me-2"></i>Delete</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#view-note-units"><i class="ti ti-eye me-2"></i>View</a>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="list-group-item list-item-hover shadow-sm rounded mb-2 p-3">
+                    <div class="row align-items-center row-gap-3">
+                      <div class="col-lg-6 col-md-7">
+                        <div class="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3 todo-strike-content">
+                          <span class="me-2 d-flex align-items-center"><i class="ti ti-grid-dots text-dark"></i></span>
+                          <div class="form-check form-check-md me-2">
+                            <input class="form-check-input" type="checkbox" checked>
+                          </div>
+                          <span class="me-2 rating-select d-flex align-items-center"><i class="ti ti-star"></i></span>
+                          <div class="strike-info">
+                            <h4 class="fs-14">Complete project report</h4>
+                          </div>
+                          <span class="badge bg-transparent-dark text-dark border border-dark rounded ms-2"><i class="ti ti-calendar me-1"></i>15 Jan 2025</span>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 col-md-5">
+                        <div class="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <span class="badge badge-pink me-3">Research</span>
+                          <span class="badge badge-soft-secondary shadow-none badge-xs d-inline-flex align-items-center me-3"><i class="fas fa-circle fs-6 me-1"></i>Unhold</span>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-list-stacked avatar-group-sm">
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-23.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-24.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-25.jpg" alt="img">
+                              </span>
+                            </div>
+                            <div class="dropdown ms-2">
+                              <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                                <i class="ti ti-dots-vertical"></i>
+                              </a>
+                              <ul class="dropdown-menu dropdown-menu-end p-3">
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#edit-note-units"><i class="ti ti-edit me-2"></i>Edit</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#delete-note-units"><i class="ti ti-trash me-2"></i>Delete</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#view-note-units"><i class="ti ti-eye me-2"></i>View</a>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item border-0 mb-3">
+            <div class="row align-items-center mb-3 row-gap-3">
+              <div class="col-lg-4 col-sm-6">
+                <div class="accordion-header" id="heading3">
+                  <div class="accordion-button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-controls="collapseTwo">
+                    <div class="d-flex align-items-center w-100">
+                      <div class="me-2">
+                        <a href="javascript:void(0);">
+                          <span><i class="fas fa-chevron-down"></i></span>
+                        </a>
+                      </div>
+                      <div class="d-flex align-items-center">
+                        <span><i class="ti ti-square-rounded text-purple me-2"></i></span>
+                        <h5 class="fw-semibold">High</h5>
+                        <span class="badge bg-light rounded-pill ms-2">15</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-8 col-sm-6">
+                <div class="d-flex align-items-center justify-content-sm-end">
+                  <a href="javascript:void(0);" class="btn btn-light me-2" data-bs-toggle="modal" data-bs-target="#note-units"><i class="ti ti-circle-plus me-2"></i>Add New</a>
+                  <a href="javascript:void(0);" class="btn btn-outline-light border">See All <i class="ti ti-arrow-right ms-2"></i></a>
+                </div>
+              </div>
+            </div>
+            <div id="collapseTwo" class="accordion-collapse collapse show" aria-labelledby="heading3" data-bs-parent="#accordionExample">
+              <div class="accordion-body">
+                <div class="list-group list-group-flush border-bottom pb-2">
+                  <div class="list-group-item list-item-hover shadow-sm rounded mb-2 p-3">
+                    <div class="row align-items-center row-gap-3">
+                      <div class="col-lg-6 col-md-7">
+                        <div class="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3">
+                          <span class="me-2 d-flex align-items-center"><i class="ti ti-grid-dots text-dark"></i></span>
+                          <div class="form-check form-check-md me-2">
+                            <input class="form-check-input" type="checkbox">
+                          </div>
+                          <span class="me-2 d-flex align-items-center rating-select"><i class="ti ti-star-filled filled"></i></span>
+                          <div class="strike-info">
+                            <h4 class="fs-14">Finalize project proposal</h4>
+                          </div>
+                          <span class="badge bg-transparent-dark text-dark border border-dark rounded ms-2"><i class="ti ti-calendar me-1"></i>15 Jan 2025</span>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 col-md-5">
+                        <div class="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <span class="badge badge-success me-3">Projects</span>
+                          <span class="badge badge-soft-pink shadow-none badge-xs d-inline-flex align-items-center me-3"><i class="fas fa-circle fs-6 me-1"></i>Onhold</span>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-list-stacked avatar-group-sm">
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-13.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-14.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-15.jpg" alt="img">
+                              </span>
+                            </div>
+                            <div class="dropdown ms-2">
+                              <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                                <i class="ti ti-dots-vertical"></i>
+                              </a>
+                              <ul class="dropdown-menu dropdown-menu-end p-3">
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#edit-note-units"><i class="ti ti-edit me-2"></i>Edit</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#delete-note-units"><i class="ti ti-trash me-2"></i>Delete</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#view-note-units"><i class="ti ti-eye me-2"></i>View</a>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="list-group-item list-item-hover shadow-sm rounded mb-2 p-3">
+                    <div class="row align-items-center row-gap-3">
+                      <div class="col-lg-6 col-md-7">
+                        <div class="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3">
+                          <span class="me-2 d-flex align-items-center"><i class="ti ti-grid-dots text-dark"></i></span>
+                          <div class="form-check form-check-md me-2">
+                            <input class="form-check-input" type="checkbox">
+                          </div>
+                          <span class="me-2 rating-select d-flex align-items-center"><i class="ti ti-star"></i></span>
+                          <div class="strike-info">
+                            <h4 class="fs-14">Submit to supervisor by EOD</h4>
+                          </div>
+                          <span class="badge bg-transparent-dark text-dark border border-dark rounded ms-2"><i class="ti ti-calendar me-1"></i>25 May 2024</span>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 col-md-5">
+                        <div class="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <span class="badge badge-danger me-3">Internal</span>
+                          <span class="badge badge-soft-indigo shadow-none badge-xs d-inline-flex align-items-center me-3"><i class="fas fa-circle fs-6 me-1"></i>Inprogress</span>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-list-stacked avatar-group-sm">
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-20.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-21.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-22.jpg" alt="img">
+                              </span>
+                            </div>
+                            <div class="dropdown ms-2">
+                              <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                                <i class="ti ti-dots-vertical"></i>
+                              </a>
+                              <ul class="dropdown-menu dropdown-menu-end p-3">
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#edit-note-units"><i class="ti ti-edit me-2"></i>Edit</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#delete-note-units"><i class="ti ti-trash me-2"></i>Delete</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#view-note-units"><i class="ti ti-eye me-2"></i>View</a>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="list-group-item list-item-hover shadow-sm rounded mb-2 p-3">
+                    <div class="row align-items-center row-gap-3">
+                      <div class="col-lg-6 col-md-7">
+                        <div class="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3 todo-strike-content">
+                          <span class="me-2 d-flex align-items-center"><i class="ti ti-grid-dots text-dark"></i></span>
+                          <div class="form-check form-check-md me-2">
+                            <input class="form-check-input" type="checkbox" checked>
+                          </div>
+                          <span class="me-2 rating-select d-flex align-items-center"><i class="ti ti-star"></i></span>
+                          <div class="strike-info">
+                            <h4 class="fs-14">Prepare presentation slides</h4>
+                          </div>
+                          <span class="badge bg-transparent-dark text-dark border border-dark rounded ms-2"><i class="ti ti-calendar me-1"></i>15 Jan 2025</span>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 col-md-5">
+                        <div class="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <span class="badge badge-secondary me-3">Reminder</span>
+                          <span class="badge badge-soft-secondary badge-xs shadow-none d-inline-flex align-items-center me-3"><i class="fas fa-circle fs-6 me-1"></i>Pending</span>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-list-stacked avatar-group-sm">
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-23.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-24.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-25.jpg" alt="img">
+                              </span>
+                            </div>
+                            <div class="dropdown ms-2">
+                              <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                                <i class="ti ti-dots-vertical"></i>
+                              </a>
+                              <ul class="dropdown-menu dropdown-menu-end p-3">
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#edit-note-units"><i class="ti ti-edit me-2"></i>Edit</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#delete-note-units"><i class="ti ti-trash me-2"></i>Delete</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#view-note-units"><i class="ti ti-eye me-2"></i>View</a>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item border-0 mb-3">
+            <div class="row align-items-center mb-3 row-gap-3">
+              <div class="col-lg-4 col-sm-6">
+                <div class="accordion-header" id="headingThree">
+                  <div class="accordion-button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-controls="collapseThree">
+                    <div class="d-flex align-items-center w-100">
+                      <div class="me-2">
+                        <a href="javascript:void(0);">
+                          <span><i class="fas fa-chevron-down"></i></span>
+                        </a>
+                      </div>
+                      <div class="d-flex align-items-center">
+                        <span><i class="ti ti-square-rounded text-warning me-2"></i></span>
+                        <h5 class="fw-semibold">Medium</h5>
+                        <span class="badge bg-light rounded-pill ms-2">05</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-8 col-sm-6">
+                <div class="d-flex align-items-center justify-content-sm-end">
+                  <a href="javascript:void(0);" class="btn btn-light me-2" data-bs-toggle="modal" data-bs-target="#note-units"><i class="ti ti-circle-plus me-2"></i>Add New</a>
+                  <a href="javascript:void(0);" class="btn btn-outline-light border">See All <i class="ti ti-arrow-right ms-2"></i></a>
+                </div>
+              </div>
+            </div>
+            <div id="collapseThree" class="accordion-collapse collapse show" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+              <div class="accordion-body">
+                <div class="list-group list-group-flush border-bottom pb-2">
+                  <div class="list-group-item list-item-hover shadow-sm rounded mb-2 p-3">
+                    <div class="row align-items-center row-gap-3">
+                      <div class="col-lg-6 col-md-7">
+                        <div class="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3">
+                          <span class="me-2 d-flex align-items-center"><i class="ti ti-grid-dots text-dark"></i></span>
+                          <div class="form-check form-check-md me-2">
+                            <input class="form-check-input" type="checkbox">
+                          </div>
+                          <span class="me-2 rating-select d-flex align-items-center"><i class="ti ti-star"></i></span>
+                          <div class="strike-info">
+                            <h4 class="fs-14">Check and respond to emails</h4>
+                          </div>
+                          <span class="badge bg-transparent-dark text-dark border border-dark rounded ms-2"><i class="ti ti-calendar me-1"></i>Tomorrow</span>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 col-md-5">
+                        <div class="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <span class="badge badge-secondary me-3">Reminder</span>
+                          <span class="badge badge-soft-success badge-xs shadow-none d-inline-flex align-items-center me-3"><i class="fas fa-circle fs-6 me-1"></i>Completed</span>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-list-stacked avatar-group-sm">
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-28.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-29.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-24.jpg" alt="img">
+                              </span>
+                            </div>
+                            <div class="dropdown ms-2">
+                              <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                                <i class="ti ti-dots-vertical"></i>
+                              </a>
+                              <ul class="dropdown-menu dropdown-menu-end p-3">
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#edit-note-units"><i class="ti ti-edit me-2"></i>Edit</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#delete-note-units"><i class="ti ti-trash me-2"></i>Delete</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#view-note-units"><i class="ti ti-eye me-2"></i>View</a>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="list-group-item list-item-hover shadow-sm rounded mb-2 p-3">
+                    <div class="row align-items-center row-gap-3">
+                      <div class="col-lg-7 col-md-7">
+                        <div class="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3">
+                          <span class="me-2 d-flex align-items-center"><i class="ti ti-grid-dots text-dark"></i></span>
+                          <div class="form-check form-check-md me-2">
+                            <input class="form-check-input" type="checkbox">
+                          </div>
+                          <span class="me-2 rating-select d-flex align-items-center"><i class="ti ti-star"></i></span>
+                          <div class="strike-info">
+                            <h4 class="fs-14">Coordinate with department head on progress</h4>
+                          </div>
+                          <span class="badge bg-transparent-dark text-dark border border-dark rounded ms-2"><i class="ti ti-calendar me-1"></i>25 May 2024</span>
+                        </div>
+                      </div>
+                      <div class="col-lg-5 col-md-5">
+                        <div class="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <span class="badge badge-danger me-3">Internal</span>
+                          <span class="badge badge-soft-danger badge-xs shadow-none d-inline-flex align-items-center me-3"><i class="fas fa-circle fs-6 me-1"></i>Inprogress</span>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-list-stacked avatar-group-sm">
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-06.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-09.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-14.jpg" alt="img">
+                              </span>
+                            </div>
+                            <div class="dropdown ms-2">
+                              <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                                <i class="ti ti-dots-vertical"></i>
+                              </a>
+                              <ul class="dropdown-menu dropdown-menu-end p-3">
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#edit-note-units"><i class="ti ti-edit me-2"></i>Edit</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#delete-note-units"><i class="ti ti-trash me-2"></i>Delete</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#view-note-units"><i class="ti ti-eye me-2"></i>View</a>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item border-0 mb-3">
+            <div class="row align-items-center mb-3 row-gap-3">
+              <div class="col-lg-4 col-sm-6">
+                <div class="accordion-header" id="headingFour">
+                  <div class="accordion-button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-controls="collapseFour">
+                    <div class="d-flex align-items-center w-100">
+                      <div class="me-2">
+                        <a href="javascript:void(0);">
+                          <span><i class="fas fa-chevron-down"></i></span>
+                        </a>
+                      </div>
+                      <div class="d-flex align-items-center">
+                        <span><i class="ti ti-square-rounded text-success me-2"></i></span>
+                        <h5 class="fw-semibold">Low</h5>
+                        <span class="badge bg-light rounded-pill ms-2">24</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-8 col-sm-6">
+                <div class="d-flex align-items-center justify-content-sm-end">
+                  <a href="javascript:void(0);" class="btn btn-light me-2" data-bs-toggle="modal" data-bs-target="#note-units"><i class="ti ti-circle-plus me-2"></i>Add New</a>
+                  <a href="javascript:void(0);" class="btn btn-outline-light border">See All <i class="ti ti-arrow-right ms-2"></i></a>
+                </div>
+              </div>
+            </div>
+            <div id="collapseFour" class="accordion-collapse collapse show" aria-labelledby="headingFour" data-bs-parent="#accordionExample">
+              <div class="accordion-body">
+                <div class="list-group list-group-flush">
+                  <div class="list-group-item list-item-hover shadow-sm rounded mb-2 p-3">
+                    <div class="row align-items-center row-gap-3">
+                      <div class="col-lg-6 col-md-7">
+                        <div class="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3">
+                          <span class="me-2 d-flex align-items-center"><i class="ti ti-grid-dots text-dark"></i></span>
+                          <div class="form-check form-check-md me-2">
+                            <input class="form-check-input" type="checkbox">
+                          </div>
+                          <span class="me-2 rating-select d-flex align-items-center"><i class="ti ti-star"></i></span>
+                          <div class="strike-info">
+                            <h4 class="fs-14">Plan tasks for the next day</h4>
+                          </div>
+                          <span class="badge bg-transparent-dark text-dark border border-dark rounded ms-2"><i class="ti ti-calendar me-1"></i>Today</span>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 col-md-5">
+                        <div class="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <span class="badge badge-info me-3">Social</span>
+                          <span class="badge badge-soft-secondary badge-xs shadow-none d-inline-flex align-items-center me-3"><i class="fas fa-circle fs-6 me-1"></i>Pending</span>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-list-stacked avatar-group-sm">
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-28.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-29.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-24.jpg" alt="img">
+                              </span>
+                            </div>
+                            <div class="dropdown ms-2">
+                              <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                                <i class="ti ti-dots-vertical"></i>
+                              </a>
+                              <ul class="dropdown-menu dropdown-menu-end p-3">
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#edit-note-units"><i class="ti ti-edit me-2"></i>Edit</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#delete-note-units"><i class="ti ti-trash me-2"></i>Delete</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#view-note-units"><i class="ti ti-eye me-2"></i>View</a>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="pills-contact" role="tabpanel">
+        <div class="accordion todo-accordion">
+          <div class="accordion-item border-0 mb-3">
+            <div class="row align-items-center mb-3 row-gap-3">
+              <div class="col-lg-4 col-sm-6">
+                <div class="accordion-header" id="headingSix">
+                  <div class="accordion-button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-controls="collapseSix">
+                    <div class="d-flex align-items-center w-100">
+                      <div class="me-2">
+                        <a href="javascript:void(0);">
+                          <span><i class="fas fa-chevron-down"></i></span>
+                        </a>
+                      </div>
+                      <div class="d-flex align-items-center">
+                        <span><i class="ti ti-square-rounded text-purple me-2"></i></span>
+                        <h5 class="fw-semibold">High</h5>
+                        <span class="badge bg-light rounded-pill ms-2">15</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-8 col-sm-6">
+                <div class="d-flex align-items-center justify-content-sm-end">
+                  <a href="javascript:void(0);" class="btn btn-light me-2" data-bs-toggle="modal" data-bs-target="#note-units"><i class="ti ti-circle-plus me-2"></i>Add New</a>
+                  <a href="javascript:void(0);" class="btn btn-outline-light border">See All <i class="ti ti-arrow-right ms-2"></i></a>
+                </div>
+              </div>
+            </div>
+            <div id="collapseSix" class="accordion-collapse collapse show" aria-labelledby="headingSix">
+              <div class="accordion-body">
+                <div class="list-group list-group-flush">
+                  <div class="list-group-item list-item-hover shadow-sm rounded mb-2 p-3">
+                    <div class="row align-items-center row-gap-3">
+                      <div class="col-lg-6 col-md-7">
+                        <div class="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3">
+                          <span class="me-2 d-flex align-items-center"><i class="ti ti-grid-dots text-dark"></i></span>
+                          <div class="form-check form-check-md me-2">
+                            <input class="form-check-input" type="checkbox">
+                          </div>
+                          <span class="me-2 rating-select d-flex align-items-center"><i class="ti ti-star-filled filled"></i></span>
+                          <div class="strike-info">
+                            <h4 class="fs-14">Finalize project proposal</h4>
+                          </div>
+                          <span class="badge bg-transparent-dark text-dark border border-dark rounded ms-2"><i class="ti ti-calendar me-1"></i>15 Jan 2025</span>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 col-md-5">
+                        <div class="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <span class="badge badge-success me-3">Projects</span>
+                          <span class="badge bg-soft-pink d-inline-flex align-items-center me-3"><i class="fas fa-circle fs-6 me-1"></i>Onhold</span>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-list-stacked avatar-group-sm">
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-13.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-14.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-15.jpg" alt="img">
+                              </span>
+                            </div>
+                            <div class="dropdown ms-2">
+                              <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                                <i class="ti ti-dots-vertical"></i>
+                              </a>
+                              <ul class="dropdown-menu dropdown-menu-end p-3">
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#edit-note-units"><i class="ti ti-edit me-2"></i>Edit</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#delete-note-units"><i class="ti ti-trash me-2"></i>Delete</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#view-note-units"><i class="ti ti-eye me-2"></i>View</a>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="list-group-item list-item-hover shadow-sm rounded mb-2 p-3">
+                    <div class="row align-items-center row-gap-3">
+                      <div class="col-lg-6 col-md-7">
+                        <div class="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3">
+                          <span class="me-2 d-flex align-items-center"><i class="ti ti-grid-dots text-dark"></i></span>
+                          <div class="form-check form-check-md me-2">
+                            <input class="form-check-input" type="checkbox">
+                          </div>
+                          <span class="me-2 rating-select d-flex align-items-center"><i class="ti ti-star"></i></span>
+                          <div class="strike-info">
+                            <h4 class="fs-14">Submit to supervisor by EOD</h4>
+                          </div>
+                          <span class="badge bg-transparent-dark text-dark border border-dark rounded ms-2"><i class="ti ti-calendar me-1"></i>25 May 2024</span>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 col-md-5">
+                        <div class="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <span class="badge badge-danger me-3">Internal</span>
+                          <span class="badge bg-transparent-purple d-flex align-items-center me-3"><i class="fas fa-circle fs-6 me-1"></i>Inprogress</span>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-list-stacked avatar-group-sm">
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-20.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-21.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-22.jpg" alt="img">
+                              </span>
+                            </div>
+                            <div class="dropdown ms-2">
+                              <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                                <i class="ti ti-dots-vertical"></i>
+                              </a>
+                              <ul class="dropdown-menu dropdown-menu-end p-3">
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#edit-note-units"><i class="ti ti-edit me-2"></i>Edit</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#delete-note-units"><i class="ti ti-trash me-2"></i>Delete</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#view-note-units"><i class="ti ti-eye me-2"></i>View</a>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="list-group-item list-item-hover shadow-sm rounded mb-2 p-3">
+                    <div class="row align-items-center row-gap-3">
+                      <div class="col-lg-6 col-md-7">
+                        <div class="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3 todo-strike-content">
+                          <span class="me-2 d-flex align-items-center"><i class="ti ti-grid-dots text-dark"></i></span>
+                          <div class="form-check form-check-md me-2">
+                            <input class="form-check-input" type="checkbox" checked>
+                          </div>
+                          <span class="me-2 rating-select d-flex align-items-center"><i class="ti ti-star"></i></span>
+                          <div class="strike-info">
+                            <h4 class="fs-14">Prepare presentation slides</h4>
+                          </div>
+                          <span class="badge bg-transparent-dark text-dark border border-dark rounded ms-2"><i class="ti ti-calendar me-1"></i>15 Jan 2025</span>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 col-md-5">
+                        <div class="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <span class="badge badge-secondary me-3">Reminder</span>
+                          <span class="badge badge-secondary-transparent d-flex align-items-center me-3"><i class="fas fa-circle fs-6 me-1"></i>Pending</span>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-list-stacked avatar-group-sm">
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-23.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-24.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-25.jpg" alt="img">
+                              </span>
+                            </div>
+                            <div class="dropdown ms-2">
+                              <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                                <i class="ti ti-dots-vertical"></i>
+                              </a>
+                              <ul class="dropdown-menu dropdown-menu-end p-3">
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#edit-note-units"><i class="ti ti-edit me-2"></i>Edit</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#delete-note-units"><i class="ti ti-trash me-2"></i>Delete</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#view-note-units"><i class="ti ti-eye me-2"></i>View</a>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="pills-medium" role="tabpanel">
+        <div class="accordion todo-accordion">
+          <div class="accordion-item border-0 mb-3">
+            <div class="row align-items-center mb-3 row-gap-3">
+              <div class="col-lg-4 col-sm-6">
+                <div class="accordion-header" id="headingSeven">
+                  <div class="accordion-button" data-bs-toggle="collapse" data-bs-target="#collapseSeven" aria-controls="collapseSeven">
+                    <div class="d-flex align-items-center w-100">
+                      <div class="me-2">
+                        <a href="javascript:void(0);">
+                          <span><i class="fas fa-chevron-down"></i></span>
+                        </a>
+                      </div>
+                      <div class="d-flex align-items-center">
+                        <span><i class="ti ti-square-rounded text-warning me-2"></i></span>
+                        <h5 class="fw-semibold">Medium</h5>
+                        <span class="badge bg-light rounded-pill ms-2">05</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-8 col-sm-6">
+                <div class="d-flex align-items-center justify-content-sm-end">
+                  <a href="javascript:void(0);" class="btn btn-light me-2" data-bs-toggle="modal" data-bs-target="#note-units"><i class="ti ti-circle-plus me-2"></i>Add New</a>
+                  <a href="javascript:void(0);" class="btn btn-outline-light border">See All <i class="ti ti-arrow-right ms-2"></i></a>
+                </div>
+              </div>
+            </div>
+            <div id="collapseSeven" class="accordion-collapse collapse show" aria-labelledby="headingSeven">
+              <div class="accordion-body">
+                <div class="list-group list-group-flush">
+                  <div class="list-group-item list-item-hover shadow-sm rounded mb-2 p-3">
+                    <div class="row align-items-center row-gap-3">
+                      <div class="col-lg-6 col-md-7">
+                        <div class="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3">
+                          <span class="me-2 d-flex align-items-center"><i class="ti ti-grid-dots text-dark"></i></span>
+                          <div class="form-check form-check-md me-2">
+                            <input class="form-check-input" type="checkbox">
+                          </div>
+                          <span class="me-2 rating-select d-flex align-items-center"><i class="ti ti-star"></i></span>
+                          <div class="strike-info">
+                            <h4 class="fs-14">Check and respond to emails</h4>
+                          </div>
+                          <span class="badge bg-transparent-dark text-dark border border-dark rounded ms-2"><i class="ti ti-calendar me-1"></i>Tomorrow</span>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 col-md-5">
+                        <div class="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <span class="badge badge-secondary me-3">Reminder</span>
+                          <span class="badge badge-soft-success align-items-center me-3"><i class="fas fa-circle fs-6 me-1"></i>Completed</span>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-list-stacked avatar-group-sm">
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-28.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-29.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-24.jpg" alt="img">
+                              </span>
+                            </div>
+                            <div class="dropdown ms-2">
+                              <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                                <i class="ti ti-dots-vertical"></i>
+                              </a>
+                              <ul class="dropdown-menu dropdown-menu-end p-3">
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#edit-note-units"><i class="ti ti-edit me-2"></i>Edit</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#delete-note-units"><i class="ti ti-trash me-2"></i>Delete</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#view-note-units"><i class="ti ti-eye me-2"></i>View</a>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="list-group-item list-item-hover shadow-sm rounded mb-2 p-3">
+                    <div class="row align-items-center row-gap-3">
+                      <div class="col-lg-6 col-md-7">
+                        <div class="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3">
+                          <span class="me-2 d-flex align-items-center"><i class="ti ti-grid-dots text-dark"></i></span>
+                          <div class="form-check form-check-md me-2">
+                            <input class="form-check-input" type="checkbox">
+                          </div>
+                          <span class="me-2 rating-select d-flex align-items-center"><i class="ti ti-star"></i></span>
+                          <div class="strike-info">
+                            <h4 class="fs-14">Coordinate with department head on progress</h4>
+                          </div>
+                          <span class="badge bg-transparent-dark text-dark border border-dark rounded ms-2"><i class="ti ti-calendar me-1"></i>25 May 2024</span>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 col-md-5">
+                        <div class="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <span class="badge badge-danger me-3">Internal</span>
+                          <span class="badge bg-transparent-purple d-flex align-items-center me-3"><i class="fas fa-circle fs-6 me-1"></i>Inprogress</span>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-list-stacked avatar-group-sm">
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-06.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-09.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-14.jpg" alt="img">
+                              </span>
+                            </div>
+                            <div class="dropdown ms-2">
+                              <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                                <i class="ti ti-dots-vertical"></i>
+                              </a>
+                              <ul class="dropdown-menu dropdown-menu-end p-3">
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#edit-note-units"><i class="ti ti-edit me-2"></i>Edit</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#delete-note-units"><i class="ti ti-trash me-2"></i>Delete</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#view-note-units"><i class="ti ti-eye me-2"></i>View</a>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="pills-low" role="tabpanel">
+        <div class="accordion todo-accordion">
+          <div class="accordion-item border-0 mb-3">
+            <div class="row align-items-center mb-3 row-gap-3">
+              <div class="col-lg-4 col-sm-6">
+                <div class="accordion-header" id="headingEight">
+                  <div class="accordion-button" data-bs-toggle="collapse" data-bs-target="#collapseEight" aria-controls="collapseEight">
+                    <div class="d-flex align-items-center w-100">
+                      <div class="me-2">
+                        <a href="javascript:void(0);">
+                          <span><i class="fas fa-chevron-down"></i></span>
+                        </a>
+                      </div>
+                      <div class="d-flex align-items-center">
+                        <span><i class="ti ti-square-rounded text-success me-2"></i></span>
+                        <h5 class="fw-semibold">Low</h5>
+                        <span class="badge bg-light rounded-pill ms-2">24</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-8 col-sm-6">
+                <div class="d-flex align-items-center justify-content-sm-end">
+                  <a href="javascript:void(0);" class="btn btn-light me-2" data-bs-toggle="modal" data-bs-target="#note-units"><i class="ti ti-circle-plus me-2"></i>Add New</a>
+                  <a href="javascript:void(0);" class="btn btn-outline-light border">See All <i class="ti ti-arrow-right ms-2"></i></a>
+                </div>
+              </div>
+            </div>
+            <div id="collapseEight" class="accordion-collapse collapse show" aria-labelledby="headingEight">
+              <div class="accordion-body">
+                <div class="list-group list-group-flush">
+                  <div class="list-group-item list-item-hover shadow-sm rounded mb-2 p-3">
+                    <div class="row align-items-center row-gap-3">
+                      <div class="col-lg-6 col-md-7">
+                        <div class="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3">
+                          <span class="me-2 d-flex align-items-center"><i class="ti ti-grid-dots text-dark"></i></span>
+                          <div class="form-check form-check-md me-2">
+                            <input class="form-check-input" type="checkbox">
+                          </div>
+                          <span class="me-2 rating-select d-flex align-items-center"><i class="ti ti-star"></i></span>
+                          <div class="strike-info">
+                            <h4 class="fs-14">Plan tasks for the next day</h4>
+                          </div>
+                          <span class="badge bg-transparent-dark text-dark border border-dark rounded ms-2"><i class="ti ti-calendar me-1"></i>Today</span>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 col-md-5">
+                        <div class="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <span class="badge badge-info me-3">Social</span>
+                          <span class="badge badge-soft-secondary d-flex align-items-center me-3"><i class="fas fa-circle fs-6 me-1"></i>Pending</span>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar-list-stacked avatar-group-sm">
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-28.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-29.jpg" alt="img">
+                              </span>
+                              <span class="avatar avatar-rounded">
+                                <img class="border border-white" src="assets/img/profiles/avatar-24.jpg" alt="img">
+                              </span>
+                            </div>
+                            <div class="dropdown ms-2">
+                              <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                                <i class="ti ti-dots-vertical"></i>
+                              </a>
+                              <ul class="dropdown-menu dropdown-menu-end p-3">
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#edit-note-units"><i class="ti ti-edit me-2"></i>Edit</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#delete-note-units"><i class="ti ti-trash me-2"></i>Delete</a>
+                                </li>
+                                <li>
+                                  <a href="javascript:void(0);" class="dropdown-item rounded-1" data-bs-toggle="modal" data-bs-target="#view-note-units"><i class="ti ti-eye me-2"></i>View</a>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="text-center">
+      <a href="javascript:void(0);" class="btn btn-primary"><i class="ti ti-loader me-2"></i>Load More</a>
+    </div>
+  </div>
+</div>
+
+
+		<!-- Add Note -->
+		<div class="modal fade" id="note-units">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<div class="page-title">
+							<h4>Add Todo</h4>
+						</div>
+						<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<form >
+						<div class="modal-body">
+								<div class="row">
+									<div class="col-12">
+										<div class="mb-3">
+											<label class="form-label">Todo Title</label>
+											<input type="text" class="form-control">
+										</div>											
+									</div>
+									<div class="col-12">
+										<div class="mb-3">
+											<label class="form-label">Assignee</label>
+											<mat-select class="custom-mat-select select" placeholder="Select">
+												<mat-option value="1">Choose</mat-option>
+												<mat-option value="1">Sophie</mat-option>
+												<mat-option value="1">Cameron</mat-option>
+											</mat-select>
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="mb-3">
+											<label class="form-label">Tag</label>
+											<mat-select class="custom-mat-select select" placeholder="Select">
+												<mat-option value="1">Select</mat-option>
+												<mat-option value="1">Internal</mat-option>
+												<mat-option value="1">Projects</mat-option>
+											</mat-select>
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="mb-3">
+											<label class="form-label">Priority</label>
+											<mat-select class="custom-mat-select select" placeholder="Select">
+												<mat-option value="1">Select</mat-option>
+												<mat-option value="1">High</mat-option>
+												<mat-option value="1">Low</mat-option>
+											</mat-select>
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="input-blocks todo-calendar">
+											<label class="form-label">Due Date</label>                                                
+											<div class="input-groupicon calender-input">
+												<input type="text" class="form-control  date-range bookingrange" placeholder="Select" value="13 Aug 1992">
+											</div>
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="mb-3">
+											<label class="form-label">Status</label>
+											<mat-select class="custom-mat-select select" placeholder="Select">
+												<mat-option value="1">Select</mat-option>
+												<mat-option value="1">Active</mat-option>
+												<mat-option value="1">Inactive</mat-option>
+											</mat-select>
+										</div>
+									</div>
+									<div class="col-lg-12">
+										<div class="mb-3 summer-description-box notes-summernote">
+											<label class="form-label">Descriptions</label>
+											<div id="summernote"></div>
+											<p>Maximum 60 Characters</p>
+										</div>											
+									</div>
+								</div>
+						</div>	
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+							<button type="submit" class="btn btn-primary">Submit</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<!-- /Add Note -->
+
+		<!-- Edit Note -->
+		<div class="modal fade" id="edit-note-units">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<div class="page-title">
+							<h4>Todo Title</h4>
+						</div>
+						<div class=" edit-note-head d-flex align-items-center">
+							<a href="javascript:void(0);" class="me-2">
+								<span>
+									<i data-feather="trash-2"></i>
+								</span>
+							</a>
+							<a href="javascript:void(0);" class="me-2">
+								<span>
+									<i data-feather="star"></i>
+								</span>
+							</a>
+							<a href="javascript:void(0);" class="me-2">
+								<span>
+									<i data-feather="eye"></i>
+								</span>
+							</a>
+							<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+					</div>
+					<form >
+						<div class="modal-body">
+								<div class="row">
+									<div class="col-12">
+										<div class="input-blocks">
+											<label class="form-label">Note Title</label>
+											<input type="text" class="form-control" placeholder="Meet Lisa to discuss project details">
+										</div>											
+									</div>
+									<div class="col-12">
+										<div class="input-blocks">
+											<label class="form-label">Assignee</label>
+											<mat-select class="custom-mat-select select" placeholder="Select">
+												<mat-option value="1">Choose</mat-option>
+												<mat-option value="1">Sophie</mat-option>
+												<mat-option value="1">Cameron</mat-option>
+											</mat-select>
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="input-blocks">
+											<label class="form-label">Tag</label>
+											<mat-select class="custom-mat-select select" placeholder="Select">
+												<mat-option value="1">Select</mat-option>
+												<mat-option value="1">Internal</mat-option>
+												<mat-option value="1">Projects</mat-option>
+											</mat-select>
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="input-blocks">
+											<label class="form-label">Priority</label>
+											<mat-select class="custom-mat-select select" placeholder="High">
+												<mat-option value="1">High</mat-option>
+												<mat-option value="1">Medium</mat-option>
+												<mat-option value="1">Low</mat-option>
+											</mat-select>
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="input-blocks todo-calendar">
+											<label class="form-label">Due Date</label>                                                
+											<div class="input-groupicon calender-input">
+												<input type="text" class="form-control date-range bookingrange" placeholder="Select" value="13 Aug 1992">
+											</div>
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="input-blocks">
+											<label class="form-label">Status</label>
+											<mat-select class="custom-mat-select select" placeholder="Select">
+												<mat-option value="1">Select</mat-option>
+												<mat-option value="1">Active</mat-option>
+												<mat-option value="1">Inactive</mat-option>
+											</mat-select>
+										</div>
+									</div>
+									<div class="col-lg-12">
+										<div class="input-blocks summer-description-box notes-summernote">
+											<label class="form-label">Descriptions</label>
+											<div id="summernote2"></div>
+											<p>Maximum 60 Characters</p>
+										</div>											
+									</div>
+
+								</div>
+						</div>									
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+							<button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Save Changes</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<!-- /Edit Note -->
+
+		<!-- Delete Note -->
+		<div class="modal fade" id="delete-note-units">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="page-wrapper-new p-0">
+						<div class="content">
+							<div class="delete-popup text-center">
+								<div class="icon-success bg-danger-transparent text-danger mb-2">
+									<i class="ti ti-trash"></i>
+								</div>
+								<div class="delete-heads">
+									<h4>Are You Sure?</h4>
+									<p>Do you really want to delete this item, This process cannot be undone.</p>
+								</div>
+								<div class="modal-footer-btn delete-footer">
+									<a href="javascript:void(0);" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</a>
+									<a href="javascript:void(0);" class="btn btn-primary" data-bs-dismiss="modal">Delete</a>
+								</div>
+							</div>																				
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /Delete Note -->
+
+    		<!-- View Note -->
+		<div class="modal fade" id="view-note-units">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<div class="page-title edit-page-title">
+							<h4>Todo</h4>
+							<span class="badge badge-soft-success shadow-none">Personal</span>
+						</div>
+						<div class=" edit-noted-head d-flex align-items-center">
+							<a href="javascript:void(0);">
+								<span class="me-2">
+									<i data-feather="trash-2"></i>
+								</span>
+							</a>
+							<a href="javascript:void(0);" class="me-2">
+								<span class="me-2">
+									<i data-feather="star"></i>
+								</span>
+							</a>
+							<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+					</div>
+					<div class="modal-body">
+						<div class="row">
+							<div class="col-12">
+								<div class="edit-head-view">
+									<h6>Meet Lisa to discuss project details</h6>
+									<p>Hiking is a long, vigorous walk, usually on trails or footpaths in the countryside.
+										Walking for pleasure developed in Europe during the eighteenth century.
+										Religious pilgrimages have existed much longer but they involve walking long
+										distances for a spiritual purpose associated with specific religions and also
+										we achieve inner peace while we hike at a local park.</p>
+
+									<p class="badged high"><i class="fas fa-circle"></i> High</p>
+								</div>	
+								<div class="modal-footer edit-footer-menu">
+									<a href="javascript:void(0);" class="btn btn-primary me-2" data-bs-dismiss="modal">Close</a>
+								</div>
+							</div>
+						</div>	
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /View Note -->

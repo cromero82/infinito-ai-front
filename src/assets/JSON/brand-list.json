@@ -1,0 +1,66 @@
+{
+  "data": [
+    {
+      "brand": "Lenevo",
+      "img": "lenova.png",
+      "createdOn": "24 Dec 2024",
+      "status": "Active"
+    },
+    {
+      "brand": "Beats",
+      "img": "beats.png",
+      "createdOn": "10 Dec 2024",
+      "status": "Active"
+    },
+    {
+      "brand": "Nike",
+      "img": "nike.png",
+      "createdOn": "27 Nov 2024",
+      "status": "Active"
+    },
+    {
+      "brand": "Apple",
+      "img": "apple.png",
+      "createdOn": "18 Nov 2024",
+      "status": "Active"
+    },
+    {
+      "brand": "Amazon",
+      "img": "amazon.png",
+      "createdOn": "06 Nov 2024",
+      "status": "Active"
+    },
+    {
+      "brand": "Woodmart",
+      "img": "woodmart.png",
+      "createdOn": "25 Oct 2024",
+      "status": "Active"
+    },
+    {
+      "brand": "Dior",
+      "img": "dior.png",
+      "createdOn": "14 Oct 2024",
+      "status": "Active"
+    },
+    {
+      "brand": "Lava",
+      "img": "lava.png",
+      "createdOn": "03 Oct 2024",
+      "status": "Active"
+    },
+    {
+      "brand": "Nilkamal",
+      "img": "nilkamal.png",
+      "createdOn": "20 Sep 2024",
+      "status": "Active"
+    },
+    {
+      "brand": "The North Face",
+      "img": "the-north-force.png",
+      "createdOn": "10 Sep 2024",
+      "status": "Active"
+    }
+  ]
+  ,
+  "totalData": 10
+}

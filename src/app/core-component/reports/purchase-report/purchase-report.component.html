@@ -1,0 +1,141 @@
+<div class="page-header">
+  <div class="add-item d-flex">
+    <div class="page-title">
+      <h4>Purchase Report</h4>
+      <h6>Manage your Purchase Report</h6>
+    </div>
+  </div>
+  <ul class="table-top-head">
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Refresh" matTooltipPosition="above"><i
+      class="ti ti-refresh"></i></a>
+    </li>
+    <li>
+      <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Collapse"
+        matTooltipPosition="above" id="collapse-header"> @if (!isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }
+      @if (isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }</a>
+    </li>
+  </ul>
+</div>
+<div class="card border-0">
+  <div class="card-body pb-1">
+    <form>
+      <div class="row align-items-end">
+        <div class="col-lg-10">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="mb-3 custom-ngxdate">
+                <label class="form-label">Choose Date</label>
+               <app-date-range-picker/>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Store</label>
+                <mat-select class="custom-mat-select select" placeholder="All">
+                  <mat-option value="1">All</mat-option>
+                  <mat-option value="1">Freshmart</mat-option>
+                  <mat-option value="1">Grocery Bevy</mat-option>
+                  <mat-option value="1">Grocery Apex</mat-option>
+                </mat-select>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Products</label>
+                <mat-select class="custom-mat-select select" placeholder="All">
+                  <mat-option value="1">All</mat-option>
+                  <mat-option value="1">Lenovo IdeaPad 3</mat-option>
+                  <mat-option value="1">Nike Jordan</mat-option>
+                  <mat-option value="1">Amazon Echo Dot</mat-option>
+                </mat-select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-2">
+          <div class="mb-3">
+            <button class="btn btn-primary w-100" type="submit">Generate Report</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- /product list -->
+<div class="card table-list-card">
+  <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+    <div>
+      <h4>Customer Report</h4>
+    </div>
+    <ul class="table-top-head">
+      <li class="me-2">
+        <a data-bs-toggle="tooltip" data-bs-placement="top" title="Pdf"><img src="assets/img/icons/pdf.svg" alt="img"></a>
+      </li>
+      <li class="me-2">
+        <a data-bs-toggle="tooltip" data-bs-placement="top" title="Excel"><img src="assets/img/icons/excel.svg" alt="img"></a>
+      </li>
+      <li>
+        <a data-bs-toggle="tooltip" data-bs-placement="top" title="Print"><i class="ti ti-printer"></i></a>
+      </li>
+    </ul>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table matSort (matSortChange)="sortData($event)" class="table  datanew">
+        <thead class="thead-light">
+          <tr>
+            <th mat-sort-header="reference">Reference</th>
+            <th mat-sort-header="sku">SKU</th>
+            <th mat-sort-header="date">Due Date</th>
+            <th mat-sort-header="productName">Product Name</th>
+            <th mat-sort-header="category">Cateegory</th>
+            <th mat-sort-header="instockQty">Instock Qty</th>
+            <th mat-sort-header="purchaseQty">Purchase Qty</th>
+            <th mat-sort-header="purchaseAmount">Purchase Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (data of tableData; track data) {
+            <tr>
+											
+              <td>
+                <a [routerLink]="routes.purchaseReport">{{data.reference}}</a>
+              </td>
+              <td>
+                {{data.sku}}
+              </td>
+              <td>
+               {{data.dueDate}}
+              </td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <a [routerLink]="routes.purchaseReport" class="avatar avatar-md"><img src="assets/img/products/{{data.img}}" class="img-fluid" alt="img"></a>
+                  <div class="ms-2">
+                    <p class="text-dark mb-0"><a>{{data.productName}}</a></p>
+                  </div>
+                </div>
+              </td>
+              <td>
+                {{data.category}}
+              </td>
+              <td>
+                {{data.instockQty}}								
+              </td>
+              <td>{{data.purchaseQty}}</td>
+              <td>
+                {{data.purchaseAmount}}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-custom-pagination></app-custom-pagination>
+  </div>
+</div>
+<!-- /product list -->

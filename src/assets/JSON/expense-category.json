@@ -1,0 +1,55 @@
+{
+  "data":[
+    {
+      "CategoryName": "Utilities",
+      "description": "Bills for electricity, water, gas, and internet",
+      "status": "Active"
+    },
+    {
+      "CategoryName": "Office Supplies",
+      "description": "Items like stationery, chairs, and printers",
+      "status": "Active"
+    },
+    {
+      "CategoryName": "Repairs & Maintenance",
+      "description": "Expenses for repairs and equipment maintenance",
+      "status": "Active"
+    },
+    {
+      "CategoryName": "Marketing",
+      "description": "Promotional and advertising costs",
+      "status": "Active"
+    },
+    {
+      "CategoryName": "Travel Expenses",
+      "description": "Travel and transport-related costs",
+      "status": "Active"
+    },
+    {
+      "CategoryName": "Employee Benefits",
+      "description": "Perks and benefits provided to employees",
+      "status": "Active"
+    },
+    {
+      "CategoryName": "Vehicle Maintenance",
+      "description": "Fuel, repairs, and maintenance of vehicles",
+      "status": "Active"
+    },
+    {
+      "CategoryName": "Rent",
+      "description": "Office or building rental payments",
+      "status": "Active"
+    },
+    {
+      "CategoryName": "Subscriptions",
+      "description": "Costs for tools or software licenses",
+      "status": "Active"
+    },
+    {
+      "CategoryName": "Miscellaneous",
+      "description": "Unplanned or uncategorized expenses",
+      "status": "Active"
+    }
+  ],  
+  "totalData": 10
+}

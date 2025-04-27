@@ -1,0 +1,56 @@
+{
+    "data": [
+        {
+            "role": "Admin",
+            "createdDate": "12 Sep 2024",
+            "status": "Active"
+        },
+        {
+            "role": "Manager",
+            "createdDate": "24 Oct 2024",
+            "status": "Active"
+        },
+        {
+            "role": "Salesman",
+            "createdDate": "18 Feb 2024",
+            "status": "Active"
+        },
+        {
+            "role": "Supervisor",
+            "createdDate": "17 Oct 2024",
+            "status": "Active"
+        },
+        {
+            "role": "Store Keeper",
+            "createdDate": "20 Jul 2024",
+            "status": "Active"
+        },
+        {
+            "role": "Inventory Manager",
+            "createdDate": "10 Apr 2024",
+            "status": "Active"
+        },
+        {
+            "role": "Delivery Biker",
+            "createdDate": "29 Aug 2024",
+            "status": "Active"
+        },
+        {
+            "role": "Employee",
+            "createdDate": "22 Feb 2024",
+            "status": "Active"
+        },
+        {
+            "role": "Cashier",
+            "createdDate": "03 Nov 2024",
+            "status": "Active"
+        },
+        {
+            "role": "Quality Analyst",
+            "createdDate": "17 Dec 2024",
+            "status": "Active"
+        }
+    ]
+    ,
+    "totalData": 10
+}

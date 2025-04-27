@@ -1,0 +1,50 @@
+{
+    "data": [
+        {
+            "name": "Sick Leave",
+            "leaveQuota": "05",
+            "createdOn": "02 Aug 2023",
+            "status": "Active",
+            "action": ""
+        },
+        {
+            "name": "Maternity",
+            "leaveQuota": "05",
+            "createdOn": "03 Aug 2023",
+            "status": "Active",
+            "action": ""
+        },
+        {
+            "name": "Paternity",
+            "leaveQuota": "05",
+            "createdOn": "04 Aug 2023",
+            "status": "Active",
+            "action": ""
+        },
+        {
+            "name": "Casual Leave",
+            "leaveQuota": "05",
+            "createdOn": "07 Aug 2023",
+            "status": "Active",
+            "action": ""
+        },
+        {
+            "name": "Emergency",
+            "leaveQuota": "05",
+            "createdOn": "08 Aug 2023",
+            "status": "Active",
+            "action": ""
+        },
+        {
+            "name": "Vacation",
+            "leaveQuota": "05",
+            "createdOn": "10 Aug 2023",
+            "status": "Active",
+            "action": ""
+        }
+     
+    ],
+    "totalData": 6
+  }
+  
+  

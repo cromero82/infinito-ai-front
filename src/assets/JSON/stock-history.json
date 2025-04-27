@@ -1,0 +1,105 @@
+{
+  "data": [
+    {
+      "img": "stock-img-01.png",
+      "sku": "PT001",
+      "productName": "Lenovo IdeaPad 3",
+      "initialQuantity": 6000,
+      "addedQuantity": 100,
+      "soldQuantity": 100,
+      "defectiveQuantity": 100,
+      "finalQuantity": 100
+    },
+    {
+      "img": "stock-img-06.png",
+      "sku": "PT002",
+      "productName": "Beats Pro",
+      "initialQuantity": 10,
+      "addedQuantity": 140,
+      "soldQuantity": 140,
+      "defectiveQuantity": 140,
+      "finalQuantity": 140
+    },
+    {
+      "img": "stock-img-02.png",
+      "sku": "PT003",
+      "productName": "Nike Jordan",
+      "initialQuantity": 8,
+      "addedQuantity": 300,
+      "soldQuantity": 300,
+      "defectiveQuantity": 300,
+      "finalQuantity": 300
+    },
+    {
+      "img": "stock-img-03.png",
+      "sku": "PT004",
+      "productName": "Apple Series 5 Watch",
+      "initialQuantity": 10,
+      "addedQuantity": 450,
+      "soldQuantity": 450,
+      "defectiveQuantity": 450,
+      "finalQuantity": 450
+    },
+    {
+      "img": "stock-img-04.png",
+      "sku": "PT005",
+      "productName": "Amazon Echo Dot",
+      "initialQuantity": 5,
+      "addedQuantity": 320,
+      "soldQuantity": 320,
+      "defectiveQuantity": 320,
+      "finalQuantity": 320
+    },
+    {
+      "img": "stock-img-05.png",
+      "sku": "PT006",
+      "productName": "Sanford Chair Sofa",
+      "initialQuantity": 7,
+      "addedQuantity": 650,
+      "soldQuantity": 650,
+      "defectiveQuantity": 650,
+      "finalQuantity": 650
+    },
+    {
+      "img": "expire-product-01.png",
+      "sku": "PT007",
+      "productName": "Red Premium Satchel",
+      "initialQuantity": 15,
+      "addedQuantity": 700,
+      "soldQuantity": 700,
+      "defectiveQuantity": 700,
+      "finalQuantity": 700
+    },
+    {
+      "img": "expire-product-02.png",
+      "sku": "PT008",
+      "productName": "iPhone 14 Pro",
+      "initialQuantity": 12,
+      "addedQuantity": 630,
+      "soldQuantity": 630,
+      "defectiveQuantity": 630,
+      "finalQuantity": 630
+    },
+    {
+      "img": "expire-product-03.png",
+      "sku": "PT009",
+      "productName": "Gaming Chair",
+      "initialQuantity": 10,
+      "addedQuantity": 410,
+      "soldQuantity": 410,
+      "defectiveQuantity": 410,
+      "finalQuantity": 410
+    },
+    {
+      "img": "expire-product-04.png",
+      "sku": "PT010",
+      "productName": "Borealis Backpack",
+      "initialQuantity": 20,
+      "addedQuantity": 550,
+      "soldQuantity": 550,
+      "defectiveQuantity": 550,
+      "finalQuantity": 550
+    }
+  ],
+  "totalData": 10
+}

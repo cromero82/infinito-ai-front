@@ -1,0 +1,73 @@
+<div class="h-100" [ngClass]="{
+  'expand-menu': miniSidebar === true && expandMenu === true ,
+  'mini-sidebar': miniSidebar === true ,
+  'menu-opened': mobileSidebar === true,
+  'slide-nav': mobileSidebar === true,
+  'menu-horizontal': layoutMode === 'horizontal' ,
+  'layout-box-mode ': layoutWidth === 'box' ,
+  'pos-page':page==='pos' || page==='pos-2' || page==='pos-3' || page==='pos-4' || page==='pos-5'
+}" style="--primary-rgb-picr : {{dthemeColor}}; --sidebar--rgb-picr : {{selectedColor}}; --topbar--rgb-picr : {{selectedColor1}};  --topbarcolor--rgb-picr : {{horizontalColor}};">
+
+  <div *ngIf="showPreloader" id="global-loader">
+    <div class="whirly-loader"> </div>
+  </div>
+
+  <!-- Main Wrapper -->
+  @if (page !== 'coming-soon' && page !== 'under-maintenance') {
+  <div class="main-wrapper h-100" [ngClass]="{
+        'light': themeMode === 'light_mode', 
+        'dark': themeMode === 'dark_mode',
+        'default': layoutMode === 'default_mode',
+        'box': layoutMode === 'box_mode', 
+        'collapsed': layoutMode === 'collapsed_mode', 
+        'horizontal': layoutMode === '3', 
+        'modern': layoutMode === 'modern_mode', 
+        'nav-light': navigationColor === 'light_color',
+        'nav-grey': navigationColor === 'grey_color', 
+        'nav-dark': navigationColor === 'dark_color', 
+       
+        'pos-five':page==='pos',
+        'pos-three':page==='pos-4' || page==='pos-5',
+        'pos-four':page==='pos-5'
+      }" [class.header-collapse]="isCollapsed">
+    <app-header></app-header>
+    <app-sidebar-one [ngClass]="{'d-none': page === 'pos' || page === 'pos-2' || page === 'pos-3' || page === 'pos-4' || page === 'pos-5'}"> </app-sidebar-one>
+    @if (layoutMode === 'twocolumn') {
+    <app-sidebar-two [ngClass]="{'d-none': page === 'pos' || page === 'pos-2' || page === 'pos-3' || page === 'pos-4' || page === 'pos-5'}"></app-sidebar-two>
+    }
+    @if (layoutMode === 'horizontal') {
+    <app-sidebar-three [ngClass]="{'d-none': page === 'pos' || page === 'pos-2' || page === 'pos-3' || page === 'pos-4' || page === 'pos-5'}"></app-sidebar-three>
+    }
+    <div class="page-wrapper" [ngClass]="{
+            'ms-0': sideBaractivePath === true,
+            'pos-pg-wrapper' : page === 'pos' || page === 'pos-2' || page === 'pos-3' || page === 'pos-4' || page === 'pos-5',
+            'cardhead': page === 'ui-counter',
+            'notes-page-wrapper' : page === 'file-archived' || page === 'file-document' || page === 'file-archived' || page === 'file-favourites' || page === 'file-recent' || page === 'file-manager'||page === 'file-shared' || page === 'todo' || page === 'notes' || page === 'qrcode' || page === 'file-manager-deleted',
+            'file-manager': page === 'file-shared' || page === 'file-archived' || page === 'file-document' || page === 'file-archived' || page === 'file-favourites' || page === 'file-recent' || page === 'file-manager' || page === 'file-manager-deleted',
+            
+          }">
+      <div class="content" [ngClass]="{
+            'settings-content':last === 'bank-settings-grid' || last === 'bank-settings-list' || last === 'email-settings' || base === 'settings' || last === 'storage-settings',
+            'pos-design':page === 'pos' || page === 'pos-2' || page === 'pos-3' || page === 'pos-4' || page === 'pos-5',
+            'p-0':page === 'pos' || page === 'pos-2' || page === 'pos-3' || page === 'pos-4' || page === 'pos-5'||page==='email',
+
+          }">
+        <router-outlet></router-outlet>
+      </div>
+      <app-footer [ngClass]="{'d-none': page === 'pos' || page === 'pos-2' || page === 'pos-3' || page === 'pos-4' || page === 'pos-5'}"></app-footer>
+    </div>
+    <!-- Main Wrapper -->
+    <app-layout [ngClass]="{'d-none': base === 'layout-horizontal' || base === 'layout-detached' || base === 'layout-two-column' || base === 'layout-boxed'
+       || base === 'layout-rtl' || base === 'layout-dark' 
+     }"></app-layout>
+  </div>
+  }
+  <!-- Main Wrapper -->
+
+  @if (page === 'coming-soon' || page === 'under-maintenance') {
+  <div class="main-wrapper">
+    <router-outlet></router-outlet>
+    
+  </div>
+  }
+</div>

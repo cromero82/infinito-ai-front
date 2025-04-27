@@ -1,0 +1,13 @@
+{
+  "data": [
+    {
+      "product": "Nike Jordan",
+      "sku": "PT002",
+      "code": "HG3FK",
+      "referenceNo": "32RRR554",
+      "qty": "+",
+      "img": "assets/img/products/stock-img-02.png"
+    }
+  ],
+  "totalData": 1
+}

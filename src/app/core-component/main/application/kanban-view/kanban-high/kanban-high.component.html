@@ -1,0 +1,476 @@
+<div class="d-flex align-items-start overflow-auto project-status pb-4">
+  <div class="p-3 rounded bg-transparent-secondary w-100 me-3">
+    <div class="bg-white p-2 rounded mb-2">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <span class="bg-soft-pink p-1 d-flex rounded-circle me-2"><span class="bg-pink rounded-circle d-block p-1"></span></span>
+          <h5 class="me-2">New</h5>
+          <span class="badge bg-light rounded-pill">02</span>
+        </div>
+        <div class="dropdown">
+          <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+            <i class="fa fa-ellipsis-v"></i>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end p-3">
+            <li>
+              <a href="javascript:void(0);" class="dropdown-item rounded-1"><i class="feather icon-edit feather-edit me-2"></i>Edit</a>
+            </li>
+            <li>
+              <a href="javascript:void(0);" class="confirm-text dropdown-item rounded-1" (click)="confirmColor()"><i class="ti ti-trash me-2"></i>Delete</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="kanban-drag-wrap"
+    cdkDropList
+      #FirstList="cdkDropList"
+      [cdkDropListData]="lstOne"
+      [cdkDropListConnectedTo]="[
+        FirstList,
+        SecondList,
+        ThirdList,
+        FourList
+      ]"
+      (cdkDropListDropped)="onDrop($event)">
+      @for (data of lstOne; track data) {
+        <div cdkDrag>
+          <div class="card kanban-card mb-2">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center">
+                  <span class="badge bg-outline-dark me-2">{{data.Logo}}</span>
+                  <span [class]="data.PowerClass"><i class="fas fa-circle fs-6 me-1"></i>{{data.kanbanPower}}</span>
+                </div>
+                <div class="dropdown">
+                  <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                    <i class="fa fa-ellipsis-v"></i>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end p-3">
+                    <li>
+                      <a href="javascript:void(0);" class="dropdown-item rounded-1"><i class="feather icon-edit feather-edit me-2"></i>Edit</a>
+                    </li>
+                    <li>
+                      <a href="javascript:void(0);" class="confirm-text dropdown-item rounded-1" (click)="confirmColor()"><i class="ti ti-trash me-2"></i>Delete</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <span class="avatar avatar-xs rounded-circle bg-warning me-2">
+                  <img src="assets/img/icons/kanban-arrow.svg" class="w-auto h-auto" alt="Img">
+                </span>
+                <h6 class="d-flex align-items-center">Project Title <span class="fs-12 ms-2 text-gray">{{data.Name}}</span></h6>
+              </div>
+              <div class="d-flex align-items-center border-bottom mb-3 pb-3">
+                <div class="me-3 pe-3 border-end">
+                  <span class="fw-medium fs-12 d-block mb-1">Budget</span>
+                  <p class="fs-12 text-dark">$24,000</p>
+                </div>
+                <div class="me-3 pe-3 border-end">
+                  <span class="fw-medium fs-12 d-block mb-1">Tasks</span>
+                  <p class="fs-12 text-dark">12/15</p>
+                </div>
+                <div class="">
+                  <span class="fw-medium fs-12 d-block mb-1">Due on</span>
+                  <p class="fs-12 text-dark">15 Apr 2024</p>
+                </div>
+              </div>
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="avatar-list-stacked avatar-group-sm me-3">
+                  <span class="avatar avatar-rounded">
+                    <img class="border border-white" src="assets/img/profiles/avatar-19.jpg" alt="img">
+                  </span>
+                  <span class="avatar avatar-rounded">
+                    <img class="border border-white" src="assets/img/profiles/avatar-29.jpg" alt="img">
+                  </span>
+                  <span class="avatar avatar-rounded">
+                    <img class="border border-white" src="assets/img/profiles/avatar-16.jpg" alt="img">
+                  </span>
+                  <span class="avatar avatar-rounded">
+                    <img class="border border-white" src="assets/img/profiles/avatar-01.jpg" alt="img">
+                  </span>
+                  <span class="avatar avatar-rounded">
+                    <img class="border border-white" src="assets/img/profiles/avatar-02.jpg" alt="img">
+                  </span>
+                  <span class="avatar avatar-rounded">
+                    <img class="border border-white" src="assets/img/profiles/avatar-03.jpg" alt="img">
+                  </span>
+                  <a href="javascript:void(0);" class="avatar avatar-rounded bg-primary fs-12 text-white">
+                    1+
+                  </a>
+                </div>
+                <div class="d-flex align-items-center">
+                  <a href="javascript:void(0);" class="d-flex align-items-center text-dark me-2"><i class="ti ti-message-circle text-gray me-1"></i>14</a>
+                  <a href="javascript:void(0);" class="d-flex align-items-center text-dark"><i class="ti ti-paperclip text-gray me-1"></i>14</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+    </div>
+    <div class="pt-2">
+      <a href="javascript:void(0);" class="btn btn-white border border-dashed d-flex align-items-center justify-content-center">
+        <i class="ti ti-plus me-2"></i>
+        New Project
+      </a>
+    </div>
+  </div>
+  <div class="p-3 rounded bg-transparent-secondary w-100 me-3">
+    <div class="bg-white p-2 rounded mb-2">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <span class="bg-soft-skyblue p-1 d-flex rounded-circle me-2"><span class="bg-skyblue rounded-circle d-block p-1"></span></span>
+          <h5 class="me-2">Inprogress</h5>
+          <span class="badge bg-light rounded-pill">13</span>
+        </div>
+        <div class="dropdown">
+          <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+            <i class="fa fa-ellipsis-v"></i>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end p-3">
+            <li>
+              <a href="javascript:void(0);" class="dropdown-item rounded-1"><i class="feather icon-edit feather-edit me-2"></i>Edit</a>
+            </li>
+            <li>
+              <a href="javascript:void(0);" class="confirm-text dropdown-item rounded-1" (click)="confirmColor()"><i class="ti ti-trash me-2"></i>Delete</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="kanban-drag-wrap"
+    cdkDropList
+        #SecondList="cdkDropList"
+        [cdkDropListData]="lstTwo"
+        [cdkDropListConnectedTo]="[
+          FirstList,
+          SecondList,
+          ThirdList,
+          FourList
+        ]"
+        (cdkDropListDropped)="onDrop($event)">
+        @for (data of lstTwo; track data) {
+          <div cdkDrag>
+            <div class="card kanban-card mb-2">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                  <div class="d-flex align-items-center">
+                    <span class="badge bg-outline-dark me-2">{{data.Logo}}</span>
+                    <span [class]="data.PowerClass"><i class="fas fa-circle fs-6 me-1"></i>{{data.kanbanPower}}</span>
+                  </div>
+                  <div class="dropdown">
+                    <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                      <i class="fa fa-ellipsis-v"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end p-3">
+                      <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1"><i class="feather icon-edit feather-edit me-2"></i>Edit</a>
+                      </li>
+                      <li>
+                        <a href="javascript:void(0);" class="confirm-text dropdown-item rounded-1" (click)="confirmColor()"><i class="ti ti-trash me-2"></i>Delete</a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <span class="avatar avatar-xs rounded-circle bg-warning me-2">
+                    <img src="assets/img/icons/kanban-arrow.svg" class="w-auto h-auto" alt="Img">
+                  </span>
+                  <h6 class="d-flex align-items-center">Project Title <span class="fs-12 ms-2 text-gray">{{data.Name}}</span></h6>
+                </div>
+                <div class="d-flex align-items-center border-bottom mb-3 pb-3">
+                  <div class="me-3 pe-3 border-end">
+                    <span class="fw-medium fs-12 d-block mb-1">Budget</span>
+                    <p class="fs-12 text-dark">$24,000</p>
+                  </div>
+                  <div class="me-3 pe-3 border-end">
+                    <span class="fw-medium fs-12 d-block mb-1">Tasks</span>
+                    <p class="fs-12 text-dark">12/15</p>
+                  </div>
+                  <div class="">
+                    <span class="fw-medium fs-12 d-block mb-1">Due on</span>
+                    <p class="fs-12 text-dark">15 Apr 2024</p>
+                  </div>
+                </div>
+                <div class="d-flex align-items-center justify-content-between">
+                  <div class="avatar-list-stacked avatar-group-sm me-3">
+                    <span class="avatar avatar-rounded">
+                      <img class="border border-white" src="assets/img/profiles/avatar-19.jpg" alt="img">
+                    </span>
+                    <span class="avatar avatar-rounded">
+                      <img class="border border-white" src="assets/img/profiles/avatar-29.jpg" alt="img">
+                    </span>
+                    <span class="avatar avatar-rounded">
+                      <img class="border border-white" src="assets/img/profiles/avatar-16.jpg" alt="img">
+                    </span>
+                    <span class="avatar avatar-rounded">
+                      <img class="border border-white" src="assets/img/profiles/avatar-01.jpg" alt="img">
+                    </span>
+                    <span class="avatar avatar-rounded">
+                      <img class="border border-white" src="assets/img/profiles/avatar-02.jpg" alt="img">
+                    </span>
+                    <span class="avatar avatar-rounded">
+                      <img class="border border-white" src="assets/img/profiles/avatar-03.jpg" alt="img">
+                    </span>
+                    <a href="javascript:void(0);" class="avatar avatar-rounded bg-primary fs-12 text-white">
+                      1+
+                    </a>
+                  </div>
+                  <div class="d-flex align-items-center">
+                    <a href="javascript:void(0);" class="d-flex align-items-center text-dark me-2"><i class="ti ti-message-circle text-gray me-1"></i>14</a>
+                    <a href="javascript:void(0);" class="d-flex align-items-center text-dark"><i class="ti ti-paperclip text-gray me-1"></i>14</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+    </div>
+    <div class="pt-2">
+      <a href="javascript:void(0);" class="btn btn-white border border-dashed d-flex align-items-center justify-content-center">
+        <i class="ti ti-plus me-2"></i>
+        New Project
+      </a>
+    </div>
+  </div>
+  <div class="p-3 rounded bg-transparent-secondary w-100 me-3">
+    <div class="bg-white p-2 rounded mb-2">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <span class="bg-soft-danger p-1 d-flex rounded-circle me-2"><span class="bg-danger rounded-circle d-block p-1"></span></span>
+          <h5 class="me-2">On-hold</h5>
+          <span class="badge bg-light rounded-pill">04</span>
+        </div>
+        <div class="dropdown">
+          <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+            <i class="fa fa-ellipsis-v"></i>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end p-3">
+            <li>
+              <a href="javascript:void(0);" class="dropdown-item rounded-1"><i class="feather icon-edit feather-edit me-2"></i>Edit</a>
+            </li>
+            <li>
+              <a href="javascript:void(0);" class="confirm-text dropdown-item rounded-1" (click)="confirmColor()"><i class="ti ti-trash me-2"></i>Delete</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="kanban-drag-wrap" cdkDropList
+    #ThirdList="cdkDropList"
+    [cdkDropListData]="lstThree"
+    [cdkDropListConnectedTo]="[
+      FirstList,
+      SecondList,
+      ThirdList,
+      FourList
+    ]"
+    (cdkDropListDropped)="onDrop($event)">
+    @for (data of lstThree; track data) {
+      <div cdkDrag>
+        <div class="card kanban-card mb-2">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div class="d-flex align-items-center">
+                <span class="badge bg-outline-dark me-2">{{data.Logo}}</span>
+                <span [class]="data.PowerClass"><i class="fas fa-circle fs-6 me-1"></i>{{data.kanbanPower}}</span>
+              </div>
+              <div class="dropdown">
+                <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                  <i class="fa fa-ellipsis-v"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end p-3">
+                  <li>
+                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i class="feather icon-edit feather-edit me-2"></i>Edit</a>
+                  </li>
+                  <li>
+                    <a href="javascript:void(0);" class="confirm-text dropdown-item rounded-1" (click)="confirmColor()"><i class="ti ti-trash me-2"></i>Delete</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="d-flex align-items-center mb-2">
+              <span class="avatar avatar-xs rounded-circle bg-warning me-2">
+                <img src="assets/img/icons/kanban-arrow.svg" class="w-auto h-auto" alt="Img">
+              </span>
+              <h6 class="d-flex align-items-center">Project Title <span class="fs-12 ms-2 text-gray">{{data.Name}}</span></h6>
+            </div>
+            <div class="d-flex align-items-center border-bottom mb-3 pb-3">
+              <div class="me-3 pe-3 border-end">
+                <span class="fw-medium fs-12 d-block mb-1">Budget</span>
+                <p class="fs-12 text-dark">$24,000</p>
+              </div>
+              <div class="me-3 pe-3 border-end">
+                <span class="fw-medium fs-12 d-block mb-1">Tasks</span>
+                <p class="fs-12 text-dark">12/15</p>
+              </div>
+              <div class="">
+                <span class="fw-medium fs-12 d-block mb-1">Due on</span>
+                <p class="fs-12 text-dark">15 Apr 2024</p>
+              </div>
+            </div>
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="avatar-list-stacked avatar-group-sm me-3">
+                <span class="avatar avatar-rounded">
+                  <img class="border border-white" src="assets/img/profiles/avatar-19.jpg" alt="img">
+                </span>
+                <span class="avatar avatar-rounded">
+                  <img class="border border-white" src="assets/img/profiles/avatar-29.jpg" alt="img">
+                </span>
+                <span class="avatar avatar-rounded">
+                  <img class="border border-white" src="assets/img/profiles/avatar-16.jpg" alt="img">
+                </span>
+                <span class="avatar avatar-rounded">
+                  <img class="border border-white" src="assets/img/profiles/avatar-01.jpg" alt="img">
+                </span>
+                <span class="avatar avatar-rounded">
+                  <img class="border border-white" src="assets/img/profiles/avatar-02.jpg" alt="img">
+                </span>
+                <span class="avatar avatar-rounded">
+                  <img class="border border-white" src="assets/img/profiles/avatar-03.jpg" alt="img">
+                </span>
+                <a href="javascript:void(0);" class="avatar avatar-rounded bg-primary fs-12 text-white">
+                  1+
+                </a>
+              </div>
+              <div class="d-flex align-items-center">
+                <a href="javascript:void(0);" class="d-flex align-items-center text-dark me-2"><i class="ti ti-message-circle text-gray me-1"></i>14</a>
+                <a href="javascript:void(0);" class="d-flex align-items-center text-dark"><i class="ti ti-paperclip text-gray me-1"></i>14</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    </div>
+    <div class="pt-2">
+      <a href="javascript:void(0);" class="btn btn-white border border-dashed d-flex align-items-center justify-content-center">
+        <i class="ti ti-plus me-2"></i>
+        New Project
+      </a>
+    </div>
+  </div>
+  <div class="p-3 rounded bg-transparent-secondary w-100">
+    <div class="bg-white p-2 rounded mb-2">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <span class="bg-soft-success p-1 d-flex rounded-circle me-2"><span class="bg-success rounded-circle d-block p-1"></span></span>
+          <h5 class="me-2">Completed</h5>
+          <span class="badge bg-light rounded-pill">10</span>
+        </div>
+        <div class="dropdown">
+          <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+            <i class="fa fa-ellipsis-v"></i>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end p-3">
+            <li>
+              <a href="javascript:void(0);" class="dropdown-item rounded-1"><i class="feather icon-edit feather-edit me-2"></i>Edit</a>
+            </li>
+            <li>
+              <a href="javascript:void(0);" class="confirm-text dropdown-item rounded-1" (click)="confirmColor()"><i class="ti ti-trash me-2"></i>Delete</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="kanban-drag-wrap" cdkDropList
+    #FourList="cdkDropList"
+    [cdkDropListData]="lstFour"
+    [cdkDropListConnectedTo]="[
+      FirstList,
+      SecondList,
+      ThirdList,
+      FourList
+    ]"
+    (cdkDropListDropped)="onDrop($event)">
+    @for (data of lstFour; track data) {
+      <div cdkDrag>
+        <div class="card kanban-card mb-2">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div class="d-flex align-items-center">
+                <span class="badge bg-outline-dark me-2">{{data.Logo}}</span>
+                <span [class]="data.PowerClass"><i class="fas fa-circle fs-6 me-1"></i>{{data.kanbanPower}}</span>
+              </div>
+              <div class="dropdown">
+                <a href="javascript:void(0);" class="d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                  <i class="fa fa-ellipsis-v"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end p-3">
+                  <li>
+                    <a href="javascript:void(0);" class="dropdown-item rounded-1"><i class="feather icon-edit feather-edit me-2"></i>Edit</a>
+                  </li>
+                  <li>
+                    <a href="javascript:void(0);" class="confirm-text dropdown-item rounded-1" (click)="confirmColor()"><i class="ti ti-trash me-2"></i>Delete</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="d-flex align-items-center mb-2">
+              <span class="avatar avatar-xs rounded-circle bg-warning me-2">
+                <img src="assets/img/icons/kanban-arrow.svg" class="w-auto h-auto" alt="Img">
+              </span>
+              <h6 class="d-flex align-items-center">Project Title <span class="fs-12 ms-2 text-gray">{{data.Name}}</span></h6>
+            </div>
+            <div class="d-flex align-items-center border-bottom mb-3 pb-3">
+              <div class="me-3 pe-3 border-end">
+                <span class="fw-medium fs-12 d-block mb-1">Budget</span>
+                <p class="fs-12 text-dark">$24,000</p>
+              </div>
+              <div class="me-3 pe-3 border-end">
+                <span class="fw-medium fs-12 d-block mb-1">Tasks</span>
+                <p class="fs-12 text-dark">12/15</p>
+              </div>
+              <div class="">
+                <span class="fw-medium fs-12 d-block mb-1">Due on</span>
+                <p class="fs-12 text-dark">15 Apr 2024</p>
+              </div>
+            </div>
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="avatar-list-stacked avatar-group-sm me-3">
+                <span class="avatar avatar-rounded">
+                  <img class="border border-white" src="assets/img/profiles/avatar-19.jpg" alt="img">
+                </span>
+                <span class="avatar avatar-rounded">
+                  <img class="border border-white" src="assets/img/profiles/avatar-29.jpg" alt="img">
+                </span>
+                <span class="avatar avatar-rounded">
+                  <img class="border border-white" src="assets/img/profiles/avatar-16.jpg" alt="img">
+                </span>
+                <span class="avatar avatar-rounded">
+                  <img class="border border-white" src="assets/img/profiles/avatar-01.jpg" alt="img">
+                </span>
+                <span class="avatar avatar-rounded">
+                  <img class="border border-white" src="assets/img/profiles/avatar-02.jpg" alt="img">
+                </span>
+                <span class="avatar avatar-rounded">
+                  <img class="border border-white" src="assets/img/profiles/avatar-03.jpg" alt="img">
+                </span>
+                <a href="javascript:void(0);" class="avatar avatar-rounded bg-primary fs-12 text-white">
+                  1+
+                </a>
+              </div>
+              <div class="d-flex align-items-center">
+                <a href="javascript:void(0);" class="d-flex align-items-center text-dark me-2"><i class="ti ti-message-circle text-gray me-1"></i>14</a>
+                <a href="javascript:void(0);" class="d-flex align-items-center text-dark"><i class="ti ti-paperclip text-gray me-1"></i>14</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    </div>
+    <div class="pt-2">
+      <a href="javascript:void(0);" class="btn btn-white border border-dashed d-flex align-items-center justify-content-center">
+        <i class="ti ti-plus me-2"></i>
+        New Project
+      </a>
+    </div>
+  </div>
+</div>

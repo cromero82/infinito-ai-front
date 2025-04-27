@@ -1,0 +1,76 @@
+{
+    "data":[
+        {
+            "author": "Carl Evans",
+            "role": "Manager",
+            "content": "This POS system has streamlined our operations and improved efficiency!",
+            "createdDate": "24 Dec 2024",
+            "img": "user-32.jpg"
+        },
+        {
+            "author": "Minerva Rameriz",
+            "role": "Salesman",
+            "content": "The POS system makes processing sales fast and effortless",
+            "createdDate": "25 Dec 2024",
+            "img": "user-02.jpg"
+        },
+        {
+            "author": "Robert Lamon",
+            "role": "Supervisor",
+            "content": "Easy to track sales and team performance in real-time",
+            "createdDate": "24 Dec 2024",
+            "img": "user-01.jpg"
+        },
+        {
+            "author": "Patricia Lewis",
+            "role": "Store Keeper",
+            "content": "This system saves me time by automating many inventory tasks",
+            "createdDate": "27 Dec 2024",
+            "img": "user-04.jpg"
+        },
+        {
+            "author": "Mark Joslyn",
+            "role": "Manager",
+            "content": "It’s easy to manage sales, inventory, and staff with this POS system!",
+            "createdDate": "28 Dec 2024",
+            "img": "user-08.jpg"
+        },
+        {
+            "author": "Marsha Betts",
+            "role": "Inventory Manager",
+            "content": "Real-time inventory updates make stock management a breeze",
+            "createdDate": "30 Dec 2024",
+            "img": "user-10.jpg"
+        },
+        {
+            "author": "Daniel Jude",
+            "role": "Delivery Biker",
+            "content": "POS integration makes tracking deliveries easy!",
+            "createdDate": "14 Dec 2024",
+            "img": "user-28.jpg"
+        },
+        {
+            "author": "Emma Bates",
+            "role": "Cashier",
+            "content": "Quick and easy to use - checkouts have never been faster!",
+            "createdDate": "24 Dec 2024",
+            "img": "user-17.jpg"
+        },
+        {
+            "author": "Richard Fralick",
+            "role": "Accountant",
+            "content": "Transaction tracking is simplified, making reconciliation faster.",
+            "createdDate": "10 Dec 2024",
+            "img": "user-20.jpg"
+        },
+        {
+            "author": "Michelle Robison",
+            "role": "Manager",
+            "content": "Our team is more organized, and customer checkouts are faster than ever.",
+            "createdDate": "16 Dec 2024",
+            "img": "user-29.jpg"
+        }
+    ]
+    ,
+    "totalData":10
+}

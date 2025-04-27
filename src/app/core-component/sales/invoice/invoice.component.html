@@ -1,0 +1,198 @@
+<div class="page-header">
+    <div class="add-item d-flex">
+        <div class="page-title">
+            <h4>Invoices</h4>
+            <h6>Manage your stock invoices</h6>
+        </div>							
+    </div>
+    <ul class="table-top-head">
+        <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Pdf"><img src="assets/img/icons/pdf.svg" alt="img"></a>
+        </li>
+        <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Excel"><img src="assets/img/icons/excel.svg" alt="img"></a>
+        </li><li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Refresh" matTooltipPosition="above"><i
+            class="ti ti-refresh"></i></a>
+          </li>
+          <li>
+            <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Collapse"
+              matTooltipPosition="above" id="collapse-header"> @if (!isCollapsed) {
+              <i class="ti ti-chevron-up"></i>
+            }
+            @if (isCollapsed) {
+              <i class="ti ti-chevron-up"></i>
+            }</a>
+          </li>
+    </ul>
+</div>
+<!-- /product list -->
+<div class="card table-list-card">
+    <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+        <div class="search-set">
+            <div class="search-input">
+                <a href="javascript:void(0);" class="btn btn-searchset"><i class="feather icon-search feather-search"></i></a>
+                <div class="dataTables_filter">
+                  <label>
+                    <input [(ngModel)]="searchDataValue" [ngModelOptions]="{standalone: true}" (ngModelChange)="searchData(searchDataValue)" type="search"
+                      class="form-control" placeholder="Search" />
+                    </label>
+                  </div>
+                </div>
+        </div>
+        <div class="d-flex table-dropdown my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+            <div class="dropdown me-2">
+                <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                    Customer
+                </a>
+                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Carl Evans</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Minerva Rameriz</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Robert Lamon</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Patricia Lewis</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="dropdown me-2">
+                <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                    Status
+                </a>
+                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Paid</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Unpaid</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Overdue</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="dropdown">
+                <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+                    Sort By : Last 7 Days
+                </a>
+                <ul class="dropdown-menu  dropdown-menu-end p-3">
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <table matSort (matSortChange)="sortData($event)" class="table">
+            <thead class="thead-light">
+              <tr>
+                <th class="no-sort">
+                    <label class="checkboxs"  (click)="selectAll(initChecked)">
+                      <input type="checkbox" id="select-all" [(ngModel)]="initChecked" >
+                      <span class="checkmarks"></span>
+                    </label>
+                  </th>
+                <th mat-sort-header="invoiceNo">Invoice No</th>
+                <th mat-sort-header="Customer">Customer</th>
+                <th mat-sort-header="date">Due Date</th>
+                <th mat-sort-header="amount">Amount</th>
+                <th mat-sort-header="paid">Paid</th>
+                <th mat-sort-header="due">Amount Due</th>
+                <th mat-sort-header="status">Status</th>
+                <th class="text-center"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (data of tableData; track data) {
+                <tr>
+                    <td>
+                        <label class="checkboxs">
+                            <input type="checkbox" [(ngModel)]="data.isSelected">
+                            <span class="checkmarks ms-1"></span>
+                          </label>
+                    </td>
+                    <td><a [routerLink]="routes.invoiceDetails">{{data.invoiceNo}}</a></td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <a href="javascript:void(0);" class="avatar avatar-md me-2">
+                                <img src="assets/img/users/{{data.img}}" alt="product">
+                            </a>
+                            <a href="javascript:void(0);">{{data.customer}}</a>
+                        </div>
+                    </td>
+                    <td>
+                        {{data.dueDate}}										
+                    </td>
+                    <td>
+                       {{data.amount}}
+                    </td>
+                    <td>{{data.paid}}</td>
+                    <td>{{data.amountDue}}</td>
+                    <td>
+                        <span class="badge badge-xs shadow-none" 
+                        [ngClass]="data.status==='Paid'?'badge-soft-success':data.status==='Unpaid'?'badge-soft-danger':data.status==='Overdue'?'badge-soft-warning':''">
+                        <i class="ti ti-point-filled me-1"></i>
+                        {{data.status}}
+                        </span>
+                    </td>
+                    <td class="d-flex">
+                        <div class="edit-delete-action d-flex align-items-center justify-content-center">
+                            <a class="me-2 p-2 d-flex align-items-center justify-content-between border rounded" [routerLink]="routes.invoiceDetails">
+                                <i class="feather icon-eye"></i>
+                            </a>
+                            <a class="p-2 d-flex align-items-center justify-content-between border rounded" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#delete">
+                                <i class="feather icon-trash-2"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+    </div>
+    <app-custom-pagination></app-custom-pagination>
+</div>
+<!-- /product list -->
+
+
+  		<!-- Delete -->
+          <div class="modal fade modal-default" id="delete">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-body p-0">
+                  <div class="success-wrap text-center">
+                    <form>
+                      <div class="icon-success bg-danger-transparent text-danger mb-2">
+                        <i class="ti ti-trash"></i>
+                      </div>
+                      <h3 class="mb-2">Delete Invoice</h3>
+                      <p class="fs-16 mb-3">Are you sure you want to delete Invoice?</p>
+                      <div class="d-flex align-items-center justify-content-center gap-2 flex-wrap">
+                        <button type="button" class="btn btn-md btn-secondary" data-bs-dismiss="modal">No, Cancel</button>
+                        <button type="submit" class="btn btn-md btn-primary" data-bs-dismiss="modal">Yes, Delete</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /Delete -->

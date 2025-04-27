@@ -1,0 +1,106 @@
+{
+    "data": [
+      {
+        "date": "01 Jan 2025",
+        "clockIn": "09:15 AM",
+        "clockOut": "08:55 PM",
+        "production":"9h 00m",
+        "break": "1h 13m",
+        "overTime": "00h 50m",
+        "status":"Present",
+        "isSelected": false,
+        "totalHours":"9h 50m"
+      },
+      {
+        "date": "02 Jan 2025",
+        "clockIn": "09:07 AM",
+        "clockOut": "08:40 PM",
+        "production":"9h 10m",
+        "break": "1h 07m",
+        "overTime": "01h 13m",
+        "status":"Present",
+        "isSelected": false,
+        "totalHours":"10h 23m"
+      },
+      {
+        "date": "03 Jan 2025",
+        "clockIn": "09:04 AM",
+        "clockOut": "08:52 PM",
+        "production":"08 47m",
+        "break": "1h 04m",
+        "overTime": "01h 07m",
+        "status":"Present",
+        "isSelected": false,
+        "totalHours":"10h 03m"
+      },
+
+      {
+        "date": "04 Jan 2023",
+        "clockIn": "-",
+        "clockOut": "-",
+        "production":"-",
+        "break": "-",
+        "overTime": "-",
+        "status":"Holiday",
+        "isSelected": false,
+        "totalHours":"-"
+      },
+      {
+        "date": "04 Jan 2025",
+        "clockIn": "09:04 AM",
+        "clockOut": "08:52 PM",
+        "production":"08 47m",
+        "break": "1h 04m",
+        "overTime": "01h 07m",
+        "status":"Present",
+        "isSelected": false,
+        "totalHours":"-"
+      },
+      {
+        "date": "06 Jan 2025",
+        "clockIn": "-",
+        "clockOut": "-",
+        "production":"-",
+        "break": "-",
+        "overTime": "-",
+        "status":"Absent",
+        "isSelected": false,
+        "totalHours":"-"
+      },
+      {
+        "date": "07 Jan 2023",
+        "clockIn": "09:10 AM",
+        "clockOut": "08:48 PM",
+        "production":"8h 38m",
+        "break": "0h 58m",
+        "overTime": "01h 08m",
+        "status":"Present",
+        "isSelected": false,
+        "totalHours":"9h 50m"
+      },
+      {
+        "date": "07 Jan 2023",
+        "clockIn": "08:10 AM",
+        "clockOut": "06:48 PM",
+        "production":"8h 38m",
+        "break": "01h 58m",
+        "overTime": "0h 08m",
+        "status":"Present",
+        "isSelected": false,
+        "totalHours":"9h 38m"
+      },
+      {
+        "date": "07 Jan 2023",
+        "clockIn": "09:20 AM",
+        "clockOut": "08:55 PM",
+        "production":"8h 45m",
+        "break": "0h 48m",
+        "overTime": "01h 18m",
+        "status":"Present",
+        "isSelected": false,
+        "totalHours":"9h 40m"
+      }
+    ],
+    "totalData": 10
+  }
+  

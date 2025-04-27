@@ -1,0 +1,25 @@
+{
+    "data": [
+        {
+            "number": "1",
+            "products": "Lenevo 3rd Generation",
+            "price": "$12500"
+        },
+        {
+            "number": "2",
+            "products": "Bold V3.2",
+            "price": "$1600"
+        },
+        {
+            "number": "3",
+            "products": "Nike Jordan",
+            "price": "$2000"
+        },
+        {
+            "number": "4",
+            "products": "Apple Series 5 Watch",
+            "price": "$800"
+        }
+    ],
+    "totalData": 4
+  }

@@ -1,0 +1,80 @@
+{
+    "data": [
+        {
+            "product": "Lenovo 3rd Generation",
+            "sku": "PT001",
+            "img":"assets/img/products/stock-img-01.png",
+            "manufacturedDate": "19 Nov 2022",
+            "expiredDate": "02 Jan 2023",
+            "action": ""
+          },
+          {
+            "product": "Nike Jordan",
+            "sku": "PT002",
+            "img":"assets/img/products/stock-img-02.png",
+            "manufacturedDate": "24 Nov 2022",
+            "expiredDate": "23 Jan 2023",
+            "action": ""
+          },
+          {
+            "product": "Apple Series 5 Watch",
+            "sku": "PT003",
+            "img":"assets/img/products/stock-img-03.png",
+            "manufacturedDate": "11 Dec 2022",
+            "expiredDate": "18 Feb 2023",
+            "action": ""
+          },
+          {
+            "product": "Amazon Echo Dot",
+            "sku": "PT004",
+            "img":"assets/img/products/stock-img-04.png",
+            "manufacturedDate": "27 Dec 2022",
+            "expiredDate": "24 Feb 2023",
+            "action": ""
+          },
+          {
+            "product": "Lobar Handy",
+            "sku": "PT005",
+            "img":"assets/img/products/stock-img-05.png",
+            "manufacturedDate": "08 Jan 2023",
+            "expiredDate": "16 Mar 2023",
+            "action": ""
+          },
+          {
+           
+            "product": "Red Premium Handy",
+            "sku": "PT006",
+            "img":"assets/img/products/stock-img-01.png",
+            "manufacturedDate": "17 Jan 2023",
+            "expiredDate": "29 Mar 2023",
+            "action": ""
+          },
+          {
+           
+            "product": "Red Premium Handy",
+            "sku": "PT007",
+            "img":"assets/img/products/stock-img-02.png",
+            "manufacturedDate": "22 Feb 2023",
+            "expiredDate": "04 Apr 2023",
+            "action": ""
+          },
+          {
+            "product": "Black Slim 200",
+            "sku": "PT008",
+            "img":"assets/img/products/stock-img-03.png",
+            "manufacturedDate": "18 Mar 2023",
+            "expiredDate": "13 May 2023",
+            "action": ""
+          },
+          {
+            
+            "product": "Woodcraft Sandal",
+            "sku": "PT009",
+            "img":"assets/img/products/stock-img-04.png",
+            "manufacturedDate": "29 Mar 2023",
+            "expiredDate": "27 May 2023",
+            "action": ""
+          }
+    ], 
+    "totalData": 9
+  }

@@ -1,0 +1,85 @@
+{
+  "data": [
+    {
+      "designation": "Sales Manager",
+      "department": "Sales",
+      
+      "members": "07",
+      "createdOn": "24 Dec 2024",
+      "status": "Active"
+    },
+    {
+      "designation": "Inventory Manager",
+      "department": "Inventory",
+      
+      "members": "10",
+      "createdOn": "10 Dec 2024",
+      "status": "Active"
+    },
+    {
+      "designation": "Accountant",
+      "department": "Finance",
+      
+      "members": "05",
+      "createdOn": "27 Nov 2024",
+      "status": "Active"
+    },
+    {
+      "designation": "System Administrator",
+      "department": "Admin",
+      
+      "members": "10",
+      "createdOn": "18 Nov 2024",
+      "status": "Active"
+    },
+    {
+      "designation": "HR Manager",
+      "department": "Human Resources",
+      
+      "members": "06",
+      "createdOn": "06 Nov 2024",
+      "status": "Active"
+    },
+    {
+      "designation": "Marketing Manager",
+      "department": "Marketing",
+      
+      "members": "12",
+      "createdOn": "25 Oct 2024",
+      "status": "Active"
+    },
+    {
+      "designation": "QA Analyst",
+      "department": "Quality Assurance",
+      
+      "members": "08",
+      "createdOn": "14 Oct 2024",
+      "status": "Active"
+    },
+    {
+      "designation": "Research Analyst",
+      "department": "R&D",
+      
+      "members": "07",
+      "createdOn": "03 Oct 2024",
+      "status": "Active"
+    },
+    {
+      "designation": "Support Engineer",
+      "department": "IT Support",
+      
+      "members": "10",
+      "createdOn": "20 Sep 2024",
+      "status": "Active"
+    },
+    {
+      "designation": "Content Writer",
+      "department": "Content Creation",
+      
+      "members": "08",
+      "createdOn": "10 Sep 2024",
+      "status": "Inactive"
+    }
+  ],
+  "totalData": 10
+}

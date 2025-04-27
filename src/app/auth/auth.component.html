@@ -1,0 +1,5 @@
+<img *ngIf="base==='lock-screen'" src="assets/img/bg/lock-screen-bg.png" alt="bg" class="lock-screen-bg position-absolute img-fluid d-sm-none d-md-none d-lg-flex">
+
+<div class="main-wrapper" [ngClass]="{  'login-body': base === 'lock-screen' }">
+    <router-outlet></router-outlet>
+</div>

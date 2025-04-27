@@ -1,0 +1,87 @@
+{
+    "data": [
+      {
+        "department": "Inventory",
+        "hod": "Steven",
+        "img": "assets/img/users/user-01.jpg",
+        "members": "07",
+        "createdon": "25 Jan 2023",
+        "status": "Active"
+      },
+      {
+        "department": "Human Resources",
+        "hod": "Susan Lopez",
+        "img": "assets/img/users/user-02.jpg",
+        "members": "05",
+        "createdon": "29 Jan 2023",
+        "status": "Active"
+      },
+      {
+        "department": "Admin",
+        "hod": "Robert Grossman",
+        "img": "assets/img/users/user-03.jpg",
+        "members": "06",
+        "createdon": "13 Feb 2023",
+        "status": "Active"
+      },
+      {
+        "department": "Sales",
+        "hod": "Janet Hembre",
+        "img": "assets/img/users/user-03.jpg",
+        "members": "08",
+        "createdon": "27 Feb 2023",
+        "status": "Active"
+      },
+      {
+        "department": "Russell Belle",
+        "hod": "Russell Belle",
+        "img": "assets/img/users/user-04.jpg",
+        "members": "04",
+        "createdon": "02 Mar 2023",
+        "status": "Active"
+      },
+      {
+        "department": "Quality Assurance",
+        "hod": "Edward K. Muniz",
+        "img": "assets/img/users/user-05.jpg",
+        "members": "04",
+        "createdon": "17 Mar 2023",
+        "status": "Active"
+      },
+      {
+        "department": "Finance",
+        "hod": "Susan Moore",
+        "img": "assets/img/users/user-07.jpg",
+        "members": "03",
+        "createdon": "20 Mar 2023",
+        "status": "Active"
+      },
+      {
+        "department": "Maintenance",
+        "hod": "Travis Marcotte",
+        "img": "assets/img/users/user-08.jpg",
+        "members": "07",
+        "createdon": "03 Oct 2024",
+        "status": "Active"
+      },
+      {
+        "department": "R&D",
+        "hod": "Travis Marcotte",
+        "img": "assets/img/users/user-11.jpg",
+        "members": "10",
+        "createdon": "20 Sep 2024",
+        "status": "Active"
+      },
+      {
+        "department": "IT Support",
+        "hod": "Malinda Ruiz",
+        "img": "assets/img/users/user-13.jpg",
+        "members": "10",
+        "createdon": "10 Sep 2024",
+        "status": "Inactive"
+      }
+      
+    ],
+    "totalData": 7
+  }
+  

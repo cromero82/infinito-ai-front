@@ -1,0 +1,329 @@
+<div class="page-header settings-pg-header">
+  <div class="add-item d-flex">
+    <div class="page-title">
+      <h4>Settings</h4>
+      <h6>Manage your settings on portal</h6>
+    </div>
+  </div>
+  <ul class="table-top-head">
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" title="Refresh"  matTooltip="Refresh"  matTooltipPosition="above"><i  class="ti ti-refresh"></i></a>
+    </li>
+    <li>
+      <a (click)="toggleCollapse()" [class.active]="isCollapsed"  data-bs-toggle="tooltip" data-bs-placement="top" title="Collapse"  matTooltip="Collapse"  matTooltipPosition="above" id="collapse-header"> @if (!isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }
+      @if (isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }</a>
+    </li>
+  </ul>
+</div>
+<div class="row">
+  <div class="col-xl-12">
+    <div class="settings-wrapper d-flex">
+      <app-settings-sidebar></app-settings-sidebar>
+      <div class="card flex-fill mb-0">
+        <div class="card-header">
+          <h4 class="fs-18 fw-bold">System Settings</h4>
+        </div>
+        <div class="card-body pb-0">
+          <div class="row">
+            <div class="col-xl-6 col-lg-12 col-md-6 d-flex">
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="d-flex align-items-center">
+                      <span class="avatar avatar-lg bg-light border me-2">
+                        <img src="assets/img/icons/fb-icon.svg" class="w-auto h-auto" alt="Img">
+                      </span>
+                      <div>
+                        <h5>Facebook</h5>
+                      </div>
+                    </div>
+                    <span class="badge bg-outline-success">Connected</span>
+                  </div>
+                  <p class="border-bottom pb-3 mb-3">Connect with friends, family and share updates, photos, moments with people you know.</p>
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <a href="javascript:void(0);" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#fb-connect"><i class="ti ti-tool me-1"></i>View Integration</a>
+                    </div>
+                    <div class="status-toggle modal-status d-flex justify-content-between align-items-center ms-2">
+                      <input type="checkbox" id="user1" class="check" checked>
+                      <label for="user1" class="checktoggle">	</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-6 col-lg-12 col-md-6 d-flex">
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="d-flex align-items-center">
+                      <span class="avatar avatar-lg bg-light border me-2">
+                        <img src="assets/img/icons/twitter-icon.svg" class="w-auto h-auto" alt="Img">
+                      </span>
+                      <div>
+                        <h5>Twitter</h5>
+                      </div>
+                    </div>
+                    <span class="badge bg-outline-light">Not connected</span>
+                  </div>
+                  <p class="border-bottom pb-3 mb-3">Communicate and stay connected through the exchange of quick, frequent messages</p>
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <a href="javascript:void(0);" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#twitter-connect"><i class="ti ti-tool me-1"></i>View Integration</a>
+                    </div>
+                    <div class="status-toggle modal-status d-flex justify-content-between align-items-center ms-2">
+                      <input type="checkbox" id="user2" class="check" checked>
+                      <label for="user2" class="checktoggle">	</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-6 col-lg-12 col-md-6 d-flex">
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="d-flex align-items-center">
+                      <span class="avatar avatar-lg bg-light border me-2">
+                        <img src="assets/img/icons/linkedin-icon.svg" class="w-auto h-auto" alt="Img">
+                      </span>
+                      <div>
+                        <h5>Linkedin</h5>
+                      </div>
+                    </div>
+                    <span class="badge bg-outline-success">Connected</span>
+                  </div>
+                  <p class="border-bottom pb-3 mb-3">Network with people and professional organizations in your industry.</p>
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <a href="javascript:void(0);" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#linkedin-connect"><i class="ti ti-tool me-1"></i>Connect Now</a>
+                    </div>
+                    <div class="status-toggle modal-status d-flex justify-content-between align-items-center ms-2">
+                      <input type="checkbox" id="user3" class="check" checked>
+                      <label for="user3" class="checktoggle">	</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-6 col-lg-12 col-md-6 d-flex">
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="d-flex align-items-center">
+                      <span class="avatar avatar-lg bg-light border me-2">
+                        <img src="assets/img/icons/google-icon.svg" class="w-auto h-auto" alt="Img">
+                      </span>
+                      <div>
+                        <h5>Google</h5>
+                      </div>
+                    </div>
+                    <span class="badge bg-outline-success">Connected</span>
+                  </div>
+                  <p class="border-bottom pb-3 mb-3">Google has many special features to help you find exactly what you're looking for.</p>
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <a href="javascript:void(0);" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#google-connect"><i class="ti ti-tool me-1"></i>View Integration</a>
+                    </div>
+                    <div class="status-toggle modal-status d-flex justify-content-between align-items-center ms-2">
+                      <input type="checkbox" id="user4" class="check" checked>
+                      <label for="user4" class="checktoggle">	</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<!-- Connect Facebook -->
+<div class="modal fade" id="fb-connect">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="page-wrapper-new p-0">
+        <div class="content">
+          <div class="modal-header">
+            <div class="page-title">
+              <h4>Facebook Login Settings</h4>
+            </div>
+            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form >
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-lg-12">
+                  <div class="mb-3">
+                    <label class="form-label fw-medium">App ID <span> *</span></label>
+                    <input type="text" class="form-control">
+                  </div>
+                </div>
+                <div class="col-lg-12">
+                  <div class="mb-3">
+                    <label class="form-label fw-medium">App Secret <span> *</span></label>
+                    <input type="text" class="form-control">
+                  </div>
+                </div>
+                <div class="col-lg-12">
+                  <div class="mb-0">
+                    <label class="form-label fw-medium">Login Redirect URL <span> *</span></label>
+                    <input type="text" class="form-control">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-submit" data-bs-dismiss="modal">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /Connect Facebook -->
+
+<!-- Connect Twitter -->
+<div class="modal fade" id="twitter-connect">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="page-wrapper-new p-0">
+        <div class="content">
+          <div class="modal-header">
+            <div class="page-title">
+              <h4>Twitter Login Settings</h4>
+            </div>
+            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form >
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-lg-12">
+                  <div class="mb-3">
+                    <label class="form-label fw-medium mb-1">Consumer Key (API Key) <span> *</span></label>
+                    <input type="text" class="form-control">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-medium mb-1">Consumer Secret (Secret Key) <span> *</span></label>
+                    <input type="text" class="form-control">
+                  </div>
+                  <div class="mb-0">
+                    <label class="form-label fw-medium mb-1">Login Redirect URL <span> *</span></label>
+                    <input type="text" class="form-control">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-submit" data-bs-dismiss="modal">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /Connect Twitter -->
+
+<!-- Connect Google -->
+<div class="modal fade" id="google-connect">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="page-wrapper-new p-0">
+        <div class="content">
+          <div class="modal-header">
+            <div class="page-title">
+              <h4>Google Login Settings</h4>
+            </div>
+            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form >
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-lg-12">
+                  <div class="mb-3">
+                    <label class="form-label fw-medium mb-1">Client ID <span> *</span></label>
+                    <input type="text" class="form-control">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-medium mb-1">Client Secret Key <span> *</span></label>
+                    <input type="text" class="form-control">											
+                  </div>
+                  <div class="mb-0">
+                    <label class="form-label fw-medium mb-1">Login Redirect URL <span> *</span></label>
+                    <input type="text" class="form-control">											
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-submit" data-bs-dismiss="modal">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /Connect Google -->
+
+<!-- Connect Linkedin -->
+<div class="modal fade" id="linkedin-connect">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="page-wrapper-new p-0">
+        <div class="content">
+          <div class="modal-header">
+            <div class="page-title">
+              <h4>LinkedIn Login Settings</h4>
+            </div>
+            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form >
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-lg-12">
+                  <div class="mb-3">
+                    <label class="form-label fw-medium mb-1">Client ID <span> *</span></label>
+                    <input type="text" class="form-control">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-medium mb-1">Client Secret Key <span> *</span></label>
+                    <input type="text" class="form-control">											
+                  </div>
+                  <div class="mb-0">
+                    <label class="form-label fw-medium mb-1">Login Redirect URL <span> *</span></label>
+                    <input type="text" class="form-control">											
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-submit" data-bs-dismiss="modal">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /Connect Linkedin -->

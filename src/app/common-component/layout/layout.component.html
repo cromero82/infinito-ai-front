@@ -1,0 +1,448 @@
+<div class="sidebar-contact ">
+    <div class="toggle-theme"  data-bs-toggle="offcanvas" data-bs-target="#theme-setting"><i class="fa fa-cog fa-w-16 fa-spin"></i></div>
+    </div>
+    <div class="sidebar-themesettings offcanvas offcanvas-end" id="theme-setting">
+    <div class="offcanvas-header d-flex align-items-center justify-content-between bg-dark">
+        <div>
+            <h3 class="mb-1 text-white">Theme Customizer</h3>
+            <p class="text-light">Choose your themes & layouts etc.</p>
+        </div>
+        <a href="javascript:void(0);" class="custom-btn-close d-flex align-items-center justify-content-center text-white"  data-bs-dismiss="offcanvas"><i class="ti ti-x"></i></a>
+    </div>
+    <div class="themecard-body offcanvas-body">
+        <div class="accordion accordion-customicon1 accordions-items-seperate" id="settingtheme">
+            <div class="accordion-item border px-3 layout-select">
+                <h2 class="accordion-header">
+                    <button class="accordion-button text-dark bg-transparent fs-16 px-0 py-3" type="button" data-bs-toggle="collapse" data-bs-target="#layoutsetting" aria-expanded="true" aria-controls="collapsecustomicon1One">
+                        Select Layouts
+                    </button>
+                </h2>
+                <div id="layoutsetting" class="accordion-collapse collapse show"  >
+                    <div class="accordion-body border-top px-0 py-3">
+                        <div class="row gx-3">
+                            <div class="col-4">
+                                <div class="theme-layout mb-3">
+                                    <input type="radio" name="LayoutTheme" id="defaultLayout" value="default" [checked]="layoutMode === 'default'" >
+                                    <label for="defaultLayout" (click)="settings.changeLayoutMode('default');toggleSidebar2()"  (keydown.enter)="settings.changeLayoutMode('default')"  tabindex="0">
+                                        <span class="d-block mb-2 layout-img">
+                                            <img src="assets/img/theme/default.svg" alt="img">
+                                        </span>                                     
+                                        <span class="layout-type">Default</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="theme-layout mb-3">
+                                    <input type="radio" name="LayoutTheme" id="miniLayout" value="mini" [checked]="layoutMode === 'mini'">
+                                    <label for="miniLayout" (click)="settings.changeLayoutMode('mini') ;toggleSidebar()"  (keydown.enter)="settings.changeLayoutMode('mini')"  tabindex="0">
+                                        <span class="d-block mb-2 layout-img">
+                                            <img src="assets/img/theme/mini.svg" alt="img">
+                                        </span>                                    
+                                        <span class="layout-type">Mini</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="theme-layout mb-3">
+                                    <input type="radio" name="LayoutTheme" id="twocolumnLayout" value="twocolumn" [checked]="layoutMode === 'twocolumn'" >
+                                    <label for="twocolumnLayout" (click)="settings.changeLayoutMode('twocolumn')"  (keydown.enter)="settings.changeLayoutMode('twocolumn')"  tabindex="0">
+                                        <span class="d-block mb-2 layout-img">
+                                            <img src="assets/img/theme/two-column.svg" alt="img">
+                                        </span>                                    
+                                        <span class="layout-type">Two Column</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="theme-layout mb-3">
+                                    <input type="radio" name="LayoutTheme" id="horizontalLayout" value="horizontal" [checked]="layoutMode === 'horizontal'" >
+                                    <label for="horizontalLayout" (click)="settings.changeLayoutMode('horizontal')"  (keydown.enter)="settings.changeLayoutMode('horizontal')"  tabindex="0">
+                                        <span class="d-block mb-2 layout-img">
+                                            <img src="assets/img/theme/horizontal.svg" alt="img">
+                                        </span>                                    
+                                        <span class="layout-type">Horizontal</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="theme-layout mb-3">
+                                    <input type="radio" name="LayoutTheme" id="detachedLayout" value="detached" [checked]="layoutMode === 'detached'" >
+                                    <label for="detachedLayout" (click)="settings.changeLayoutMode('detached')"  (keydown.enter)="settings.changeLayoutMode('detached')"  tabindex="0">
+                                        <span class="d-block mb-2 layout-img">
+                                            <img src="assets/img/theme/detached.svg" alt="img">
+                                        </span>                                    
+                                        <span class="layout-type">Detached</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="theme-layout mb-3">
+                                    <input type="radio" name="LayoutTheme" id="without-headerLayout" value="without-header" [checked]="layoutMode === 'without-header'" >
+                                    <label for="without-headerLayout" (click)="settings.changeLayoutMode('without-header')"  (keydown.enter)="settings.changeLayoutMode('without-header')" >
+                                        <span class="d-block mb-2 layout-img">
+                                            <img src="assets/img/theme/without-header.svg" alt="img">
+                                        </span>                                    
+                                        <span class="layout-type">Without Header</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <a [routerLink]="routes.RTL" class="theme-layout mb-3">
+                                    <span class="d-block mb-2 layout-img">
+                                        <img src="assets/img/theme/rtl.svg" alt="img">
+                                    </span>                                    
+                                    <span class="layout-type d-block">RTL</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> 
+            <div class="accordion-item border px-3 layout-select">
+                <h2 class="accordion-header">
+                    <button class="accordion-button text-dark fs-16 bg-transparent px-0 py-3" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarsetting" aria-expanded="true">
+                        Layout Width
+                    </button>
+                </h2>
+                <div id="sidebarsetting" class="accordion-collapse collapse show">
+                    <div class="accordion-body px-0 py-3 border-top">
+                        <div class="d-flex align-items-center">
+                            <div class="theme-width m-1 me-2">
+                                <input type="radio" name="width" id="fluidWidth" value="fluid" [checked]="layoutWidth === 'fluid'">
+                                <label for="fluidWidth" class="d-block rounded fs-12"  (click)="settings.changeLayoutWidth('fluid')"  (keydown.enter)="settings.changeLayoutWidth('fluid')"  tabindex="0">
+                                    <i class="ti ti-layout-list me-1"></i>
+                                    Fluid Layout
+                                </label>
+                            </div>
+                            <div class="theme-width m-1">
+                                <input type="radio" name="width" id="boxWidth" value="box" [checked]="layoutWidth === 'box'">
+                                <label for="boxWidth" class="d-block rounded fs-12" (click)="settings.changeLayoutWidth('box')"  (keydown.enter)="settings.changeLayoutWidth('box')"  tabindex="0">
+                                 <i class="ti ti-layout-distribute-horizontal me-1"></i>
+                                    Boxed Layout
+                                </label>
+                            </div>
+                        </div>  
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item border px-3">
+                <h2 class="accordion-header">
+                    <button class="accordion-button text-dark fs-16 px-0 py-3 bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#colorsetting" aria-expanded="true">
+                        Top Bar Color
+                    </button>
+                </h2>
+                <div id="colorsetting" class="accordion-collapse collapse show"	>
+                    <div class="accordion-body pb-1 px-0 py-3 border-top">
+                       <p class="mb-2 text-gray-9">Solid Colors</p>
+                       <div class="d-flex align-items-center flex-wrap">
+                            <div class="theme-colorselect theme-colorselect-rounded mb-3 me-3" (click)="settings.changeTopbarColor('white')"  (keydown.enter)="settings.changeTopbarColor('white')"  tabindex="0"   >
+                                <input type="radio" name="topbar" id="whiteTopbar" value="white" [checked]="topbarColor === 'white'">
+                                <label for="whiteTopbar" class="bg-white"></label>
+                            </div>
+                            <div class="theme-colorselect theme-colorselect-rounded mb-3 me-3" (click)="settings.changeTopbarColor('topbarcolorone')"  (keydown.enter)="settings.changeTopbarColor('topbarcolorone')"  tabindex="0"   >
+                                <input type="radio" name="topbar" id="darkaquaTopbar" value="topbarcolorone" [checked]="topbarColor === 'topbarcolorone'">
+                                <label for="darkaquaTopbar" class=" bg-sidebar-color-1"></label>
+                            </div>
+                            <div class="theme-colorselect theme-colorselect-rounded mb-3 me-3" (click)="settings.changeTopbarColor('topbarcolortwo')"  (keydown.enter)="settings.changeTopbarColor('topbarcolortwo')"  tabindex="0"   >
+                                <input type="radio" name="topbar" id="whiterockTopbar" value="topbarcolortwo" [checked]="topbarColor === 'topbarcolortwo'">
+                                <label for="whiterockTopbar" class=" bg-sidebar-color-2"></label>
+                            </div>
+                            <div class="theme-colorselect theme-colorselect-rounded mb-3 me-3" (click)="settings.changeTopbarColor('topbarcolorthree')"  (keydown.enter)="settings.changeTopbarColor('topbarcolorthree')"  tabindex="0"   >
+                                <input type="radio" name="topbar" id="rockblueTopbar" value="topbarcolorthree" [checked]="topbarColor === 'topbarcolorthree'">
+                                <label for="rockblueTopbar" class=" bg-sidebar-color-3"></label>
+                            </div>
+                            <div class="theme-colorselect theme-colorselect-rounded mb-3 me-3" (click)="settings.changeTopbarColor('topbarcolorfour')"  (keydown.enter)="settings.changeTopbarColor('topbarcolorfour')"  tabindex="0"   >
+                                <input type="radio" name="topbar" id="bluehazeTopbar" value="topbarcolorfour" [checked]="topbarColor === 'topbarcolorfour'">
+                                <label for="bluehazeTopbar" class=" bg-sidebar-color-4"></label>
+                            </div>              
+                            <div class="theme-colorselect theme-colorselect-rounded mb-3 me-3" (click)="settings.changeTopbarColor('topbarcolorfive')"  (keydown.enter)="settings.changeTopbarColor('topbarcolorfive')"  tabindex="0"   >
+                                <input type="radio" name="topbar" id="topbar-color-5" value="topbarcolorfive" [checked]="topbarColor === 'topbarcolorfive'">
+                                <label for="topbar-color-5" class="bg-sidebar-color-5"></label>
+                            </div>              
+                            <div class="theme-colorselect theme-colorselect-rounded mb-3 me-3" (click)="settings.changeTopbarColor('topbarcolorsix')"  (keydown.enter)="settings.changeTopbarColor('topbarcolorsix')"  tabindex="0"   >
+                                <input type="radio" name="topbar" id="topbar-color-6" value="topbarcolorsix" [checked]="topbarColor === 'topbarcolorsix'">
+                                <label for="topbar-color-6" class="bg-sidebar-color-6"></label>
+                            </div>              
+                            <div class="theme-colorselect position-relative dynamic-box theme-colorselect-rounded mb-2 mt-0" [ngClass]="{'active': topbarColor === 'all'}"   >
+                                <div class="select-color position-absolute"><i class="ti ti-palette"></i></div>
+                                <input type="color" name="topbar" id="dynamicColor1" [(ngModel)]="selectedColor1" (input)="setColor1()" />
+                                <label for="dynamicColor1" class="d-block rounded mb-2" [ngStyle]="{'background-color': 'rgba(' + rgbaValues1 + ')'}">
+                                </label>
+                            </div>
+                        </div>
+                        <p class="mb-2 text-gray-9">Gradient Colors</p>
+                       <div class="d-flex align-items-center flex-wrap">
+                            <div class="theme-colorselect theme-colorselect-rounded  mb-3 me-3" >
+                                <input type="radio" name="topbar" id="topbar-color-7" value="topbarcolorseven" [checked]="topbarColor === 'topbarcolorseven'">
+                                <label for="topbar-color-7" class="bg-sidebar-color-7" (click)="settings.changeTopbarColor('topbarcolorseven')"  (keydown.enter)="settings.changeTopbarColor('topbarcolorseven')"  tabindex="0"></label>
+                            </div>
+                            <div class="theme-colorselect theme-colorselect-rounded  mb-3 me-3" (click)="settings.changeTopbarColor('topbarcoloreight')"  (keydown.enter)="settings.changeTopbarColor('topbarcoloreight')"  tabindex="0">
+                                <input type="radio" name="topbar" id="topbar-color-8" value="topbarcoloreight" [checked]="topbarColor === 'topbarcoloreight'">
+                                <label for="topbar-color-8" class=" bg-sidebar-color-8"></label>
+                            </div>
+                            <div class="theme-colorselect theme-colorselect-rounded  mb-3 me-3" (click)="settings.changeTopbarColor('topbarcolornine')"  (keydown.enter)="settings.changeTopbarColor('topbarcolornine')"  tabindex="0">
+                                <input type="radio" name="topbar" id="topbar-color-9" value="topbarcolornine" [checked]="topbarColor === 'topbarcolornine'">
+                                <label for="topbar-color-9" class=" bg-sidebar-color-9"></label>
+                            </div>
+                            <div class="theme-colorselect theme-colorselect-rounded mb-3 me-3" (click)="settings.changeTopbarColor('topbarcolorten')"  (keydown.enter)="settings.changeTopbarColor('topbarcolorten')"  tabindex="0">
+                                <input type="radio" name="topbar" id="topbar-color-10" value="topbarcolorten" [checked]="topbarColor === 'topbarcolorten'">
+                                <label for="topbar-color-10" class=" bg-sidebar-color-10"></label>
+                            </div>
+                            <div class="theme-colorselect theme-colorselect-rounded mb-3 me-3" (click)="settings.changeTopbarColor('topbarcoloreleven')"  (keydown.enter)="settings.changeTopbarColor('topbarcoloreleven')"  tabindex="0">
+                                <input type="radio" name="topbar" id="topbar-color-11" value="topbarcoloreleven" [checked]="topbarColor === 'topbarcoloreleven'">
+                                <label for="topbar-color-11" class=" bg-sidebar-color-11"></label>
+                            </div> 
+                            <div class="theme-colorselect theme-colorselect-rounded mb-3 me-3" (click)="settings.changeTopbarColor('topbarcolortwelve')"  (keydown.enter)="settings.changeTopbarColor('topbarcolortwelve')"  tabindex="0">
+                                <input type="radio" name="topbar" id="topbar-color-12" value="topbarcolortwelve" [checked]="topbarColor === 'topbarcolortwelve'">
+                                <label for="topbar-color-12" class=" bg-sidebar-color-12"></label>
+                            </div> 
+                            <div class="theme-colorselect theme-colorselect-rounded mb-3 me-3" (click)="settings.changeTopbarColor('topbarcolorthirteen')"  (keydown.enter)="settings.changeTopbarColor('topbarcolorthirteen')"  tabindex="0">
+                                <input type="radio" name="topbar" id="topbar-color-13" value="topbarcolorthirteen" [checked]="topbarColor === 'topbarcolorthirteen'">
+                                <label for="topbar-color-13" class=" bg-sidebar-color-13"></label>
+                            </div> 
+                            <div class="theme-colorselect theme-colorselect-rounded mb-3 me-3" (click)="settings.changeTopbarColor('topbarcolorfourteen')"  (keydown.enter)="settings.changeTopbarColor('topbarcolorfourteen')"  tabindex="0">
+                                <input type="radio" name="topbar" id="topbar-color-14" value="topbarcolorfourteen" [checked]="topbarColor === 'topbarcolorfourteen'">
+                                <label for="topbar-color-14" class=" bg-sidebar-color-14"></label>
+                            </div> 
+                        </div>
+                    </div>
+                </div>
+            </div> 
+            <div class="accordion-item border px-3 layout-select">
+                <h2 class="accordion-header">
+                    <button class="accordion-button text-dark fs-16 px-0 py-3 bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarsetting" aria-expanded="true">
+                        Sidebar Color
+                    </button>
+                </h2>
+                <div id="sidebarsetting" class="accordion-collapse collapse show">
+                    <div class="accordion-body px-0 py-3 border-top">
+                       <p class="mb-2 text-gray-9">Solid Colors</p>
+                       <div class="d-flex align-items-center">
+                            <div class="theme-colorselect m-1 me-3">
+                                <input type="radio" name="sidebar" id="lightSidebar" value="light" [checked]="sidebarColor === 'light'">
+                                <label for="lightSidebar" class="d-block mb-2" (click)="settings.changeSidebarColor('light')"  (keydown.enter)="settings.changeSidebarColor('light')"  tabindex="0">
+                                </label>
+                            </div>
+                            <div class="theme-colorselect me-3">
+                                <input type="radio" name="sidebar" id="bgcolorSidebar" value="sidebarcolorone" [checked]="sidebarColor === 'sidebarcolorone'">
+                                <label for="bgcolorSidebar" class="d-block bg-sidebar-color-1 mb-2" (click)="settings.changeSidebarColor('sidebarcolorone')"  (keydown.enter)="settings.changeSidebarColor('sidebarcolorone')"  tabindex="0">
+                                </label>
+                            </div>
+                            <div class="theme-colorselect me-3">
+                                <input type="radio" name="sidebar" id="bgcolor2Sidebar" value="sidebarcolortwo" [checked]="sidebarColor === 'sidebarcolortwo'">
+                                <label for="bgcolor2Sidebar" class="d-block bg-sidebar-color-2 mb-2" (click)="settings.changeSidebarColor('sidebarcolortwo')"  (keydown.enter)="settings.changeSidebarColor('sidebarcolortwo')"  tabindex="0">
+                                </label>
+                            </div>
+                            <div class="theme-colorselect me-3">
+                                <input type="radio" name="sidebar" id="bgcolor3Sidebar" value="sidebarcolorthree" [checked]="sidebarColor === 'sidebarcolorthree'">
+                                <label for="bgcolor3Sidebar" class="d-block bg-sidebar-color-3 mb-2" (click)="settings.changeSidebarColor('sidebarcolorthree')"  (keydown.enter)="settings.changeSidebarColor('sidebarcolorthree')"  tabindex="0">
+                                </label>
+                            </div>
+                            <div class="theme-colorselect me-3">
+                                <input type="radio" name="sidebar" id="bgcolor4Sidebar" value="sidebarcolorfour" [checked]="sidebarColor === 'sidebarcolorfour'">
+                                <label for="bgcolor4Sidebar" class="d-block bg-sidebar-color-4 mb-2" (click)="settings.changeSidebarColor('sidebarcolorfour')"  (keydown.enter)="settings.changeSidebarColor('sidebarcolorfour')"  tabindex="0">
+                                </label>
+                            </div>
+                            <div class="theme-colorselect me-3">
+                                <input type="radio" name="sidebar" id="bgcolor5Sidebar" value="sidebarcolorfive" [checked]="sidebarColor === 'sidebarcolorfive'">
+                                <label for="bgcolor5Sidebar" class="d-block bg-sidebar-color-5 mb-2" (click)="settings.changeSidebarColor('sidebarcolorfive')"  (keydown.enter)="settings.changeSidebarColor('sidebarcolorfive')"  tabindex="0">
+                                </label>
+                            </div>                            
+                            <div class="theme-colorselect me-3">
+                                <input type="radio" name="sidebar" id="bgcolor6Sidebar" value="sidebarcolorsix" [checked]="sidebarColor === 'sidebarcolorsix'">
+                                <label for="bgcolor6Sidebar" class="d-block bg-sidebar-color-6 mb-2" (click)="settings.changeSidebarColor('sidebarcolorsix')"  (keydown.enter)="settings.changeSidebarColor('sidebarcolorsix')"  tabindex="0">
+                                </label>
+                            </div>                          
+                            <div class="theme-colorselect position-relative dynamic-box2 mt-0 " [ngClass]="{'active': sidebarColor === 'all'}">
+                                <div class="select-color position-absolute"><i class="ti ti-palette"></i></div>
+                              <input type="color" name="sidebar" id="dynamicColor" [(ngModel)]="selectedColor" (input)="setColor()" />
+                              <label for="dynamicColor" class="d-block rounded mb-2" [ngStyle]="{'background-color': 'rgba(' + rgbaValues + ')'}">
+                              </label>
+                            </div>
+                        </div>
+                        <p class="mb-2 text-gray-9">Gradient Colors</p>
+                        <div class="d-flex align-items-center">
+                            <div class="theme-colorselect m-1 me-3">
+                                <input type="radio" name="sidebar" id="bgcolor7Sidebar" value="sidebarcolorseven" [checked]="sidebarColor === 'sidebarcolorseven'">
+                                <label for="bgcolor7Sidebar" class="d-block bg-sidebar-color-7 mb-2" (click)="settings.changeSidebarColor('sidebarcolorseven')"  (keydown.enter)="settings.changeSidebarColor('sidebarcolorseven')"  tabindex="0">
+                                </label>
+                            </div>
+                            <div class="theme-colorselect me-3">
+                                <input type="radio" name="sidebar" id="bgcolor8Sidebar" value="sidebarcoloreight" [checked]="sidebarColor === 'sidebarcoloreight'">
+                                <label for="bgcolor8Sidebar" class="d-block bg-sidebar-color-8 mb-2" (click)="settings.changeSidebarColor('sidebarcoloreight')"  (keydown.enter)="settings.changeSidebarColor('sidebarcoloreight')"  tabindex="0">
+                                </label>
+                            </div>
+                            <div class="theme-colorselect me-3">
+                                <input type="radio" name="sidebar" id="bgcolor9Sidebar" value="sidebarcolornine" [checked]="sidebarColor === 'sidebarcolornine'">
+                                <label for="bgcolor9Sidebar" class="d-block bg-sidebar-color-9 mb-2" (click)="settings.changeSidebarColor('sidebarcolornine')"  (keydown.enter)="settings.changeSidebarColor('sidebarcolornine')"  tabindex="0">
+                                </label>
+                            </div>
+                            <div class="theme-colorselect me-3">
+                                <input type="radio" name="sidebar" id="bgcolor10Sidebar" value="sidebarcolorten" [checked]="sidebarColor === 'sidebarcolorten'">
+                                <label for="bgcolor10Sidebar" class="d-block bg-sidebar-color-10 mb-2" (click)="settings.changeSidebarColor('sidebarcolorten')"  (keydown.enter)="settings.changeSidebarColor('sidebarcolorten')"  tabindex="0">
+                                </label>
+                            </div>
+                            <div class="theme-colorselect me-3">
+                                <input type="radio" name="sidebar" id="bgcolor11Sidebar" value="sidebarcoloreleven" [checked]="sidebarColor === 'sidebarcoloreleven'">
+                                <label for="bgcolor11Sidebar" class="d-block bg-sidebar-color-11 mb-2" (click)="settings.changeSidebarColor('sidebarcoloreleven')"  (keydown.enter)="settings.changeSidebarColor('sidebarcoloreleven')"  tabindex="0">
+                                </label>
+                            </div>  
+                            <div class="theme-colorselect me-3">
+                                <input type="radio" name="sidebar" id="bgcolor12Sidebar" value="sidebarcolortwelve" [checked]="sidebarColor === 'sidebarcolortwelve'">
+                                <label for="bgcolor12Sidebar" class="d-block bg-sidebar-color-12 mb-2" (click)="settings.changeSidebarColor('sidebarcolortwelve')"  (keydown.enter)="settings.changeSidebarColor('sidebarcolortwelve')"  tabindex="0">
+                                </label>
+                            </div>  
+                            <div class="theme-colorselect me-3">
+                                <input type="radio" name="sidebar" id="bgcolor13Sidebar" value="sidebarcolorthirteen" [checked]="sidebarColor === 'sidebarcolorthirteen'">
+                                <label for="bgcolor13Sidebar" class="d-block bg-sidebar-color-13 mb-2" (click)="settings.changeSidebarColor('sidebarcolorthirteen')"  (keydown.enter)="settings.changeSidebarColor('sidebarcolorthirteen')"  tabindex="0">
+                                </label>
+                            </div>  
+                            <div class="theme-colorselect">
+                                <input type="radio" name="sidebar" id="bgcolor14Sidebar" value="sidebarcolorfourteen" [checked]="sidebarColor === 'sidebarcolorfourteen'">
+                                <label for="bgcolor14Sidebar" class="d-block bg-sidebar-color-14 mb-2" (click)="settings.changeSidebarColor('sidebarcolorfourteen')"  (keydown.enter)="settings.changeSidebarColor('sidebarcolorfourteen')"  tabindex="0">
+                                </label>
+                            </div>  
+                        </div>
+                    </div>
+                </div>
+            </div>   
+            <div class="accordion-item border px-3">
+                <h2 class="accordion-header">
+                    <button class="accordion-button text-dark fs-16 px-0 py-3 bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#modesetting" aria-expanded="true">
+                       Theme Mode
+                    </button>
+                </h2>
+                <div id="modesetting" class="accordion-collapse collapse show">
+                    <div class="accordion-body px-0 py3 border-top">
+                       <div class="d-flex align-items-center">
+                            <div class="theme-mode flex-fill text-center w-100 me-3">
+                                <input type="radio" name="theme" id="lightTheme" value="light" [checked]="themeColor === 'light'">
+                                <label for="lightTheme" class="rounded fw-medium w-100" (click)="settings.changeThemeColor('light')"  (keydown.enter)="settings.changeThemeColor('light')">                            
+                                    <span class="d-inline-flex rounded me-2"><i class="ti ti-sun-filled"></i></span>Light
+                                </label>
+                            </div>
+                            <div class="theme-mode flex-fill text-center w-100 me-3">
+                                <input type="radio" name="theme" id="darkTheme" value="dark" [checked]="themeColor === 'dark'">
+                                <label for="darkTheme" class="rounded fw-medium w-100" (click)="settings.changeThemeColor('dark')"  (keydown.enter)="settings.changeThemeColor('dark')">                         
+                                    <span class="d-inline-flex rounded me-2"><i class="ti ti-moon-filled"></i></span>Dark
+                                </label>
+                            </div>
+                            <div class="theme-mode flex-fill w-100 text-center">
+                                <input type="radio" name="theme" id="systemTheme" value="system" [checked]="themeColor === 'system'">
+                                <label for="systemTheme" class="rounded fw-medium w-100" (click)="settings.changeThemeColor('system')"  (keydown.enter)="settings.changeThemeColor('system')">                         
+                                    <span class="d-inline-flex rounded me-2"><i class="ti ti-device-laptop"></i></span>System 
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>    	    
+            <div class="accordion-item border px-3 layout-select">
+                <h2 class="accordion-header">
+                    <button class="accordion-button text-dark fs-16 px-0 py-3 bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarbgsetting" aria-expanded="true">
+                        Sidebar Background
+                    </button>
+                </h2>
+                <div id="sidebarbgsetting" class="accordion-collapse collapse show">
+                    <div class="accordion-body pb-1 px-0 py-3 border-top">
+                       <div class="d-flex align-items-center flex-wrap">
+                            <div class="theme-sidebarbg me-3 mb-3">
+                                <input type="radio" name="sidebarbg" id="sidebarBg1" value="sidebarbg1" [checked]="sidebarImage === 'sidebarbg1'">
+                                <label for="sidebarBg1" class="d-block rounded" (click)="settings.changeSidebarImage('sidebarbg1')"  (keydown.enter)="settings.changeSidebarImage('sidebarbg1')"  tabindex="0">
+                                    <img src="assets/img/theme/sidebar-bg-01.svg" alt="img" class="rounded">
+                                </label>
+                            </div>
+                            <div class="theme-sidebarbg me-3 mb-3">
+                                <input type="radio" name="sidebarbg" id="sidebarBg2" value="sidebarbg2" [checked]="sidebarImage === 'sidebarbg2'">
+                                <label for="sidebarBg2" class="d-block rounded" (click)="settings.changeSidebarImage('sidebarbg2')"  (keydown.enter)="settings.changeSidebarImage('sidebarbg2')"  tabindex="0">
+                                    <img src="assets/img/theme/sidebar-bg-02.svg" alt="img" class="rounded">
+                                </label>
+                            </div>
+                            <div class="theme-sidebarbg me-3 mb-3">
+                                <input type="radio" name="sidebarbg" id="sidebarBg3" value="sidebarbg3" [checked]="sidebarImage === 'sidebarbg3'">
+                                <label for="sidebarBg3" class="d-block rounded" (click)="settings.changeSidebarImage('sidebarbg3')"  (keydown.enter)="settings.changeSidebarImage('sidebarbg3')"  tabindex="0">
+                                    <img src="assets/img/theme/sidebar-bg-03.svg" alt="img" class="rounded">
+                                </label>
+                            </div>
+                            <div class="theme-sidebarbg me-3 mb-3">
+                                <input type="radio" name="sidebarbg" id="sidebarBg4" value="sidebarbg4" [checked]="sidebarImage === 'sidebarbg4'">
+                                <label for="sidebarBg4" class="d-block rounded" (click)="settings.changeSidebarImage('sidebarbg4')"  (keydown.enter)="settings.changeSidebarImage('sidebarbg4')"  tabindex="0">
+                                    <img src="assets/img/theme/sidebar-bg-04.svg" alt="img" class="rounded">
+                                </label>
+                            </div>
+                            <div class="theme-sidebarbg me-3 mb-3">
+                                <input type="radio" name="sidebarbg" id="sidebarBg5" value="sidebarbg5" [checked]="sidebarImage === 'sidebarbg5'">
+                                <label for="sidebarBg5" class="d-block rounded" (click)="settings.changeSidebarImage('sidebarbg5')"  (keydown.enter)="settings.changeSidebarImage('sidebarbg5')"  tabindex="0">
+                                    <img src="assets/img/theme/sidebar-bg-05.svg" alt="img" class="rounded">
+                                </label>
+                            </div>
+                            <div class="theme-sidebarbg me-3 mb-3">
+                                <input type="radio" name="sidebarbg" id="sidebarBg6" value="sidebarbg6" [checked]="sidebarImage === 'sidebarbg6'">
+                                <label for="sidebarBg6" class="d-block rounded" (click)="settings.changeSidebarImage('sidebarbg6')"  (keydown.enter)="settings.changeSidebarImage('sidebarbg6')"  tabindex="0">
+                                    <img src="assets/img/theme/sidebar-bg-06.svg" alt="img" class="rounded">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>    
+            <div class="accordion-item border px-3">
+                <h2 class="accordion-header">
+                    <button class="accordion-button text-dark fs-16 px-0 py-3 bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarcolor" aria-expanded="true">
+                        Theme Colors
+                    </button>
+                </h2>
+                <div id="sidebarcolor" class="accordion-collapse collapse show"	 >
+                    <div class="accordion-body pb-2 px-0 py-3 border-top">
+                       <div class="d-flex align-items-center flex-wrap">
+                            <div class="theme-colorsset me-2 mb-2">
+                                <input type="radio" name="color" id="primaryColor" value="primary" [checked]="primaryColor === 'primary'">
+                                <label for="primaryColor" class="primary-clr" (click)="settings.changePrimaryColor('primary')"  (keydown.enter)="settings.changePrimaryColor('primary')"  tabindex="0"></label>
+                            </div>
+                            <div class="theme-colorsset me-2 mb-2">
+                                <input type="radio" name="color" id="brightblueColor" value="brightblue"  [checked]="primaryColor === 'brightblue'">
+                                <label for="brightblueColor" class="theme-color-1" (click)="settings.changePrimaryColor('brightblue')"  (keydown.enter)="settings.changePrimaryColor('brightblue')"  tabindex="0"></label>
+                            </div>
+                            <div class="theme-colorsset me-2 mb-2">
+                                <input type="radio" name="color" id="lunargreenColor" value="lunargreen"  [checked]="primaryColor === 'lunargreen'">
+                                <label for="lunargreenColor" class="theme-color-2" (click)="settings.changePrimaryColor('lunargreen')"  (keydown.enter)="settings.changePrimaryColor('lunargreen')"  tabindex="0"></label>
+                            </div>
+                            <div class="theme-colorsset me-2 mb-2">
+                                <input type="radio" name="color" id="lavendarColor" value="lavendar" [checked]="primaryColor === 'lavendar'">
+                                <label for="lavendarColor" class="theme-color-3" (click)="settings.changePrimaryColor('lavendar')"  (keydown.enter)="settings.changePrimaryColor('lavendar')"  tabindex="0"></label>
+                            </div>
+                            <div class="theme-colorsset me-2 mb-2">
+                                <input type="radio" name="color" id="magentaColor" value="magenta" [checked]="primaryColor === 'magenta'">
+                                <label for="magentaColor" class="theme-color-4" (click)="settings.changePrimaryColor('magenta')"  (keydown.enter)="settings.changePrimaryColor('magenta')"  tabindex="0"></label>
+                            </div>
+                            <div class="theme-colorsset me-2 mb-2">
+                                <input type="radio" name="color" id="chromeyellowColor" value="chromeyellow" [checked]="primaryColor === 'chromeyellow'">
+                                <label for="chromeyellowColor" class="theme-color-5" (click)="settings.changePrimaryColor('chromeyellow')"  (keydown.enter)="settings.changePrimaryColor('chromeyellow')"  tabindex="0"></label>
+                            </div> 
+                            <div class="theme-colorsset me-2 mb-2">
+                                <input type="radio" name="color" id="orangeColor" value="orange" [checked]="primaryColor === 'orange'">
+                                <label for="orangeColor" class="theme-color-6" (click)="settings.changePrimaryColor('orange')"  (keydown.enter)="settings.changePrimaryColor('orange')"  tabindex="0"></label>
+                            </div> 
+                           <div class="theme-colorsset position-relative dynamic-round mb-2" [ngClass]="{'active': primaryColor === 'all'}">                                
+                            <div class="select-color position-absolute"><i class="ti ti-palette"></i></div>
+                            <input type="color" name="primaryColor" id="dynamicColor2" [(ngModel)]="dthemeColor" (input)="setprimaryColor()" />
+                            <label for="dynamicColor2" class="d-block mb-2" [ngStyle]="{'background-color': 'rgba(' + rgbaValues3 + ')'}">
+                            </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> 
+        </div> 
+    </div>
+        <div class="p-3 pt-0">
+            <div class="row gx-3">
+                <div class="col-6">
+                    <a href="javascript:void(0);" id="resetbutton" class="btn btn-light close-theme w-100" (click)="resetAllMode()"><i class="ti ti-restore me-1"></i>Reset</a>
+                </div>
+                <div class="col-6">
+                    <a href="javascript:void(0);" class="btn btn-primary w-100" data-bs-dismiss="offcanvas"><i class="ti ti-shopping-cart-plus me-1"></i>Buy Product</a>
+                </div>
+            </div>
+        </div>    
+    </div>

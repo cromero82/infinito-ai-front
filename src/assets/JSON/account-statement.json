@@ -1,0 +1,87 @@
+{
+    "data":[
+        {
+          "referenceNumber": "#AS842",
+          "date": "24 Dec 2024",
+          "category": "Sale",
+          "description": "Sale of goods",
+          "amount": "+$200",
+          "transactionType": "Credit",
+          "balance": "$4365"
+        },
+        {
+          "referenceNumber": "#AS821",
+          "date": "10 Dec 2024",
+          "category": "Refund",
+          "description": "Refund Issued",
+          "amount": "-$50",
+          "transactionType": "Debit",
+          "balance": "$4444"
+        },
+        {
+          "referenceNumber": "#AS847",
+          "date": "27 Nov 2024",
+          "category": "Purchase",
+          "description": "Inventory restocking",
+          "amount": "-$800",
+          "transactionType": "Debit",
+          "balance": "$65145"
+        },
+        {
+          "referenceNumber": "#AS874",
+          "date": "18 Nov 2024",
+          "category": "Sale",
+          "description": "Sale of goods",
+          "amount": "+$100",
+          "transactionType": "Credit",
+          "balance": "$1848"
+        },
+        {
+          "referenceNumber": "#AS887",
+          "date": "06 Nov 2024",
+          "category": "Purchase",
+          "description": "Inventory restocking",
+          "amount": "-$700",
+          "transactionType": "Debit",
+          "balance": "$986"
+        },
+        {
+          "referenceNumber": "#AS856",
+          "date": "25 Oct 2024",
+          "category": "Utility Payment",
+          "description": "Electricity Bill",
+          "amount": "-$1000",
+          "transactionType": "Debit",
+          "balance": "$15547"
+        },
+        {
+          "referenceNumber": "#AS822",
+          "date": "14 Oct 2024",
+          "category": "Equipment Purchase",
+          "description": "New POS terminal purchased",
+          "amount": "-$1200",
+          "transactionType": "Debit",
+          "balance": "$141645"
+        },
+        {
+          "referenceNumber": "#AS844",
+          "date": "03 Oct 2024",
+          "category": "Refund",
+          "description": "Refund Issued",
+          "amount": "-$750",
+          "transactionType": "Debit",
+          "balance": "$4356"
+        },
+        {
+          "referenceNumber": "#AS832",
+          "date": "20 Sep 2024",
+          "category": "Withdraw",
+          "description": "Withdraw by accountant",
+          "amount": "-$450",
+          "transactionType": "Debit",
+          "balance": "614389"
+        }
+      ]
+      ,
+    "totalData":9
+}

@@ -1,0 +1,177 @@
+
+<div class="mb-4">
+  <ul class="nav nav-pills">
+    <li class="nav-item">
+      <a class="nav-link active" [routerLink]="routes.supplierReport">Supplier Report</a>
+  </li>
+  <li class="nav-item">
+        <a class="nav-link " [routerLink]="routes.supplierDueReport">Supplier Due</a>
+  </li>
+  </ul>
+</div>
+<div>
+
+  <div class="page-header">
+    <div class="add-item d-flex">
+      <div class="page-title">
+        <h4>Supplier Report</h4>
+        <h6>View Reports of Supplier</h6>
+      </div>
+    </div>
+    <ul class="table-top-head">
+      <li>
+        <a
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          matTooltip="Refresh"
+          matTooltipPosition="above"
+          ><i class="ti ti-refresh"></i
+        ></a>
+      </li>
+      <li>
+        <a
+          (click)="toggleCollapse()" [class.active]="isCollapsed"
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          matTooltip="Collapse"
+          matTooltipPosition="above"
+          id="collapse-header"
+          > @if (!isCollapsed) {
+          <i class="ti ti-chevron-up"></i>
+        }
+        @if (isCollapsed) {
+          <i class="ti ti-chevron-up"></i>
+        }</a>
+      </li>
+    </ul>
+  </div>
+  <div class="card border-0">
+    <div class="card-body pb-1">
+      <form>
+        <div class="row align-items-end">
+          <div class="col-lg-10">
+            <div class="row">
+              <div class="col-md-3">
+                <div class="mb-3 custom-ngxdate">
+                  <label class="form-label">Choose Date</label>
+                 <app-date-range-picker/>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="mb-3">
+                  <label class="form-label">Supplier</label>
+                 <mat-select class="custom-mat-select select" placeholder="All">
+                    <mat-option value="1">All</mat-option>
+                    <mat-option value="1">Apex Computers</mat-option>
+                    <mat-option value="1">Beats Headphones</mat-option>
+                    <mat-option value="1">Dazzle Shoes</mat-option>
+                  </mat-select>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="mb-3">
+                  <label class="form-label">Status</label>
+                 <mat-select class="custom-mat-select select" placeholder="All">
+                    <mat-option value="1">All</mat-option>
+                    <mat-option value="1">Received</mat-option>
+                    <mat-option value="1">Pending</mat-option>
+                    <mat-option value="1">Ordered</mat-option>
+                  </mat-select>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="mb-3">
+                  <label class="form-label">Payment Method</label>
+                 <mat-select class="custom-mat-select select" placeholder="All">
+                    <mat-option value="1">All</mat-option>
+                    <mat-option value="1">Cash</mat-option>
+                    <mat-option value="1">Paypal</mat-option>
+                    <mat-option value="1">Credit Card</mat-option>
+                    <mat-option value="1">Stripe</mat-option>
+                  </mat-select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-2">
+            <div class="mb-3">
+              <button class="btn btn-primary w-100" type="submit">Generate Report</button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="card table-list-card no-search">
+    <div class="card-body">
+      <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+        <div>
+          <h4>Supplier Report</h4>
+        </div>
+        <ul class="table-top-head">
+          <li class="me-2">
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Pdf"><img src="assets/img/icons/pdf.svg" alt="img"></a>
+          </li>
+          <li class="me-2">
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Excel"><img src="assets/img/icons/excel.svg" alt="img"></a>
+          </li>
+          <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Print"><i class="ti ti-printer"></i></a>
+          </li>
+        </ul>
+      </div>
+      <div class="table-responsive">
+        <table matSort (matSortChange)="sortData($event)" class="table datatable">
+          <thead class="thead-light">
+            <tr>
+              <th mat-sort-header="Reference">Reference</th>
+              <th mat-sort-header="id">ID</th>
+              <th mat-sort-header="supplier">Supplier</th>
+              <th mat-sort-header="items">Total Items</th>
+              <th mat-sort-header="amt">Amount</th>
+              <th mat-sort-header="pay">Payment Method</th>
+              <th mat-sort-header="status">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (data of tableData; track data) {
+            <tr>
+              <td><a href="javascript:void(0);" class="text-primary">{{data.reference}}</a></td>
+              <td>{{data.id}}</td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <a href="javascript:void(0);" class="avatar avatar-md me-2">
+                    <img src="assets/img/supplier/{{data.img}}" alt="Img">
+                  </a>
+                  <h6 class="fw-medium"><a href="javascript:void(0);">{{data.supplier}}</a></h6>
+                </div>
+              </td>
+              <td>{{data.totalItems}}</td>
+              <td>{{data.amount}}</td>
+              <td>{{data.paymentMethod}}</td>
+              <td>
+                <span class="badge d-inline-flex align-items-center badge-xs" [ngClass]="data.status==='Pending'?'badge-cyan':data.status==='Ordered'?'badge-warning':'badge-success'">
+                  {{data.status}}
+                </span>
+              </td>
+            </tr>
+          }
+            <tr class="bg-secondary-transparent">
+              <td class="bg-secondary-transparent"><h6>Total</h6></td>
+              <td class="bg-secondary-transparent"></td>
+              <td class="bg-secondary-transparent"></td>
+              <td class="bg-secondary-transparent"></td>
+              <td class="bg-secondary-transparent"><h6>$33268.53</h6></td>
+              <td class="bg-secondary-transparent"></td>
+              <td class="bg-secondary-transparent"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <app-custom-pagination/>
+    </div>
+  </div>
+</div>
+                    
+                      
+           

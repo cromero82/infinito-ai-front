@@ -1,0 +1,55 @@
+{
+    "data":[
+        {
+          "Tag": "PointOfSale",
+          "CreatedDate": "12 Sep 2024",
+          "Status": "Active"
+        },
+        {
+          "Tag": "Business",
+          "CreatedDate": "24 Oct 2024",
+          "Status": "Active"
+        },
+        {
+          "Tag": "RetailTech",
+          "CreatedDate": "18 Feb 2024",
+          "Status": "Active"
+        },
+        {
+          "Tag": "POSIntegration",
+          "CreatedDate": "17 Oct 2024",
+          "Status": "Active"
+        },
+        {
+          "Tag": "Payments",
+          "CreatedDate": "20 Jul 2024",
+          "Status": "Active"
+        },
+        {
+          "Tag": "Software",
+          "CreatedDate": "10 Apr 2024",
+          "Status": "Active"
+        },
+        {
+          "Tag": "Software Tips",
+          "CreatedDate": "29 Aug 2024",
+          "Status": "Active"
+        },
+        {
+          "Tag": "Features",
+          "CreatedDate": "22 Feb 2024",
+          "Status": "Active"
+        },
+        {
+          "Tag": "Budgeting",
+          "CreatedDate": "03 Nov 2024",
+          "Status": "Active"
+        },
+        {
+          "Tag": "Benefits",
+          "CreatedDate": "17 Dec 2024",
+          "Status": "Active"
+        }
+       ],
+    "totaldata":10
+}

@@ -1,0 +1,150 @@
+<div class="page-header justify-content-between">
+  <div class="page-title">
+    <h4>Expenses</h4>
+    <h6>Manage your Expenses</h6>
+  </div>
+  <ul class="table-top-head">
+    <li>
+      <a
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title="Refresh"
+        matTooltip="Refresh"
+        matTooltipPosition="above"
+        ><i class="ti ti-refresh"></i
+      ></a>
+    </li>
+    <li>
+      <a
+        (click)="toggleCollapse()" [class.active]="isCollapsed"
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title="Collapse"
+        matTooltip="Collapse"
+        matTooltipPosition="above"
+        id="collapse-header"
+      >
+        @if (!isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+        } @if (isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+        }</a
+      >
+    </li>
+  </ul>
+</div>
+<div class="card border-0">
+  <div class="card-body pb-1">
+    <form>
+      <div class="row align-items-end">
+        <div class="col-lg-10">
+          <div class="row">
+            <div class="col-md-3">
+              <div class="mb-3 custom-ngxdate">
+                <label class="form-label">Choose Date</label>
+                <app-date-range-picker/>                
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="mb-3">
+                <label class="form-label">Expense Category</label>
+                <mat-select class="custom-mat-select select" placeholder="All">
+                  <mat-option value="1">All</mat-option>
+                  <mat-option value="1">Electricity Payment</mat-option>
+                  <mat-option value="1">Stationery Purchase</mat-option>
+                  <mat-option value="1">AC Repair Service</mat-option>
+                </mat-select>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="mb-3">
+                <label class="form-label">Payment Method</label>
+                <mat-select class="custom-mat-select select" placeholder="All">
+                  <mat-option value="1">All</mat-option>
+                  <mat-option value="1">Paypal</mat-option>
+                  <mat-option value="1">Cash</mat-option>
+                  <mat-option value="1">Credit Card</mat-option>
+                </mat-select>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="mb-3">
+                <label class="form-label">Status</label>
+                <mat-select class="custom-mat-select select" placeholder="All">
+                  <mat-option value="1">All</mat-option>
+                  <mat-option value="1">Approved</mat-option>
+                  <mat-option value="1">Pending</mat-option>
+                </mat-select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-2">
+          <div class="mb-3">
+            <button class="btn btn-primary w-100" type="submit">Generate Report</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- /product list -->
+<div class="card table-list-card">
+  <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+    <div>
+      <h4>Expense Report</h4>
+    </div>
+    <ul class="table-top-head">
+      <li class="me-2">
+        <a data-bs-toggle="tooltip" data-bs-placement="top" title="Pdf"><img src="assets/img/icons/pdf.svg" alt="img"></a>
+      </li>
+      <li class="me-2">
+        <a data-bs-toggle="tooltip" data-bs-placement="top" title="Excel"><img src="assets/img/icons/excel.svg" alt="img"></a>
+      </li>
+      <li>
+        <a data-bs-toggle="tooltip" data-bs-placement="top" title="Print"><i class="ti ti-printer"></i></a>
+      </li>
+    </ul>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table
+        class="table datanew"
+        (matSortChange)="sortData($event)"
+        matSort
+        matSortActive="Sno"
+        matSortDirection="asc"
+        matSortDisableClear
+      >
+        <thead class="thead-light">
+          <tr>
+            <th mat-sort-header="name">Expense Name</th>
+            <th mat-sort-header="expense">Category</th>
+            <th mat-sort-header="user">Description</th>
+            <th mat-sort-header="date">Date</th>
+            <th mat-sort-header="amountDue">Amount</th>
+            <th mat-sort-header="amountDue">Status</th>
+          </tr>
+        </thead>
+        <tbody class="Expense-list">
+          @for (data of tableData; track data) {
+            <tr>
+              <td>{{data.expenseName}}</td>
+              <td>{{data.category}}</td>
+              <td>{{data.description}}</td>
+              <td>{{data.date}}</td>
+              <td>{{data.amount}}</td>
+              <td>
+                <span class="badge d-inline-flex align-items-center badge-xs" [ngClass]="data.status==='Pending'?'badge-cyan':'badge-success'">
+                  {{data.status}}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-custom-pagination></app-custom-pagination>
+  </div>
+</div>
+<!-- /product list -->

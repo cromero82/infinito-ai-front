@@ -1,0 +1,75 @@
+{
+  "data":[
+      {
+        "img":"stock-img-01.png",
+        "productName": "Lenovo IdeaPad 3",
+        "purchasedAmount": "$1000",
+        "purchasedQty": "40",
+        "instockQty": "30"
+      },
+      {
+        "img":"stock-img-06.png",
+        "productName": "Beats Pro",
+        "purchasedAmount": "$1500",
+        "purchasedQty": "25",
+        "instockQty": "18"
+      },
+      {
+        "img":"stock-img-02.png",
+        "productName": "Nike Jordan",
+        "purchasedAmount": "$1500",
+        "purchasedQty": "30",
+        "instockQty": "35"
+      },
+      {
+        "img":"stock-img-03.png",
+        "productName": "Apple Series 5 Watch",
+        "purchasedAmount": "$2000",
+        "purchasedQty": "28",
+        "instockQty": "30"
+      },
+      {
+        "img":"stock-img-04.png",
+        "productName": "Amazon Echo Dot",
+        "purchasedAmount": "$800",
+        "purchasedQty": "15",
+        "instockQty": "10"
+      },
+      {
+        "img":"stock-img-05.png",
+        "productName": "Sanford Chair Sofa",
+        "purchasedAmount": "$750",
+        "purchasedQty": "20",
+        "instockQty": "15"
+      },
+      {
+        "img":"expire-product-01.png",
+        "productName": "Red Premium Satchel",
+        "purchasedAmount": "$1300",
+        "purchasedQty": "35",
+        "instockQty": "40"
+      },
+      {
+        "img":"expire-product-02.png",
+        "productName": "Iphone 14 Pro",
+        "purchasedAmount": "$1100",
+        "purchasedQty": "45",
+        "instockQty": "35"
+      },
+      {
+        "img":"expire-product-03.png",
+        "productName": "Gaming Chair",
+        "purchasedAmount": "$2300",
+        "purchasedQty": "22",
+        "instockQty": "20"
+      },
+      {
+        "img":"expire-product-04.png",
+        "productName": "Borealis Backpack",
+        "purchasedAmount": "$1700",
+        "purchasedQty": "18",
+        "instockQty": "25"
+      }
+    ],
+    "totalData":10      
+}

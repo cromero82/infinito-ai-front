@@ -1,0 +1,25 @@
+{
+    "data": [
+        {
+            
+            "name": "VAT",
+            "taxRates": "16",
+            "createdOn": "12 Jul 2023",
+            "action": ""
+        },
+        {
+           
+            "name": "TGST",
+            "taxRates": "14",
+            "createdOn": "17 Jul 2023",
+            "action": ""
+        },
+        {
+            "name": "HST",
+            "taxRates": "12",
+            "createdOn": "23 Jul 2023",
+            "action": ""
+        }
+    ],
+    "totalData": 3
+  }

@@ -1,0 +1,105 @@
+{
+    "data": [
+        {
+           
+            "value": "PR0001",
+            "supplierName": "Apex Computers",
+            "amount": "$1800",
+            "paid": "$1800",
+            "dueAmount": "$0.00",
+            "status": "Completed",
+            "paymentStatus": "Paid"
+        },
+        {
+            
+            "value": "PR0002",
+            "supplierName": "Beats Headphones",
+            "amount": "$1200",
+            "paid": "$0.00",
+            "dueAmount": "$1200",
+            "status": "Completed",
+            "paymentStatus": "Unpaid"
+        },
+        {
+            
+            "value": "PR0003",
+            "supplierName": "Dazzle Shoes",
+            "amount": "$2000",
+            "paid": "$2000",
+            "dueAmount": "$0.00",
+            "status": "Completed",
+            "paymentStatus": "Paid"
+        },
+        {
+           
+            "value": "PR0004",
+            "supplierName": "Best Accessories",
+            "amount": "$1300",
+            "paid": "$1300",
+            "dueAmount": "$1300",
+            "status": "Completed",
+            "paymentStatus": "Overdue"
+        },
+        {
+           
+            "value": "PR0005",
+            "supplierName": "Aesthetic Bags",
+            "amount": "$400",
+            "paid": "$0.00",
+            "dueAmount": "$400",
+            "status": "Completed",
+            "paymentStatus": "Unpaid"
+        },
+        {
+            
+            "value": "PR0006",
+            "supplierName": "Hatimi Hardwares",
+            "amount": "$700",
+            "paid": "$700",
+            "dueAmount": "$700",
+            "status": "Completed",
+            "paymentStatus": "Overdue"
+        },
+        {
+            
+            "value": "PR0007",
+            "supplierName": "Shine Bags",
+            "amount": "$800",
+            "paid": "$800",
+            "dueAmount": "$0.00",
+            "status": "Completed",
+            "paymentStatus": "Paid"
+        },
+        {
+           
+            "value": "PR0008",
+            "supplierName": "Alpha Mobiles",
+            "amount": "$300",
+            "paid": "$300",
+            "dueAmount": "$0.00",
+            "status": "Completed",
+            "paymentStatus": "Paid"
+        },
+        {
+            
+            "value": "PR0009",
+            "supplierName": "Sigma Chairs",
+            "amount": "$120",
+            "paid": "$120",
+            "dueAmount": "$0.00",
+            "status": "Completed",
+            "paymentStatus": "Paid"
+        },
+        {
+            
+            "value": "PR0010",
+            "supplierName": "Zenith Bags",
+            "amount": "$600",
+            "paid": "$600",
+            "dueAmount": "$0.00",
+            "status": "Completed",
+            "paymentStatus": "Paid"
+        }
+    ],
+    "totalData": 10
+}

@@ -1,0 +1,106 @@
+{
+    "data": [
+        {
+          "warehouse": "Lavish Warehouse",
+          "store": "Electro Mart",
+          "product": "Lenovo IdeaPad 3",
+          "date": "24 Dec 2024",
+          "person": "James Kirwin",
+          "quantity": "100",
+          "img": "stock-img-01.png",
+          "img2": "user-30.jpg"
+        },
+        {
+          "warehouse": "Quaint Warehouse",
+          "store": "Quantum Gadgets",
+          "product": "Beats Pro",
+          "date": "10 Dec 2024",
+          "person": "Francis Chang",
+          "quantity": "140",
+          "img": "stock-img-06.png",
+          "img2": "user-13.jpg"
+        },
+        {
+          "warehouse": "Lobar Handy",
+          "store": "Selosy",
+          "product": "Nike Jordan",
+          "date": "25 Jul 2023",
+          "person": "Steven",
+          "quantity": "120",
+          "img": "stock-img-02.png",
+          "img2": "user-08.jpg"
+        },
+        {
+          "warehouse": "Quaint Warehouse",
+          "store": "Logerro",
+          "product": "Apple Series 5 Watch",
+          "date": "28 Jul 2023",
+          "person": "Gravely",
+          "quantity": "130",
+          "img": "stock-img-03.png",
+          "img2": "user-04.jpg"
+        },
+        {
+          "warehouse": "Traditional Warehouse",
+          "store": "Vesloo",
+          "product": "Amazon Echo Dot",
+          "date": "24 Jul 2023",
+          "person": "Kevin",
+          "quantity": "140",
+          "img": "stock-img-04.png",
+          "img2": "user-09.jpg"
+        },
+        {
+          "warehouse": "Cool Warehouse",
+          "store": "Crompy",
+          "product": "Lobar Handy",
+          "date": "15 Jul 2023",
+          "person": "Grillo",
+          "quantity": "150",
+          "img": "stock-img-05.png",
+          "img2": "user-10.jpg"
+        },
+        {
+          "warehouse": "Retail Supply Hub",
+          "store": "Prime Mart",
+          "product": "Red Premium Satchel",
+          "date": "14 Oct 2024",
+          "person": "Gary Hennessy",
+          "quantity": "700",
+          "img": "expire-product-01.png",
+          "img2": "user-08.jpg"
+        },
+        {
+          "warehouse": "EdgeWare Solutions",
+          "store": "NeoTech Store",
+          "product": "Iphone 14 Pro",
+          "date": "03 Oct 2024",
+          "person": "Eleanor Panek",
+          "quantity": "630",
+          "img": "expire-product-02.png",
+          "img2": "user-04.jpg"
+        },
+        {
+          "warehouse": "North Zone Warehouse",
+          "store": "Urban Mart",
+          "product": "Gaming Chair",
+          "date": "20 Sep 2024",
+          "person": "William Levy",
+          "quantity": "410",
+          "img": "expire-product-03.png",
+          "img2": "user-13.jpg"
+        },
+        {
+          "warehouse": "Fulfillment Hub",
+          "store": "Travel Mart",
+          "product": "Borealis Backpack",
+          "date": "10 Sep 2024",
+          "person": "Charlotte Klotz",
+          "quantity": "550",
+          "img": "expire-product-04.png",
+          "img2": "user-16.jpg"
+        }
+      ]
+      ,
+    "totalData": 10
+}

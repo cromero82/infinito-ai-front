@@ -1,0 +1,50 @@
+{
+  "data": [
+    {
+      "name": "Mathew",
+      "bank": "HDFC",
+      "branch": "Bringham",
+      "accountNo": "**** **** 1832",
+      "ifsc": "124547",
+      "isSelected": false,
+      "createdOn": "12 Jul 2023"
+    },
+    {
+      "name": "Toby Lando",
+      "bank": "SBI",
+      "branch": "Leicester",
+      "accountNo": "**** **** 1596",
+      "ifsc": "156723",
+      "isSelected": false,
+      "createdOn": "17 Aug 2023"
+    },
+    {
+      "name": "John Smith",
+      "bank": "KVB",
+      "branch": "Bristol",
+      "accountNo": "**** **** 1982",
+      "ifsc": "198367",
+      "isSelected": false,
+      "createdOn": "08 Sep 2023"
+    },
+    {
+      "name": "Andrew",
+      "bank": "Swiss Bank",
+      "branch": "Nottingham",
+      "accountNo": "**** **** 1796",
+      "ifsc": "186730",
+      "isSelected": false,
+      "createdOn": "21 Oct 2023"
+    },
+    {
+      "name": "Robert",
+      "bank": "Canara Bank",
+      "branch": "Norwich",
+      "accountNo": "**** **** 1645",
+      "ifsc": "146026",
+      "isSelected": false,
+      "createdOn": "03 Nov 2023"
+    }
+  ],
+  "totalData": 5
+}

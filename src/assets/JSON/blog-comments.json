@@ -1,0 +1,48 @@
+{
+    "data":[
+        {
+            "comments": "Thanks for the detailed guide on POS System",
+            "createdDate": "24 Dec 2024",
+            "blog": "What is a POS System? A Beginner’s Guide",
+            "by": "Gertrude"
+        },
+        {
+            "comments": "Thanks for sharing these insights!",
+            "createdDate": "10 Dec 2024",
+            "blog": "Best POS Systems for Retail Businesses",
+            "by": "Edward"
+        },
+        {
+            "comments": "Helpful info on POS features - thank you!",
+            "createdDate": "27 Nov 2024",
+            "blog": "Key Features of a Modern POS",
+            "by": "Mark"
+        },
+        {
+            "comments": "Fantastic content, thank you for sharing!",
+            "createdDate": "18 Nov 2024",
+            "blog": "Integrating POS with E-Commerce",
+            "by": "Nidia"
+        },
+        {
+            "comments": "This really cleared things up, I appreciate it",
+            "createdDate": "06 Nov 2024",
+            "blog": "AI & the Future of POS Systems",
+            "by": "Rebecca"
+        },
+        {
+            "comments": "Awesome post, thanks for sharing!",
+            "createdDate": "25 Oct 2024",
+            "blog": "Retail vs Restaurant POS: Key Differences",
+            "by": "Jimmy"
+        },
+        {
+            "comments": "I learned a lot from this - thanks!",
+            "createdDate": "14 Oct 2024",
+            "blog": "Understanding PCI Compliance for POS",
+            "by": "Richard"
+        }
+    ]
+    ,
+    "totalData":10
+}

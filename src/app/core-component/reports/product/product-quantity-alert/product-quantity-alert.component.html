@@ -1,0 +1,287 @@
+<div class="mb-4">
+    <ul class="nav nav-pills">
+        <li class="nav-item">
+            <a class="nav-link" [routerLink]="routes.productReport">Product Report</a>
+        </li>
+        <li class="nav-item">
+              <a class="nav-link" [routerLink]="routes.productExpiryReport">Product Expiry Report</a>
+        </li>
+        <li class="nav-item">
+              <a class="nav-link active" [routerLink]="routes.productQuantityAlert">Product Quantity Alert</a>
+        </li>
+    </ul>
+</div>
+<div>
+    <div class="page-header">
+        <div class="add-item d-flex">
+            <div class="page-title">
+                <h4>Product Expiry Report</h4>
+                <h6>View Reports of Products</h6>
+            </div>
+        </div>
+        <ul class="table-top-head">
+            <li class="me-2">
+                <a data-bs-toggle="tooltip" data-bs-placement="top" title="Refresh" matTooltip="Refresh"
+                  matTooltipPosition="above"><i class="ti ti-refresh"></i></a>
+                </li>
+                <li>
+                  <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" title="Collapse" matTooltip="Collapse"
+                    matTooltipPosition="above" id="collapse-header"> @if (!isCollapsed) {
+                    <i class="ti ti-chevron-up"></i>
+                  }
+                  @if (isCollapsed) {
+                    <i class="ti ti-chevron-up"></i>
+                  }</a>
+                </li>
+        </ul>
+    </div>
+    <div class="card border-0">
+        <div class="card-body pb-1">
+            <form>
+                <div class="row align-items-end">
+                    <div class="col-lg-10">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3 custom-ngxdate">
+                                    <label class="form-label">Choose Date</label>
+                                    <app-date-range-picker/>
+                                </div>
+                            </div>
+                            <div class="col-lg-9">
+                                <div class="row">
+                                    <div class="col-lg-3 col-md-4 col-sm-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Store</label>
+                                           <mat-select class="custom-mat-select select" placeholder="All">
+                                                <mat-option value="1">All</mat-option>
+                                                <mat-option value="1">Electro Mart</mat-option>
+                                                <mat-option value="1">Quantum Gadgets</mat-option>
+                                                <mat-option value="1">Prime Bazaar</mat-option>
+                                            </mat-select>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-md-4 col-sm-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Category</label>
+                                           <mat-select class="custom-mat-select select" placeholder="All">
+                                                <mat-option value="1">All</mat-option>
+                                                <mat-option value="1">Computers</mat-option>
+                                                <mat-option value="1">Electronics</mat-option>
+                                                <mat-option value="1">Shoe</mat-option>
+                                            </mat-select>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-md-4 col-sm-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Brand</label>
+                                           <mat-select class="custom-mat-select select" placeholder="All">
+                                                <mat-option value="1">All</mat-option>
+                                                <mat-option value="1">Lenovo</mat-option>
+                                                <mat-option value="1">Beats</mat-option>
+                                                <mat-option value="1">Nike</mat-option>
+                                            </mat-select>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-md-4 col-sm-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Product</label>
+                                           <mat-select class="custom-mat-select select" placeholder="All">
+                                                <mat-option value="1">All</mat-option>
+                                                <mat-option value="1">Lenovo IdeaPad 3</mat-option>
+                                                <mat-option value="1">Beats Pro</mat-option>
+                                                <mat-option value="1">Nike Jordan</mat-option>
+                                            </mat-select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-2">
+                        <div class="mb-3">
+                            <button class="btn btn-primary w-100" type="submit">Generate Report</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- /product list -->
+    <div class="card table-list-card no-search">
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+            <div>
+                <h4>Product Expiry Report</h4>
+            </div>
+            <ul class="table-top-head">
+                <li class="me-2">
+                    <a data-bs-toggle="tooltip" data-bs-placement="top" title="Pdf"><img src="assets/img/icons/pdf.svg" alt="img"></a>
+                </li>
+                <li class="me-2">
+                    <a data-bs-toggle="tooltip" data-bs-placement="top" title="Excel"><img src="assets/img/icons/excel.svg" alt="img"></a>
+                </li>
+                <li>
+                    <a data-bs-toggle="tooltip" data-bs-placement="top" title="Print"><i class="ti ti-printer"></i></a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table datatable">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>SKU</th>
+                            <th>Serial No</th>
+                            <th>Product Name</th>
+                            <th>Total Quantity</th>
+                            <th>Alert Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="javascript:void(0);" class="text-orange">PT001</a></td>
+                            <td>LNV-IP3-8GB-256SSD-BL</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <a href="javascript:void(0);" class="avatar avatar-md"><img src="assets/img/products/stock-img-01.png" class="img-fluid" alt="img"></a>
+                                    <div class="ms-2">
+                                        <p class="text-dark mb-0"><a href="javascript:void(0);">Lenovo IdeaPad 3</a></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>98</td>
+                            <td>79</td>
+                        </tr>
+                        <tr>
+                            <td><a href="javascript:void(0);" class="text-orange">PT002</a></td>
+                            <td>LNV-IP3-8GB-256SSD-BL</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <a href="javascript:void(0);" class="avatar avatar-md"><img src="assets/img/products/stock-img-06.png" class="img-fluid" alt="img"></a>
+                                    <div class="ms-2">
+                                        <p class="text-dark mb-0"><a href="javascript:void(0);">Beats Pro </a></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>156</td>
+                            <td>66</td>
+                        </tr>
+                        <tr>
+                            <td><a href="javascript:void(0);" class="text-orange">PT003</a></td>
+                            <td>LNV-IP3-8GB-256SSD-BL</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <a href="javascript:void(0);" class="avatar avatar-md"><img src="assets/img/products/stock-img-02.png" class="img-fluid" alt="img"></a>
+                                    <div class="ms-2">
+                                        <p class="text-dark mb-0"><a href="javascript:void(0);">Nike Jordan</a></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>89</td>
+                            <td>69</td>
+                        </tr>
+                        <tr>
+                            <td><a href="javascript:void(0);" class="text-orange">PT004</a></td>
+                            <td>LNV-IP3-8GB-256SSD-BL</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <a href="javascript:void(0);" class="avatar avatar-md"><img src="assets/img/products/stock-img-03.png" class="img-fluid" alt="img"></a>
+                                    <div class="ms-2">
+                                        <p class="text-dark mb-0"><a href="javascript:void(0);">Apple Series 5 Watch</a></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>569</td>
+                            <td>68</td>
+                        </tr>
+                        <tr>
+                            <td><a href="javascript:void(0);" class="text-orange">PT005</a></td>
+                            <td>LNV-IP3-8GB-256SSD-BL</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <a href="javascript:void(0);" class="avatar avatar-md"><img src="assets/img/products/stock-img-04.png" class="img-fluid" alt="img"></a>
+                                    <div class="ms-2">
+                                        <p class="text-dark mb-0"><a href="javascript:void(0);">Amazon Echo Dot</a></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>548</td>
+                            <td>33</td>
+                        </tr>
+                        <tr>
+                            <td><a href="javascript:void(0);" class="text-orange">PT006</a></td>
+                            <td>LNV-IP3-8GB-256SSD-BL</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <a href="javascript:void(0);" class="avatar avatar-md"><img src="assets/img/products/stock-img-05.png" class="img-fluid" alt="img"></a>
+                                    <div class="ms-2">
+                                        <p class="text-dark mb-0"><a href="javascript:void(0);">Sanford Chair Sofa</a></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>456</td>
+                            <td>16</td>
+                        </tr>
+                        <tr>
+                            <td><a href="javascript:void(0);" class="text-orange">PT007</a></td>
+                            <td>LNV-IP3-8GB-256SSD-BL</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <a href="javascript:void(0);" class="avatar avatar-md"><img src="assets/img/products/expire-product-01.png" class="img-fluid" alt="img"></a>
+                                    <div class="ms-2">
+                                        <p class="text-dark mb-0"><a href="javascript:void(0);">Red Premium Satchel</a></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>178</td>
+                            <td>86</td>
+                        </tr>
+                        <tr>
+                            <td><a href="javascript:void(0);" class="text-orange">PT008</a></td>
+                            <td>LNV-IP3-8GB-256SSD-BL</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <a href="javascript:void(0);" class="avatar avatar-md"><img src="assets/img/products/expire-product-02.png" class="img-fluid" alt="img"></a>
+                                    <div class="ms-2">
+                                        <p class="text-dark mb-0"><a href="javascript:void(0);">Iphone 14 Pro</a></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>1768</td>
+                            <td>33</td>
+                        </tr>
+                        <tr>
+                            <td><a href="javascript:void(0);" class="text-orange">PT009</a></td>
+                            <td>LNV-IP3-8GB-256SSD-BL</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <a href="javascript:void(0);" class="avatar avatar-md"><img src="assets/img/products/expire-product-03.png" class="img-fluid" alt="img"></a>
+                                    <div class="ms-2">
+                                        <p class="text-dark mb-0"><a href="javascript:void(0);">Gaming Chair</a></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>568</td>
+                            <td>528</td>
+                        </tr>
+                        <tr>
+                            <td><a href="javascript:void(0);" class="text-orange">PT010</a></td>
+                            <td>LNV-IP3-8GB-256SSD-BL</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <a href="javascript:void(0);" class="avatar avatar-md"><img src="assets/img/products/expire-product-04.png" class="img-fluid" alt="img"></a>
+                                    <div class="ms-2">
+                                        <p class="text-dark mb-0"><a href="javascript:void(0);">Borealis Backpack</a></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>146</td>
+                            <td>11</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <app-custom-pagination/>
+        </div>
+    </div>
+    <!-- /product list -->
+</div>

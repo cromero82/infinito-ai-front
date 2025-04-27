@@ -1,0 +1,105 @@
+{
+    "data": [
+        {
+            "img": "user-42.png",
+            "code": "BI001",
+            "biller": "Shaun Farley",
+            "companyName": "GreenTech Industries",
+            "email": "shaun@example.com",
+            "phone": "+18647961254",
+            "country": "USA",
+            "status": "Active"
+        },
+        {
+            "img": "user-02.jpg",
+            "code": "BI002",
+            "biller": "Jenny Ellis",
+            "companyName": "BlueSky Logistics",
+            "email": "jenny@example.com",
+            "phone": "+13197521863",
+            "country": "Germany",
+            "status": "Active"
+        },
+        {
+            "img": "user-43.png",
+            "code": "BI003",
+            "biller": "Leon Baxter",
+            "companyName": "EcoFarm Organics",
+            "email": "leon@example.com",
+            "phone": "+18496275831",
+            "country": "Japan",
+            "status": "Active"
+        },
+        {
+            "img": "user-35.jpg",
+            "code": "BI004",
+            "biller": "Karen Flores",
+            "companyName": "SmartTech Solutions",
+            "email": "karen@example.com",
+            "phone": "+18731498524",
+            "country": "Austria",
+            "status": "Active"
+        },
+        {
+            "img": "user-44.png",
+            "code": "BI005",
+            "biller": "Michael Dawson",
+            "companyName": "Fresh Supplies",
+            "email": "michael@example.com",
+            "phone": "+12876928738",
+            "country": "Turkey",
+            "status": "Active"
+        },
+        {
+            "img": "user-37.jpg",
+            "code": "BI006",
+            "biller": "Karen Galvan",
+            "companyName": "BrightSource Lighting",
+            "email": "karen@example.com",
+            "phone": "+17534896148",
+            "country": "Mexico",
+            "status": "Active"
+        },
+        {
+            "img": "user-44.png",
+            "code": "BI007",
+            "biller": "Thomas Ward",
+            "companyName": "GlobalTech Industries",
+            "email": "thomas@example.com",
+            "phone": "+16482479624",
+            "country": "France",
+            "status": "Active"
+        },
+        {
+            "img": "user-38.jpg",
+            "code": "BI008",
+            "biller": "Aliza Duncan",
+            "companyName": "HealthWell Pharma",
+            "email": "aliza@example.com",
+            "phone": "+13175964827",
+            "country": "Greece",
+            "status": "Active"
+        },
+        {
+            "img": "user-45.png",
+            "code": "BI009",
+            "biller": "James Higham",
+            "companyName": "HomeStyle Furnishings",
+            "email": "james@example.com",
+            "phone": "+13875196482",
+            "country": "Italy",
+            "status": "Active"
+        },
+        {
+            "img": "user-40.jpg",
+            "code": "BI010",
+            "biller": "Jada Robinson",
+            "companyName": "EcoLogistics Partners",
+            "email": "robinson@example.com",
+            "phone": "+17586143284",
+            "country": "China",
+            "status": "Active"
+        }
+    ],
+    "totalData": 10
+}

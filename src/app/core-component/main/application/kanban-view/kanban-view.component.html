@@ -1,0 +1,161 @@
+<!-- Page Wrapper -->
+
+
+		<!-- Breadcrumb -->
+		<div class="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
+			<div class="my-auto mb-2">
+				<h4 class="mb-1">Projects</h4>
+				<h6>Manage your Projects</h6>
+			</div>
+			<div class="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+				<div class="form-sort me-2 mb-sm-0 mb-3">
+					<i  class="feather icon-sliders info-img"></i>
+					<mat-select [(ngModel)]="selectedValue1" [ngModelOptions]="{standalone: true}"
+					  class="select space-select" placeholder="Sort by Date">
+					  @for (data of selectedList1; track data) {
+						<mat-option [value]="data.value">
+						  {{data.value}}
+						</mat-option>
+					  }
+					</mat-select>
+				  </div>
+				<ul class="table-top-head">
+					<li>
+						<a data-bs-toggle="tooltip" data-bs-placement="top" title="Refresh" matTooltip="Refresh" matTooltipPosition="above"><i  class="ti ti-refresh"></i></a>
+					  </li>
+					<li>
+						<a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" title="Collapse" id="collapse-header" matTooltip="Collapse" matTooltipPosition="above"> @if (!isCollapsed) {
+						<i class="ti ti-chevron-up"></i>
+						}
+						@if (isCollapsed) {
+						<i class="ti ti-chevron-up"></i>
+						}</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="card">
+			<div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+				<h4>Projects</h4>
+				<div class="d-flex align-items-center flex-wrap row-gap-3">
+					<div class="avatar-list-stacked avatar-group-sm me-3">
+						<span class="avatar avatar-rounded">
+							<img class="border border-white" src="assets/img/profiles/avatar-19.jpg" alt="img">
+						</span>
+						<span class="avatar avatar-rounded">
+							<img class="border border-white" src="assets/img/profiles/avatar-29.jpg" alt="img">
+						</span>
+						<span class="avatar avatar-rounded">
+							<img class="border border-white" src="assets/img/profiles/avatar-16.jpg" alt="img">
+						</span>
+						<span class="avatar avatar-rounded bg-primary fs-12">
+							1+
+						</span>
+					</div>
+					<div class="d-flex align-items-center me-3">
+						<p class="mb-0 me-3 pe-3 border-end fs-14">Total Task : <span class="text-dark"> 55 </span></p>
+						<p class="mb-0 me-3 pe-3 border-end fs-14">Pending : <span class="text-dark"> 15 </span></p>
+						<p class="mb-0 fs-14">Completed : <span class="text-dark"> 40 </span></p>
+					</div>
+					<div class="input-icon-start position-relative">
+						<span class="input-icon-addon">
+							<i class="ti ti-search"></i>
+						</span>
+						<input type="text" class="form-control" placeholder="Search Project">
+					</div>
+				</div>
+			</div>
+			<div class="card-body">
+				<div class="row">
+					<div class="col-lg-4">
+						<div class="d-flex align-items-center flex-wrap row-gap-3 mb-3">
+							<h6 class="me-2">Priority</h6>
+							<ul class="nav nav-pills border d-inline-flex p-1 rounded bg-light todo-tabs" id="pills-tab" role="tablist">
+								<li class="nav-item" role="presentation">
+									<button class="nav-link btn btn-sm btn-icon py-3 d-flex align-items-center justify-content-center w-auto active" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-selected="true">All</button>
+								</li>
+								<li class="nav-item" role="presentation">
+									<button class="nav-link btn btn-sm btn-icon py-3 d-flex align-items-center justify-content-center w-auto" data-bs-toggle="pill" data-bs-target="#pills-contact" type="button" role="tab" aria-selected="false">High</button>
+								</li>
+								<li class="nav-item" role="presentation">
+									<button class="nav-link btn btn-sm btn-icon py-3 d-flex align-items-center justify-content-center w-auto" data-bs-toggle="pill" data-bs-target="#pills-medium" type="button" role="tab" aria-selected="false">Medium</button>
+								</li>
+								<li class="nav-item" role="presentation">
+									<button class="nav-link btn btn-sm btn-icon py-3 d-flex align-items-center justify-content-center w-auto" data-bs-toggle="pill" data-bs-target="#pills-low" type="button" role="tab" aria-selected="false">Low</button>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class="col-lg-8">
+						<div class="d-flex align-items-center justify-content-lg-end flex-wrap row-gap-3 mb-3">
+							<div class="input-icon w-120 position-relative me-2">
+								<span class="input-icon-addon">
+									<i class="ti ti-calendar text-gray-9"></i>
+								</span>
+								<input type="text" bsDatepicker class="form-control datetimepicker" placeholder="Created Date">
+							</div>
+							<div class="input-icon w-120 position-relative me-2">
+								<span class="input-icon-addon">
+									<i class="ti ti-calendar text-gray-9"></i>
+								</span>
+								<input type="text" bsDatepicker class="form-control datetimepicker" placeholder="Due Date">
+							</div>
+							<div class="dropdown me-2">
+								<a href="javascript:void(0);" class="dropdown-toggle btn btn-white d-inline-flex align-items-center p-2" data-bs-toggle="dropdown">
+									Select Status
+								</a>
+								<ul class="dropdown-menu  dropdown-menu-end p-3">
+									<li>
+										<a href="javascript:void(0);" class="dropdown-item rounded-1">Inprogress</a>
+									</li>
+									<li>
+										<a href="javascript:void(0);" class="dropdown-item rounded-1">On-hold</a>
+									</li>
+									<li>
+										<a href="javascript:void(0);" class="dropdown-item rounded-1">Completed</a>
+									</li>
+								</ul>
+							</div>
+							<div class="d-flex align-items-center border p-2 rounded">
+								<span class="d-inline-flex me-2">Sort By : </span>
+								<div class="dropdown">
+									<a href="javascript:void(0);" class="dropdown-toggle btn btn-white d-inline-flex align-items-center border-0 bg-transparent p-0 text-dark" data-bs-toggle="dropdown">
+										Created Date
+									</a>
+									<ul class="dropdown-menu  dropdown-menu-end p-3">
+										<li>
+											<a href="javascript:void(0);" class="dropdown-item rounded-1">Created Date</a>
+										</li>
+										<li>
+											<a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
+										</li>
+										<li>
+											<a href="javascript:void(0);" class="dropdown-item rounded-1">Due Date</a>
+										</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="tab-content" id="pills-tabContent">
+					<div class="tab-pane fade show active" id="pills-home" role="tabpanel">
+						<app-kanban-all/>
+					</div>
+					<div class="tab-pane fade" id="pills-contact" role="tabpanel">
+						<app-kanban-high/>
+					</div>
+					<div class="tab-pane fade" id="pills-medium" role="tabpanel">
+						<app-kanban-medium/>
+					</div>
+					<div class="tab-pane fade" id="pills-low" role="tabpanel">
+						<app-kanban-low/>
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+
+<!-- /Page Wrapper -->
+ 

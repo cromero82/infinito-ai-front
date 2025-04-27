@@ -1,0 +1,29 @@
+<div class="sidebars settings-sidebar stickybar" id="sidebar2">
+  <div class="sidebar-inner slimscroll slimScrollDiv">
+    <div id="sidebar-menu5" class="sidebar-menu">
+      <h4 class="fw-bold fs-18 mb-2 pb-2">Settings</h4>
+      <ul>
+        <li class="submenu-open">
+          <ul>
+            @for (menu of menuItems; track menu) {
+            <li class="submenu"  (click)="toggleSubMenu(menu);openSubDrop(menu.page)">
+              <a href="javascript:void(0);" [ngClass]="{'subdrop': menu.expanded}" [class.active]="page === menu.page">
+                <i [class]="menu.icon" class="fs-18"></i>
+                <span>{{ menu.title }}</span>
+                <span class="menu-arrow"></span>
+              </a>
+              <ul [ngClass]="{'d-block': menu.expanded, 'd-none': !menu.expanded}">
+                @for (subMenu of menu.subMenu; track subMenu) {
+                <li>
+                  <a [routerLink]="subMenu.routes" [class.active]="page === subMenu.last" routerLinkActive="active">{{ subMenu.title }}</a>
+                </li>
+                }
+              </ul>
+            </li>
+            }
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+  

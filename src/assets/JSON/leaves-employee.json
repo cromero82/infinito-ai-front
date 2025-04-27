@@ -1,0 +1,89 @@
+{
+    "data":[
+      {
+        "type": "Sick Leave",
+        "fromDate": "24 Dec 2024",
+        "toDate": "24 Dec 2024",
+        "daysOrHours": "01 Day",
+        "appliedOn": "23 Dec 2024",
+        "status": "Approved"
+      },
+      {
+        "type": "Casual Leave",
+        "fromDate": "10 Dec 2024",
+        "toDate": "10 Dec 2024",
+        "daysOrHours": "01 Day",
+        "appliedOn": "09 Dec 2024",
+        "status": "Approved"
+      },
+      {
+        "type": "Casual Leave",
+        "fromDate": "27 Nov 2024",
+        "toDate": "28 Nov 2024",
+        "daysOrHours": "02 Days",
+        "appliedOn": "26 Nov 2024",
+        "status": "Applied"
+      },
+      {
+        "type": "Sick Leave",
+        "fromDate": "18 Nov 2024",
+        "toDate": "18 Nov 2024",
+        "daysOrHours": "02 hrs",
+        "appliedOn": "18 Nov 2024",
+        "status": "Approved"
+      },
+      {
+        "type": "Casual Leave",
+        "fromDate": "06 Nov 2024",
+        "toDate": "08 Nov 2024",
+        "daysOrHours": "03 Days",
+        "appliedOn": "05 Nov 2024",
+        "status": "Approved"
+      },
+      {
+        "type": "Sick Leave",
+        "fromDate": "25 Oct 2024",
+        "toDate": "25 Oct 2024",
+        "daysOrHours": "01 Day",
+        "appliedOn": "24 Oct 2024",
+        "status": "Rejected"
+      },
+      {
+        "type": "Casual Leave",
+        "fromDate": "14 Oct 2024",
+        "toDate": "15 Oct 2024",
+        "daysOrHours": "02 Days",
+        "appliedOn": "13 Oct 2024",
+        "status": "Approved"
+      },
+      {
+        "type": "Casual Leave",
+        "fromDate": "03 Oct 2024",
+        "toDate": "03 Oct 2024",
+        "daysOrHours": "01 Day",
+        "appliedOn": "02 Oct 2024",
+        "status": "Applied"
+      },
+      {
+        "type": "Sick Leave",
+        "fromDate": "20 Sep 2024",
+        "toDate": "21 Sep 2024",
+        "daysOrHours": "02 Days",
+        "appliedOn": "19 Sep 2024",
+        "status": "Approved"
+      },
+      {
+        "type": "Casual Leave",
+        "fromDate": "10 Sep 2024",
+        "toDate": "10 Sep 2024",
+        "daysOrHours": "02 hrs",
+        "appliedOn": "09 Sep 2024",
+        "status": "Rejected"
+      }
+    ]
+    ,
+    "totalData": 10
+    
+  }
+  
+  

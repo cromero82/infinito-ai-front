@@ -1,0 +1,95 @@
+{
+  "data": [
+    {
+      "img": "user-33.png",
+      "id": "EMP001",
+      "employee": "Carl Evans",
+      "role": "Designer",
+      "email": "carlevans@example.com",
+      "salary": 30000,
+      "status": "Paid"
+    },
+    {
+      "img": "user-02.jpg",
+      "id": "EMP002",
+      "employee": "Minerva Rameriz",
+      "role": "Administrator",
+      "email": "rameriz@example.com",
+      "salary": 20000,
+      "status": "Paid"
+    },
+    {
+      "img": "user-34.jpg",
+      "id": "EMP003",
+      "employee": "Robert Lamon",
+      "role": "Developer",
+      "email": "robert@example.com",
+      "salary": 35000,
+      "status": "Paid"
+    },
+    {
+      "img": "user-35.jpg",
+      "id": "EMP004",
+      "employee": "Patricia Lewis",
+      "role": "HR Manager",
+      "email": "patricia@example.com",
+      "salary": 35000,
+      "status": "Paid"
+    },
+    {
+      "img": "user-36.jpg",
+      "id": "EMP005",
+      "employee": "Mark Joslyn",
+      "role": "Designer",
+      "email": "markjoslyn@example.com",
+      "salary": 32000,
+      "status": "Paid"
+    },
+    {
+      "img": "user-28.jpg",
+      "id": "EMP006",
+      "employee": "Marsha Betts",
+      "role": "Developer",
+      "email": "marshabetts@example.com",
+      "salary": 28000,
+      "status": "Paid"
+    },
+    {
+      "img": "user-37.jpg",
+      "id": "EMP007",
+      "employee": "Daniel Jude",
+      "role": "Administrator",
+      "email": "danieljude@example.com",
+      "salary": 25000,
+      "status": "Paid"
+    },
+    {
+      "img": "user-38.jpg",
+      "id": "EMP008",
+      "employee": "Emma Bates",
+      "role": "HR Assistant",
+      "email": "emmabates@example.com",
+      "salary": 21000,
+      "status": "Paid"
+    },
+    {
+      "img": "user-39.jpg",
+      "id": "EMP009",
+      "employee": "Richard Fralick",
+      "role": "Designer",
+      "email": "richard@example.com",
+      "salary": 34000,
+      "status": "Paid"
+    },
+    {
+      "img": "user-21.jpg",
+      "id": "EMP010",
+      "employee": "Michelle Robison",
+      "role": "HR Manager",
+      "email": "robinson@example.com",
+      "salary": 28000,
+      "status": "Unpaid"
+    }
+  ],
+  "totalData": 10
+}

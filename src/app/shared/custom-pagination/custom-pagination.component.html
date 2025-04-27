@@ -1,0 +1,69 @@
+<div class="dataTables_length" id="DataTables_Table_0_length">
+
+    <label>
+   Row Per Page
+        <select [(ngModel)]="pageSize" class="form-select form-select-sm" name="page" (ngModelChange)="changePageSize(pageSize)">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select> Entries
+   
+    </label>
+</div>
+  <div class="dataTables_paginate paging_simple_numbers" id="DataTables_Table_0_paginate">
+  
+      <ul class="pagination">
+        <li class="paginate_button page-item previous disabled" [ngClass]="{
+            disabled: currentPage === 1
+          }">
+          <a (click)="getMoreData('previous')" class="page-link" href="javascript:void(0);" tabindex="-1"><i
+              class="fa fa-angle-left"></i></a>
+
+
+        </li>
+
+        @for (item of pageNumberArray; track item; let i = $index) {
+        <li class="paginate_button page-item active" [class.active]="item === currentPage" [ngClass]="
+              (pageNumberArray[currentPage - 2] > item &&
+                item !==  1 &&
+                pageNumberArray.length > 6) ||
+              (pageNumberArray[currentPage] < item &&
+                item !==  1 &&
+                pageNumberArray.length > 6 &&
+                pageNumberArray.length !==  item)
+                ? 'hide-page-no'
+                : 'show-page-no'
+            ">
+          <a (click)="moveToPage(item)" class="page-link" href="javascript:void(0);">
+            {{ item }}
+          </a>
+        </li>
+        @if (i === 0 && pageNumberArray.length > 6 && currentPage > 2) {
+        <li class="page-item" [hidden]="currentPage === 1" (click)="moveToPage(currentPage - 2)">
+          <a class="page-link" href="javascript:void(0);"> ... </a>
+        </li>
+        }
+        @if (
+        i === pageNumberArray.length - 2 && pageNumberArray.length > 6
+        ) {
+        <li [hidden]="
+              currentPage >= pageNumberArray[pageNumberArray.length - 2] ||
+              totalData < serialNumberArray[serialNumberArray.length - 1]
+            " class="page-item" (click)="moveToPage(currentPage + 2)">
+          <a class="page-link" href="javascript:void(0);"> ... </a>
+        </li>
+        }
+        }
+
+        <li class="paginate_button page-item next disabled" [ngClass]="{
+            disabled:
+              currentPage === pageNumberArray[pageNumberArray.length - 1] ||
+              tableData.length === 0
+          }">
+          <a (click)="getMoreData('next')" class="page-link" href="javascript:void(0);"><i
+              class="fa fa-angle-right"></i>
+          </a>
+        </li>
+      </ul>
+</div>

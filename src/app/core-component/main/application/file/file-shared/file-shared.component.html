@@ -1,0 +1,1235 @@
+<div class="page-header page-add-notes d-flex align-items-center justify-content-between">
+  <div class="add-item d-flex align-items-center">
+    <div class="page-title">
+      <h4>File Manager</h4>
+      <p>Manage your files</p>
+    </div>
+    <a id="toggle_btn2" class="notes-tog" href="javascript:void(0);" (click)="toggleChange()">
+      @if (!appSidebar) {
+        <i class="fas fa-chevron-right"></i>
+      }
+      @if (appSidebar) {
+        <i class="fas fa-chevron-left"></i>
+      }
+    </a>
+  </div>
+  <div class="d-sm-flex align-items-center">
+    <div class="form-sort owned-by w-auto">
+      <span><i class="feather icon-sliders info-img"></i></span>
+      <mat-select [(ngModel)]="selectedValue1" [ngModelOptions]="{standalone: true}" class="space-select select"
+        placeholder="Owned By Me">
+        @for (data of selectedList1; track data) {
+          <mat-option [value]="data.value">
+            {{data.value}}
+          </mat-option>
+        }
+      </mat-select>
+    </div>
+    <ul class="table-top-head">
+      <li>
+        <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Refresh" matTooltipPosition="above"><i
+        class="ti ti-refresh"></i></a>
+      </li>
+      <li class="full-height">
+        <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Collapse" matTooltipPosition="above"
+          (click)="toggleCollapse()" [class.active]="isCollapsed" id="collapse-header">
+          @if (!isCollapsed) {
+            <i class="ti ti-chevron-up"></i>
+          }
+          @if (isCollapsed) {
+            <i class="ti ti-chevron-up"></i>
+          }
+        </a>
+      </li>
+    </ul>
+    <a href="javascript:void(0);" class="btn btn-primary btn-added" data-bs-toggle="modal"
+      data-bs-target="#upload-file"><span class="me-1 d-flex align-items-center"><i
+    class="feather icon-upload feather-16"></i></span>Upload
+  Files</a>
+</div>
+</div>
+
+<div class="row">
+  <div class="col-lg-3 col-md-12 sidebars-right theiaStickySidebar section-bulk-widget"
+    [ngClass]="{'section-notes-dashboard': appSidebar === false}">
+    <div class="stickybar">
+      <aside class="card file-manager-sidebar mb-0">
+        <h5 class="d-flex align-items-center"><span class="me-2 d-flex align-items-center"><i
+        class="feather icon-folder feather-20"></i></span>Files</h5>
+        <div class="dropdown">
+          <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false"
+            class="dropset btn btn-primary mb-3 btn-icon">
+            <span class="me-1 btn-icon"><i class="ti ti-circle-plus feather-16"></i></span>New
+          </a>
+          <ul class="dropdown-menu">
+            <li data-bs-toggle="modal" data-bs-target="#upload-file"><a href="javascript:void(0);"
+              class="dropdown-item"><i class="feather icon-upload-cloud feather-16 me-2"></i>Upload
+            File</a></li>
+            <li data-bs-toggle="modal" data-bs-target="#upload-folder"><a href="javascript:void(0);"
+              class="dropdown-item"><i class="feather icon-folder feather-16 me-2"></i>Upload Folder</a>
+            </li>
+            <li data-bs-toggle="modal" data-bs-target="#create-folder"><a href="javascript:void(0);"
+              class="dropdown-item"><i class="feather icon-folder-minus feather-16 me-2"></i>Create
+            folder</a></li>
+          </ul>
+        </div>
+
+        <ul class="mb-5">
+          <li><a [routerLink]="routes.fileManager"><span class="me-2 btn-icon"><i
+          class="feather icon-file-text feather-16"></i></span>My Files</a></li>
+          <li><a href="javascript:void(0);"><span class="me-2 btn-icon"><i
+          class="feather icon-star  feather-16"></i></span>Google Drive</a></li>
+          <li><a href="javascript:void(0);"><span class="me-2 btn-icon"><i
+          class="feather icon-send feather-16"></i></span>Dropbox</a></li>
+          <li><a [routerLink]="routes.fileShared" class="active"><span class="me-2 btn-icon"><i
+          class="feather icon-file feather-16"></i></span>Shared With Me</a></li>
+          <li><a [routerLink]="routes.fileDocument"><span class="me-2 btn-icon"><i
+          class="feather icon-file feather-16"></i></span>Document</a></li>
+          <li><a [routerLink]="routes.fileRecent"><span class="me-2 btn-icon"><i
+          class="feather icon-clock feather-16"></i></span>Recent</a></li>
+          <li><a [routerLink]="routes.fileFavorites"><span class="me-2 btn-icon"><i
+          class="feather icon-star feather-16"></i></span>Favourites</a></li>
+          <li><a [routerLink]="routes.fileArchived"><span class="me-2 btn-icon"><i
+          class="feather icon-target feather-16"></i></span>Archived</a></li>
+          <li><a [routerLink]="routes.fileManagerDeleted"><span class="me-2 btn-icon"><i
+          class="feather icon-trash-2 feather-16"></i></span>Deleted</a></li>
+          <li><a href="javascript:void(0);"><span class="me-2 btn-icon"><i
+          class="feather icon-settings feather-16"></i></span>Settings</a></li>
+        </ul>
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center">
+            <span class="me-2 btn-icon"><i class="feather icon-hard-drive  feather-16"></i></span>
+            <h6>Storage</h6>
+          </div>
+          <span>70%</span>
+        </div>
+        <div class="progress my-2">
+          <div class="progress-bar progress-bar bg-danger" role="progressbar" style="width: 75%" aria-valuenow="75"
+          aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <span>78.5 GB of 1 TB Free Used</span>
+        <div class="space-manager p-4">
+          <img src="assets/img/icons/half-circle.svg" alt="Folder">
+          <h6><a href="javascript:void(0);">Need More Space?</a></h6>
+          <p>Upgrade storage for 2TB for $60 per month</p>
+          <a href="javascript:void(0);" class="btn btn-outline-primary">Upgrade<span class="ms-1 btn-icon"><i
+          class="feather icon-reapeat feather-16"></i></span></a>
+        </div>
+      </aside>
+    </div>
+
+  </div>
+
+  <div class="col-lg-9 budget-role-notes" [ngClass]="{'budgeted-role-notes': appSidebar === false}">
+    <div class="row">
+      <div class="col-12">
+        <div class="section-bulk-wrap">
+          <div class="bulk-action-type col-lg-6 col-md-6">
+            <div class="form-sort select-bluk">
+              <mat-select [(ngModel)]="selectedValue2" [ngModelOptions]="{standalone: true}" class="select"
+                placeholder="Sort by Date">
+                @for (data of selectedList2; track data) {
+                  <mat-option [value]="data.value">
+                    {{data.value}}
+                  </mat-option>
+                }
+              </mat-select>
+            </div>
+            <div class="search-set me-2" id="dropdownSort" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+              <div class="search-input">
+                <a href="javascript:void(0);" class="btn btn-searchset"><i
+                class="feather icon-search feather-search"></i></a>
+                <div class="dataTables_filter">
+                  <label> <input type="search" class="form-control form-control-sm width-auto"
+                  placeholder="Search"></label>
+                </div>
+              </div>
+            </div>
+
+            <div class="dropdown-menu search-dropdown" aria-labelledby="dropdownMenuClickable">
+              <div class="search-info">
+                <h6><span><i class="feather icon-search feather-16"></i></span>Recent Searches</h6>
+                <ul class="search-tags">
+                  <li><a href="javascript:void(0);">Filename</a></li>
+                  <li><a href="javascript:void(0);">Excel Files</a></li>
+                </ul>
+              </div>
+              <div class="search-info">
+                <h6>Search Results</h6>
+                <p class="d-flex align-items-center justify-content-between">Sportsmodel.pdf <i
+                class="feather icon-chevron-right feather-16"></i></p>
+                <p class="d-flex align-items-center justify-content-between">Projectdetails.xls<i
+                class="feather icon-chevron-right feather-16"></i></p>
+              </div>
+            </div>
+          </div>
+          <div class="d-sm-flex align-items-center col-lg-6 col-md-6 justify-content-end">
+            <div class="form-sort me-3">
+              <i class="feather icon-filter fa-filter"></i>
+              <mat-select [(ngModel)]="selectedValue3" [ngModelOptions]="{standalone: true}" class="space-select select"
+                placeholder="Recent">
+                @for (data of selectedList3; track data) {
+                  <mat-option [value]="data.value">
+                    {{data.value}}
+                  </mat-option>
+                }
+              </mat-select>
+            </div>
+            <div class="form-sort">
+              <i class="feather icon-file-text fa-filter"></i>
+              <mat-select [(ngModel)]="selectedValue4" [ngModelOptions]="{standalone: true}" class="space-select select"
+                placeholder="All File types">
+                @for (data of selectedList4; track data) {
+                  <mat-option [value]="data.value">
+                    {{data.value}}
+                  </mat-option>
+                }
+              </mat-select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- Accordian -->
+    <div class="accordion" id="accordionPanelsStayOpenExample">
+      <div class="accordion-item seprator-lg">
+        <h4 class="accordion-header d-flex align-items-center justify-content-between" id="panelsStayOpen-headingOne">
+          Folders
+          <a href="javascript:void(0);" class="accordion-button a-auto" data-bs-toggle="collapse"
+            data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true"
+          aria-controls="panelsStayOpen-collapseOne"></a>
+        </h4>
+        <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show"
+          aria-labelledby="panelsStayOpen-headingOne">
+          <div class="accordion-body mt-3">
+            <div class="row mt-3">
+              <div class="col-sm-12 col-md-6 col-lg-6">
+                <div class="folders p-3 mb-4">
+                  <div class="d-flex align-items-center justify-content-between head">
+                    <div class="d-flex align-items-center">
+                      <img src="assets/img/icons/folder.svg" alt="Folder" class="me-2">
+                      <h6 class="popup-toggle"><a (click)="toggleFileSidebar()" href="javascript:void(0);">Project
+                      Details</a>
+                    </h6>
+                  </div>
+                  <div class="dropdown">
+                    <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false" class="dropset">
+                      <i class="fa fa-ellipsis-v"></i>
+                    </a>
+                    <ul class="dropdown-menu">
+                      <li><a href="javascript:void(0);" class="dropdown-item">Details</a></li>
+                      <li><a href="javascript:void(0);" class="dropdown-item">Share</a></li>
+                      <li><a href="javascript:void(0);" class="dropdown-item">Copy</a></li>
+                      <li><a href="javascript:void(0);" class="dropdown-item">Move</a></li>
+                      <li><a href="javascript:void(0);" class="dropdown-item">Download</a>
+                    </li>
+                    <li><a href="javascript:void(0);" class="dropdown-item">Rename</a></li>
+                    <li><a href="javascript:void(0);" class="dropdown-item">Archeived</a>
+                  </li>
+                  <li><a href="javascript:void(0);" class="dropdown-item">Delete</a></li>
+                </ul>
+              </div>
+            </div>
+            <div class="d-flex align-items-center justify-content-start project-plan my-3">
+              <label>Project plan</label>
+              <ul class="d-flex">
+                <li class="d-flex align-items-center">154 KB</li>
+                <li class="d-flex align-items-center">8 Files</li>
+              </ul>
+            </div>
+            <div class="d-flex align-items-center justify-content-between avatar-wrap">
+              <div class="group-avatar">
+                <span class="avatar">
+                  <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right"
+                    aria-label="Member 1" data-bs-original-title="Member 1" matTooltip="Member 1"
+                    matTooltipPosition="right"><img src="assets/img/avatar/avatar-2.jpg" alt="Avatar"></a>
+                  </span>
+                  <span class="avatar">
+                    <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right"
+                      aria-label="Member 2" data-bs-original-title="Member 2" matTooltip="Member 2"
+                      matTooltipPosition="right"><img src="assets/img/avatar/avatar-1.jpg" alt="Avatar"></a>
+                    </span>
+                    <span class="count">
+                      <a href="javascript:void(0);">1 Members</a>
+                    </span>
+                  </div>
+                  <a href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-6">
+              <div class="folders p-3 mb-4">
+                <div class="d-flex align-items-center justify-content-between head">
+                  <div class="d-flex align-items-center">
+                    <img src="assets/img/icons/folder.svg" alt="Folder" class="me-2">
+                    <h6 class="popup-toggle"><a href="javascript:void(0);" (click)="toggleFileSidebar()">Project
+                    Details</a>
+                  </h6>
+                </div>
+                <div class="dropdown">
+                  <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false" class="dropset">
+                    <i class="fa fa-ellipsis-v"></i>
+                  </a>
+                  <ul class="dropdown-menu">
+                    <li><a href="javascript:void(0);" class="dropdown-item">Details</a></li>
+                    <li><a href="javascript:void(0);" class="dropdown-item">Share</a></li>
+                    <li><a href="javascript:void(0);" class="dropdown-item">Copy</a></li>
+                    <li><a href="javascript:void(0);" class="dropdown-item">Move</a></li>
+                    <li><a href="javascript:void(0);" class="dropdown-item">Download</a>
+                  </li>
+                  <li><a href="javascript:void(0);" class="dropdown-item">Rename</a></li>
+                  <li><a href="javascript:void(0);" class="dropdown-item">Archeived</a>
+                </li>
+                <li><a href="javascript:void(0);" class="dropdown-item">Delete</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="d-flex align-items-center justify-content-start project-plan my-3">
+            <label>Project plan</label>
+            <ul class="d-flex">
+              <li class="d-flex align-items-center">154 KB</li>
+              <li class="d-flex align-items-center">8 Files</li>
+            </ul>
+          </div>
+          <div class="d-flex align-items-center justify-content-between avatar-wrap">
+            <div class="group-avatar">
+              <span class="avatar">
+                <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right"
+                  aria-label="Member 1" data-bs-original-title="Member 1" matTooltip="Member 1"
+                  matTooltipPosition="right"><img src="assets/img/avatar/avatar-6.jpg" alt="Avatar"></a>
+                </span>
+                <span class="avatar">
+                  <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right"
+                    aria-label="Member 2" data-bs-original-title="Member 2" matTooltip="Member 2"
+                    matTooltipPosition="right"><img src="assets/img/avatar/avatar-14.jpg" alt="Avatar"></a>
+                  </span>
+                  <span class="avatar">
+                    <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right"
+                      aria-label="Member 3" data-bs-original-title="Member 3" matTooltip="Member 3"
+                      matTooltipPosition="right"><img src="assets/img/avatar/avatar-15.jpg" alt="Avatar"></a>
+                    </span>
+                    <span class="avatar">
+                      <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right"
+                        aria-label="Member 4" data-bs-original-title="Member 4" matTooltip="Member 4"
+                        matTooltipPosition="right"><img src="assets/img/avatar/avatar-16.jpg" alt="Avatar"></a>
+                      </span>
+                      <span class="avatar">
+                        <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right"
+                          aria-label="Member 5" data-bs-original-title="Member 5" matTooltip="Member 5"
+                          matTooltipPosition="right"><img src="assets/img/avatar/avatar-17.jpg" alt="Avatar"></a>
+                        </span>
+                        <span class="count">
+                          <a href="javascript:void(0);">+9 Members</a>
+                        </span>
+                      </div>
+                      <a href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-12 col-md-6 col-lg-6">
+                  <div class="folders p-3 mb-4">
+                    <div class="d-flex align-items-center justify-content-between head">
+                      <div class="d-flex align-items-center">
+                        <img src="assets/img/icons/folder.svg" alt="Folder" class="me-2">
+                        <h6 class="popup-toggle"><a href="javascript:void(0);" (click)="toggleFileSidebar()">Project
+                        Details</a>
+                      </h6>
+                    </div>
+                    <div class="dropdown">
+                      <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false" class="dropset">
+                        <i class="fa fa-ellipsis-v"></i>
+                      </a>
+                      <ul class="dropdown-menu">
+                        <li><a href="javascript:void(0);" class="dropdown-item">Details</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Share</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Copy</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Move</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Download</a>
+                      </li>
+                      <li><a href="javascript:void(0);" class="dropdown-item">Rename</a></li>
+                      <li><a href="javascript:void(0);" class="dropdown-item">Archeived</a>
+                    </li>
+                    <li><a href="javascript:void(0);" class="dropdown-item">Delete</a></li>
+                  </ul>
+                </div>
+              </div>
+              <div class="d-flex align-items-center justify-content-start project-plan my-3">
+                <label>Project plan</label>
+                <ul class="d-flex">
+                  <li class="d-flex align-items-center">154 KB</li>
+                  <li class="d-flex align-items-center">8 Files</li>
+                </ul>
+              </div>
+              <div class="d-flex align-items-center justify-content-between avatar-wrap">
+                <div class="group-avatar">
+                  <span class="avatar">
+                    <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right"
+                      aria-label="Member 1" data-bs-original-title="Member 1" matTooltip="Member 1"
+                      matTooltipPosition="right"><img src="assets/img/avatar/avatar-18.jpg" alt="Avatar"></a>
+                    </span>
+                    <span class="avatar">
+                      <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right"
+                        aria-label="Member 2" data-bs-original-title="Member 2" matTooltip="Member 2"
+                        matTooltipPosition="right"><img src="assets/img/avatar/avatar-5.jpg" alt="Avatar"></a>
+                      </span>
+                      <span class="count">
+                        <a href="javascript:void(0);">
+                        +2 Members</a>
+                      </span>
+                    </div>
+                    <a href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-6">
+                <div class="folders p-3 mb-4">
+                  <div class="d-flex align-items-center justify-content-between head">
+                    <div class="d-flex align-items-center">
+                      <img src="assets/img/icons/folder.svg" alt="Folder" class="me-2">
+                      <h6 class="popup-toggle"><a href="javascript:void(0);" (click)="toggleFileSidebar()">Project
+                      Details</a>
+                    </h6>
+                  </div>
+                  <div class="dropdown">
+                    <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false" class="dropset">
+                      <i class="fa fa-ellipsis-v"></i>
+                    </a>
+                    <ul class="dropdown-menu">
+                      <li><a href="javascript:void(0);" class="dropdown-item">Details</a></li>
+                      <li><a href="javascript:void(0);" class="dropdown-item">Share</a></li>
+                      <li><a href="javascript:void(0);" class="dropdown-item">Copy</a></li>
+                      <li><a href="javascript:void(0);" class="dropdown-item">Move</a></li>
+                      <li><a href="javascript:void(0);" class="dropdown-item">Download</a>
+                    </li>
+                    <li><a href="javascript:void(0);" class="dropdown-item">Rename</a></li>
+                    <li><a href="javascript:void(0);" class="dropdown-item">Archeived</a>
+                  </li>
+                  <li><a href="javascript:void(0);" class="dropdown-item">Delete</a></li>
+                </ul>
+              </div>
+            </div>
+            <div class="d-flex align-items-center justify-content-start project-plan my-3">
+              <label>Project plan</label>
+              <ul class="d-flex">
+                <li class="d-flex align-items-center">154 KB</li>
+                <li class="d-flex align-items-center">8 Files</li>
+              </ul>
+            </div>
+            <div class="d-flex align-items-center justify-content-between avatar-wrap">
+              <div class="group-avatar">
+                <span class="avatar">
+                  <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right"
+                    aria-label="Member 1" data-bs-original-title="Member 1" matTooltip="Member 1"
+                    matTooltipPosition="right"><img src="assets/img/avatar/avatar-2.jpg" alt="Avatar"></a>
+                  </span>
+                  <span class="avatar">
+                    <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right"
+                      aria-label="Member 2" data-bs-original-title="Member 2" matTooltip="Member 2"
+                      matTooltipPosition="right"><img src="assets/img/avatar/avatar-1.jpg" alt="Avatar"></a>
+                    </span>
+                    <span class="count">
+                      <a href="javascript:void(0);">1 Members</a>
+                    </span>
+                  </div>
+                  <a href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="accordion-item seprator-lg">
+      <h4 class="accordion-header d-flex align-items-center justify-content-between" id="panelsStayOpen-headingTwo">
+        Files
+        <a href="javascript:void(0);" class="accordion-button w-auto" data-bs-toggle="collapse"
+          data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false"
+          aria-controls="panelsStayOpen-collapseTwo">
+        </a>
+      </h4>
+      <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse show"
+        aria-labelledby="panelsStayOpen-headingTwo">
+        <div class="accordion-body mt-3">
+          <div class="row mt-3">
+            <div class="col-sm-12 col-md-6 col-lg-6">
+              <div class="folders p-3 mb-4">
+                <div class="d-flex align-items-center justify-content-between head">
+                  <div class="d-flex align-items-center">
+                    <img src="assets/img/icons/pdf-02.svg" alt="File" class="me-2">
+                    <h6 class="popup-toggle"><a href="javascript:void(0);">hsa.pdf</a></h6>
+                  </div>
+                  <div class="d-flex align-items-center">
+                    <a href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+                    <div class="dropdown">
+                      <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false" class="dropset">
+                        <i class="fa fa-ellipsis-v"></i>
+                      </a>
+                      <ul class="dropdown-menu">
+                        <li><a href="javascript:void(0);" class="dropdown-item">Details</a>
+                      </li>
+                      <li><a href="javascript:void(0);" class="dropdown-item">Share</a>
+                    </li>
+                    <li><a href="javascript:void(0);" class="dropdown-item">Copy</a>
+                  </li>
+                  <li><a href="javascript:void(0);" class="dropdown-item">Move</a>
+                </li>
+                <li><a href="javascript:void(0);" class="dropdown-item">Download</a>
+              </li>
+              <li><a href="javascript:void(0);" class="dropdown-item">Rename</a>
+            </li>
+            <li><a href="javascript:void(0);" class="dropdown-item">Archeived</a></li>
+            <li><a href="javascript:void(0);" class="dropdown-item">Delete</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="d-flex align-items-center justify-content-start project-plan mt-3">
+    <label>Last edited 12 Jul</label>
+    <ul class="d-flex">
+      <li class="d-flex align-items-center">15 Memebers</li>
+      <li class="d-flex align-items-center">8 5 MB</li>
+    </ul>
+  </div>
+</div>
+</div>
+<div class="col-sm-12 col-md-6 col-lg-6">
+  <div class="folders p-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between head">
+      <div class="d-flex align-items-center">
+        <img src="assets/img/icons/pdf-02.svg" alt="File" class="me-2">
+        <h6 class="popup-toggle"><a href="javascript:void(0);">Haird.pdf</a></h6>
+      </div>
+      <div class="d-flex align-items-center">
+        <a href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+        <div class="dropdown">
+          <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false" class="dropset">
+            <i class="fa fa-ellipsis-v"></i>
+          </a>
+          <ul class="dropdown-menu">
+            <li><a href="javascript:void(0);" class="dropdown-item">Details</a>
+          </li>
+          <li><a href="javascript:void(0);" class="dropdown-item">Share</a>
+        </li>
+        <li><a href="javascript:void(0);" class="dropdown-item">Copy</a>
+      </li>
+      <li><a href="javascript:void(0);" class="dropdown-item">Move</a>
+    </li>
+    <li><a href="javascript:void(0);" class="dropdown-item">Download</a>
+  </li>
+  <li><a href="javascript:void(0);" class="dropdown-item">Rename</a>
+</li>
+<li><a href="javascript:void(0);" class="dropdown-item">Archeived</a></li>
+<li><a href="javascript:void(0);" class="dropdown-item">Delete</a>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="d-flex align-items-center justify-content-start project-plan mt-3">
+  <label>Last edited 14 Jul</label>
+  <ul class="d-flex">
+    <li class="d-flex align-items-center">09 Memebers</li>
+    <li class="d-flex align-items-center">4 MB</li>
+  </ul>
+</div>
+</div>
+</div>
+<div class="col-sm-12 col-md-6 col-lg-6">
+  <div class="folders p-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between head">
+      <div class="d-flex align-items-center">
+        <img src="assets/img/icons/xls.svg" alt="File" class="me-2">
+        <h6 class="popup-toggle"><a href="javascript:void(0);">Estimation.xls</a>
+      </h6>
+    </div>
+    <div class="d-flex align-items-center">
+      <a href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+      <div class="dropdown">
+        <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false" class="dropset">
+          <i class="fa fa-ellipsis-v"></i>
+        </a>
+        <ul class="dropdown-menu">
+          <li><a href="javascript:void(0);" class="dropdown-item">Details</a>
+        </li>
+        <li><a href="javascript:void(0);" class="dropdown-item">Share</a>
+      </li>
+      <li><a href="javascript:void(0);" class="dropdown-item">Copy</a>
+    </li>
+    <li><a href="javascript:void(0);" class="dropdown-item">Move</a>
+  </li>
+  <li><a href="javascript:void(0);" class="dropdown-item">Download</a>
+</li>
+<li><a href="javascript:void(0);" class="dropdown-item">Rename</a>
+</li>
+<li><a href="javascript:void(0);" class="dropdown-item">Archeived</a></li>
+<li><a href="javascript:void(0);" class="dropdown-item">Delete</a>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="d-flex align-items-center justify-content-start project-plan mt-3">
+  <label>Last edited 14 Jul</label>
+  <ul class="d-flex">
+    <li class="d-flex align-items-center">05 Memebers</li>
+    <li class="d-flex align-items-center">500 KB</li>
+  </ul>
+</div>
+</div>
+</div>
+<div class="col-sm-12 col-md-6 col-lg-6">
+  <div class="folders p-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between head">
+      <div class="d-flex align-items-center">
+        <img src="assets/img/icons/pdf-02.svg" alt="File" class="me-2">
+        <h6 class="popup-toggle"><a href="javascript:void(0);">hsa.pdf</a></h6>
+      </div>
+      <div class="d-flex align-items-center">
+        <a href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+        <div class="dropdown">
+          <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false" class="dropset">
+            <i class="fa fa-ellipsis-v"></i>
+          </a>
+          <ul class="dropdown-menu">
+            <li><a href="javascript:void(0);" class="dropdown-item">Details</a>
+          </li>
+          <li><a href="javascript:void(0);" class="dropdown-item">Share</a>
+        </li>
+        <li><a href="javascript:void(0);" class="dropdown-item">Copy</a>
+      </li>
+      <li><a href="javascript:void(0);" class="dropdown-item">Move</a>
+    </li>
+    <li><a href="javascript:void(0);" class="dropdown-item">Download</a>
+  </li>
+  <li><a href="javascript:void(0);" class="dropdown-item">Rename</a>
+</li>
+<li><a href="javascript:void(0);" class="dropdown-item">Archeived</a></li>
+<li><a href="javascript:void(0);" class="dropdown-item">Delete</a>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="d-flex align-items-center justify-content-start project-plan mt-3">
+  <label>Last edited 12 Jul</label>
+  <ul class="d-flex">
+    <li class="d-flex align-items-center">15 Memebers</li>
+    <li class="d-flex align-items-center">8 5 MB</li>
+  </ul>
+</div>
+</div>
+</div>
+<div class="col-sm-12 col-md-6 col-lg-6">
+  <div class="folders p-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between head">
+      <div class="d-flex align-items-center">
+        <img src="assets/img/icons/pdf-02.svg" alt="File" class="me-2">
+        <h6 class="popup-toggle"><a href="javascript:void(0);">Haird.pdf</a></h6>
+      </div>
+      <div class="d-flex align-items-center">
+        <a href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+        <div class="dropdown">
+          <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false" class="dropset">
+            <i class="fa fa-ellipsis-v"></i>
+          </a>
+          <ul class="dropdown-menu">
+            <li><a href="javascript:void(0);" class="dropdown-item">Details</a>
+          </li>
+          <li><a href="javascript:void(0);" class="dropdown-item">Share</a>
+        </li>
+        <li><a href="javascript:void(0);" class="dropdown-item">Copy</a>
+      </li>
+      <li><a href="javascript:void(0);" class="dropdown-item">Move</a>
+    </li>
+    <li><a href="javascript:void(0);" class="dropdown-item">Download</a>
+  </li>
+  <li><a href="javascript:void(0);" class="dropdown-item">Rename</a>
+</li>
+<li><a href="javascript:void(0);" class="dropdown-item">Archeived</a></li>
+<li><a href="javascript:void(0);" class="dropdown-item">Delete</a>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="d-flex align-items-center justify-content-start project-plan mt-3">
+  <label>Last edited 14 Jul</label>
+  <ul class="d-flex">
+    <li class="d-flex align-items-center">09 Memebers</li>
+    <li class="d-flex align-items-center">4 MB</li>
+  </ul>
+</div>
+</div>
+</div>
+<div class="col-sm-12 col-md-6 col-lg-6">
+  <div class="folders p-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between head">
+      <div class="d-flex align-items-center">
+        <img src="assets/img/icons/xls.svg" alt="File" class="me-2">
+        <h6 class="popup-toggle"><a href="javascript:void(0);">Estimation.xls</a>
+      </h6>
+    </div>
+    <div class="d-flex align-items-center">
+      <a href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+      <div class="dropdown">
+        <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false" class="dropset">
+          <i class="fa fa-ellipsis-v"></i>
+        </a>
+        <ul class="dropdown-menu">
+          <li><a href="javascript:void(0);" class="dropdown-item">Details</a>
+        </li>
+        <li><a href="javascript:void(0);" class="dropdown-item">Share</a>
+      </li>
+      <li><a href="javascript:void(0);" class="dropdown-item">Copy</a>
+    </li>
+    <li><a href="javascript:void(0);" class="dropdown-item">Move</a>
+  </li>
+  <li><a href="javascript:void(0);" class="dropdown-item">Download</a>
+</li>
+<li><a href="javascript:void(0);" class="dropdown-item">Rename</a>
+</li>
+<li><a href="javascript:void(0);" class="dropdown-item">Archeived</a></li>
+<li><a href="javascript:void(0);" class="dropdown-item">Delete</a>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="d-flex align-items-center justify-content-start project-plan mt-3">
+  <label>Last edited 14 Jul</label>
+  <ul class="d-flex">
+    <li class="d-flex align-items-center">05 Memebers</li>
+    <li class="d-flex align-items-center">500 KB</li>
+  </ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- /Accordian -->
+
+<div class="card p-4 bg-white all-files mb-0">
+  <div class="seprator-lg d-lg-flex align-items-center justify-content-between">
+    <h4>All Files</h4>
+    <div class="d-sm-flex align-items-center btn-grp">
+      <a href="javascript:void(0);" class="btn btn-primary me-2"><i class="feather icon-list feather-20"></i></a>
+      <a href="javascript:void(0);" class="btn btn-outline-secondary me-2"><i
+      class="feather icon-layout feather-20"></i></a>
+      <a href="javascript:void(0);" class="btn btn-outline-secondary me-2"><i
+      class="feather icon-grid feather-20"></i></a>
+
+      <div class="icon-select">
+        <span class="icon"><i class="feather icon-calendar feather-16"></i></span>
+        <mat-select [(ngModel)]="selectedValue5" [ngModelOptions]="{standalone: true}" class="space-select select"
+          placeholder="Last Modified">
+          @for (data of selectedList5; track data) {
+            <mat-option [value]="data.value">
+              {{data.value}}
+            </mat-option>
+          }
+        </mat-select>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table matSort (matSortChange)="sortData($event)" class="table datanew">
+      <thead>
+        <tr>
+          <th>
+            <label class="checkboxs">
+               <input type="checkbox" id="select-all" [(ngModel)]="initChecked" >
+              <span class="checkmarks"></span>
+            </label>
+          </th>
+          <th mat-sort-header="name">Name</th>
+          <th mat-sort-header="lastModified">Last Modified</th>
+          <th mat-sort-header="size">Size</th>
+          <th mat-sort-header="ownedMember">Owned Memebr</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (data of tableData; track data) {
+          <tr>
+            <td>
+              <label class="checkboxs">
+                <input type="checkbox">
+                <span class="checkmarks"></span>
+              </label>
+            </td>
+            <td class="productimgname">
+              <a [routerLink]="routes.productList" class="product-img d-flex align-items-center">
+                <img [src]="data.img1" alt="Product" class="me-2">
+                <span>{{data.name}}</span>
+              </a>
+            </td>
+            <td>{{data.lastModified}} <br>by Angel</td>
+            <td>{{data.size}}</td>
+            <td>
+              <a href="javascript:void(0);" class="product-img d-flex align-items-center">
+                <img [src]="data.img2" alt="Product" class="me-2 rounded-circle">
+                <span>{{data.ownedMember}}</span>
+              </a>
+            </td>
+            <td>
+              <div class="d-flex align-items-center">
+                <a href="javascript:void(0);" class=""><i
+                class="feather icon-star feather-16 me-2 color-primary"></i></a>
+                <div class="dropdown">
+                  <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false" class="dropset">
+                    <i class="fa fa-ellipsis-v"></i>
+                  </a>
+                  <ul class="dropdown-menu">
+                    <li><a href="javascript:void(0);" class="dropdown-item"><i
+                    class="feather icon-trash-2 feather-14 me-2"></i>Permanent
+                  Delete</a></li>
+                  <li><a href="javascript:void(0);" class="dropdown-item"><i
+                  class="feather icon-edit feather-14 me-2"></i>Restore File</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
+</div>
+<app-custom-pagination></app-custom-pagination>
+
+</div>
+
+</div>
+</div>
+
+<!-- Files Toogle Slide -->
+<div class="toggle-sidebar" [class.open-sidebar]="isSidebarOpen">
+  <div class="d-flex align-items-center justify-content-between head">
+    <h4>File Preview</h4>
+    <div class="d-flex align-items-center">
+      <a href="javascript:void(0);" class="me-2 d-flex align-items-center"><i class="fa fa-star"></i></a>
+      <a href="javascript:void(0);" class="me-2 d-flex align-items-center"><i
+      class="feather icon-trash-2 feather-16 text-center text-danger"></i></a>
+      <a (click)="toggleFileSidebar()" href="javascript:void(0);" class="sidebar-closes d-flex align-items-center"
+        aria-hidden="true"><i class="feather icon-x-circle feather-26-custom color-primary"></i></a>
+      </div>
+    </div>
+    <div class="text-center">
+      <a href="javascript:void(0);"><img src="assets/img/file-manager/folder-lg.png" alt="Folder"></a>
+      <h5>Website Backup for the Design team</h5>
+      <p>File Size : 616 MB</p>
+    </div>
+
+    <div class="nav nav-tabs d-flex align-items-center justify-content-between py-4 mb-4" id="nav-tab" role="tablist">
+      <a class="nav-link flex-fill active btn btn-light me-2 text-center" id="nav-home-tab" data-bs-toggle="tab"
+        href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true"><i
+      class="feather icon-list feather-16 me-2 text-center"></i>Details</a>
+      <a class="nav-link flex-fill btn btn-light" id="nav-profile-tab" data-bs-toggle="tab" href="#nav-profile" role="tab"
+        aria-controls="nav-profile" aria-selected="false"><i class="feather icon-clock feather-16 me-2"></i>Activity</a>
+      </div>
+      <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+          <h5 class="mb-4 d-flex align-items-center"><i class="feather icon-edit feather-20 me-2"></i>Properties
+        </h5>
+        <ul class="seprator-lg">
+          <li class="mb-4">
+            <h6>File Name</h6>
+            <p>Website Backup for the Designteam</p>
+          </li>
+          <li class="mb-4">
+            <h6>File Type</h6>
+            <p>Folder</p>
+          </li>
+          <li class="mb-4">
+            <h6>Size</h6>
+            <p>616 MB</p>
+          </li>
+          <li class="mb-4">
+            <h6>Created</h6>
+            <p>22 July 2023, 08:30 PM</p>
+          </li>
+          <li class="mb-4">
+            <h6>Location</h6>
+            <p class="location d-inline-flex align-items-center"><i
+            class="feather icon-hard-drive feather-16 me-1"></i>Drive</p>
+          </li>
+          <li class="mb-4">
+            <h6>File Name</h6>
+            <p>23 July 2023, 08:30 PM</p>
+          </li>
+          <li class="mb-4">
+            <h6>Opened On</h6>
+            <p>28 July 2023, 06:40 PM</p>
+          </li>
+          <li>
+            <div class="row">
+              <!-- Editor -->
+              <div class="col-lg-12">
+                <div class="input-blocks summer-description-box transfer">
+                  <label>Description</label>
+                  <ngx-editor [editor]="editor">
+                    <ngx-editor-menu [editor]="editor" [toolbar]="toolbar">
+                    </ngx-editor-menu>
+                  </ngx-editor>
+                  <p>Maximum 60 Characters</p>
+                </div>
+              </div>
+              <!-- /Editor -->
+            </div>
+          </li>
+        </ul>
+        <h5 class="mb-4 d-flex align-items-center"><i class="feather icon-user feather-20 me-2"></i>Who has access
+      </h5>
+      <div class="d-flex align-items-center justify-content-between avatar-wrap">
+        <div class="avatar-access d-flex align-items-center mb-4">
+          <span>
+            <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Member 1"
+              data-bs-original-title="Member 1" matTooltip="Member 1" matTooltipPosition="right"><img
+            src="assets/img/avatar/avatar-1.jpg" alt="Avatar" class="avatar-md"></a>
+          </span>
+          <span>
+            <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Member 2"
+              data-bs-original-title="Member 2" matTooltip="Member 2" matTooltipPosition="right"><img
+            src="assets/img/avatar/avatar-2.jpg" alt="Avatar" class="avatar-md"></a>
+          </span>
+          <span>
+            <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Member 3"
+              data-bs-original-title="Member 3" matTooltip="Member 3" matTooltipPosition="right"><img
+            src="assets/img/avatar/avatar-3.jpg" alt="Avatar" class="avatar-md"></a>
+          </span>
+          <span>
+            <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Member 4"
+              data-bs-original-title="Member 4" matTooltip="Member 4" matTooltipPosition="right"><img
+            src="assets/img/avatar/avatar-4.jpg" alt="Avatar" class="avatar-md"></a>
+          </span>
+          <span>
+            <a href="javascript:void(0);" class="avatar-md add d-flex align-items-center justify-content-center"><i
+            class="feather icon-plus feather-16 me-1"></i></a>
+          </span>
+        </div>
+      </div>
+      <p>Owned by Andrew. Shared with James, Fin, Davis</p>
+    </div>
+    <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
+      <h5 class="mb-4 d-flex align-items-center"><i class="feather icon-calendar feather-20 me-2"></i>This Week
+    </h5>
+    <ul class="mb-4">
+      <li class="mb-4">
+        <div class="d-flex align-items-center mb-2">
+          <a href="javascript:void(0);" class="me-3"><img src="assets/img/avatar/avatar-1.jpg" alt="Avatar"
+          class="avatar-md"></a>
+          <p>Andrew commented on 1 items <br>3:39 PM Jul 19</p>
+        </div>
+        <p class="d-flex align-items-center location border-0"><img src="assets/img/icons/folder.svg" alt="Folder"
+        class="me-2">Website Backup for the Design team</p>
+      </li>
+      <li class="mb-4">
+        <div class="d-flex align-items-center mb-2">
+          <a href="javascript:void(0);" class="me-3"><img src="assets/img/avatar/avatar-2.jpg" alt="Avatar"
+          class="avatar-md"></a>
+          <p>Drake shared an item<br>3:39 PM Jul 19</p>
+        </div>
+        <p class="d-flex align-items-center location border-0"><img src="assets/img/icons/folder.svg" alt="Folder"
+        class="me-2">Website Backup for the Design team</p>
+      </li>
+      <li class="mb-2">
+        <div class="d-flex align-items-center mb-2">
+          <a href="javascript:void(0);" class="me-3"><img src="assets/img/avatar/avatar-3.jpg" alt="Avatar"
+          class="avatar-md"></a>
+          <div>
+            <p class="mb-0 text-secondary">Melvin</p>
+            <p class="mb-0">Commentor</p>
+          </div>
+        </div>
+      </li>
+      <li class="mb-2">
+        <div class="d-flex align-items-center mb-2">
+          <a href="javascript:void(0);" class="me-3"><img src="assets/img/avatar/avatar-4.jpg" alt="Avatar"
+          class="avatar-md"></a>
+          <div>
+            <p class="mb-0 text-secondary">Drake</p>
+            <p class="mb-0">Editor</p>
+          </div>
+        </div>
+      </li>
+    </ul>
+    <h5 class="mb-4 d-flex align-items-center"><i class="feather icon-calendar feather-20 me-2"></i>Last Month
+  </h5>
+  <ul class="mb-4">
+    <li class="mb-4">
+      <div class="d-flex align-items-center mb-2">
+        <a href="javascript:void(0);" class="me-3"><img src="assets/img/avatar/avatar-1.jpg" alt="Avatar"
+        class="avatar-md"></a>
+        <p>Andrew commented on 1 items <br>3:39 PM Jul 19</p>
+      </div>
+      <p class="d-flex align-items-center location border-0"><img src="assets/img/icons/folder.svg" alt="Folder"
+      class="me-2">Website Backup for the Design team</p>
+    </li>
+    <li class="mb-4">
+      <div class="d-flex align-items-center mb-2">
+        <a href="javascript:void(0);" class="me-3"><img src="assets/img/avatar/avatar-2.jpg" alt="Avatar"
+        class="avatar-md"></a>
+        <p>Drake shared an item<br>3:39 PM Jul 19</p>
+      </div>
+      <p class="d-flex align-items-center location border-0"><img src="assets/img/icons/folder.svg" alt="Folder"
+      class="me-2">Website Backup for the Design team</p>
+    </li>
+    <li class="mb-2">
+      <div class="d-flex align-items-center mb-2">
+        <a href="javascript:void(0);" class="me-3"><img src="assets/img/avatar/avatar-3.jpg" alt="Avatar"
+        class="avatar-md"></a>
+        <div>
+          <p class="mb-0 text-secondary">Melvin</p>
+          <p class="mb-0">Commentor</p>
+        </div>
+      </div>
+    </li>
+    <li class="mb-2">
+      <div class="d-flex align-items-center mb-2">
+        <a href="javascript:void(0);" class="me-3"><img src="assets/img/avatar/avatar-4.jpg" alt="Avatar"
+        class="avatar-md"></a>
+        <div>
+          <p class="mb-0 text-secondary">Drake</p>
+          <p class="mb-0">Editor</p>
+        </div>
+      </div>
+    </li>
+  </ul>
+  <a href="javascript:void(0);" class="text-primary show-all"><i
+  class="ti ti-circle-plus feather-20 me-2"></i>Show All</a>
+</div>
+</div>
+
+</div>
+<!-- Files Toogle Slide -->
+
+<!-- Upload File -->
+<div class="modal fade modal-default pos-modal upload-modal" id="upload-file" aria-labelledby="upload-file">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header p-4">
+        <h5>Upload File</h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="drag-drop text-center mb-4">
+          <div class="upload">
+            <a href="javascript:void(0);"><img src="assets/img/icons/drag-drop.svg" alt=""></a>
+            <p>Drag and drop a <a href="javascript:void(0);">file to upload</a></p>
+          </div>
+          <input type="file" multiple="">
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between">
+          <p>3 of 1 files Uploaded</p>
+          <span>70%</span>
+        </div>
+        <div class="progress mt-2 mb-4">
+          <div class="progress-bar progress-bar bg-success" role="progressbar" style="width: 75%" aria-valuenow="75"
+          aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+
+        <ul>
+          <li class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center w-85">
+              <img src="assets/img/icons/folder.svg" alt="Folder" class="me-2">
+              <div class="flex-fill">
+                <h6><a href="javascript:void(0);">latest-version.zip<i
+                class="feather icon-check-circle ms-2 feather-16"></i></a></h6>
+                <span>616 MB</span>
+              </div>
+            </div>
+            <a href="javascript:void(0);" class="text-danger text-right"><i
+            class="feather icon-trash-2 feather-16"></i></a>
+          </li>
+          <li class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center w-85">
+              <img src="assets/img/icons/xls.svg" alt="Folder" class="me-2">
+              <div class="flex-fill">
+                <h6><a href="javascript:void(0);">Update work history.xls</a></h6>
+                <span>616 MB</span>
+                <div class="progress mt-2">
+                  <div class="progress-bar bg-danger" role="progressbar" style="width: 75%" aria-valuenow="75"
+                  aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+            </div>
+            <div class="d-flex align-items-center">
+              <a href="javascript:void(0);" class="text-danger me-2"><i class="feather icon-trash-2 feather-16"></i></a>
+              <a href="javascript:void(0);" class="text-default"><i
+              class="feather icon-pause-circle feather-16"></i></a>
+            </div>
+          </li>
+          <li class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center w-85">
+              <img src="assets/img/icons/zip.svg" alt="Folder" class="me-2">
+              <div class="flex-fill">
+                <h6><a href="javascript:void(0);">Updated Project.zip</a></h6>
+                <span>616 MB</span>
+                <div class="progress mt-2">
+                  <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-flex align-items-center">
+              <a href="javascript:void(0);" class="text-danger me-2"><i class="feather icon-trash-2 feather-16"></i></a>
+              <a href="javascript:void(0);" class="text-default"><i class="feather icon-play-circle feather-16"></i></a>
+            </div>
+          </li>
+        </ul>
+
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /Upload File -->
+
+<!-- Upload Folder -->
+<div class="modal fade modal-default pos-modal upload-modal" id="upload-folder" aria-labelledby="upload-folder">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header p-4">
+        <h5>Upload File</h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="drag-drop text-center mb-4">
+          <div class="upload">
+            <a href="javascript:void(0);"><img src="assets/img/icons/drag-drop.svg" alt=""></a>
+            <p>Drag and drop a <a href="javascript:void(0);">file to upload</a></p>
+          </div>
+          <input type="file" multiple="">
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between">
+          <p>3 of 3 files Uploaded</p>
+          <span>100%</span>
+        </div>
+        <div class="progress mt-2 mb-4">
+          <div class="progress-bar progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100"
+          aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+
+        <ul>
+          <li class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center w-85">
+              <img src="assets/img/icons/folder.svg" alt="Folder" class="me-2">
+              <div class="flex-fill">
+                <h6><a href="javascript:void(0);">latest-version<i
+                class="feather icon-check-circle ms-2 feather-16"></i></a></h6>
+                <span>616 MB</span>
+              </div>
+            </div>
+            <a href="javascript:void(0);" class="text-danger text-right"><i
+            class="feather icon-trash-2 feather-16"></i></a>
+          </li>
+          <li class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center w-85">
+              <img src="assets/img/icons/xls.svg" alt="Folder" class="me-2">
+              <div class="flex-fill">
+                <h6><a href="javascript:void(0);">Update work history.xls<i
+                class="feather icon-trash-2 feather-16"></i></a></h6>
+                <span>16 MB</span>
+              </div>
+            </div>
+            <div class="d-flex align-items-center">
+              <a href="javascript:void(0);" class="text-danger me-2"><i class="feather icon-trash-2 feather-16"></i></a>
+              <a href="javascript:void(0);" class="text-default"><i
+              class="feather icon-pause-circle feather-16"></i></a>
+            </div>
+          </li>
+          <li class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center w-85">
+              <img src="assets/img/icons/zip.svg" alt="Folder" class="me-2">
+              <div class="flex-fill">
+                <h6><a href="javascript:void(0);">updated project.zip<i class="feather icon-trash-2 feather-16"></i></a>
+              </h6>
+              <span>14 MB</span>
+            </div>
+          </div>
+          <div class="d-flex align-items-center">
+            <a href="javascript:void(0);" class="text-danger me-2"><i class="feather icon-trash-2 feather-16"></i></a>
+            <a href="javascript:void(0);" class="text-default"><i class="feather icon-play-circle feather-16"></i></a>
+          </div>
+        </li>
+      </ul>
+
+    </div>
+    <div class="modal-footer d-sm-flex justify-content-end">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Clear</button>
+      <button type="button" class="btn btn-primary">Upload</button>
+    </div>
+  </div>
+</div>
+</div>
+<!-- /Upload Folder -->
+
+<!-- Upload Folder -->
+<div class="modal fade modal-default pos-modal upload-message" id="upload-message" aria-labelledby="upload-message">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header p-4">
+        <h5>Upload File</h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body p-4">
+
+        <div class="d-flex align-items-center justify-content-between">
+          <p>3 of 3 files Uploaded</p>
+          <span>100%</span>
+        </div>
+        <div class="progress mt-2 mb-4">
+          <div class="progress-bar progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100"
+          aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+      </div>
+      <div class="modal-footer d-sm-flex justify-content-end">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Clear</button>
+        <button type="button" class="btn btn-primary">Upload</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /Upload Folder -->
+
+<!-- Create Folder -->
+<div class="modal fade modal-default pos-modal" id="create-folder" aria-labelledby="create-folder">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header p-4">
+        <h5>Create Folder</h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="row">
+          <div class="col-12">
+            <label class="form-label">Folder Name</label>
+            <input type="text" class="form-control">
+          </div>
+        </div>
+        <div class="modal-footer d-sm-flex justify-content-end">
+          <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary">Create Folder</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /Create Folder -->

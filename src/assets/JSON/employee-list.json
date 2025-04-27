@@ -1,0 +1,106 @@
+{
+  "data": [
+    {
+      "id": "EMP001",
+      "employee": "Carl Evans",
+      "designation": "Designer",
+      "email": "carlevans@example.com",
+      "phone": "+12163547758",
+      "shift": "Regular",
+      "status": "Active",
+      "img": "user-32.jpg"
+    },
+    {
+      "id": "EMP002",
+      "employee": "Minerva Rameriz",
+      "designation": "Administrator",
+      "email": "rameriz@example.com",
+      "phone": "+11367529510",
+      "shift": "Regular",
+      "status": "Active",
+      "img": "user-02.jpg"
+    },
+    {
+      "id": "EMP003",
+      "employee": "Robert Lamon",
+      "designation": "Developer",
+      "email": "robert@example.com",
+      "phone": "+15362789414",
+      "shift": "Regular",
+      "status": "Active",
+      "img": "user-01.jpg"
+    },
+    {
+      "id": "EMP004",
+      "employee": "Patricia Lewis",
+      "designation": "HR Manager",
+      "email": "patricia@example.com",
+      "phone": "+18513094627",
+      "shift": "Night Shift",
+      "status": "Active",
+      "img": "user-04.jpg"
+    },
+    {
+      "id": "EMP005",
+      "employee": "Mark Joslyn",
+      "designation": "Designer",
+      "email": "markjoslyn@example.com",
+      "phone": "+14678219025",
+      "shift": "Mid Shift",
+      "status": "Active",
+      "img": "user-08.jpg"
+    },
+    {
+      "id": "EMP006",
+      "employee": "Marsha Betts",
+      "designation": "Developer",
+      "email": "marshabetts@example.com",
+      "phone": "+10913278319",
+      "shift": "Mid Shift",
+      "status": "Active",
+      "img": "user-10.jpg"
+    },
+    {
+      "id": "EMP007",
+      "employee": "Daniel Jude",
+      "designation": "Administrator",
+      "email": "daieljude@example.com",
+      "phone": "+19125852947",
+      "shift": "Regular",
+      "status": "Active",
+      "img": "user-28.jpg"
+    },
+    {
+      "id": "EMP008",
+      "employee": "Emma Bates",
+      "designation": "HR Assistant",
+      "email": "emmabates@example.com",
+      "phone": "+13671835209",
+      "shift": "Regular",
+      "status": "Active",
+      "img": "user-17.jpg"
+    },
+    {
+      "id": "EMP009",
+      "employee": "Richard Fralick",
+      "designation": "Designer",
+      "email": "richard@example.com",
+      "phone": "+19756194733",
+      "shift": "Regular",
+      "status": "Active",
+      "img": "user-20.jpg"
+    },
+    {
+      "id": "EMP010",
+      "employee": "Michelle Robison",
+      "designation": "HR Manager",
+      "email": "robinson@example.com",
+      "phone": "+19167850925",
+      "shift": "Regular",
+      "status": "Inactive",
+      "img": "user-29.jpg"
+    }
+  ]
+  ,
+  "totalData": 10
+}

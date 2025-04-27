@@ -1,0 +1,56 @@
+{
+    "data": [
+        {
+            
+            "language": "English",
+            "code": "en",
+            "rtl": "",
+            "total": "2145",
+            "done": "1815",
+            "progress": "80%",
+            "status": "Active",
+            "img":"assets/img/icons/flag-01.svg"
+                                                                                                                 
+        },
+        {
+           
+            "language": "Arabic",
+            "code": "Ar",
+            "rtl": "",
+            "total": "2045",
+            "done": "2045",
+            "progress": "100%",
+            "status": "Inactive",
+            "img":"assets/img/icons/flag-02.svg"
+                                                                                                          
+        },
+        {
+           
+            "language": "Chinese",
+            "code": "zh",
+            "rtl": "",
+            "total": "2245",
+            "done": "295",
+            "progress": "5%",
+            "status": "Active",
+            "img":"assets/img/icons/flag-03.svg"
+                                                                                                                
+        },
+        {
+           
+            "language": "Hindi",
+            "code": "hi",
+            "rtl": "",
+            "total": "2535",
+            "done": "1145",
+            "progress": "40%",
+            "status": "Active",
+            "img":"assets/img/icons/flag-04.svg"
+                                                                                                      
+        } 
+     
+     
+    ],
+    "totalData": 4
+  }
+  

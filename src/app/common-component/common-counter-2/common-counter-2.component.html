@@ -1,0 +1,3 @@
+<a (click)="decrementQuantity()" href="javascript:void(0);" class="dec d-flex justify-content-center align-items-center" data-bs-toggle="tooltip" data-bs-placement="top" title="minus"><i class="ti ti-minus"></i></a>
+<input type="text" class="form-control text-center" [(ngModel)]="quantity" name="quantity" (input)="validateQuantity($event)">
+<a (click)="incrementQuantity()" href="javascript:void(0);" class="inc d-flex justify-content-center align-items-center" data-bs-toggle="tooltip" data-bs-placement="top" title="plus"><i class="ti ti-plus"></i></a>

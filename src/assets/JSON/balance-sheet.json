@@ -1,0 +1,77 @@
+{
+    "data":[
+        {
+          "name": "Zephyr Indira",
+          "bankAccount": "HBSC - 3298784309485",
+          "credit": "$4565",
+          "debit": "-$200",
+          "balance": "$4365"
+        },
+        {
+          "name": "Quillon Elysia",
+          "bankAccount": "SWIZ - 5475878970090",
+          "credit": "$4494",
+          "debit": "-$50",
+          "balance": "$4444"
+        },
+        {
+          "name": "Thaddeus Juniper",
+          "bankAccount": "SWIZ - 3255465758698",
+          "credit": "$65945",
+          "debit": "-$800",
+          "balance": "$65145"
+        },
+        {
+          "name": "Orion Astrid",
+          "bankAccount": "IBO - 4353689870544",
+          "credit": "$1948",
+          "debit": "-$100",
+          "balance": "$1848"
+        },
+        {
+          "name": "Caspian Marigold",
+          "bankAccount": "NBC - 4324356677889",
+          "credit": "$1686",
+          "debit": "-$700",
+          "balance": "$986"
+        },
+        {
+          "name": "Emma James",
+          "bankAccount": "NBC - 2343547586900",
+          "credit": "$16547",
+          "debit": "-$1000",
+          "balance": "$15547"
+        },
+        {
+          "name": "Olivia Ethan",
+          "bankAccount": "IBO - 3453647664889",
+          "credit": "$141845",
+          "debit": "-$1200",
+          "balance": "$141645"
+        },
+        {
+          "name": "Sophia Liam",
+          "bankAccount": "SWIZ - 3354456565687",
+          "credit": "$44188",
+          "debit": "-$750",
+          "balance": "$4356"
+        },
+        {
+          "name": "Ava Mason",
+          "bankAccount": "SWIZ - 3456565767787",
+          "credit": "$614848",
+          "debit": "-$450",
+          "balance": "$614389"
+        },
+        {
+          "name": "Isabella Jackson",
+          "bankAccount": "IBO - 3434565776768",
+          "credit": "$77818",
+          "debit": "-$300",
+          "balance": "$77518"
+        }
+
+      ]
+      ,
+    "totalData":10
+}

@@ -1,0 +1,77 @@
+{
+    "data":[
+        {
+          "date": "24 Dec 2024",
+          "reference": "IN849",
+          "store": "Distribution Center",
+          "category": "Foreign Investment",
+          "notes": "Categorize income derived",
+          "amount": "$200"
+        },
+        {
+          "date": "10 Dec 2024",
+          "reference": "IN848",
+          "store": "Intelligent Warehouse",
+          "category": "Product Export",
+          "notes": "Services that have been verified",
+          "amount": "$50"
+        },
+        {
+          "date": "27 Nov 2024",
+          "reference": "IN847",
+          "store": "Mahin Logistics",
+          "category": "Installation",
+          "notes": "POS Installation for Store",
+          "amount": "$800"
+        },
+        {
+          "date": "06 Nov 2024",
+          "reference": "IN845",
+          "store": "Bonded Warehouse",
+          "category": "Local Sale",
+          "notes": "Travel fare for client meeting",
+          "amount": "$700"
+        },
+        {
+          "date": "25 Oct 2024",
+          "reference": "IN844",
+          "store": "Budget Warehouse",
+          "category": "Service Fees",
+          "notes": "Services that have been verified",
+          "amount": "$1000"
+        },
+        {
+          "date": "14 Oct 2024",
+          "reference": "IN843",
+          "store": "Gati Limited",
+          "category": "Return/Refund Income",
+          "notes": "Flight tickets for meetings",
+          "amount": "$1200"
+        },
+        {
+          "date": "03 Oct 2024",
+          "reference": "IN842",
+          "store": "Storeroom Halls",
+          "category": "Foreign Investment",
+          "notes": "Services that have been verified",
+          "amount": "$750"
+        },
+        {
+          "date": "20 Sep 2024",
+          "reference": "IN841",
+          "store": "Strongbox",
+          "category": "Product Export",
+          "notes": "Categorize income derived in office",
+          "amount": "$450"
+        },
+        {
+          "date": "10 Sep 2024",
+          "reference": "IN840",
+          "store": "Total Quality Logistics",
+          "category": "Return/Refund Income",
+          "notes": "Services that have been verified",
+          "amount": "$300"
+        }
+      ],
+      "totalData":10      
+}

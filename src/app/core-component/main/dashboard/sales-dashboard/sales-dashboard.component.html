@@ -1,0 +1,371 @@
+<div class="welcome d-lg-flex align-items-center justify-content-between">
+  <div class="d-flex align-items-center welcome-text">
+    <h3 class="d-flex align-items-center"><img src="assets/img/icons/hi.svg" alt="img">&nbsp;Hi John Smilga,</h3>
+    &nbsp;<h6>here's what's happening with your store today.</h6>
+  </div>
+  <div class="d-flex align-items-center">
+    
+      <div class="input-icon-start position-relative me-2 date-input1">
+        <span class="input-icon-addon fs-16 text-gray-9">
+          <i class="ti ti-calendar"></i>
+        </span>
+        <input type="text" class="form-control date-range bookingrange" bsDaterangepicker container=".date-input1" [(ngModel)]="bsRangeValue" placeholder="Search Product">
+      </div>
+      <ul class="table-top-head">
+        <li>
+          <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Refresh" data-bs-original-title="Refresh" matTooltip="Refresh" matTooltipPosition="above"><i class="ti ti-refresh"></i></a>
+        </li>
+        <li>
+          <a href="javascript:void(0);" (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" id="collapse-header" aria-label="Collapse" matTooltip="Collapse" matTooltipPosition="above" data-bs-original-title="Collapse">
+              <i class="ti ti-chevron-up"></i>
+          </a>
+        </li>
+      </ul>
+     
+    </div>
+  </div>
+  <div class="row sales-cards">
+    <div class="col-xl-6 col-sm-12 col-12 d-flex">
+      <div class="card d-flex align-items-center justify-content-between default-cover flex-fill mb-4">
+        <div>
+          <h6>Weekly Earning</h6>
+          <h3>$<span class="counters">95000.45</span></h3>
+          <p class="sales-range"><span class="text-success"><i
+          class="feather icon-chevron-up fs-16"></i>48%&nbsp;</span>increase compare to last week
+        </p>
+      </div>
+      <img src="assets/img/icons/weekly-earning.svg" alt="img">
+    </div>
+  </div>
+  <div class="col-xl-3 col-sm-6 col-12 d-flex">
+    <div class="card color-info bg-primary mb-4 flex-fill">
+      <div class="mb-2">
+        <img src="assets/img/icons/total-sales.svg" alt="img">
+      </div>
+      <h3 class="counters" data-count="10000.00" [countUp]="10000.00" [options]="{ duration: 10 }">10,000+</h3>
+      <p>No of Total Sales</p>
+      <i class="feather icon-rotate-ccw feather-16" data-bs-toggle="tooltip" data-bs-placement="top"
+      matTooltip="Refresh" matTooltipPosition="above"></i>
+    </div>
+  </div>
+  <div class="col-xl-3 col-sm-6 col-12 d-flex">
+    <div class="card color-info bg-secondary mb-4 flex-fill">
+      <div class="mb-2">
+        <img src="assets/img/icons/purchased-earnings.svg" alt="img">
+      </div>
+      <h3 class="counters" data-count="800.00" [countUp]="800.00" [options]="{ duration: 10 }">800+</h3>
+      <p>No of Total Sales</p>
+      <i class="feather icon-rotate-ccw feather-16" data-bs-toggle="tooltip" data-bs-placement="top"
+      matTooltip="Refresh" matTooltipPosition="above"></i>
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-sm-12 col-md-12 col-xl-4 d-flex">
+    <div class="card flex-fill w-100 mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="card-title mb-0">Best Seller</h4>
+        <a href="javascript:void(0);" class="btn btn-outline-light btn-sm">View All</a>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-borderless best-seller">
+            <tbody>
+              <tr>
+                <td class="pt-0 ps-0">
+                  <div class="d-flex align-items-center">
+                    <a [routerLink]="routes.productList" class="avatar avatar-lg me-2">
+                      <img src="assets/img/products/stock-img-01.png" alt="img">
+                    </a>
+                    <div>
+                      <h6 ><a class="fw-bold" [routerLink]="routes.productList">Lenovo 3rd Generation</a></h6>
+                      <p>$4420</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="pt-0">
+                  <p class="text-gray-9 mb-1">Sales</p>
+                  <p class="text-gray-9 fw-medium">6547</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="ps-0">
+                  <div class="d-flex align-items-center">
+                    <a [routerLink]="routes.productList" class="avatar avatar-lg me-2">
+                      <img src="assets/img/products/stock-img-02.png" alt="img">
+                    </a>
+                    <div>
+                      <h6 ><a class="fw-bold" [routerLink]="routes.productList">Bold V3.2</a></h6>
+                      <p>$1474</p>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <p class="text-gray-9 mb-1">Sales</p>
+                  <p class="text-gray-9 fw-medium">3474</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="ps-0">
+                  <div class="d-flex align-items-center">
+                    <a [routerLink]="routes.productList" class="avatar avatar-lg me-2">
+                      <img src="assets/img/products/stock-img-06.png" alt="img">
+                    </a>
+                    <div>
+                      <h6 ><a class="fw-bold" [routerLink]="routes.productList">Nike Jordan</a></h6>
+                      <p>$8784</p>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <p class="text-gray-9 mb-1">Sales</p>
+                  <p class="text-gray-9 fw-medium">1478</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="ps-0">
+                  <div class="d-flex align-items-center">
+                    <a [routerLink]="routes.productList" class="avatar avatar-lg me-2">
+                      <img src="assets/img/products/stock-img-03.png" alt="img">
+                    </a>
+                    <div>
+                      <h6 ><a class="fw-bold" [routerLink]="routes.productList">Apple Series 5 Watch</a></h6>
+                      <p>$3240</p>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <p class="text-gray-9 mb-1">Sales</p>
+                  <p class="text-gray-9 fw-medium">987</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="ps-0">
+                  <div class="d-flex align-items-center">
+                    <a [routerLink]="routes.productList" class="avatar avatar-lg me-2">
+                      <img src="assets/img/products/stock-img-04.png" alt="img">
+                    </a>
+                    <div>
+                      <h6 ><a class="fw-bold" [routerLink]="routes.productList">Amazon Echo Dot</a></h6>
+                      <p>$597</p>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <p class="text-gray-9 mb-1">Sales</p>
+                  <p class="text-gray-9 fw-medium">784</p>
+                </td>
+              </tr>
+              
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-12 col-md-12 col-xl-8 d-flex">
+    <div class="card flex-fill w-100 mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="card-title mb-0">Recent Transactions</h4>
+        <a [routerLink]="routes.purchaseTransaction" class="btn btn-outline-light btn-sm">View All</a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-borderless recent-transactions">
+            <thead class="thead-light">
+              <tr>
+                <th>#</th>
+                <th>Order Details</th>
+                <th>Payment</th>
+                <th>Status</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <a [routerLink]="routes.productList" class="avatar avatar-lg me-2">
+                      <img src="assets/img/products/stock-img-05.png" alt="img">
+                    </a>
+                    <div>
+                      <h6 ><a class="fw-bold" [routerLink]="routes.productList">Lobar Handy</a></h6>
+                      <span class="d-flex align-items-center"><i data-feather="clock" class="feather icon-clock feather-14"></i>15 Mins</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="d-block head-text">Paypal</span>
+                  <span class="text-blue">#416645453773</span>
+                </td>
+                <td><span class="badge badge-success badge-xs d-inline-flex align-items-center"><i class="ti ti-circle-filled fs-5 me-1"></i>Success</span></td>
+                <td class="fs-16 fw-bold text-gray-9">$1,099.00</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <a [routerLink]="routes.productList" class="avatar avatar-lg me-2">
+                      <img src="assets/img/products/expire-product-01.png" alt="img">
+                    </a>
+                    <div>
+                      <h6 ><a class="fw-bold" [routerLink]="routes.productList">Red Premium Handy</a></h6>
+                      <span class="d-flex align-items-center"><i data-feather="clock" class="feather icon-clock feather-14"></i>15 Mins</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="d-block head-text">Apple Pay</span>
+                  <span class="text-blue">#147784454554</span>
+                </td>
+                <td><span class="badge badge-danger badge-xs d-inline-flex align-items-center"><i class="ti ti-circle-filled fs-5 me-1"></i>Cancelled</span></td>
+                <td class="fs-16 fw-bold text-gray-9">$600.55</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <a [routerLink]="routes.productList" class="avatar avatar-lg me-2">
+                      <img src="assets/img/products/expire-product-02.png" alt="img">
+                    </a>
+                    <div>
+                      <h6 ><a class="fw-bold" [routerLink]="routes.productList">Iphone 14 Pro</a></h6>
+                      <span class="d-flex align-items-center"><i data-feather="clock" class="feather icon-clock feather-14"></i>15 Mins</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="d-block head-text">Stripe</span>
+                  <span class="text-blue">#147784454554</span>
+                </td>
+                <td><span class="badge badge-cyan badge-xs d-inline-flex align-items-center"><i class="ti ti-circle-filled fs-5 me-1"></i>Completed</span></td>
+                <td class="fs-16 fw-bold text-gray-9">$1,099.00</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <a [routerLink]="routes.productList" class="avatar avatar-lg me-2">
+                      <img src="assets/img/products/expire-product-03.png" alt="img">
+                    </a>
+                    <div>
+                      <h6 ><a class="fw-bold" [routerLink]="routes.productList">Black Slim 200</a></h6>
+                      <span class="d-flex align-items-center"><i data-feather="clock" class="feather icon-clock feather-14"></i>15 Mins</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="d-block head-text">PayU</span>
+                  <span class="text-blue">#147784454554</span>
+                </td>
+                <td><span class="badge badge-success badge-xs d-inline-flex align-items-center"><i class="ti ti-circle-filled fs-5 me-1"></i>Success</span></td>
+                <td class="fs-16 fw-bold text-gray-9">$1,569.00</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <a [routerLink]="routes.productList" class="avatar avatar-lg me-2">
+                      <img src="assets/img/products/expire-product-04.png" alt="img">
+                    </a>
+                    <div>
+                      <h6 ><a class="fw-bold" [routerLink]="routes.productList">Woodcraft Sandal</a></h6>
+                      <span class="d-flex align-items-center"><i data-feather="clock" class="feather icon-clock feather-14"></i>15 Mins</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="d-block head-text">Paytm</span>
+                  <span class="text-blue">#147784454554</span>
+                </td>
+                <td><span class="badge badge-success badge-xs d-inline-flex align-items-center"><i class="ti ti-circle-filled fs-5 me-1"></i>Success</span></td>
+                <td class="fs-16 fw-bold text-gray-9">$1,478.00</td>
+              </tr>
+              
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Button trigger modal -->
+
+<div class="row sales-board">
+  <div class="col-md-12 col-lg-7 col-sm-12 col-12 d-flex">
+    <div class="card flex-fill default-cover flex-fill">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Sales Analytics</h5>
+        <div class="graph-sets">
+          <div class="dropdown dropdown-wraper">
+            <button class="btn btn-white btn-sm dropdown-toggle d-flex align-items-center" type="button"
+              id="dropdown-sales" data-bs-toggle="dropdown" aria-expanded="false"><i
+            class="feather icon-calendar fs-14 me-1"></i>2023</button>
+            <ul class="dropdown-menu" aria-labelledby="dropdown-sales">
+              <li>
+                <a href="javascript:void(0);" class="dropdown-item">2023</a>
+              </li>
+              <li>
+                <a href="javascript:void(0);" class="dropdown-item">2022</a>
+              </li>
+              <li>
+                <a href="javascript:void(0);" class="dropdown-item">2021</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="sales-analysis" class="chart-set">
+          <apx-chart
+            [series]="chartOptionsOne.series"
+            [chart]="chartOptionsOne.chart"
+            [xaxis]="chartOptionsOne.xaxis"
+            [yaxis]="chartOptionsOne.yaxis"
+            [stroke]="chartOptionsOne.stroke"
+            [tooltip]="chartOptionsOne.tooltip"
+            [dataLabels]="chartOptionsOne.dataLabels"
+            [fill]="chartOptionsOne.fill"
+            [colors]="chartOptionsOne.colors"
+          ></apx-chart>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-12 col-lg-5 col-sm-12 col-12 d-flex">
+    <!-- World Map -->
+    <div class="card default-cover flex-fill">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Sales by Countries</h5>
+        <div class="graph-sets">
+          <div class="dropdown dropdown-wraper">
+            <button class="btn btn-white btn-sm dropdown-toggle d-flex align-items-center" type="button"
+              id="dropdown-country-sales" data-bs-toggle="dropdown" aria-expanded="false">This
+            Week</button>
+            <ul class="dropdown-menu" aria-labelledby="dropdown-country-sales">
+              <li>
+                <a href="javascript:void(0);" class="dropdown-item">This Month</a>
+              </li>
+              <li>
+                <a href="javascript:void(0);" class="dropdown-item">This Year</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="sales_db_world_map" style="height: 265px;">
+          <iframe
+            src="https://www.google.com/maps/embed"
+            style="border:0;" style="height:265px;" allowfullscreen="" loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade" class="contact-map"></iframe>
+        </div>
+        <p class="sales-range"><span class="text-success"><i
+        class="feather icon-chevron-up fs-16"></i>48%&nbsp;</span>increase compare to last week
+      </p>
+    </div>
+  </div>
+  <!-- /World Map -->
+</div>
+</div>

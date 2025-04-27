@@ -1,0 +1,66 @@
+{
+  "data": [
+      {
+        "warranty": "Replacement Warranty",
+        "description": "Covers replacement of faulty items",
+        "duration": "2 Years",
+        "status": "Active"
+      },
+      {
+        "warranty": "On-Site Warranty",
+        "description": "Product repairs done at the customer’s location",
+        "duration": "1 Year",
+        "status": "Active"
+      },
+      {
+        "warranty": "Accidental Protection Plan",
+        "description": "Coverage for accidental damage",
+        "duration": "6 Months",
+        "status": "Active"
+      },
+      {
+        "warranty": "Labor-Only Warranty",
+        "description": "Covers only labor costs, not parts",
+        "duration": "6 Months",
+        "status": "Active"
+      },
+      {
+        "warranty": "No-Cost Repairs",
+        "description": "No charge for repairs during warranty period",
+        "duration": "3 Months",
+        "status": "Active"
+      },
+      {
+        "warranty": "Accidental Damage",
+        "description": "Coverage for unexpected damage",
+        "duration": "6 Months",
+        "status": "Active"
+      },
+      {
+        "warranty": "Wear & Tear Warranty",
+        "description": "Covers specific product aging issues",
+        "duration": "1 Year",
+        "status": "Active"
+      },
+      {
+        "warranty": "Money-Back Guarantee",
+        "description": "Refund within a specified period",
+        "duration": "3 Months",
+        "status": "Active"
+      },
+      {
+        "warranty": "Water Damage Warranty",
+        "description": "Coverage for water-related issues",
+        "duration": "6 Months",
+        "status": "Active"
+      },
+      {
+        "warranty": "Power Surge Protection",
+        "description": "Covers damage from power surges",
+        "duration": "6 Months",
+        "status": "Active"
+      }
+    ]
+    ,
+  "totalData": 10
+}

@@ -1,0 +1,163 @@
+<div class="mb-4">
+    <ul class="nav nav-pills">
+        <li class="nav-item">
+            <a class="nav-link" [routerLink]="routes.customerReport">Customer Report</a>
+        </li>
+        <li class="nav-item">
+              <a class="nav-link active" [routerLink]="routes.customerDueReport">Customer Due</a>
+        </li>
+    </ul>
+</div>
+<div>
+    <div class="page-header">
+        <div class="add-item d-flex">
+            <div class="page-title">
+                <h4>Customer Due Report</h4>
+                <h6>View Reports of Customer</h6>
+            </div>
+        </div>
+        <ul class="table-top-head">
+            <li>
+                <a data-bs-toggle="tooltip" data-bs-placement="top" title="Refresh" matTooltip="Refresh" matTooltipPosition="above">
+                  <i class="ti ti-refresh"></i>
+                </a>
+              </li>
+              <li>
+                <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" title="Collapse" matTooltip="Collapse" atTooltipPosition="above" id="collapse-header">
+                   @if (!isCollapsed) {
+                  <i class="ti ti-chevron-up"></i>
+                }
+                @if (isCollapsed) {
+                  <i class="ti ti-chevron-up"></i>
+                }</a>
+              </li>
+        </ul>
+    </div>
+    <div class="card border-0">
+        <div class="card-body pb-1">
+            <form>
+                <div class="row align-items-end">
+                    <div class="col-lg-10">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3 custom-ngxdate">
+                                    <label class="form-label">Choose Date</label>
+                                   <app-date-range-picker/>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">Customer</label>
+                                   <mat-select class="custom-mat-select select" placeholder="All">
+                                        <mat-option value="1">All</mat-option>
+                                        <mat-option value="1">Carl Evans</mat-option>
+                                        <mat-option value="1">Minerva Rameriz</mat-option>
+                                        <mat-option value="1">Robert Lamon</mat-option>
+                                    </mat-select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Method</label>
+                                   <mat-select class="custom-mat-select select" placeholder="All">
+                                        <mat-option value="1">All</mat-option>
+                                        <mat-option value="1">Cash</mat-option>
+                                        <mat-option value="1">Paypal</mat-option>
+                                        <mat-option value="1">Stripe</mat-option>
+                                    </mat-select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Status</label>
+                                   <mat-select class="custom-mat-select select" placeholder="All">
+                                        <mat-option value="1">All</mat-option>
+                                        <mat-option value="1">Completed</mat-option>
+                                        <mat-option value="1">Unpaid</mat-option>
+                                        <mat-option value="1">Paid</mat-option>
+                                    </mat-select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-2">
+                        <div class="mb-3">
+                            <button class="btn btn-primary w-100" type="submit">Generate Report</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- /product list -->
+    <div class="card table-list-card no-search">
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+            <div>
+                <h4>Customer Due Report</h4>
+            </div>
+            <ul class="table-top-head">
+                <li class="me-2">
+                    <a data-bs-toggle="tooltip" data-bs-placement="top" title="Pdf"><img src="assets/img/icons/pdf.svg" alt="img"></a>
+                </li>
+                <li class="me-2">
+                    <a data-bs-toggle="tooltip" data-bs-placement="top" title="Excel"><img src="assets/img/icons/excel.svg" alt="img"></a>
+                </li>
+                <li>
+                    <a data-bs-toggle="tooltip" data-bs-placement="top" title="Print"><i class="ti ti-printer"></i></a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table matSort (matSortChange)="sortData($event)" class="table datatable">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Reference</th>
+                            <th>Code</th>
+                            <th>Customer</th>
+                            <th>Total Amount</th>
+                            <th>Paid</th>
+                            <th>Due</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (data of tableData; track data) {
+                        <tr>
+                            <td><a href="javascript:void(0);" class="text-orange">{{data.reference}}</a></td>
+                            <td>{{data.code}}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <a href="javascript:void(0);" class="avatar avatar-md"><img src="assets/img/users/{{data.img}}" class="img-fluid" alt="img"></a>
+                                    <div class="ms-2">
+                                        <p class="text-dark mb-0"><a href="javascript:void(0);">{{data.customer}}</a></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{data.totalOrders}}</td>
+                            <td>{{data.amount}}</td>
+                            <td>$0.0</td>
+                            <td>
+                                <span class="badge d-inline-flex align-items-center badge-xs" [ngClass]="data.status==='Overdue'?' badge-purple':data.status==='Unpaid'?' badge-danger':' badge-success'">
+                                    <i class="ti ti-point-filled me-1"></i>{{data.status}}
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td class="bg-light fw-bold p-3 fs-16" colspan="3" rowspan="1">Total</td>
+                            <td class="bg-light fw-bold p-3 fs-16" rowspan="1" colspan="1">33268</td>
+                            <td class="bg-light fw-bold p-3 fs-16" rowspan="1" colspan="1">$33268.53</td>
+                            <td class="bg-light fw-bold p-3 fs-16" rowspan="1" colspan="1">$0.0</td>
+                            <td class="bg-light" rowspan="1" colspan="1"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <app-custom-pagination/>
+        </div>
+    </div>
+    <!-- /product list -->
+</div>

@@ -1,0 +1,136 @@
+<!-- Page Header -->
+<div class="page-header">
+  <div class="row">
+    <div class="col-sm-12">
+      <h3 class="page-title">Form Wizard</h3>
+      <ul class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink] = "routes.adminDashboard">Dashboard</a></li>
+        <li class="breadcrumb-item active">Form Wizard</li>
+      </ul>
+    </div>
+  </div>
+</div>	
+<!-- /Page Header -->
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-body">
+        <mat-stepper #stepper>
+          <mat-step
+            [stepControl]="firstFormGroup"
+            errorMessage="Name is required."
+          >
+            <form [formGroup]="firstFormGroup">
+              <ng-template matStepLabel>Fill out your name</ng-template>
+              <mat-form-field appearance="fill">
+                <mat-label>Name</mat-label>
+                <input class="form-control"
+                  matInput
+                  formControlName="firstCtrl"
+                  required
+                />
+              </mat-form-field>
+              <div>
+                <p>Go to a different step to see the error state</p>
+                <button mat-button matStepperNext class="btn btn-primary">Next</button>
+              </div>
+            </form>
+          </mat-step>
+          <mat-step
+            [stepControl]="secondFormGroup"
+            errorMessage="Address is required."
+          >
+            <form [formGroup]="secondFormGroup">
+              <ng-template matStepLabel>Fill out your address</ng-template>
+              <mat-form-field appearance="fill">
+                <mat-label>Address</mat-label>
+                <input
+                  matInput
+                  formControlName="secondCtrl"
+                  required
+                />
+              </mat-form-field>
+              <div>
+                <p>Go to a different step to see the error state</p>
+                <button mat-button matStepperPrevious class="btn btn-primary me-1">Back</button>
+                <button mat-button matStepperNext class="btn btn-primary">Next</button>
+              </div>
+            </form>
+          </mat-step>
+          <mat-step>
+            <ng-template matStepLabel>Done</ng-template>
+            <p>You are now done.</p>
+            <div>
+              <button mat-button matStepperPrevious class="btn btn-primary me-1">Back</button>
+              <button mat-button (click)="stepper.reset()" class="btn btn-primary">Reset</button>
+            </div>
+          </mat-step>
+        </mat-stepper>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-body">
+        <mat-stepper #stepperTwo>
+          <mat-step
+            [stepControl]="firstFormGroup"
+            errorMessage="Name is required."
+          >
+            <mat-progress-bar mode="determinate" value="33"></mat-progress-bar>
+
+            <form [formGroup]="firstFormGroup">
+              <ng-template matStepLabel>Fill out your name</ng-template>
+              <mat-form-field appearance="fill">
+                <mat-label>Name</mat-label>
+                <input class="form-control"
+                  matInput
+                  formControlName="firstCtrl"
+                  required
+                />
+              </mat-form-field>
+              <div>
+                <p>Go to a different step to see the error state</p>
+                <button mat-button matStepperNext class="btn btn-primary">Next</button>
+              </div>
+            </form>
+          </mat-step>
+          <mat-step
+            [stepControl]="secondFormGroup"
+            errorMessage="Address is required."
+          >
+            <mat-progress-bar mode="determinate" value="66"></mat-progress-bar>
+            <form [formGroup]="secondFormGroup">
+              <ng-template matStepLabel>Fill out your address</ng-template>
+              <mat-form-field appearance="fill">
+                <mat-label>Address</mat-label>
+                <input
+                  matInput
+                  formControlName="secondCtrl"
+                  required
+                />
+              </mat-form-field>
+              <div>
+                <p>Go to a different step to see the error state</p>
+                <button mat-button matStepperPrevious class="btn btn-primary me-1">Back</button>
+                <button mat-button matStepperNext class="btn btn-primary">Next</button>
+              </div>
+            </form>
+          </mat-step>
+          <mat-step>
+            <mat-progress-bar mode="determinate" value="100"></mat-progress-bar>
+
+            <ng-template matStepLabel>Done</ng-template>
+            <p>You are now done.</p>
+            <div>
+              <button mat-button matStepperPrevious class="btn btn-primary me-1">Back</button>
+              <button mat-button (click)="stepperTwo.reset()" class="btn btn-primary">Reset</button>
+            </div>
+          </mat-step>
+        </mat-stepper>
+      </div>
+    </div>
+  </div>
+</div>

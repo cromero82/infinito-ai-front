@@ -1,0 +1,40 @@
+{
+    "data":[
+        {
+          "planName": "Standard Plan",
+          "customers": "All Customers",
+          "status": "Active"
+        },
+        {
+          "planName": "Membership Plan",
+          "customers": "Members Only",
+          "status": "Active"
+        },
+        {
+          "planName": "Premium Plan",
+          "customers": "High-Spending Customers",
+          "status": "Active"
+        },
+        {
+          "planName": "Seasonal Plan",
+          "customers": "All Customers",
+          "status": "Active"
+        },
+        {
+          "planName": "Student Plan",
+          "customers": "Students",
+          "status": "Active"
+        },
+        {
+          "planName": "Free Shipping Plan",
+          "customers": "Online Customers",
+          "status": "Active"
+        },
+        {
+          "planName": "Celebration Plan",
+          "customers": "All Customers",
+          "status": "Active"
+        }
+      ],
+      "totalData":10      
+}

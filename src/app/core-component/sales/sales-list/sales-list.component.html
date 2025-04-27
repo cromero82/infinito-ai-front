@@ -1,0 +1,1103 @@
+<div class="page-header">
+  <div class="add-item d-flex">
+    <div class="page-title">
+      <h4>Sales</h4>
+      <h6>Manage Your Sales</h6>
+    </div>
+  </div>
+  <ul class="table-top-head">
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Pdf" matTooltipPosition="above"><img
+      src="assets/img/icons/pdf.svg" alt="img"></a>
+    </li>
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Excel" matTooltipPosition="above"><img
+      src="assets/img/icons/excel.svg" alt="img"></a>
+    </li>
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Refresh" matTooltipPosition="above"><i
+      class="ti ti-refresh"></i></a>
+    </li>
+    <li>
+      <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" matTooltip="Collapse"
+        matTooltipPosition="above" id="collapse-header"> @if (!isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }
+      @if (isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }</a>
+    </li>
+  </ul>
+  <div class="page-btn">
+    <a href="javascript:void(0);" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-sales-new"><i
+    class="ti ti-circle-plus me-2"></i> Add Sales</a>
+  </div>
+</div>
+
+
+<!-- /product list -->
+<div class="card table-list-card">
+  <div class="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+    <div class="search-set">
+      <div class="search-input">
+        <a href="javascript:void(0);" class="btn btn-searchset"><i class="feather icon-search feather-search"></i></a>
+        <div class="dataTables_filter">
+          <label>
+            <input [(ngModel)]="searchDataValue" [ngModelOptions]="{standalone: true}" (ngModelChange)="searchData(searchDataValue)" type="search"
+              class="form-control" placeholder="Search" />
+            </label>
+          </div>
+        </div>
+    </div>
+    <div class="d-flex table-dropdown my-xl-auto right-content align-items-center flex-wrap row-gap-3">
+      <div class="dropdown me-2">
+        <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+          Customer
+        </a>
+        <ul class="dropdown-menu  dropdown-menu-end p-3">
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Carl Evans</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Minerva Rameriz</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Robert Lamon</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Patricia Lewis</a>
+          </li>
+        </ul>
+      </div>
+      <div class="dropdown me-2">
+        <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+          Staus
+        </a>
+        <ul class="dropdown-menu  dropdown-menu-end p-3">
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Completed</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Pending</a>
+          </li>
+        </ul>
+      </div>
+      <div class="dropdown me-2">
+        <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+          Payment Status
+        </a>
+        <ul class="dropdown-menu  dropdown-menu-end p-3">
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Paid</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Unpaid</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Overdue</a>
+          </li>
+        </ul>
+      </div>
+      <div class="dropdown">
+        <a href="javascript:void(0);" class="dropdown-toggle btn btn-white btn-md d-inline-flex align-items-center" data-bs-toggle="dropdown">
+          Sort By : Last 7 Days
+        </a>
+        <ul class="dropdown-menu  dropdown-menu-end p-3">
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Recently Added</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Ascending</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Desending</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Last Month</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" class="dropdown-item rounded-1">Last 7 Days</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>  
+  <div class="card-body">
+    <div class="custom-datatable-filter table-responsive">
+      <table matSort (matSortChange)="sortData($event)" class="table datatable">
+        <thead class="thead-light">
+          <tr>
+            <th class="no-sort">
+                <label class="checkboxs"  (click)="selectAll(initChecked)">
+                  <input type="checkbox" id="select-all" [(ngModel)]="initChecked" >
+                  <span class="checkmarks"></span>
+                </label>
+              </th>
+            <th mat-sort-header="customerName">Customer Name</th>
+            <th mat-sort-header="reference">Reference</th>
+            <th mat-sort-header="date">Date</th>
+            <th mat-sort-header="status">Status</th>
+            <th mat-sort-header="grandTotal">Grand Total</th>
+            <th mat-sort-header="paid">Paid</th>
+            <th mat-sort-header="due">Due</th>
+            <th mat-sort-header="paymentStatus">Payment Status</th>
+            <th mat-sort-header="biller">Biller</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody class="sales-list">
+          @for (data of tableData; track data) {
+            <tr>
+              <td>
+                  <label class="checkboxs">
+                    <input type="checkbox" [(ngModel)]="data.isSelected">
+                    <span class="checkmarks ms-1"></span>
+                  </label>
+                </td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <a href="javascript:void(0);" class="avatar avatar-md me-2">
+                      <img src="assets/img/users/{{data.img}}" alt="product">
+                    </a>
+                    <a href="javascript:void(0);">{{data.CustomerName}}</a>
+                  </div>
+                </td>
+                <td>{{data.Reference}}</td>
+              <td>{{data.Date}}</td>
+              <td><span class="badge shadow-none "
+              [ngClass]="{'badge-success': data.Status === 'Completed', 'badge-cyan': data.Status === 'Pending'}">{{data.Status}}</span>
+            </td>
+            <td>{{data.GrandTotal}}</td>
+            <td>{{data.Paid}}</td>
+            <td>{{data.Due}}</td>
+            <td><span class="badge shadow-none badge-xs"
+            [ngClass]="{'badge-soft-success': data.PaymentStatus === 'Paid', 'badge-soft-danger': data.PaymentStatus === 'Unpaid','badge-soft-warning':data.PaymentStatus === 'Overdue'}"><i class="ti ti-point-filled me-1"></i>{{data.PaymentStatus}}</span>
+          </td>
+          <td>{{data.Biller}}</td>
+          <td class="text-center">
+            <a class="action-set" href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="true">
+              <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+            </a>
+            <ul class="dropdown-menu">
+              <li>
+                <a href="javascript:void(0);" class="dropdown-item" data-bs-toggle="modal"
+                  data-bs-target="#sales-details-new"><i class="feather icon-eye info-img"></i>Sale Detail</a>
+                </li>
+                <li>
+                  <a href="javascript:void(0);" class="dropdown-item" data-bs-toggle="modal"
+                    data-bs-target="#edit-sales-new"><i class="feather icon-edit info-img"></i>Edit
+                  Sale</a>
+                </li>
+                <li>
+                  <a href="javascript:void(0);" class="dropdown-item" data-bs-toggle="modal"
+                    data-bs-target="#showpayment"><i class="feather icon-dollar-sign info-img"></i>Show Payments</a>
+                  </li>
+                  <li>
+                    <a href="javascript:void(0);" class="dropdown-item" data-bs-toggle="modal"
+                      data-bs-target="#createpayment"><i class="ti ti-circle-plus info-img"></i>Create Payment</a>
+                    </li>
+                    <li>
+                      <a href="javascript:void(0);" class="dropdown-item"><i
+                      class="feather icon-download info-img"></i>Download pdf</a>
+                    </li>
+                    <li>
+                      <a href="javascript:void(0);" class="dropdown-item confirm-text mb-0" data-bs-toggle="modal" data-bs-target="#delete"><i
+                      class="feather icon-trash-2 info-img"></i>Delete Sale</a>
+                    </li>
+                  </ul>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-custom-pagination></app-custom-pagination>
+    </div>
+  </div>
+  <!-- /product list -->
+
+  <!--add popup -->
+  <div class="modal fade" id="add-sales-new">
+    <div class="modal-dialog add-centered">
+      <div class="modal-content">
+        <div class="page-wrapper p-0 m-0">
+          <div class="content p-0">
+            <div class="modal-header border-0 custom-modal-header">
+              <div class="page-title">
+                <h4> Add Sales</h4>
+              </div>
+              <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="card">
+              <div class="card-body">
+                <form>
+                  <div class="table-responsive no-pagination mb-3">
+                    <table class="table  datanew">
+                      <thead>
+                        <tr>
+                          <th>Product</th>
+                          <th>Qty</th>
+                          <th>Purchase Price($)</th>
+                          <th>Discount($)</th>
+                          <th>Tax(%)</th>
+                          <th>Tax Amount($)</th>
+                          <th>Unit Cost($)</th>
+                          <th>Total Cost(%)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="row">
+                    <div class="col-lg-4 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Customer Name<span class="text-danger ms-1">*</span></label>
+                        <div class="row">
+                          <div class="col-lg-10 col-sm-10 col-10">
+                            <mat-select [(ngModel)]="selectedValue5" [ngModelOptions]="{standalone: true}" class="select"
+                              placeholder="Choose">
+                              @for (data of selectedList5; track data) {
+                                <mat-option [value]="data.value">
+                                  {{data.value}}
+                                </mat-option>
+                              }
+                            </mat-select>
+                          </div>
+                          <div class="col-lg-2 col-sm-2 col-2 ps-0">
+                            <div class="add-icon">
+                              <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#add_customer" class="choose-add"><i
+                              class="ti ti-circle-plus plus"></i></a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Date<span class="text-danger ms-1">*</span></label>
+                        <div class="input-groupicon calender-input date-input1">
+                          <i class="feather icon-calendar info-img mt-1"></i>
+                          <input type="text" class="datetimepicker form-control" bsDatepicker container=".date-input1" placeholder="Choose">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Supplier<span class="text-danger ms-1">*</span></label>
+                        <mat-select [(ngModel)]="selectedValue6" [ngModelOptions]="{standalone: true}" class="select"
+                          placeholder="Choose">
+                          @for (data of selectedList6; track data) {
+                            <mat-option [value]="data.value">
+                              {{data.value}}
+                            </mat-option>
+                          }
+                        </mat-select>
+                      </div>
+                    </div>
+                    <div class="col-lg-12 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Product Name<span class="text-danger ms-1">*</span></label>
+                        <div class="input-groupicon select-code">
+                          <input type="text" placeholder="Please type product code and select" class="form-control p-2">
+                          <div class="addonset">
+                            <img src="assets/img/icons/qrcode-scan.svg" alt="img">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+
+                  <div class="row">
+                    <div class="col-lg-6 ms-auto">
+                      <div class="total-order w-100 max-widthauto m-auto mb-4">
+                        <ul class="border-1 rounded-2">
+                          <li class="border-bottom">
+                            <h4 class="border-end">Order Tax</h4>
+                            <h5>$ 0.00</h5>
+                          </li>
+                         <li class="border-bottom">
+                            <h4 class="border-end">Discount</h4>
+                            <h5>$ 0.00</h5>
+                          </li>
+                         <li class="border-bottom">
+                            <h4 class="border-end">Shipping</h4>
+                            <h5>$ 0.00</h5>
+                          </li>
+                         <li class="border-bottom">
+                            <h4 class="border-end">Grand Total</h4>
+                            <h5>$ 0.00</h5>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-lg-3 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Order Tax<span class="text-danger ms-1">*</span></label>
+                        <div class="input-groupicon select-code">
+                          <input type="text" class="form-control p-2" value="0">
+                        </div>
+
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Discount<span class="text-danger ms-1">*</span></label>
+                        <div class="input-groupicon select-code">
+                          <input type="text" class="form-control p-2" value="0">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Shipping<span class="text-danger ms-1">*</span></label>
+                        <div class="input-groupicon select-code">
+                          <input type="text"  class="form-control p-2" value="0">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                      <div class="input-blocks mb-5">
+                        <label>Status<span class="text-danger ms-1">*</span></label>
+                        <mat-select [(ngModel)]="selectedValue7" [ngModelOptions]="{standalone: true}" class="select"
+                          placeholder="Choose">
+                          @for (data of selectedList7; track data) {
+                            <mat-option [value]="data.value">
+                              {{data.value}}
+                            </mat-option>
+                          }
+                        </mat-select>
+                      </div>
+                    </div>
+                    <div class="col-lg-12 text-end">
+                      <button type="button" class="btn btn-cancel add-cancel me-3" data-bs-dismiss="modal">Cancel</button>
+                      <button type="submit" class="btn btn-submit add-sale" data-bs-dismiss="modal">Submit</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /add popup -->
+
+		<!-- details popup -->
+		<div class="modal fade" id="sales-details-new">
+			<div class="modal-dialog sales-details-modal">
+				<div class="modal-content">
+					<div class="page-header p-4 border-bottom mb-0">
+						<div class="add-item d-flex align-items-center">
+							<div class="page-title modal-datail">
+								<h4 class="mb-0 me-2">Sales Detail</h4>
+							</div>
+						</div>
+						<ul class="table-top-head">
+							<li>
+								<a data-bs-toggle="tooltip" data-bs-placement="top" title="Pdf"><img src="assets/img/icons/pdf.svg" alt="img"></a>
+							</li>
+							<li>
+								<a data-bs-toggle="tooltip" data-bs-placement="top" title="Pdf"><img src="assets/img/icons/printer.svg" alt="img"></a>
+							</li>
+						</ul>
+						<div class="page-btn">
+							<a href="javascript:void(0);" class="btn btn-secondary" data-bs-dismiss="modal"><i class="feather icon-arrow-left me-2"></i> Back to Sales</a>
+						</div>
+					</div>
+							
+					<form>
+						<div class="card border-0">
+							<div class="card-body pb-0">
+								<div class="invoice-box table-height" style="max-width: 1600px;width:100%;padding: 0;font-size: 14px;line-height: 24px;color: #555;">
+									<div class="row sales-details-items d-flex">
+										<div class="col-md-4 details-item">
+											<h6>Customer Info</h6>
+											<h4 class="mb-1">Carl Evans</h4>
+											<p class="mb-0">3103 Trainer Avenue Peoria, IL 61602</p>
+											<p class="mb-0">Email<span>carlevans241&#64;example.com</span></p>
+											<p class="mb-0">Phone<span>+1 987 471 6589</span></p>
+										</div>
+										<div class="col-md-4 details-item">
+											<h6>Company Info</h6>
+											<h4 class="mb-1">DGT</h4>
+											<p class="mb-0">2077 Chicago Avenue Orosi, CA 93647</p>
+											<p class="mb-0">Email<span>admin&#64;example.com</span></p>
+											<p class="mb-0">Phone<span>+1 893 174 0385</span></p>
+										</div>
+										<div class="col-md-4 details-item">
+											<h6>Invoice Info</h6>
+											<p class="mb-0">Reference: <span class="fs-16 text-primary ms-2">#SL0101</span></p>
+											<p class="mb-0">Reference: <span class="ms-2 text-gray-9">Dec 24, 2024</span></p>
+											<p class="mb-0">Status: <span class="badge badge-success ms-2">Completed</span></p>
+											<p class="mb-0">Payment Status: <span class="badge badge-soft-success shadow-none badge-xs d-inline-flex align-items-center ms-2"> <i class="ti ti-point-filled"></i>Paid</span></p>
+										</div>
+									</div>
+									<h5 class="order-text">Order Summary</h5>
+									<div class="table-responsive no-pagination mb-3">
+										<table class="table  datanew">
+											<thead>
+												<tr>
+													<th>Product</th>
+													<th>Purchase Price($)</th>
+													<th>Discount($)</th>
+													<th>Tax(%)</th>
+													<th>Tax Amount($)</th>
+													<th>Unit Cost($)</th>
+													<th>Total Cost(%)</th>
+												</tr>
+											</thead>
+											<tbody>
+												<tr>
+													<td>
+														<div class="d-flex align-items-center">
+															<a href="javascript:void(0);" class="avatar avatar-md me-2">
+																<img src="assets/img/products/stock-img-02.png" alt="product">
+															</a>
+															<a href="javascript:void(0);">Nike Jordan</a>
+														</div>												
+													</td>
+													<td>2000</td>
+													<td>500</td>
+													<td>
+														0.00
+													</td>
+													<td>0.00</td>
+													<td>0.00</td>
+													<td>1500</td>
+												</tr>
+												<tr>
+													<td>
+														<div class="d-flex align-items-center">
+															<a href="javascript:void(0);" class="avatar avatar-md me-2">
+																<img src="assets/img/products/stock-img-03.png" alt="product">
+															</a>
+															<a href="javascript:void(0);">Apple Series 5 Watch</a>
+														</div>												
+													</td>
+													<td>3000</td>
+													<td>400</td>
+													<td>
+														0.00
+													</td>
+													<td>0.00</td>
+													<td>0.00</td>
+													<td>1700</td>
+												</tr>
+												<tr>
+													<td>
+														<div class="d-flex align-items-center">
+															<a href="javascript:void(0);" class="avatar avatar-md me-2">
+																<img src="assets/img/products/stock-img-05.png" alt="product">
+															</a>
+															<a href="javascript:void(0);">Lobar Handy</a>
+														</div>												
+													</td>
+													<td>2500</td>
+													<td>500</td>
+													<td>
+														0.00
+													</td>
+													<td>0.00</td>
+													<td>0.00</td>
+													<td>2000</td>
+												</tr>
+											</tbody>
+										</table>
+									</div>
+								</div>
+									
+								<div class="row">
+									
+									<div class="row">
+										<div class="col-lg-6 ms-auto">
+											<div class="total-order w-100 max-widthauto m-auto mb-4">
+												<ul  class="border-1 rounded-1">
+													<li class="border-bottom">
+														<h4 class="border-end">Order Tax</h4>
+														<h5>$ 0.00</h5>
+													</li>
+													<li class="border-bottom">
+														<h4 class="border-end">Discount</h4>
+														<h5>$ 0.00</h5>
+													</li>
+													<li class="border-bottom">
+														<h4 class="border-end">Grand Total</h4>
+														<h5>$ 5200.00</h5>
+													</li>
+													<li class="border-bottom">
+														<h4 class="border-end">Paid</h4>
+														<h5>$ 5200.00</h5>
+													</li>
+													<li class="border-bottom">
+														<h4 class="border-end">Due</h4>
+														<h5>$ 0.00</h5>
+													</li>
+												</ul>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+							<button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Submit</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<!-- /details popup -->
+  <!-- edit popup -->
+  <div class="modal fade" id="edit-sales-new">
+    <div class="modal-dialog edit-sales-modal">
+      <div class="modal-content">
+        <div class="page-wrapper p-0 m-0">
+          <div class="content p-0">
+            <div class="page-header p-4 mb-0">
+              <div class="add-item new-sale-items d-flex">
+                <div class="page-title">
+                  <h4>Edit Sales</h4>
+                </div>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body">
+                <form>
+                  <div class="table-responsive no-pagination mb-3">
+                    <table class="table  datanew">
+                      <thead>
+                        <tr>
+                          <th>Product</th>
+                          <th>Qty</th>
+                          <th>Purchase Price($)</th>
+                          <th>Discount($)</th>
+                          <th>Tax(%)</th>
+                          <th>Tax Amount($)</th>
+                          <th>Unit Cost($)</th>
+                          <th>Total Cost(%)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>
+                            <div class="productimgname">
+                              <a href="javascript:void(0);" class="product-img stock-img">
+                                <img src="assets/img/products/stock-img-02.png" alt="product">
+                              </a>
+                              <a href="javascript:void(0);">Nike Jordan</a>
+                            </div>
+                          </td>
+                          <td>
+                            <app-common-counter [value]="2"></app-common-counter>
+                          </td>
+                          <td>2000</td>
+                          <td>500</td>
+                          <td>
+                            0.00
+                          </td>
+                          <td>0.00</td>
+                          <td>0.00</td>
+                          <td>1500</td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <div class="productimgname">
+                              <a href="javascript:void(0);" class="product-img stock-img">
+                                <img src="assets/img/products/stock-img-03.png" alt="product">
+                              </a>
+                              <a href="javascript:void(0);">Apple Series 5 Watch</a>
+                            </div>
+                          </td>
+                          <td>
+                            <app-common-counter [value]="2"></app-common-counter>
+                          </td>
+                          <td>3000</td>
+                          <td>400</td>
+                          <td>
+                            0.00
+                          </td>
+                          <td>0.00</td>
+                          <td>0.00</td>
+                          <td>1700</td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <div class="productimgname">
+                              <a href="javascript:void(0);" class="product-img stock-img">
+                                <img src="assets/img/products/stock-img-05.png" alt="product">
+                              </a>
+                              <a href="javascript:void(0);">Lobar Handy</a>
+                            </div>
+                          </td>
+                          <td>
+                            <app-common-counter [value]="2"></app-common-counter>
+                          </td>
+                          <td>2500</td>
+                          <td>500</td>
+                          <td>
+                            0.00
+                          </td>
+                          <td>0.00</td>
+                          <td>0.00</td>
+                          <td>2000</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="row">
+                    <div class="col-lg-4 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Customer<span class="text-danger">*</span></label>
+                        <div class="row">
+                          <div class="col-lg-10 col-sm-10 col-10">
+                            <mat-select [(ngModel)]="selectedValue8" [ngModelOptions]="{standalone: true}" class="select"
+                              placeholder="Thomas">
+                              @for (data of selectedList8; track data) {
+                                <mat-option [value]="data.value">
+                                  {{data.value}}
+                                </mat-option>
+                              }
+                            </mat-select>
+                          </div>
+                          <div class="col-lg-2 col-sm-2 col-2 ps-0">
+                            <div class="add-icon">
+                              <a href="javascript:void(0);" class="choose-add" data-bs-toggle="modal" data-bs-target="#add_customer"><i
+                              class="ti ti-circle-plus plus"></i></a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Purchase Date<span class="text-danger">*</span></label>
+                        <div class="input-groupicon calender-input date-input2">
+                          <i class="feather icon-calendar info-img mt-2"></i>
+                          <input type="text" class="datetimepicker form-control p-2" bsDatepicker container=".date-input2" placeholder="19 jan 2023">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Supplier<span class="text-danger">*</span></label>
+                        <mat-select [(ngModel)]="selectedValue9" [ngModelOptions]="{standalone: true}" class="select"
+                          placeholder="Dazzle Shoes">
+                          @for (data of selectedList9; track data) {
+                            <mat-option [value]="data.value">
+                              {{data.value}}
+                            </mat-option>
+                          }
+                        </mat-select>
+                      </div>
+                    </div>
+                    <div class="col-lg-12 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Product Name<span class="text-danger">*</span></label>
+                        <div class="input-groupicon select-code">
+                          <input type="text" class="form-control p-2" placeholder="Please type product code and select">
+                          <div class="addonset">
+                            <img src="assets/img/icons/scanners.svg" alt="img">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+
+                  <div class="row">
+                    <div class="col-lg-6 ms-auto">
+                      <div class="total-order w-100 max-widthauto m-auto mb-4">
+                        <ul class="border-1 rounded-1">
+                          <li class="border-bottom">
+                            <h4 class="border-end">Order Tax</h4>
+                            <h5>$ 0.00</h5>
+                          </li>
+                          <li class="border-bottom">
+                             <h4 class="border-end">Discount</h4>
+                            <h5>$ 0.00</h5>
+                          </li>
+                          <li class="border-bottom">
+                             <h4 class="border-end">Shipping</h4>
+                            <h5>$ 0.00</h5>
+                          </li>
+                          <li class="border-bottom">
+                             <h4 class="border-end">Grand Total</h4>
+                            <h5>$5200.00</h5>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-lg-3 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Order Tax<span class="text-danger">*</span></label>
+                        <div class="input-groupicon select-code">
+                          <input type="text" class="form-control p-2" placeholder="0">
+                        </div>
+
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Discount<span class="text-danger">*</span></label>
+                        <div class="input-groupicon select-code">
+                          <input type="text" class="form-control p-2" placeholder="0">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                      <div class="input-blocks">
+                        <label>Shipping<span class="text-danger">*</span></label>
+                        <div class="input-groupicon select-code">
+                          <input type="text" class="form-control p-2" placeholder="0">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6 col-12">
+                      <div class="input-blocks mb-5">
+                        <label>Status<span class="text-danger">*</span></label>
+                        <mat-select [(ngModel)]="selectedValue10" [ngModelOptions]="{standalone: true}" class="select"
+                          placeholder="Choose">
+                          @for (data of selectedList10; track data) {
+                            <mat-option [value]="data.value">
+                              {{data.value}}
+                            </mat-option>
+                          }
+                        </mat-select>
+                      </div>
+                    </div>
+                    <div class="col-lg-12">
+                      <div class="input-blocks">
+                        <label>Notes<span class="text-danger">*</span></label>
+                        <textarea class="form-control"></textarea>
+                      </div>
+                    </div>
+                    <div class="col-lg-12 text-end">
+                      <button type="button" class="btn btn-secondary add-cancel me-3" data-bs-dismiss="modal">Cancel</button>
+                      <button type="submit" class="btn btn-primary add-sale" data-bs-dismiss="modal">Save Changes</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /edit popup -->
+
+  <!-- show payment Modal -->
+  <div class="modal fade" id="showpayment" tabindex="-1" aria-labelledby="showpayment" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered stock-adjust-modal">
+      <div class="modal-content">
+        <div class="page-wrapper-new p-0">
+          <div class="content p-0">
+            <div class="modal-header border-0 custom-modal-header">
+              <div class="page-title">
+                <h4>Show Payments</h4>
+              </div>
+              <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body custom-modal-body">
+              <div class="row">
+                <div class="col-lg-12">
+                  <div class="modal-body-table total-orders p-0">
+                    <div class="table-responsive rounded">
+                      <table class="table  datanew">
+                        <thead class="thead-light">
+                          <tr>
+                            <th>Date</th>
+                            <th>Reference</th>
+                            <th>Amount</th>
+                            <th>Paid By</th>
+                            <th class="no-sort">Action</th>
+
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>19 Jan 2023</td>
+                            <td>INV/SL0101</td>
+                            <td>$1500</td>
+                            <td>Cash</td>
+                            <td class="action-table-data">
+                              <div class="edit-delete-action">
+                                <a class="me-3 p-2" href="javascript:void(0);">
+                                  <i class="feather icon-printer feather-rotate-ccw"></i>
+                                </a>
+                                <a class="me-3 p-2" href="javascript:void(0);" data-bs-toggle="modal"
+                                  data-bs-target="#editpayment">
+                                  <i class="feather icon-edit feather-edit"></i>
+                                </a>
+                                <a class="confirm-text p-2" href="javascript:void(0);">
+                                  <i class="feather icon-trash-2 feather-trash-2"></i>
+                                </a>
+                              </div>
+
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- show payment Modal -->
+
+  <!-- Create payment Modal -->
+  <div class="modal fade" id="createpayment" tabindex="-1" aria-labelledby="createpayment" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0 custom-modal-header">
+          <div class="page-title">
+            <h4>Create Payments</h4>
+          </div>
+          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body custom-modal-body">
+          <form>
+            <div class="row">
+              <div class="col-lg-6">
+                <div class="input-blocks">
+                  <label> Date<span class="text-danger">*</span></label>
+                  <div class="input-groupicon calender-input date-input3">
+                    <i class="feather icon-calendar info-img"></i>
+                    <input type="text" class="datetimepicker" bsDatepicker container=".date-input3" placeholder="Choose Date">
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-6 col-sm-12 col-12">
+                <div class="input-blocks">
+                  <label>Reference<span class="text-danger">*</span></label>
+                  <input type="text" class="form-control">
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-lg-4 col-sm-12 col-12">
+                <div class="input-blocks">
+                  <label>Received Amount<span class="text-danger">*</span></label>
+                  <div class="input-groupicon doller-input">
+                    <i class="feather icon-dollar-sign info-img"></i>
+                    <input type="text" class="form-control ps-4">
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-sm-12 col-12">
+                <div class="input-blocks">
+                  <label>Paying Amount<span class="text-danger">*</span></label>
+                  <div class="input-groupicon doller-input">
+                    <i class="feather icon-dollar-sign info-img"></i>
+                    <input type="text" class="form-control ps-4">
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-sm-12 col-12">
+                <div class="input-blocks">
+                  <label>Payment type<span class="text-danger">*</span></label>
+                  <mat-select [(ngModel)]="selectedValue11" [ngModelOptions]="{standalone: true}" class="select"
+                    placeholder="Choose">
+                    @for (data of selectedList11; track data) {
+                      <mat-option [value]="data.value">
+                        {{data.value}}
+                      </mat-option>
+                    }
+                  </mat-select>
+                </div>
+              </div>
+              <div class="col-lg-12">
+                <div class="input-blocks">
+                  <label>Description<span class="text-danger">*</span></label>
+                  <ngx-editor [editor]="editor">
+                    <ngx-editor-menu [editor]="editor" [toolbar]="toolbar" >
+                    </ngx-editor-menu>
+                  </ngx-editor>
+                  <p>Maximum 60 Characters</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-12">
+              <div class="modal-footer-btn">
+                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Submit</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Create payment Modal -->
+
+  <!-- edit payment Modal -->
+  <div class="modal fade" id="editpayment" tabindex="-1" aria-labelledby="editpayment" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0 custom-modal-header">
+          <div class="page-title">
+            <h4>Edit Payments</h4>
+          </div>
+          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body custom-modal-body">
+          <form>
+            <div class="row">
+              <div class="col-lg-6">
+                <div class="input-blocks">
+                  <label>19 Jan 2023</label>
+                  <div class="input-groupicon calender-input date-input4">
+                    <i class="feather icon-calendar info-img"></i>
+                    <input type="text" class="datetimepicker form-control" bsDatepicker container=".date-input4" placeholder="Select Date">
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-6 col-sm-12 col-12">
+                <div class="input-blocks">
+                  <label>Reference</label>
+                  <input type="text" value="INV/SL0101">
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-lg-4 col-sm-12 col-12">
+                <div class="input-blocks">
+                  <label>Received Amount</label>
+                  <div class="input-groupicon calender-input">
+                    <i class="feather icon-dollar-sign info-img"></i>
+                    <input type="text" value="1500">
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-sm-12 col-12">
+                <div class="input-blocks">
+                  <label>Paying Amount</label>
+                  <div class="input-groupicon calender-input">
+                    <i class="feather icon-dollar-sign info-img"></i>
+                    <input type="text" value="1500">
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-sm-12 col-12">
+                <div class="input-blocks">
+                  <label>Payment type</label>
+                  <mat-select [(ngModel)]="selectedValue12" [ngModelOptions]="{standalone: true}" class="select"
+                    placeholder="Cash">
+                    @for (data of selectedList12; track data) {
+                      <mat-option [value]="data.value">
+                        {{data.value}}
+                      </mat-option>
+                    }
+                  </mat-select>
+                </div>
+              </div>
+              <div class="col-lg-12">
+                <div class="input-blocks summer-description-box transfer">
+                  <label>Description</label>
+                  <textarea class="form-control"></textarea>
+                </div>
+                <p>Maximum 60 Characters</p>
+              </div>
+            </div>
+            <div class="col-lg-12">
+              <div class="modal-footer-btn mb-3 me-3">
+                <button type="button" class="btn btn-cancel me-2" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-submit">Save Changes</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- edit payment Modal -->
+
+
+  		<!-- Delete -->
+      <div class="modal fade modal-default" id="delete">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-body p-0">
+              <div class="success-wrap text-center">
+                <form>
+                  <div class="icon-success bg-danger-transparent text-danger mb-2">
+                    <i class="ti ti-trash"></i>
+                  </div>
+                  <h3 class="mb-2">Delete Sale</h3>
+                  <p class="fs-16 mb-3">Are you sure you want to delete sale?</p>
+                  <div class="d-flex align-items-center justify-content-center gap-2 flex-wrap">
+                    <button type="button" class="btn btn-md btn-secondary" data-bs-dismiss="modal">No, Cancel</button>
+                    <button type="submit" class="btn btn-md btn-primary" data-bs-dismiss="modal">Yes, Delete</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /Delete -->
+
+      		<!-- Add Customer -->
+		<div class="modal fade" id="add_customer">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<div class="page-title">
+							<h4>Add Customer</h4>
+						</div>
+						<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<form>
+						<div class="modal-body">
+							<div>
+								<label class="form-label">Customer <span class="text-danger">*</span></label>
+								<input type="text" class="form-control">
+							</div>												
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn me-2 btn-secondary fs-13 fw-medium p-2 px-3 shadow-none" data-bs-dismiss="modal">Cancel</button>
+							<button  type="submit" class="btn btn-primary fs-13 fw-medium p-2 px-3">Add Customer</button>
+						</div>						
+					</form>
+				</div>
+			</div>
+		</div>
+		<!-- /Add Customer -->

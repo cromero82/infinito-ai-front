@@ -1,0 +1,784 @@
+<div class="page-header page-add-notes d-flex align-items-center justify-content-between">
+  <div class="add-item d-flex align-items-center">
+    <div class="page-title">
+      <h4>File Manager</h4>
+      <p>Manage your files</p>
+    </div>
+    <a id="toggle_btn2" class="notes-tog" href="javascript:void(0);" (click)="toggleChange()">
+      @if (!appSidebar) {
+        <i class="fas fa-chevron-right"></i>
+      }
+      @if (appSidebar) {
+        <i class="fas fa-chevron-left"></i>
+      }
+    </a>
+  </div>
+  <div class="d-sm-flex align-items-center">
+    <div class="form-sort owned-by w-auto">
+      <span><i  class="feather icon-sliders info-img"></i></span>
+      <mat-select
+        [(ngModel)]="selectedValue1"
+        [ngModelOptions]="{ standalone: true }"
+        class="select space-select"
+        placeholder="Owned By Me"
+        >
+        @for (data of selectedList1; track data) {
+          <mat-option [value]="data.value">
+            {{ data.value }}
+          </mat-option>
+        }
+      </mat-select>
+    </div>
+    <ul class="table-top-head">
+      <li>
+        <a
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          title="rotate"
+          matTooltip="rotate"
+          matTooltipPosition="above"
+          ><i class="ti ti-refresh"></i
+        ></a>
+      </li>
+      <li class="full-height">
+        <a
+          (click)="toggleCollapse()" [class.active]="isCollapsed"
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          title="Collapse"
+          id="collapse-header"
+          matTooltip="Collapse"
+          matTooltipPosition="above"
+          > @if (!isCollapsed) {
+          <i class="ti ti-chevron-up"></i>
+        }
+        @if (isCollapsed) {
+          <i class="ti ti-chevron-up"></i>
+        }</a>
+      </li>
+    </ul>
+    <a href="javascript:void(0);" class="btn btn-primary btn-added" data-bs-toggle="modal" data-bs-target="#upload-file"><span class="me-1 d-flex align-items-center"><i  class="feather icon-upload feather-16"></i></span>Upload Files</a>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-3 col-md-12 sidebars-right theiaStickySidebar section-bulk-widget" [ngClass]="{'section-notes-dashboard': appSidebar === false}">
+    <div class="stickybar">
+      <aside class="card file-manager-sidebar mb-0">
+        <h5 class="d-flex align-items-center"><span class="me-2 d-flex align-items-center"><i
+        class="feather icon-folder feather-20"></i></span>Files</h5>
+        <div class="dropdown">
+          <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false"
+            class="dropset btn btn-primary mb-3 btn-icon">
+            <span class="me-1 btn-icon"><i class="ti ti-circle-plus feather-16"></i></span>New
+          </a>
+          <ul class="dropdown-menu">
+            <li data-bs-toggle="modal" data-bs-target="#upload-file"><a href="javascript:void(0);"
+              class="dropdown-item"><i class="feather icon-upload-cloud feather-16 me-2"></i>Upload
+            File</a></li>
+            <li data-bs-toggle="modal" data-bs-target="#upload-folder"><a href="javascript:void(0);"
+              class="dropdown-item"><i class="feather icon-folder feather-16 me-2"></i>Upload Folder</a>
+            </li>
+            <li data-bs-toggle="modal" data-bs-target="#create-folder"><a href="javascript:void(0);"
+              class="dropdown-item"><i class="feather icon-folder-minus feather-16 me-2"></i>Create
+            folder</a></li>
+          </ul>
+        </div>
+
+        <ul class="mb-5">
+          <li><a [routerLink] = "routes.fileManager"><span class="me-2 btn-icon"><i
+          class="feather icon-file-text feather-16"></i></span>My Files</a></li>
+          <li><a href="javascript:void(0);"><span class="me-2 btn-icon"><i
+          class="feather icon-star  feather-16"></i></span>Google Drive</a></li>
+          <li><a href="javascript:void(0);"><span class="me-2 btn-icon"><i
+          class="feather icon-send feather-16"></i></span>Dropbox</a></li>
+          <li><a [routerLink] = "routes.fileShared" ><span class="me-2 btn-icon"><i
+          class="feather icon-file feather-16"></i></span>Shared With Me</a></li>
+          <li><a [routerLink] = "routes.fileDocument"><span class="me-2 btn-icon"><i
+          class="feather icon-file feather-16"></i></span>Document</a></li>
+          <li><a [routerLink] = "routes.fileRecent" class="active"><span class="me-2 btn-icon"><i
+          class="feather icon-clock feather-16"></i></span>Recent</a></li>
+          <li><a [routerLink] = "routes.fileFavorites"><span class="me-2 btn-icon"><i
+          class="feather icon-star feather-16"></i></span>Favourites</a></li>
+          <li><a [routerLink] = "routes.fileArchived"><span class="me-2 btn-icon"><i
+          class="feather icon-target feather-16"></i></span>Archived</a></li>
+          <li><a [routerLink] = "routes.fileManagerDeleted"><span class="me-2 btn-icon"><i
+          class="feather icon-trash-2 feather-16"></i></span>Deleted</a></li>
+          <li><a href="javascript:void(0);"><span class="me-2 btn-icon"><i
+          class="feather icon-settings feather-16"></i></span>Settings</a></li>
+        </ul>
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center">
+            <span class="me-2 btn-icon"><i class="feather icon-hard-drive  feather-16"></i></span>
+            <h6>Storage</h6>
+          </div>
+          <span>70%</span>
+        </div>
+        <div class="progress my-2">
+          <div class="progress-bar progress-bar bg-danger" role="progressbar" style="width: 75%"
+          aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <span>78.5 GB of 1 TB Free Used</span>
+        <div class="space-manager p-4">
+          <img src="assets/img/icons/half-circle.svg" alt="Folder">
+          <h6><a href="javascript:void(0);">Need More Space?</a></h6>
+          <p>Upgrade storage for 2TB for $60 per month</p>
+          <a href="javascript:void(0);" class="btn btn-outline-primary">Upgrade<span class="ms-1 btn-icon"><i
+          class="feather icon-reapeat feather-16"></i></span></a>
+        </div>
+      </aside>
+    </div>
+
+  </div>
+
+  <div class="col-lg-9 budget-role-notes" [ngClass]="{'budgeted-role-notes': appSidebar === false}">
+    <div class="row">
+      <div class="col-12">
+        <div class="section-bulk-wrap">
+          <div class="bulk-action-type col-lg-6 col-md-6">
+            <div class="form-sort select-bluk">
+
+              <mat-select [(ngModel)]="selectedValue5" [ngModelOptions]="{standalone: true}"
+                class="select" placeholder="Sort by Date">
+                @for (data of selectedList5; track data) {
+                  <mat-option [value]="data.value">
+                    {{data.value}}
+                  </mat-option>
+                }
+              </mat-select>
+            </div>
+            <div
+              class="search-set me-2"
+              id="dropdownSort"
+              data-bs-toggle="dropdown"
+              data-bs-auto-close="outside"
+              >
+              <div class="search-input">
+                <a href="javascript:void(0);" class="btn btn-searchset"
+                  ><i  class="feather icon-search feather-search"></i
+                ></a>
+                <div class="dataTables_filter">
+                  <label>
+                    <input
+                      type="search"
+                      class="form-control form-control-sm width-auto"
+                      placeholder="Search"
+                    /></label>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="dropdown-menu search-dropdown"
+                aria-labelledby="dropdownMenuClickable"
+                >
+                <div class="search-info">
+                  <h6>
+                    <span><i  class="feather icon-search feather-16"></i></span
+                    >Recent Searches
+                  </h6>
+                  <ul class="search-tags">
+                    <li><a href="javascript:void(0);">Filename</a></li>
+                    <li><a href="javascript:void(0);">Excel Files</a></li>
+                  </ul>
+                </div>
+                <div class="search-info">
+                  <h6>Search Results</h6>
+                  <p class="d-flex align-items-center justify-content-between">
+                    Sportsmodel.pdf
+                    <i  class="feather icon-chevron-right feather-16"></i>
+                  </p>
+                  <p class="d-flex align-items-center justify-content-between">
+                    Projectdetails.xls<i
+
+                    class="feather icon-chevron-right feather-16"
+                  ></i>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div
+            class="d-sm-flex align-items-center col-lg-6 col-md-6 justify-content-end"
+            >
+            <div class="form-sort me-3">
+              <i class="feather icon-filter fa-filter"></i>
+
+              <mat-select
+                [(ngModel)]="selectedValue2"
+                [ngModelOptions]="{ standalone: true }"
+                class="select space-select"
+                placeholder="Recent"
+                >
+                @for (data of selectedList2; track data) {
+                  <mat-option
+                    [value]="data.value"
+                    >
+                    {{ data.value }}
+                  </mat-option>
+                }
+              </mat-select>
+            </div>
+            <div class="form-sort">
+              <i class="feather icon-file-text fa-filter"></i>
+
+              <mat-select
+                [(ngModel)]="selectedValue3"
+                [ngModelOptions]="{ standalone: true }"
+                class="select space-select"
+                placeholder="All File types"
+                >
+                @for (data of selectedList3; track data) {
+                  <mat-option
+                    [value]="data.value"
+                    >
+                    {{ data.value }}
+                  </mat-option>
+                }
+              </mat-select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Accordian -->
+    <div class="accordion" id="accordionPanelsStayOpenExample">
+      <div class="accordion-item seprator-lg">
+        <h4 class="accordion-header d-flex align-items-center justify-content-between" id="panelsStayOpen-headingOne">Folders
+          <a href="javascript:void(0);" class="accordion-button a-auto" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne"></a>
+        </h4>
+        <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingOne">
+          <div class="accordion-body">
+            <div class="row mt-3">
+              <div class="col-sm-12 col-md-6 col-lg-6">
+                <div class="folders p-3 mb-3">
+                  <div class="d-flex align-items-center justify-content-between head">
+                    <div class="d-flex align-items-center">
+                      <img src="assets/img/icons/folder.svg" alt="Folder" class="me-2">
+                      <h6 class="popup-toggle"><a href="javascript:void(0);">Project Details</a></h6>
+                    </div>
+                    <div class="dropdown">
+                      <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false"
+                        class="dropset">
+                        <i class="fa fa-ellipsis-v"></i>
+                      </a>
+                      <ul class="dropdown-menu">
+                        <li><a href="javascript:void(0);" class="dropdown-item">Details</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Share</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Copy</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Move</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Download</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Rename</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Archeived</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Delete</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-start project-plan my-3">
+                    <label>Project plan</label>
+                    <ul class="d-flex">
+                      <li class="d-flex align-items-center">154 KB</li>
+                      <li class="d-flex align-items-center">8 Files</li>
+                    </ul>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-between avatar-wrap">
+                    <div class="group-avatar">
+                      <span class="avatar">
+                        <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Member 1" data-bs-original-title="Member 1"><img src="assets/img/avatar/avatar-2.jpg" alt="Avatar"></a>
+                      </span>
+                      <span class="avatar">
+                        <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Member 2" data-bs-original-title="Member 2"><img src="assets/img/avatar/avatar-1.jpg" alt="Avatar"></a>
+                      </span>
+                      <span class="count">
+                        <a href="javascript:void(0);">1 Members</a>
+                      </span>
+                    </div>
+                    <a  href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-6">
+                <div class="folders p-3 mb-3">
+                  <div class="d-flex align-items-center justify-content-between head">
+                    <div class="d-flex align-items-center">
+                      <img src="assets/img/icons/folder.svg" alt="Folder" class="me-2">
+                      <h6 class="popup-toggle"><a href="javascript:void(0);">Project Details</a></h6>
+                    </div>
+                    <div class="dropdown">
+                      <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false"
+                        class="dropset">
+                        <i class="fa fa-ellipsis-v"></i>
+                      </a>
+                      <ul class="dropdown-menu">
+                        <li><a href="javascript:void(0);" class="dropdown-item">Details</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Share</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Copy</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Move</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Download</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Rename</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Archeived</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Delete</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-start project-plan my-3">
+                    <label>Project plan</label>
+                    <ul class="d-flex">
+                      <li class="d-flex align-items-center">154 KB</li>
+                      <li class="d-flex align-items-center">8 Files</li>
+                    </ul>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-between avatar-wrap">
+                    <div class="group-avatar">
+                      <span class="avatar">
+                        <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Member 1" data-bs-original-title="Member 1"><img src="assets/img/avatar/avatar-6.jpg" alt="Avatar"></a>
+                      </span>
+                      <span class="avatar">
+                        <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Member 2" data-bs-original-title="Member 2"><img src="assets/img/avatar/avatar-14.jpg" alt="Avatar"></a>
+                      </span>
+                      <span class="avatar">
+                        <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Member 3" data-bs-original-title="Member 3"><img src="assets/img/avatar/avatar-15.jpg" alt="Avatar"></a>
+                      </span>
+                      <span class="avatar">
+                        <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Member 4" data-bs-original-title="Member 4"><img src="assets/img/avatar/avatar-16.jpg" alt="Avatar"></a>
+                      </span>
+                      <span class="avatar">
+                        <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Member 5" data-bs-original-title="Member 5"><img src="assets/img/avatar/avatar-17.jpg" alt="Avatar"></a>
+                      </span>
+                      <span class="count">
+                        <a href="javascript:void(0);">+9 Members</a>
+                      </span>
+                    </div>
+                    <a  href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-6">
+                <div class="folders p-3 mb-3">
+                  <div class="d-flex align-items-center justify-content-between head">
+                    <div class="d-flex align-items-center">
+                      <img src="assets/img/icons/folder.svg" alt="Folder" class="me-2">
+                      <h6 class="popup-toggle"><a href="javascript:void(0);">Project Details</a></h6>
+                    </div>
+                    <div class="dropdown">
+                      <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false"
+                        class="dropset">
+                        <i class="fa fa-ellipsis-v"></i>
+                      </a>
+                      <ul class="dropdown-menu">
+                        <li><a href="javascript:void(0);" class="dropdown-item">Details</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Share</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Copy</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Move</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Download</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Rename</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Archeived</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Delete</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-start project-plan my-3">
+                    <label>Project plan</label>
+                    <ul class="d-flex">
+                      <li class="d-flex align-items-center">154 KB</li>
+                      <li class="d-flex align-items-center">8 Files</li>
+                    </ul>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-between avatar-wrap">
+                    <div class="group-avatar">
+                      <span class="avatar">
+                        <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Member 1" data-bs-original-title="Member 1"><img src="assets/img/avatar/avatar-18.jpg" alt="Avatar"></a>
+                      </span>
+                      <span class="avatar">
+                        <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Member 2" data-bs-original-title="Member 2"><img src="assets/img/avatar/avatar-5.jpg" alt="Avatar"></a>
+                      </span>
+                      <span class="count">
+                        <a href="javascript:void(0);">
+                        +2 Members</a>
+                      </span>
+                    </div>
+                    <a  href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-6">
+                <div class="folders p-3 mb-3">
+                  <div class="d-flex align-items-center justify-content-between head">
+                    <div class="d-flex align-items-center">
+                      <img src="assets/img/icons/folder.svg" alt="Folder" class="me-2">
+                      <h6 class="popup-toggle"><a href="javascript:void(0);">Project Details</a></h6>
+                    </div>
+                    <div class="dropdown">
+                      <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false"
+                        class="dropset">
+                        <i class="fa fa-ellipsis-v"></i>
+                      </a>
+                      <ul class="dropdown-menu">
+                        <li><a href="javascript:void(0);" class="dropdown-item">Details</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Share</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Copy</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Move</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Download</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Rename</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Archeived</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item">Delete</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-start project-plan my-3">
+                    <label>Project plan</label>
+                    <ul class="d-flex">
+                      <li class="d-flex align-items-center">154 KB</li>
+                      <li class="d-flex align-items-center">8 Files</li>
+                    </ul>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-between avatar-wrap">
+                    <div class="group-avatar">
+                      <span class="avatar">
+                        <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Member 1" data-bs-original-title="Member 1"><img src="assets/img/avatar/avatar-2.jpg" alt="Avatar"></a>
+                      </span>
+                      <span class="avatar">
+                        <a href="javascript:void(0);" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Member 2" data-bs-original-title="Member 2"><img src="assets/img/avatar/avatar-1.jpg" alt="Avatar"></a>
+                      </span>
+                      <span class="count">
+                        <a href="javascript:void(0);">1 Members</a>
+                      </span>
+                    </div>
+                    <a  href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item seprator-lg">
+        <h4 class="accordion-header d-flex align-items-center justify-content-between" id="panelsStayOpen-headingTwo">Files
+          <a href="javascript:void(0);" class="accordion-button w-auto" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false" aria-controls="panelsStayOpen-collapseTwo">
+          </a>
+        </h4>
+        <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingTwo">
+          <div class="accordion-body">
+            <div class="row mt-3">
+              <div class="col-sm-12 col-md-6 col-lg-6">
+                <div class="folders p-3 mb-3">
+                  <div class="d-flex align-items-center justify-content-between head">
+                    <div class="d-flex align-items-center">
+                      <img src="assets/img/icons/pdf-02.svg" alt="File" class="me-2">
+                      <h6 class="popup-toggle"><a href="javascript:void(0);">hsa.pdf</a></h6>
+                    </div>
+                    <div class="d-flex align-items-center">
+                      <a  href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+                      <div class="dropdown">
+                        <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false"
+                          class="dropset">
+                          <i class="fa fa-ellipsis-v"></i>
+                        </a>
+                        <ul class="dropdown-menu">
+                          <li><a href="javascript:void(0);" class="dropdown-item">Details</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Share</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Copy</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Move</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Download</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Rename</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Archeived</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Delete</a></li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-start project-plan mt-3">
+                    <label>Last edited  12 Jul</label>
+                    <ul class="d-flex">
+                      <li class="d-flex align-items-center">15 Memebers</li>
+                      <li class="d-flex align-items-center">8 5 MB</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-6">
+                <div class="folders p-3 mb-3">
+                  <div class="d-flex align-items-center justify-content-between head">
+                    <div class="d-flex align-items-center">
+                      <img src="assets/img/icons/pdf-02.svg" alt="File" class="me-2">
+                      <h6 class="popup-toggle"><a href="javascript:void(0);">Haird.pdf</a></h6>
+                    </div>
+                    <div class="d-flex align-items-center">
+                      <a  href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+                      <div class="dropdown">
+                        <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false"
+                          class="dropset">
+                          <i class="fa fa-ellipsis-v"></i>
+                        </a>
+                        <ul class="dropdown-menu">
+                          <li><a href="javascript:void(0);" class="dropdown-item">Details</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Share</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Copy</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Move</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Download</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Rename</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Archeived</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Delete</a></li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-start project-plan mt-3">
+                    <label>Last edited  14 Jul</label>
+                    <ul class="d-flex">
+                      <li class="d-flex align-items-center">09 Memebers</li>
+                      <li class="d-flex align-items-center">4 MB</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-6">
+                <div class="folders p-3 mb-3">
+                  <div class="d-flex align-items-center justify-content-between head">
+                    <div class="d-flex align-items-center">
+                      <img src="assets/img/icons/xls.svg" alt="File" class="me-2">
+                      <h6 class="popup-toggle"><a href="javascript:void(0);">Estimation.xls</a></h6>
+                    </div>
+                    <div class="d-flex align-items-center">
+                      <a  href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+                      <div class="dropdown">
+                        <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false"
+                          class="dropset">
+                          <i class="fa fa-ellipsis-v"></i>
+                        </a>
+                        <ul class="dropdown-menu">
+                          <li><a href="javascript:void(0);" class="dropdown-item">Details</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Share</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Copy</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Move</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Download</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Rename</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Archeived</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Delete</a></li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-start project-plan mt-3">
+                    <label>Last edited  14 Jul</label>
+                    <ul class="d-flex">
+                      <li class="d-flex align-items-center">05 Memebers</li>
+                      <li class="d-flex align-items-center">500 KB</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-6">
+                <div class="folders p-3 mb-3">
+                  <div class="d-flex align-items-center justify-content-between head">
+                    <div class="d-flex align-items-center">
+                      <img src="assets/img/icons/pdf-02.svg" alt="File" class="me-2">
+                      <h6 class="popup-toggle"><a href="javascript:void(0);">hsa.pdf</a></h6>
+                    </div>
+                    <div class="d-flex align-items-center">
+                      <a  href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+                      <div class="dropdown">
+                        <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false"
+                          class="dropset">
+                          <i class="fa fa-ellipsis-v"></i>
+                        </a>
+                        <ul class="dropdown-menu">
+                          <li><a href="javascript:void(0);" class="dropdown-item">Details</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Share</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Copy</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Move</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Download</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Rename</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Archeived</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Delete</a></li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-start project-plan mt-3">
+                    <label>Last edited  12 Jul</label>
+                    <ul class="d-flex">
+                      <li class="d-flex align-items-center">15 Memebers</li>
+                      <li class="d-flex align-items-center">8 5 MB</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-6">
+                <div class="folders p-3 mb-3">
+                  <div class="d-flex align-items-center justify-content-between head">
+                    <div class="d-flex align-items-center">
+                      <img src="assets/img/icons/pdf-02.svg" alt="File" class="me-2">
+                      <h6 class="popup-toggle"><a href="javascript:void(0);">Haird.pdf</a></h6>
+                    </div>
+                    <div class="d-flex align-items-center">
+                      <a  href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+                      <div class="dropdown">
+                        <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false"
+                          class="dropset">
+                          <i class="fa fa-ellipsis-v"></i>
+                        </a>
+                        <ul class="dropdown-menu">
+                          <li><a href="javascript:void(0);" class="dropdown-item">Details</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Share</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Copy</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Move</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Download</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Rename</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Archeived</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Delete</a></li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-start project-plan mt-3">
+                    <label>Last edited  14 Jul</label>
+                    <ul class="d-flex">
+                      <li class="d-flex align-items-center">09 Memebers</li>
+                      <li class="d-flex align-items-center">4 MB</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-6">
+                <div class="folders p-3 mb-3">
+                  <div class="d-flex align-items-center justify-content-between head">
+                    <div class="d-flex align-items-center">
+                      <img src="assets/img/icons/xls.svg" alt="File" class="me-2">
+                      <h6 class="popup-toggle"><a href="javascript:void(0);">Estimation.xls</a></h6>
+                    </div>
+                    <div class="d-flex align-items-center">
+                      <a  href="javascript:void(0);" class=""><i class="fa fa-star me-2"></i></a>
+                      <div class="dropdown">
+                        <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false"
+                          class="dropset">
+                          <i class="fa fa-ellipsis-v"></i>
+                        </a>
+                        <ul class="dropdown-menu">
+                          <li><a href="javascript:void(0);" class="dropdown-item">Details</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Share</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Copy</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Move</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Download</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Rename</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Archeived</a></li>
+                          <li><a href="javascript:void(0);" class="dropdown-item">Delete</a></li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-start project-plan mt-3">
+                    <label>Last edited  14 Jul</label>
+                    <ul class="d-flex">
+                      <li class="d-flex align-items-center">05 Memebers</li>
+                      <li class="d-flex align-items-center">500 KB</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /Accordian -->
+
+    <div class="card p-4 bg-white all-files mb-0">
+      <div class="seprator-lg d-lg-flex align-items-center justify-content-between">
+        <h4>All Files</h4>
+        <div class="d-sm-flex align-items-center btn-grp">
+          <a href="javascript:void(0);" class="btn btn-primary me-2"><i  class="feather icon-list feather-20"></i></a>
+          <a href="javascript:void(0);" class="btn btn-outline-secondary me-2"><i class="feather icon-layout feather-20"></i></a>
+          <a href="javascript:void(0);" class="btn btn-outline-secondary me-2"><i  class="feather icon-grid feather-20"></i></a>
+
+          <div class="icon-select">
+            <span class="icon"><i  class="feather icon-calendar feather-16"></i></span>
+            <mat-select
+              [(ngModel)]="selectedValue4"
+              [ngModelOptions]="{ standalone: true }"
+              class="select space-select"
+              placeholder="Last Modified"
+              >
+              @for (data of selectedList4; track data) {
+                <mat-option
+                  [value]="data.value"
+                  >
+                  {{ data.value }}
+                </mat-option>
+              }
+            </mat-select>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="table-responsive">
+        <table class="table datanew" (matSortChange)="sortData($event)" matSort matSortActive="Sno"
+          matSortDirection="asc" matSortDisableClear>
+          <thead>
+            <tr>
+              <th>
+               <label class="checkboxs" (click)="selectAll(initChecked)">
+                      <input type="checkbox" id="select-all" [(ngModel)]="initChecked"/>
+                      <span class="checkmarks"></span>
+                    </label>
+              </th>
+              <th mat-sort-header="name">Name</th>
+              <th mat-sort-header="lastmodified">Last Modified</th>
+              <th mat-sort-header="size">Size</th>
+              <th mat-sort-header="owned">Owned Memebr</th>
+              <th mat-sort-header="action">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (data of tableData; track data; let i = $index) {
+              <tr>
+                <td>
+                      <label class="checkboxs" (click)="selectAll(initChecked)">
+                        <input type="checkbox"  [(ngModel)]="initChecked"/>
+                        <span class="checkmarks"></span>
+                      </label>
+                    </td>
+                <td class="productimgname">
+                  <a [routerLink]="routes.productList" class="product-img d-flex align-items-center">
+                    <img [src]="data.folderimg" alt="Product" class="me-2">
+                    <span>{{data.name}}</span>
+                  </a>
+                </td>
+                <td>{{data.lastModified}} <br>{{data.modified}}</td>
+                <td>{{data.size}}</td>
+                <td>
+                  <a href="javascript:void(0);" class="product-img d-flex align-items-center">
+                    <img [src]="data.memberimg" alt="Product" class="me-2 rounded-circle">
+                    <span>{{data.ownedMember}}</span>
+                  </a>
+                </td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <a href="javascript:void(0);" class=""><i  class="feather icon-star feather-16 me-2 color-primary"></i></a>
+                    <div class="dropdown">
+                      <a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false" class="dropset">
+                        <i class="fa fa-ellipsis-v"></i>
+                      </a>
+                      <ul class="dropdown-menu">
+                        <li><a href="javascript:void(0);" class="dropdown-item"><i  class="feather icon-trash-2 feather-14 me-2"></i>Permanent Delete</a></li>
+                        <li><a href="javascript:void(0);" class="dropdown-item"><i  class="feather icon-edit feather-14 me-2"></i>Restore File</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            }
+
+
+          </tbody>
+        </table>
+
+      </div>
+      <app-custom-pagination></app-custom-pagination>
+
+    </div>
+
+  </div>
+</div>

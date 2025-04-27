@@ -1,0 +1,106 @@
+{
+    "data":[
+      {
+        "name": "New Year Blast",
+        "code": "NEWYEAR30",
+        "description": "30% off on New Year",
+        "type": "percentage",
+        "discount": "30%",
+        "limit": "01",
+        "valid": "04 Jan 2025",
+        "status": "Active"
+      },
+      {
+        "name": "Christmas Cheer",
+        "code": "CHRISTMAS100",
+        "description": "$100 off holiday packages",
+        "type": "fixedAmount",
+        "discount": "$100",
+        "limit": "01",
+        "valid": "27 Dec 2024",
+        "status": "Active"
+      },
+      {
+        "name": "Spooky Savings",
+        "code": "HALLOWEEN20",
+        "description": "20% off on Halloween items",
+        "type": "percentage",
+        "discount": "20%",
+        "limit": "02",
+        "valid": "28 Nov 2024",
+        "status": "Active"
+      },
+      {
+        "name": "Black Friday",
+        "code": "BLACKFRIDAY50",
+        "description": "50% off electronics",
+        "type": "percentage",
+        "discount": "50%",
+        "limit": "04",
+        "valid": "18 Nov 2024",
+        "status": "Inactive"
+      },
+      {
+        "name": "Golden Years Deal",
+        "code": "SENIOR20",
+        "description": "20% off for senior citizens",
+        "type": "percentage",
+        "discount": "20%",
+        "limit": "03",
+        "valid": "06 Nov 2024",
+        "status": "Active"
+      },
+      {
+        "name": "Thanksgiving Special",
+        "code": "THANKS10",
+        "description": "10% off for Thanksgiving",
+        "type": "percentage",
+        "discount": "10%",
+        "limit": "01",
+        "valid": "31 Oct 2024",
+        "status": "Active"
+      },
+      {
+        "name": "New Year Blast",
+        "code": "STUDENT10",
+        "description": "10% off for students",
+        "type": "percentage",
+        "discount": "10%",
+        "limit": "02",
+        "valid": "14 Oct 2024",
+        "status": "Active"
+      },
+      {
+        "name": "Big Saver Deal",
+        "code": "SAVE50",
+        "description": "$50 off orders over $300",
+        "type": "fixedAmount",
+        "discount": "$50",
+        "limit": "03",
+        "valid": "03 Oct 2024",
+        "status": "Inactive"
+      },
+      {
+        "name": "Weekend Exclusive",
+        "code": "WEEKENDSALE",
+        "description": "Exclusive 15% off on weekends",
+        "type": "percentage",
+        "discount": "15%",
+        "limit": "04",
+        "valid": "29 Sep 2024",
+        "status": "Active"
+      },
+      {
+        "name": "Welcome Delight",
+        "code": "WELCOME10",
+        "description": "10% off for first-time users",
+        "type": "percentage",
+        "discount": "10%",
+        "limit": "01",
+        "valid": "10 Sep 2024",
+        "status": "Active"
+      }
+    ],    
+    "totalData": 10
+  }
+  

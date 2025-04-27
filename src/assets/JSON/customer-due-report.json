@@ -1,0 +1,96 @@
+{
+    "data": [
+      {
+        "reference": "INV2025",
+        "code": "CU001",
+        "customer": "Carl Evans",
+        "totalOrders": "$2000",
+        "amount": "$2000",
+        "paymentMethod": "Cash",
+       "status": "Paid",
+        "img": "user-10.jpg"
+      },
+      {
+        "reference": "INV2031",
+        "code": "CU002",
+        "customer": "Minerva Rameriz",
+        "totalOrders": "$600",
+        "amount": "$600",
+        "paymentMethod": "Paypal",
+       "status": "Overdue",
+        "img": "user-28.jpg"
+      },
+      {
+        "reference": "INV2042",
+        "code": "CU003",
+        "customer": "Robert Lamon",
+        "totalOrders": "$1000",
+        "amount": "$1000",
+        "paymentMethod": "Paypal",
+       "status": "Paid",
+        "img": "user-32.jpg"
+      },
+      {
+        "reference": "INV2033",
+        "code": "CU004",
+        "customer": "Patricia Lewis",
+        "totalOrders": "$1500",
+        "amount": "$1500",
+        "paymentMethod": "Stripe",
+       "status": "Paid",
+        "img": "user-02.jpg"
+      },
+      {
+        "reference": "INV2042",
+        "code": "CU005",
+        "customer": "Mark Joslyn",
+        "totalOrders": "$700",
+        "amount": "$700",
+        "paymentMethod": "Paypal",
+       "status": "Paid",
+        "img": "user-04.jpg"
+      },
+      {
+        "reference": "INV2011",
+        "code": "CU006",
+        "customer": "Marsha Betts",
+        "totalOrders": "$1600",
+        "amount": "$1600",
+        "paymentMethod": "Cash",
+       "status": "Paid",
+        "img": "user-01.jpg"
+      },
+      {
+        "reference": "INV2014",
+        "code": "CU007",
+        "customer": "Daniel Jude",
+        "totalOrders": "$1000",
+        "amount": "$1000",
+        "paymentMethod": "Credit Card",
+       "status": "Paid",
+        "img": "user-08.jpg"
+      },
+      {
+        "reference": "INV2056",
+        "code": "CU008",
+        "customer": "Emma Bates",
+        "totalOrders": "$500",
+        "amount": "$500",
+        "paymentMethod": "Stripe",
+       "status": "Paid",
+        "img": "user-20.jpg"
+      },
+      {
+        "reference": "INV2047",
+        "code": "CU009",
+        "customer": "Richard Fralick",
+        "totalOrders": "$1000",
+        "amount": "$1000",
+        "paymentMethod": "Credit Card",
+       "status": "Unpaid",
+        "img": "user-17.jpg"
+      }
+    ],
+    "totalData": 10
+  }
+  

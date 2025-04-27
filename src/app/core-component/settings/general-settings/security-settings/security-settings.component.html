@@ -1,0 +1,594 @@
+<div class="page-header settings-pg-header">
+  <div class="add-item d-flex">
+    <div class="page-title">
+      <h4>Settings</h4>
+      <h6>Manage your settings on portal</h6>
+    </div>
+  </div>
+  <ul class="table-top-head">
+    <li>
+      <a data-bs-toggle="tooltip" data-bs-placement="top" title="Refresh" matTooltip="Refresh" matTooltipPosition="above"><i  class="ti ti-refresh"></i></a>
+    </li>
+    <li>
+      <a (click)="toggleCollapse()" [class.active]="isCollapsed" data-bs-toggle="tooltip" data-bs-placement="top" title="Collapse" id="collapse-header"  matTooltip="Collapse" matTooltipPosition="above"> @if (!isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }
+      @if (isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }</a>
+    </li>
+  </ul>
+</div>
+<div class="row">
+  <div class="col-xl-12">
+    <div class="settings-wrapper d-flex">
+      <app-settings-sidebar></app-settings-sidebar>
+      <div class="card flex-fill mb-0">
+        <div class="card-header">
+          <h4 class="fs-18 fw-bold">Security</h4>
+        </div>
+        <div class="card-body">
+          <div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap row-gap-3 border-bottom mb-3 pb-3">
+              <div class="d-flex align-items-center">
+                <span class="avatar avatar-lg border bg-light fs-24 me-2">
+                  <i class="ti ti-eye-off text-gray-900 fs-18"></i>
+                </span>
+                <div>
+                  <h5 class="fs-16 fw-medium mb-1">Password</h5>
+                  <p class="fs-16">Last Changed 22 Dec 2024, 10:30 AM</p>
+                </div>
+              </div>
+              <a href="javascript:void(0);" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#change-password">Change Password</a>
+            </div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap row-gap-3 border-bottom mb-3 pb-3">
+              <div class="d-flex align-items-center">
+                <span class="avatar avatar-lg border bg-light fs-24 me-2">
+                  <i class="ti ti-shield text-gray-900 fs-18"></i>
+                </span>
+                <div>
+                  <h5 class="fs-16 fw-medium mb-1">Two Factor Authentication</h5>
+                  <p class="fs-16">Receive codes via SMS or email every time you login</p>
+                </div>
+              </div>
+              <div class="status-toggle modal-status d-flex justify-content-between align-items-center ms-2">
+                <input type="checkbox" id="user3" class="check" checked>
+                <label for="user3" class="checktoggle">	</label>
+              </div>
+            </div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap row-gap-3 border-bottom mb-3 pb-3">
+              <div class="d-flex align-items-center">
+                <span class="avatar avatar-lg border bg-light fs-24 me-2">
+                  <i class="ti ti-brand-google text-gray-900 fs-18"></i>
+                </span>
+                <div>
+                  <h5 class="fs-16 fw-medium mb-1">Google Authentication</h5>
+                  <p class="fs-16">Connect to Google</p>
+                </div>
+              </div>
+              <div class="d-flex align-items-center">
+                <span class="badge bg-outline-success">Connected</span>
+                <div class="status-toggle modal-status d-flex justify-content-between align-items-center ms-3">
+                  <input type="checkbox" id="user4" class="check" checked>
+                  <label for="user4" class="checktoggle">	</label>
+                </div>
+              </div>
+            </div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap row-gap-3 border-bottom mb-3 pb-3">
+              <div class="d-flex align-items-center">
+                <span class="avatar avatar-lg border bg-light fs-24 me-2">
+                  <i class="ti ti-phone text-gray-900 fs-18"></i>
+                </span>
+                <div>
+                  <h5 class="fs-16 fw-medium mb-1">Phone Number Verification</h5>
+                  <p class="fs-16">Verified Mobile Number : +81699799974</p>
+                </div>
+              </div>
+              <div class="d-flex align-items-center">
+                <span class="fs-20 text-success me-3">
+                  <i class="ti ti-circle-check-filled"></i>
+                </span>
+                <a href="javascript:void(0);" class="btn btn-primary mt-0" data-bs-toggle="modal" data-bs-target="#phone-verification">Change</a>
+                <a href="javascript:void(0);" class="btn btn-secondary ms-3">Remove</a>
+              </div>
+            </div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap row-gap-3 border-bottom mb-3 pb-3">
+              <div class="d-flex align-items-center">
+                <span class="avatar avatar-lg border bg-light fs-24 me-2">
+                  <i class="ti ti-mail text-gray-900 fs-18"></i>
+                </span>
+                <div>
+                  <h5 class="fs-16 fw-medium mb-1">Email Verification</h5>
+                  <p class="fs-16">Verified Email : info&#64;example.com</p>
+                </div>
+              </div>
+              <div class="d-flex align-items-center">
+                <span class="fs-20 text-success me-3">
+                  <i class="ti ti-circle-check-filled"></i>
+                </span>
+                <a href="javascript:void(0);" class="btn btn-primary mt-0" data-bs-toggle="modal" data-bs-target="#email-verification">Change</a>
+                <a href="javascript:void(0);" class="btn btn-secondary ms-3">Remove</a>
+              </div>
+            </div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap row-gap-3 border-bottom mb-3 pb-3">
+              <div class="d-flex align-items-center">
+                <span class="avatar avatar-lg border bg-light fs-24 me-2">
+                  <i class="ti ti-tool text-gray-900 fs-18"></i>
+                </span>
+                <div>
+                  <h5 class="fs-16 fw-medium mb-1">Device Management</h5>
+                  <p class="fs-16">Manage devices associated with the account</p>
+                </div>
+              </div>
+              <a href="javascript:void(0);" class="btn btn-primary mt-0" data-bs-toggle="modal" data-bs-target="#device-management">Manage</a>
+            </div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap row-gap-3 border-bottom mb-3 pb-3">
+              <div class="d-flex align-items-center">
+                <span class="avatar avatar-lg border bg-light fs-24 me-2">
+                  <i class="ti ti-activity text-gray-900 fs-18"></i>
+                </span>
+                <div>
+                  <h5 class="fs-16 fw-medium mb-1">Account Activity</h5>
+                  <p class="fs-16">Manage activities associated with the account</p>
+                </div>
+              </div>
+              <a href="javascript:void(0);" class="btn btn-primary mt-0" data-bs-toggle="modal" data-bs-target="#account-activity">View</a>
+            </div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap row-gap-3 border-bottom mb-3 pb-3">
+              <div class="d-flex align-items-center">
+                <span class="avatar avatar-lg border bg-light fs-24 me-2">
+                  <i class="ti ti-ban text-gray-900 fs-18"></i>
+                </span>
+                <div>
+                  <h5 class="fs-16 fw-medium mb-1">Deactivate Account</h5>
+                  <p class="fs-16">This will shutdown your account. Your account will be reactive when you sign in again</p>
+                </div>
+              </div>
+              <a href="javascript:void(0);" class="btn btn-primary mt-0">Deactivate</a>
+            </div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+              <div class="d-flex align-items-center">
+                <span class="avatar avatar-lg border bg-light fs-24 me-2">
+                  <i class="ti ti-trash text-gray-900 fs-18"></i>
+                </span>
+                <div>
+                  <h5 class="fs-16 fw-medium mb-1">Delete Account</h5>
+                  <p class="fs-16">Your account will be permanently deleted</p>
+                </div>
+              </div>
+              <a href="javascript:void(0);" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-account">Delete</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Change Password -->
+<div class="modal fade" id="change-password">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="page-title">
+          <h4>Change Password</h4>
+        </div>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="input-blocks">
+              <label class="fw-medium">Current Password <span class="text-danger">*</span></label>
+              <div class="pass-group">
+                <input [type]="password[2] ? 'text' : 'password' " class="pass-input form-control">
+                <span class="ti toggle-password" [ngClass]=" password[2] ? 'ti-eye' : 'ti-eye-off'"(click)="togglePassword(2)"></span>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-12">
+            <div class="input-blocks">
+              <div class="mb-3">
+                <label class="fw-medium">New Password <span class="text-danger">*</span></label>
+                <div id="passwordInput" class="pass-group">
+                    <div class="pass-group mb-3">
+                        <input
+                      [type]="password[1] ? 'text' : 'password'"
+                      id="password"
+                      class="pass-input form-control"
+                      (input)="checkPasswordStrength($event)"
+                    />
+                    <span class="ti toggle-password"
+                        [ngClass]="password[1] ? 'ti-eye' : 'ti-eye-off'"
+                        (click)="togglePassword(1)"
+                        (keydown.enter)="togglePassword(1)"
+                        tabindex="0"
+                        ></span>
+                    </div>
+                    <div id="passwordStrength" class="strength-meter password-strength" [ngClass]="{'poor-active':strengthLevel === 'poor','avg-active':strengthLevel === 'weak','strong-active':strengthLevel === 'strong','heavy-active':strengthLevel === 'heavy'}" >
+                      <span id="poor" [ngClass]="{'active': strengthLevel === 'poor'||strengthLevel === 'weak'||strengthLevel === 'strong'||strengthLevel === 'heavy'}"></span>
+                      <span id="weak" [ngClass]="{'active': strengthLevel === 'weak'||strengthLevel === 'strong'||strengthLevel === 'heavy'}"></span>
+                      <span id="strong" [ngClass]="{'active': strengthLevel === 'strong'||strengthLevel === 'heavy'}"></span>
+                      <span id="heavy" [ngClass]="{'active': strengthLevel === 'heavy'}"></span>
+                    </div>
+                   
+                  </div>
+                  
+            </div>
+            <p id="passwordInfo" class="fs-12">
+              <span *ngIf="strengthLevel === 'poor'" class="d-flex align-items-center text-danger">
+                <img src="assets/img/icons/angry.svg" class="me-2">Weak. Must contain at least 8 characters
+              </span>
+              <span *ngIf="strengthLevel === ('poor'&&'weak')" class="d-flex align-items-center text-warning">
+                <img src="assets/img/icons/anguish.svg" class="me-2">Average. Must contain at least 1 letter or number
+              </span>
+              <span *ngIf="strengthLevel === ('poor'&&'weak'&&'strong')" class="d-flex align-items-center text-blue">
+                <img src="assets/img/icons/smile.svg" class="me-2">Almost. Must contain special symbol
+              </span>
+              <span *ngIf="strengthLevel === ('poor'&&'weak'&&'strong'&&'heavy')" class="d-flex align-items-center text-success">
+                <img src="assets/img/icons/smile.svg" class="me-2">Awesome! You have a secure password.
+              </span>
+            </p>
+             
+          </div>
+          </div>
+          <div class="col-lg-12">
+            <div class="input-blocks mb-0">
+              <label class="fw-medium">Confirm Password <span class="text-danger">*</span></label>
+              <div class="pass-group">
+                <input [type]="password[3] ? 'text' : 'password' " class="pass-input form-control">
+                <span class="ti toggle-password" [ngClass]=" password[3] ? 'ti-eye' : 'ti-eye-off'"(click)="togglePassword(3)"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a href="javascript:void(0);" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</a>
+        <a href="javascript:void(0);" class="btn btn-primary" data-bs-dismiss="modal">Save Changes</a>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /Change Password -->
+
+<!-- Change Phone Number -->
+<div class="modal fade" id="phone-verification">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="page-title">
+          <h4>Change Phone Number</h4>
+        </div>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="input-blocks custom-tel">
+              <label class="fw-medium">Current Phone Number <span class="text-danger">*</span></label>
+              <input id="phone" type="tel" class="form-control pass-input" placeholder="(201) 555-0123"/>
+            </div>
+          </div>
+          <div class="col-lg-12">
+            <div class="input-blocks custom-tel">
+              <label class="fw-medium">New Phone Number <span class="text-danger">*</span></label>
+              <input id="phone2" type="tel" class="form-control pass-input" placeholder="(201) 555-0123"/>
+            </div>
+          </div>
+          <div class="col-lg-12">
+            <div class="input-blocks">
+              <p class="fs-14">
+                <i class="ti ti-info-circle me-1"></i> New phone number only updated once you verified 
+              </p>
+            </div>
+          </div>
+          <div class="col-lg-12">
+            <div class="input-blocks mb-0">
+              <label class="fw-medium">Current Password <span class="text-danger">*</span></label>
+              <div class="pass-group">
+                <input [type]="password[4] ? 'text' : 'password' " class="pass-input form-control">
+                <span class="ti toggle-password" [ngClass]=" password[4] ? 'ti-eye' : 'ti-eye-off'"(click)="togglePassword(4)"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a href="javascript:void(0);" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</a>
+        <a href="javascript:void(0);" class="btn btn-primary" data-bs-dismiss="modal">Save Changes</a>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /Change Phone Number -->
+
+<!-- Change Email -->
+<div class="modal fade" id="email-verification">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="page-title">
+          <h4>Change Email</h4>
+        </div>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="input-blocks">
+              <label class="fw-medium">Current Email <span class="text-danger">*</span></label>
+              <input class="form-control" type="text">
+            </div>
+          </div>
+          <div class="col-lg-12">
+            <div class="input-blocks">
+              <label class="fw-medium">New Email <span class="text-danger">*</span></label>
+              <input class="form-control" type="text">
+            </div>
+          </div>
+          <div class="col-lg-12">
+            <div class="input-blocks">
+              <p class="fs-14">
+                <i class="ti ti-info-circle me-1"></i> New email address only updated once you verified 
+              </p>
+            </div>
+          </div>
+          <div class="col-lg-12">
+            <div class="input-blocks mb-0">
+              <label class="fw-medium">Current Password <span class="text-danger">*</span></label>
+              <div class="pass-group">
+                <input [type]="password[5] ? 'text' : 'password' " class="pass-input form-control">
+                <span class="ti toggle-password" [ngClass]=" password[5] ? 'ti-eye' : 'ti-eye-off'"(click)="togglePassword(5)"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a href="javascript:void(0);" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</a>
+        <a href="javascript:void(0);" class="btn btn-primary" data-bs-dismiss="modal">Save Changes</a>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /Change Email -->
+
+<!-- Device Management -->
+<div class="modal device-management-modal fade" id="device-management">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="page-title">
+          <h4>Device Management</h4>
+        </div>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="device-management-table">
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Device</th>
+                      <th>Date</th>
+                      <th>Location</th>
+                      <th>IP Address</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Chrome - Windows</td>
+                      <td>15 May 2025, 10:30 AM</td>
+                      <td>Newyork / USA</td>
+                      <td>232.222.12.72</td>
+                      <td>
+                        <a href="javascript:void(0);" class="btn">
+                          <i class="ti ti-trash"></i>
+                        </a>	
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Safari Macos</td>
+                      <td>10 Apr 2025, 05:15 PM</td>
+                      <td>Newyork / USA</td>
+                      <td>224.111.12.75</td>
+                      <td>
+                        <a href="javascript:void(0);" class="btn">
+                          <i class="ti ti-trash"></i>
+                        </a>	
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Firefox Windows</td>
+                      <td>15 Mar 2025, 02:40 PM</td>
+                      <td>Newyork / USA</td>
+                      <td>111.222.13.28</td>
+                      <td>
+                        <a href="javascript:void(0);" class="btn">
+                          <i class="ti ti-trash"></i>
+                        </a>	
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Safari Macos</td>
+                      <td>15 Jan 2025, 08:00 AM</td>
+                      <td>Newyork / USA</td>
+                      <td>333.555.10.54</td>
+                      <td>
+                        <a href="javascript:void(0);" class="btn">
+                          <i class="ti ti-trash"></i>
+                        </a>	
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /Device Management -->
+
+<!-- Account Activity -->
+<div class="modal device-management-modal fade" id="account-activity">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="page-title">
+          <h4>Account Activity</h4>
+        </div>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="device-management-table">
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Device</th>
+                      <th>Location</th>
+                      <th>IP Address</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>15 May 2025, 10:30 AM</td>
+                      <td>Chrome - Windows</td>
+                      <td>Newyork / USA</td>
+                      <td>232.222.12.72</td>
+                      <td>
+                        <a href="javascript:void(0);" class="btn">
+                          <i class="ti ti-logout"></i>
+                        </a>	
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>10 Apr 2025, 05:15 PM</td>
+                      <td>Safari Macos</td>
+                      <td>Newyork / USA</td>
+                      <td>224.111.12.75</td>
+                      <td>
+                        <a href="javascript:void(0);" class="btn">
+                          <i class="ti ti-logout"></i>
+                        </a>	
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>15 Mar 2025, 02:40 PM</td>
+                      <td>Firefox Windows</td>
+                      <td>Newyork / USA</td>
+                      <td>111.222.13.28</td>
+                      <td>
+                        <a href="javascript:void(0);" class="btn">
+                          <i class="ti ti-logout"></i>
+                        </a>	
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>15 Jan 2025, 08:00 AM</td>
+                      <td>Safari Macos</td>
+                      <td>Newyork / USA</td>
+                      <td>333.555.10.54</td>
+                      <td>
+                        <a href="javascript:void(0);" class="btn">
+                          <i class="ti ti-logout"></i>
+                        </a>	
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /Account Activity -->
+
+<!-- Delete Account -->
+<div class="modal delete-account-modal fade" id="delete-account">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="page-title">
+          <h4>Delete Account</h4>
+        </div>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="delete-header">
+          <h4 class="fs-16 fw-medium mb-1">Why Are You Deleting Your Account?</h4>
+          <p class="fs-16">We're sorry to see you go! To help us improve, please let us know your reason for deleting your account</p>
+        </div>
+        <div class="form-check d-flex mb-2">
+          <input class="form-check-input" type="radio" name="delete" id="del-acc1">
+          <label class="form-check-label fs-14 ms-2" for="del-acc1">
+            <span class="text-gray-9 fw-medium">No longer using the service</span> 
+            <span class="d-block text-default">I no longer need this service and won’t be using it in the future.</span>
+          </label>
+        </div>
+        <div class="form-check d-flex mb-2">
+          <input class="form-check-input" type="radio" name="delete" id="del-acc2">
+          <label class="form-check-label fs-14 ms-2" for="del-acc2">
+            <span class="text-gray-9 fw-medium">Privacy concerns</span> 
+            <span class="d-block text-default">I am concerned about how my data is handled and want to remove my information.</span>
+          </label>
+        </div>
+        <div class="form-check d-flex mb-2">
+          <input class="form-check-input" type="radio" name="delete" id="del-acc3">
+          <label class="form-check-label fs-14 ms-2" for="del-acc3">
+            <span class="text-gray-9 fw-medium">Too many notifications/emails</span> 
+            <span class="d-block text-default">I’m overwhelmed by the volume of notifications or emails and would like to reduce them.</span>
+          </label>
+        </div>
+        <div class="form-check d-flex mb-2">
+          <input class="form-check-input" type="radio" name="delete" id="del-acc4">
+          <label class="form-check-label fs-14 ms-2" for="del-acc4">
+            <span class="text-gray-9 fw-medium">Poor user experience</span> 
+            <span class="d-block text-default">I’ve had difficulty using the platform, and it didn’t meet my expectations.</span>
+          </label>
+        </div>
+        <div class="form-check d-flex mb-2">
+          <input class="form-check-input" type="radio" name="delete" id="del-acc5" checked>
+          <label class="form-check-label fs-14 ms-2" for="del-acc5">
+            <span class="text-gray-9 fw-medium">Other (Please specify)</span> 
+          </label>
+        </div>
+        <div class="ms-4">                        
+          <textarea class="form-control" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a href="javascript:void(0);" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</a>
+        <a href="javascript:void(0);" class="btn btn-primary" data-bs-dismiss="modal">Delete Account</a>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /Delete Account -->

@@ -1,0 +1,68 @@
+{
+    "data": [
+      {
+        "userName": "Steven",
+        "userImg": "assets/img/users/user-01.jpg",
+        "requisition": "25 Sep 2023",
+        "delete": "01 Oct 2023"
+        
+      },
+      {
+        "userName": "Susan Lopez",
+        "userImg": "assets/img/users/user-02.jpg",
+        "requisition": "30 Sep 2023",
+        "delete": " 05 Oct 2023"
+      },
+      {
+        "userName": "Robert Grossman",
+        "userImg": "assets/img/users/user-03.jpg",
+        "requisition": "10 Sep 2023",
+        "delete": " 25 Sep 2023"
+      },
+      {
+        "userName": "Janet Hembre",
+        "userImg": "assets/img/users/user-06.jpg",
+        "requisition": "15 Sep 2023",
+        "delete": " 20 Sep 2023"
+      },
+      {
+        "userName": "Russell Belle",
+        "userImg": "assets/img/users/user-04.jpg",
+        "requisition": "15 Aug 2023",
+        "delete": "  01 Sep 2023"
+      },
+      {
+        "userName": "Henry Bryant",
+        "userImg": "assets/img/users/user-08.jpg",
+        "requisition": "12 Aug 2023",
+        "delete": "  01 Sep 2023"
+      },
+      {
+        "userName": "Michael Dawson",
+        "userImg": "assets/img/users/user-10.jpg",
+        "requisition": "15 Sep 2023",
+        "delete": "  01 Sep 2023"
+      },
+      {
+        "userName": "Thomas Ward",
+        "userImg": "assets/img/users/user-09.jpg",
+        "requisition": "01 Jan 2023",
+        "delete": "  01 Feb 2023"
+      },
+      {
+        "userName": "Jada Robinson",
+        "userImg": "assets/img/users/user-20.jpg",
+        "requisition": "22 Oct 2023",
+        "delete": "  15 Nov 2023"
+      },
+      {
+        "userName": "Aliza Duncan",
+        "userImg": "assets/img/users/user-04.jpg",
+        "requisition": "02 Nov 2023",
+        "delete": "01 Dec 2023"
+      }
+      
+    ],
+    "totalData": 10
+  }
+  

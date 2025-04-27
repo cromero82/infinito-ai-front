@@ -1,0 +1,69 @@
+{
+    "data":[
+        {
+          "unit": "Kilograms",
+          "shortName": "kg",
+          "noOfProducts": "25",
+          "createdOn": "24 Dec 2024",
+          "status": "Active"
+        },
+        {
+          "unit": "Liters",
+          "shortName": "L",
+          "noOfProducts": "18",
+          "createdOn": "10 Dec 2024",
+          "status": "Active"
+        },
+        {
+          "unit": "Dozen",
+          "shortName": "dz",
+          "noOfProducts": "30",
+          "createdOn": "27 Nov 2024",
+          "status": "Active"
+        },
+        {
+          "unit": "Pieces",
+          "shortName": "pcs",
+          "noOfProducts": "42",
+          "createdOn": "18 Nov 2024",
+          "status": "Active"
+        },
+        {
+          "unit": "Boxes",
+          "shortName": "bx",
+          "noOfProducts": "60",
+          "createdOn": "06 Nov 2024",
+          "status": "Active"
+        },
+        {
+          "unit": "Tons",
+          "shortName": "t",
+          "noOfProducts": "10",
+          "createdOn": "25 Oct 2024",
+          "status": "Active"
+        },
+        {
+          "unit": "Grams",
+          "shortName": "g",
+          "noOfProducts": "70",
+          "createdOn": "03 Oct 2024",
+          "status": "Active"
+        },
+        {
+          "unit": "Meters",
+          "shortName": "m",
+          "noOfProducts": "80",
+          "createdOn": "20 Sep 2024",
+          "status": "Active"
+        },
+        {
+          "unit": "Centimeters",
+          "shortName": "cm",
+          "noOfProducts": "120",
+          "createdOn": "10 Sep 2024",
+          "status": "Active"
+        }
+      ]
+      ,
+    "totalData": 9
+  }

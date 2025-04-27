@@ -1,0 +1,57 @@
+{
+    "data":[
+        {
+            "question": "What is a POS platform?",
+            "answer": "A software system that processes sales, manages inventory, and handles transactions.",
+            "category": "General"
+        },
+        {
+            "question": "Who uses it?",
+            "answer": "Retailers, restaurants, and service businesses.",
+            "category": "General"
+        },
+        {
+            "question": "What are the key features?",
+            "answer": "Billing, inventory tracking, CRM, employee management, and reports.",
+            "category": "Features"
+        },
+        {
+            "question": "Does it support multiple payment methods?",
+            "answer": "Yes, including cash, credit/debit cards, mobile wallets, and online payments.",
+            "category": "Features"
+        },
+        {
+            "question": "Does it support barcode scanning?",
+            "answer": "Yes, barcode scanners can be integrated for faster checkouts.",
+            "category": "Features"
+        },
+        {
+            "question": "Does it work with thermal receipt printers?",
+            "answer": "Yes, many POS platforms support thermal and standard receipt printers.",
+            "category": "Hardware"
+        },
+        {
+            "question": "Is a POS platform secure?",
+            "answer": "Yes, it uses encryption, authentication, and secure payment processing.",
+            "category": "Security"
+        },
+        {
+            "question": "Can a POS platform track inventory?",
+            "answer": "Yes, it helps track stock levels, manage suppliers, and set reorder alerts.",
+            "category": "Features"
+        },
+        {
+            "question": "Can a POS platform generate reports?",
+            "answer": "Yes, it provides sales, inventory, and customer analytics reports.",
+            "category": "Features"
+        },
+        {
+            "question": "Johannesburg",
+            "answer": "Gauteng",
+            "category": "Geography"
+
+        }
+    ]
+    ,
+    "totalData":10
+}

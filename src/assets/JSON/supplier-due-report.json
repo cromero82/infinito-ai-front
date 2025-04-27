@@ -1,0 +1,96 @@
+{
+    "data":[
+        {
+          "reference": "INV/PO2025",
+          "id": "SU001",
+          "supplier": "Apex Computers",
+          "totalAmount": "$1000",
+          "paid": "$1000",
+          "due": "$0.0",
+          "status": "Paid",
+          "img": "supplier-06.png"
+        },
+        {
+          "reference": "INV/PO2042",
+          "id": "SU003",
+          "supplier": "Dazzle Shoes",
+          "totalAmount": "$1500",
+          "paid": "$1500",
+          "due": "$0.0",
+          "status": "Paid",
+          "img": "supplier-07.png"
+        },
+        {
+          "reference": "INV/PO2033",
+          "id": "SU004",
+          "supplier": "Best Accessories",
+          "totalAmount": "$2000",
+          "paid": "$2000",
+          "due": "$0.0",
+          "status": "Paid",
+          "img": "supplier-10.png"
+        },
+        {
+          "reference": "INV/PO2042",
+          "id": "SU005",
+          "supplier": "A-Z Store",
+          "totalAmount": "$800",
+          "paid": "$800",
+          "due": "$0.0",
+          "status": "Paid",
+          "img": "supplier-01.png"
+        },
+        {
+          "reference": "INV/PO2011",
+          "id": "SU006",
+          "supplier": "Hatimi Hardwares",
+          "totalAmount": "$750",
+          "paid": "$750",
+          "due": "$0.0",
+          "status": "Paid",
+          "img": "supplier-04.png"
+        },
+        {
+          "reference": "INV/PO2014",
+          "id": "SU007",
+          "supplier": "Aesthetic Bags",
+          "totalAmount": "$1300",
+          "paid": "$1300",
+          "due": "$0.0",
+          "status": "Overdue",
+          "img": "supplier-03.png"
+        },
+        {
+          "reference": "INV/PO2056",
+          "id": "SU008",
+          "supplier": "Alpha Mobiles",
+          "totalAmount": "$1100",
+          "paid": "$1100",
+          "due": "$0.0",
+          "status": "Paid",
+          "img": "supplier-05.png"
+        },
+        {
+          "reference": "INV/PO2047",
+          "id": "SU009",
+          "supplier": "Sigma Chairs",
+          "totalAmount": "$2300",
+          "paid": "$2300",
+          "due": "$0.0",
+          "status": "Paid",
+          "img": "supplier-09.png"
+        },
+        {
+          "reference": "INV/PO2017",
+          "id": "SU010",
+          "supplier": "Zenith Bags",
+          "totalAmount": "$1700",
+          "paid": "$1700",
+          "due": "$0.0",
+          "status": "Unpaid",
+          "img": "supplier-08.png"
+        }
+      ]
+      ,
+    "totalData":10
+}

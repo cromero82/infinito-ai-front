@@ -1,0 +1,106 @@
+{
+    "data": [
+        {
+          "warehouse": "Lavish Warehouse",
+          "store": "Electro Mart",
+          "product": "Lenovo IdeaPad 3",
+          "category": "Computers",
+          "sku": "PT001",
+          "qty": "20",
+          "qtyAlert": "15",
+          "img": "stock-img-01.png"
+        },
+        {
+          "warehouse": "Quaint Warehouse",
+          "store": "Quantum Gadgets",
+          "product": "Beats Pro",
+          "category": "Electronics",
+          "sku": "PT002",
+          "qty": "25",
+          "qtyAlert": "20",
+          "img": "stock-img-06.png"
+        },
+        {
+          "warehouse": "Traditional Warehouse",
+          "store": "Prime Bazaar",
+          "product": "Nike Jordan",
+          "category": "Shoe",
+          "sku": "PT003",
+          "qty": "40",
+          "qtyAlert": "35",
+          "img": "stock-img-02.png"
+        },
+        {
+          "warehouse": "Cool Warehouse",
+          "store": "Gadget World",
+          "product": "Apple Series 5 Watch",
+          "category": "Electronics",
+          "sku": "PT004",
+          "qty": "50",
+          "qtyAlert": "45",
+          "img": "stock-img-03.png"
+        },
+        {
+          "warehouse": "Overflow Warehouse",
+          "store": "Volt Vault",
+          "product": "Amazon Echo Dot",
+          "category": "Electronics",
+          "sku": "PT005",
+          "qty": "30",
+          "qtyAlert": "25",
+          "img": "stock-img-04.png"
+        },
+        {
+          "warehouse": "Nova Storage Hub",
+          "store": "Elite Retail",
+          "product": "Sanford Chair Sofa",
+          "category": "Furniture",
+          "sku": "PT006",
+          "qty": "10",
+          "qtyAlert": "08",
+          "img": "stock-img-05.png"
+        },
+        {
+          "warehouse": "Retail Supply Hub",
+          "store": "Prime Mart",
+          "product": "Red Premium Satchel",
+          "category": "Bags",
+          "sku": "PT007",
+          "qty": "70",
+          "qtyAlert": "60",
+          "img": "expire-product-01.png"
+        },
+        {
+          "warehouse": "EdgeWare Solutions",
+          "store": "NeoTech Store",
+          "product": "Iphone 14 Pro",
+          "category": "Phone",
+          "sku": "PT008",
+          "qty": "35",
+          "qtyAlert": "30",
+          "img": "expire-product-02.png"
+        },
+        {
+          "warehouse": "North Zone Warehouse",
+          "store": "Urban Mart",
+          "product": "Gaming Chair",
+          "category": "Furniture",
+          "sku": "PT009",
+          "qty": "15",
+          "qtyAlert": "10",
+          "img": "expire-product-03.png"
+        },
+        {
+          "warehouse": "Fulfillment Hub",
+          "store": "Travel Mart",
+          "product": "Borealis Backpack",
+          "category": "Bags",
+          "sku": "PT010",
+          "qty": "45",
+          "qtyAlert": "40",
+          "img": "expire-product-04.png"
+        }
+      ]
+      ,
+    "totalData": 10
+}

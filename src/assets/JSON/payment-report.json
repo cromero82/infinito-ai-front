@@ -1,0 +1,105 @@
+{
+    "data": [
+        {
+           
+            "date": "19 Jan 2023",
+            "purchase": "PR_0001",
+            "reference": "INV/PR_0001",
+            "supplierName": "Apex Computers",
+            "amount": "$1800",
+            "paid": "$1800",
+            "paidBy": "Cash"
+        },
+        {
+            
+            "date": "24 Jan 2023",
+            "purchase": "PR_0002",
+            "reference": "INV/PR_0002",
+            "supplierName": "Beats Headphones",
+            "amount": "$1100",
+            "paid": "$1100",
+            "paidBy": "Cash"
+        },
+        {
+            
+            "date": "02 Feb 2023",
+            "purchase": "PR_0003",
+            "reference": "INV/PR_0003",
+            "supplierName": "Dazzle Shoes",
+            "amount": "$2000",
+            "paid": "$2000",
+            "paidBy": "Cash"
+        },
+        {
+            
+            "date": "15 Feb 2023",
+            "purchase": "PR_0004",
+            "reference": "INV/PR_0004",
+            "supplierName": "Best Accessories",
+            "amount": "$700",
+            "paid": "$700",
+            "paidBy": "Cash"
+        },
+        {
+            
+            "date": "12 Mar 2023",
+            "purchase": "PR_0005",
+            "reference": "INV/PR_0005",
+            "supplierName": "Aesthetic Bags",
+            "amount": "$500",
+            "paid": "$500",
+            "paidBy": "Cash"
+        },
+        {
+           
+            "date": "26 Mar 2023",
+            "purchase": "PR_0006",
+            "reference": "INV/PR_0006",
+            "supplierName": "Hatimi Hardwares",
+            "amount": "$1600",
+            "paid": "$1600",
+            "paidBy": "Cash"
+        },
+        {
+           
+            "date": "16 Apr 2023",
+            "purchase": "PR_0007",
+            "reference": "INV/PR_0007",
+            "supplierName": "Shine Bags",
+            "amount": "$600",
+            "paid": "$600",
+            "paidBy": "Cash"
+        },
+        {
+           
+            "date": "24 Apr 2023",
+            "purchase": "PR_0008",
+            "reference": "INV/PR_0008",
+            "supplierName": "Alpha Mobiles",
+            "amount": "$120",
+            "paid": "$120",
+            "paidBy": "Cash"
+        },
+        {
+           
+            "date": "13 May 2023",
+            "purchase": "PR_0009",
+            "reference": "INV/PR_0009",
+            "supplierName": "Sigma Chairs",
+            "amount": "$300",
+            "paid": "$300",
+            "paidBy": "Cash"
+        },
+        {
+           
+            "date": "29 May 2023",
+            "purchase": "PR_0010",
+            "reference": "INV/PR_0011",
+            "supplierName": "Zenith Bags",
+            "amount": "$350",
+            "paid": "$350",
+            "paidBy": "Cash"
+        }
+    ],
+    "totalData": 10
+}

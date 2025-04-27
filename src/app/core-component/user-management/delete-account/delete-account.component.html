@@ -1,0 +1,145 @@
+
+<div class="page-header">
+  <div class="add-item d-flex">
+    <div class="page-title">
+      <h4>Delete Account Request</h4>
+    </div>
+  </div>
+  <ul class="table-top-head">
+    <li>
+      <a
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title="Pdf"
+        matTooltip="Pdf"
+        matTooltipPosition="above"
+        ><img src="assets/img/icons/pdf.svg" alt="img"
+      /></a>
+    </li>
+    <li>
+      <a
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title="Excel"
+        matTooltip="Excel"
+        matTooltipPosition="above"
+        ><img src="assets/img/icons/excel.svg" alt="img"
+      /></a>
+    </li>
+    <li>
+      <a
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title="Refresh"
+        matTooltip="Refresh"
+        matTooltipPosition="above"
+        ><i class="ti ti-refresh"></i
+      ></a>
+    </li>
+    <li>
+      <a
+        (click)="toggleCollapse()" [class.active]="isCollapsed"
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title="Collapse"
+        matTooltip="Collapse"
+        matTooltipPosition="above"
+        id="collapse-header"
+        > @if (!isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }
+      @if (isCollapsed) {
+        <i class="ti ti-chevron-up"></i>
+      }</a>
+    </li>
+  </ul>
+</div>
+<!-- /product list -->
+<div class="card table-list-card">
+  <div class="card-body pb-0">
+    <div class="table-top table-top-two">
+      <div class="input-blocks search-set mb-0">
+        <div class="search-input">
+          <a href="javascript:void(0);" class="btn btn-searchset"
+            ><i class="feather icon-search feather-search"></i
+          ></a>
+          <div class="dataTables_filter">
+            <label>
+              <input
+                [(ngModel)]="searchDataValue" [ngModelOptions]="{standalone: true}"
+                (ngModelChange)="searchData(searchDataValue)"
+                type="search"
+                class="form-control"
+                placeholder="Search"
+                />
+              </label>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+      <div class="table-responsive">
+        <table
+          (matSortChange)="sortData($event)"
+          matSort
+          matSortActive="Sno"
+          matSortDirection="asc"
+          matSortDisableClear
+          class="table  datanew">
+          <thead>
+            <tr>
+              <th class="no-sort">
+                <label class="checkboxs"  (click)="selectAll(initChecked)">
+                  <input type="checkbox" id="select-all" [(ngModel)]="initChecked">
+                  <span class="checkmarks"></span>
+                </label>
+              </th>
+              <th mat-sort-header="username">User Name</th>
+              <th mat-sort-header="requistion">Requisition Date</th>
+              <th mat-sort-header="delete">Delete Request Date</th>
+              <th class="no-sort">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (users of tableData; track users; let i = $index) {
+              <tr>
+                <td>
+                      <label class="checkboxs" (click)="selectAll(initChecked)">
+                        <input type="checkbox"  [(ngModel)]="initChecked"/>
+                        <span class="checkmarks"></span>
+                      </label>
+                    </td>
+                <td>
+                  <div class="userimgname">
+                    <a href="javascript:void(0);" class="product-img">
+                      <img [src]="users.userImg" alt="product">
+                    </a>
+                    <div>
+                      <a href="javascript:void(0);">{{users.userName}}</a>
+                    </div>
+
+                  </div>
+                </td>
+                <td>{{users.requisition}}</td>
+                <td>
+                  {{users.delete}}
+                </td>
+                <td class="action-table-data">
+                  <div class="edit-delete-action">
+                    <a class="confirm-text p-2" href="javascript:void(0);" (click)=confirmColor()>
+                      <i  class="feather icon-trash-2 feather-trash-2" ></i>
+                    </a>
+                  </div>
+
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+      </div>
+      <app-custom-pagination></app-custom-pagination>
+    </div>
+  </div>
+  <!-- /product list -->

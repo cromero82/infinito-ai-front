@@ -1,0 +1,8 @@
+
+<div class="product-quantity bg-gray-transparent border-0">
+    <span class="quantity-btn" (click)="decrementQuantity()"><i class="feather icon-minus-circle plus-circle"></i></span>
+    <input type="text" class="quntity-input form-control bg-transparent" [(ngModel)]="quantity" name="quantity" (input)="validateQuantity($event)">
+    <span class="quantity-btn" (click)="incrementQuantity()"><i class="ti ti-circle-plus feather-search"></i></span>
+</div>
+
+

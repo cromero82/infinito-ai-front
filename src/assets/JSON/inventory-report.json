@@ -1,0 +1,108 @@
+{
+    "data": [
+        {
+           
+            "productName": "Lenovo 3rd Generation",
+            "SKU": "PT001",
+            "category": "Computers",
+           
+            "unit": "Pc",
+            "instockQty": "100",
+            "img":"assets/img/products/stock-img-01.png"
+        },
+        {
+           
+            "productName": "Bold V3.2",
+            "SKU": "PT002",
+            "category": "Accessories",
+           
+            "unit": "Pc",
+            "instockQty": "150",
+            "img":"assets/img/products/stock-img-03.png"
+        },
+        {
+           
+            "productName": "Nike Jordan",
+            "SKU": "PT003",
+            "category": "Shoe",
+           
+            "unit": "Bx",
+            "instockQty": "170",
+            "img":"assets/img/products/stock-img-06.png"
+        },
+        {
+           
+            "productName": "Apple Series 5 Watch",
+            "SKU": "PT004",
+            "category": "Accessories",
+           
+            "unit": "Pc",
+            "instockQty": "120",
+            "img":"assets/img/products/stock-img-02.png"
+        },
+        {
+           
+            "productName": "Amazon Echo Dot",
+            "SKU": "PT005",
+            "category": "Accessories",
+           
+            "unit": "Pc",
+            "instockQty": "80",
+            "img":"assets/img/products/stock-img-05.png"
+        },
+        {
+            
+            "productName": "Lobar Handy",
+            "SKU": "PT006",
+            "category": "Furnitures",
+           
+            "unit": "Pc",
+            "instockQty": "200",
+            "img":"assets/img/products/stock-img-04.png"
+        },
+        {
+            
+            "productName": "Red Premium Handy",
+            "SKU": "PT007",
+            "category": "Accessories",
+           
+            "unit": "Bx",
+            "instockQty": "230",
+            "img":"assets/img/products/expire-product-01.png"
+        },
+        {
+            
+            "productName": "Iphone 14 Pro",
+            "SKU": "PT008",
+            "category": "Phone",
+           
+            "unit": "Bx",
+            "instockQty": "370",
+            "img":"assets/img/products/stock-img-03.png"
+        },
+        {
+            
+            "productName": "Black Slim 200",
+            "SKU": "PT009",
+            "category": "Furnitures",
+           
+            "unit": "Pc",
+            "instockQty": "260",
+            "img":"assets/img/products/stock-img-04.png"
+        },
+        {
+           
+            "productName": "Woodcraft Sandal",
+            "SKU": "PT010",
+            "category": "Bags",
+           
+            "unit": "Bx",
+            "instockQty": "340",
+            "img":"assets/img/products/stock-img-02.png"
+        }
+     
+     
+    ],
+    "totalData": 10
+  }
+  

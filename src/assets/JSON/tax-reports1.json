@@ -1,0 +1,115 @@
+{
+    "data": [
+        {
+            "customer": "Mark Joslyn",
+            "reference": "#4237300",
+            "supplier": "Apex Computers",
+            "date": "24 Dec 2024",
+            "store": "Electro Mart",
+            "amount": "$200",
+            "paymentMethod": "Stripe",
+            "discount": "$200",
+            "taxAmount": "$200"
+        },
+        {
+            "customer": "Carl Evans",
+            "reference": "#7590325",
+            "supplier": "Beats Headphones",
+            "date": "10 Dec 2024",
+            "store": "Quantum Gadgets",
+            "amount": "$50",
+            "paymentMethod": "Paypal",
+            "discount": "$50",
+            "taxAmount": "$50"
+        },
+        {
+            "customer": "Richard Fralick",
+            "reference": "#9814521",
+            "supplier": "Dazzle Shoes",
+            "date": "27 Nov 2024",
+            "store": "Prime Bazaar",
+            "amount": "$800",
+            "paymentMethod": "Cash",
+            "discount": "$800",
+            "taxAmount": "$800"
+        },
+        {
+            "customer": "Minerva Rameriz",
+            "reference": "#8745225",
+            "supplier": "Best Accessories",
+            "date": "18 Nov 2024",
+            "store": "Gadget World",
+            "amount": "$100",
+            "paymentMethod": "Paypal",
+            "discount": "$100",
+            "taxAmount": "$100"
+        },
+        {
+            "customer": "Daniel Jude",
+            "reference": "#4237022",
+            "supplier": "A-Z Store",
+            "date": "06 Nov 2024",
+            "store": "Volt Vault",
+            "amount": "$700",
+            "paymentMethod": "Cash",
+            "discount": "$700",
+            "taxAmount": "$700"
+        },
+        {
+            "customer": "Marsha Betts",
+            "reference": "#8744439",
+            "supplier": "Hatimi Hardwares",
+            "date": "25 Oct 2024",
+            "store": "Elite Retail",
+            "amount": "$1000",
+            "paymentMethod": "Cash",
+            "discount": "$1000",
+            "taxAmount": "$1000"
+        },
+        {
+            "customer": "Patricia Lewis",
+            "reference": "#7590365",
+            "supplier": "Aesthetic Bags",
+            "date": "14 Oct 2024",
+            "store": "Prime Mart",
+            "amount": "$1200",
+            "paymentMethod": "Paypal",
+            "discount": "$1200",
+            "taxAmount": "$1200"
+        },
+        {
+            "customer": "Michelle Robison",
+            "reference": "#8745478",
+            "supplier": "Alpha Mobiles",
+            "date": "03 Oct 2024",
+            "store": "NeoTech Store",
+            "amount": "$750",
+            "paymentMethod": "Stripe",
+            "discount": "$750",
+            "taxAmount": "$750"
+        },
+        {
+            "customer": "Emma Bates",
+            "reference": "#7590321",
+            "supplier": "Sigma Chairs",
+            "date": "20 Sep 2024",
+            "store": "Urban Mart",
+            "amount": "$450",
+            "paymentMethod": "Stripe",
+            "discount": "$450",
+            "taxAmount": "$450"
+        },
+        {
+            "customer": "Robert Lamon",
+            "reference": "#8745245",
+            "supplier": "Zenith Bags",
+            "date": "10 Sep 2024",
+            "store": "Travel Mart",
+            "amount": "$300",
+            "paymentMethod": "Cash",
+            "discount": "$300",
+            "taxAmount": "$300"
+        }
+    ],
+    "totalData": 10
+}

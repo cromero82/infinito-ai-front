@@ -1,0 +1,19 @@
+{
+    "data": [
+        {
+            "printerName": "HP Printer",
+            "connectionType": "Network",
+            "ipAddress": "151.00.1.22",
+            "port": "900",
+            "action": ""
+        },
+        {
+            "printerName": "Epson",
+            "connectionType": "Network",
+            "ipAddress": "151.00.2.20",
+            "port": "700",
+            "action": ""
+        }
+    ],
+    "totalData": 2
+  }

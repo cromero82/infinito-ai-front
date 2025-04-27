@@ -1,0 +1,45 @@
+{
+    "data": [
+        {
+            "shiftName": "Fixed",
+            "time": "09:00 AM - 6:00 PM",
+            "weekOff": "Sunday, Monday",
+            "createdOn": "04 Aug 2023",
+            "status": "Active"
+            
+        },
+        {
+            "shiftName": "Rotating",
+            "time": "06:00 AM - 3:00 PM",
+            "weekOff": "Saturday, Sunday",
+            "createdOn": "21 July 2023",
+            "status": "Active"
+           
+        },
+        {
+            "shiftName": "Split",
+            "time": "03:00 AM - 9:00 PM",
+            "weekOff": "Tuesday, Saturday",
+            "createdOn": "31 Jan 2022",
+            "status": "Active"
+           
+        },
+        {
+            "shiftName": "On-Call",
+            "time": "09:00 AM - 6:00 PM",
+            "weekOff": "Monday",
+            "createdOn": "15 May 2023",
+            "status": "Active"
+            
+        },
+        {
+            "shiftName": "Weekend",
+            "time": "06:00 AM - 3:00 PM",
+            "weekOff": "Friday",
+            "createdOn": "04 Aug 2023",
+            "status": "Active"
+            
+        }
+    ],
+    "totalData": 5
+  }

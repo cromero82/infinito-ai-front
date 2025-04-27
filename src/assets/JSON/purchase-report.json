@@ -1,0 +1,115 @@
+{
+  "data": [
+    {
+      "img": "stock-img-01.png",
+      "reference": "PO2025",
+      "sku": "PT001",
+      "dueDate": "2024 Dec 24",
+      "productName": "Lenovo IdeaPad 3",
+      "category": "Computers",
+      "instockQty": 100,
+      "purchaseQty": 5,
+      "purchaseAmount": 500
+    },
+    {
+      "img": "stock-img-06.png",
+      "reference": "PO2025",
+      "sku": "PT002",
+      "dueDate": "2024 Dec 10",
+      "productName": "Beats Pro",
+      "category": "Electronics",
+      "instockQty": 140,
+      "purchaseQty": 10,
+      "purchaseAmount": 1500
+    },
+    {
+      "img": "stock-img-02.png",
+      "reference": "PO2025",
+      "sku": "PT003",
+      "dueDate": "2024 Nov 27",
+      "productName": "Nike Jordan",
+      "category": "Shoes",
+      "instockQty": 300,
+      "purchaseQty": 8,
+      "purchaseAmount": 600
+    },
+    {
+      "img": "stock-img-03.png",
+      "reference": "PO2025",
+      "sku": "PT004",
+      "dueDate": "2024 Nov 18",
+      "productName": "Apple Series 5 Watch",
+      "category": "Electronics",
+      "instockQty": 450,
+      "purchaseQty": 10,
+      "purchaseAmount": 1000
+    },
+    {
+      "img": "stock-img-04.png",
+      "reference": "PO2025",
+      "sku": "PT005",
+      "dueDate": "2024 Nov 18",
+      "productName": "Amazon Echo Dot",
+      "category": "Electronics",
+      "instockQty": 320,
+      "purchaseQty": 5,
+      "purchaseAmount": 1200
+    },
+    {
+      "img": "stock-img-05.png",
+      "reference": "PO2025",
+      "sku": "PT006",
+      "dueDate": "2024 Oct 25",
+      "productName": "Sanford Chair Sofa",
+      "category": "Furniture",
+      "instockQty": 650,
+      "purchaseQty": 7,
+      "purchaseAmount": 800
+    },
+    {
+      "img": "expire-product-01.png",
+      "reference": "PO2025",
+      "sku": "PT007",
+      "dueDate": "2024 Oct 14",
+      "productName": "Red Premium Satchel",
+      "category": "Bags",
+      "instockQty": 700,
+      "purchaseQty": 15,
+      "purchaseAmount": 2000
+    },
+    {
+      "img": "expire-product-02.png",
+      "reference": "PO2025",
+      "sku": "PT008",
+      "dueDate": "2024 Oct 03",
+      "productName": "iPhone 14 Pro",
+      "category": "Phones",
+      "instockQty": 630,
+      "purchaseQty": 12,
+      "purchaseAmount": 2000
+    },
+    {
+      "img": "expire-product-03.png",
+      "reference": "PO2025",
+      "sku": "PT009",
+      "dueDate": "2024 Sep 20",
+      "productName": "Gaming Chair",
+      "category": "Furniture",
+      "instockQty": 410,
+      "purchaseQty": 10,
+      "purchaseAmount": 300
+    },
+    {
+      "img": "expire-product-04.png",
+      "reference": "PO2025",
+      "sku": "PT010",
+      "dueDate": "2024 Sep 10",
+      "productName": "Borealis Backpack",
+      "category": "Bags",
+      "instockQty": 550,
+      "purchaseQty": 20,
+      "purchaseAmount": 5000
+    }
+  ],
+  "totalData": 10
+}

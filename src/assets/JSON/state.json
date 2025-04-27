@@ -1,0 +1,89 @@
+{
+    "data": [
+        {
+           
+            "stateName": "Beijing",
+            "country": "China",
+            "status": "Inactive",
+            "action": ""
+        },
+        {
+           
+            "stateName": "Newyork",
+            "country": "USA",
+            "status": "Active",
+            "action": ""
+        },
+        {
+           
+            "stateName": "Greece",
+            "country": "Athens",
+            "status": "Active",
+            "action": ""
+        },
+        {
+            
+            "stateName": "Bangkok",
+            "country": "Thailand",
+            "status": "Active",
+            "action": ""
+        },
+        {
+            
+            "stateName": "Mueang Phuket",
+            "country": "Phiket island",
+            "status": "Inactive",
+            "action": ""
+        },
+        {
+           
+            "stateName": "Berlin",
+            "country": "Germany",
+            "status": "Inactive",
+            "action": ""
+        },
+        {
+           
+            "stateName": "Luanda",
+            "country": "Angola",
+            "status": "Active",
+            "action": ""
+        },
+        {
+           
+            "stateName": "Albania",
+            "country": "Albania",
+            "status": "Active",
+            "action": ""
+        },
+        {
+            "0": "",
+            "stateName": "Ankara",
+            "country": "Turkey",
+            "status": "Active",
+            "action": ""
+        },
+        {
+           
+            "stateName": "Polanco",
+            "country": "Mexico",
+            "status": "Active",
+            "action": ""
+        },
+        {
+           
+            "stateName": "Greece",
+            "country": "Athens",
+            "status": "Inactive",
+            "action": ""
+        },
+        {
+            "0": "",
+            "stateName": "Newyork",
+            "country": "USA",
+            "status": "Inactive",
+            "action": ""
+        }
+    ],
+    "totalData": 12
+  }
