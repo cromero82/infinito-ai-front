@@ -1,35 +1,49 @@
-# Compiled output
-/dist
-/out-tsc
+# See http://help.github.com/ignore-files/ for more about ignoring files.
 
-# Dependencies
+# compiled output
+# /dist
+/tmp
+/out-tsc
+# Only exists if Bazel was run
+/bazel-out
+
+# dependencies
 /node_modules
 
-# Testing
-/coverage
+# profiling files
+chrome-profiler-events.json
+speed-measure-plugin.json
 
 # IDEs and editors
-.idea/
-.vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
 
-# System files
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+
+# misc
+/.angular/cache
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
 .DS_Store
 Thumbs.db
 
-# Angular specific files that can be regenerated
-angular.json
-package-lock.json
-
-# Environment files - keep only example or template
-src/environments/environment*.ts
-!src/environments/environment.example.ts
-
-# Logs
-*.log
-
-# Temporary files
-*~
+/ARCHIVE/*
