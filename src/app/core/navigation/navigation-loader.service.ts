@@ -37,18 +37,19 @@ export class NavigationLoaderService {
         type: 'subheading',
         label: 'Apps',
         children: [
-           {
-      type: 'link',
-      label: 'All-In-One Table',
-      route: '/apps/aio-table',
-      icon: 'mat:assignment'
-    },
-    {
-      type: 'link',
-      label: 'Products',
-      route: '/apps/products/list',
-      icon: 'mat:shopping_cart'
-    },
+          {
+            type: 'link',
+            label: 'Products',
+            route: '/apps/products/list',
+            icon: 'mat:shopping_cart'
+          },
+          {
+            type: 'link',
+            label: 'All-In-One Table',
+            route: '/apps/aio-table',
+            icon: 'mat:assignment'
+          },
+
           {
             type: 'dropdown',
             label: 'Help Center',

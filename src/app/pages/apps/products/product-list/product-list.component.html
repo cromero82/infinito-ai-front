@@ -1,1 +1,19 @@
-<p>product-list works!</p>
+<vex-page-layout>
+  <vex-page-layout-header class="pb-16 flex flex-col items-start justify-center">
+    <div
+      [class.container]="true"
+      class="w-full flex flex-col sm:flex-row justify-between">
+      <div>
+        <h1 class="title mt-0 mb-1">Product List</h1>
+        <vex-breadcrumbs [crumbs]="['Apps', 'Products', 'List']"></vex-breadcrumbs>
+      </div>
+    </div>
+  </vex-page-layout-header>
+
+  <vex-page-layout-content [class.container]="true" class="-mt-6">
+    <div class="card overflow-auto -mt-16 p-8 flex flex-col items-center justify-center min-h-[300px]">
+      <!-- Add your product list content here -->
+      <p class="text-hint">No products to display yet.</p>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>
