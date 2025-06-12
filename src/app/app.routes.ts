@@ -108,7 +108,19 @@ export const appRoutes: VexRoutes = [
             data: {
               scrollDisabled: true
             }
-          }
+          },
+          {
+      path: 'products',
+      children: [
+        {
+          path: 'list',
+          loadComponent: () =>
+            import('./pages/apps/products/product-list/product-list.component').then(
+              (m) => m.ProductListComponent
+            )
+        }
+      ]
+    },
         ]
       },
       {
