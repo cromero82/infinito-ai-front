@@ -1,0 +1,82 @@
+<vex-page-layout>
+  <vex-page-layout-header class="pb-16 flex flex-col items-start justify-center">
+    <div
+      [class.container]="true"
+      class="w-full flex flex-col sm:flex-row justify-between">
+      <div>
+        <h1 class="title mt-0 mb-1">Lista de productos</h1>
+        <vex-breadcrumbs [crumbs]="['Aplicaciones', 'Productos', 'Lista']"></vex-breadcrumbs>
+      </div>
+    </div>
+  </vex-page-layout-header>
+
+  <vex-page-layout-content [class.container]="true" class="-mt-6">
+    <div class="card overflow-auto -mt-16">
+      <div class="bg-app-bar px-6 h-16 border-b sticky left-0 flex items-center">
+        <h2 class="title my-0 ltr:pr-4 rtl:pl-4 ltr:mr-4 rtl:ml-4 ltr:border-r rtl:border-l hidden sm:block flex-none">
+          Productos
+        </h2>
+        <div class="flex items-center" style="height: 48px;">
+          <mat-form-field appearance="outline" class="search-input my-auto">
+            <mat-label>Buscar producto</mat-label>
+            <input matInput [formControl]="searchCtrl" placeholder="Código o nombre" />
+            <button mat-icon-button matSuffix *ngIf="searchCtrl.value" aria-label="Limpiar búsqueda" (click)="searchCtrl.setValue('')">
+              <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+            </button>
+          </mat-form-field>
+          <button mat-icon-button class="ml-2 flex-none" matTooltip="Buscar por voz" type="button" (click)="toggleRecording()">
+            <mat-icon svgIcon="mat:mic"></mat-icon>
+          </button>
+        </div>
+        <span class="flex-1"></span>
+        <button mat-icon-button matTooltip="Ordenar" type="button" class="ml-4 flex-none">
+          <mat-icon svgIcon="mat:sort"></mat-icon>
+        </button>
+        <button
+          (click)="createProduct()"
+          class="ml-4 flex-none"
+          color="primary"
+          mat-mini-fab
+          matTooltip="Agregar producto"
+          type="button">
+          <mat-icon svgIcon="mat:add" class="icon-sm"></mat-icon>
+        </button>
+      </div>
+      <table class="w-full" mat-table [dataSource]="dataSource" matSort>
+        <!-- Barcode Column -->
+        <ng-container matColumnDef="barcode">
+          <th *matHeaderCellDef mat-header-cell mat-sort-header>Código</th>
+          <td *matCellDef="let product" mat-cell>{{ product.barcode }}</td>
+        </ng-container>
+        <!-- Name Column -->
+        <ng-container matColumnDef="nombre">
+          <th *matHeaderCellDef mat-header-cell mat-sort-header>Nombre</th>
+          <td *matCellDef="let product" mat-cell>{{ product.nombre }}</td>
+        </ng-container>
+        <!-- Price Column -->
+        <ng-container matColumnDef="precio">
+          <th *matHeaderCellDef mat-header-cell mat-sort-header>Precio</th>
+          <td *matCellDef="let product" mat-cell>${{ product.precio | number:'1.2-2' }}</td>
+        </ng-container>
+        <!-- Photo Column -->
+        <ng-container matColumnDef="foto">
+          <th *matHeaderCellDef mat-header-cell>Foto</th>
+          <td *matCellDef="let product" mat-cell>
+            <img [src]="product.foto" alt="{{ product.nombre }}" class="h-10 w-10 object-cover rounded" />
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+      <mat-paginator
+        [length]="totalElements"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex"
+        [pageSizeOptions]="[5, 10, 20, 50]"
+        (page)="onPageChange($event)"
+        class="sticky left-0 mt-2">
+      </mat-paginator>
+    </div>
+
+  </vex-page-layout-content>
+</vex-page-layout>
