@@ -18,6 +18,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { UntypedFormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import * as RecordRTC from 'recordrtc';
 
 @Component({
   selector: 'vex-product-list',
@@ -53,6 +54,10 @@ export class ProductListComponent implements OnInit {
   searchCtrl = new UntypedFormControl('');
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+  recording = false;
+  private recorder: any = null;
+  private stream: MediaStream | null = null;
 
   constructor(private productsService: ProductsService, private http: HttpClient) {}
 
@@ -90,5 +95,69 @@ export class ProductListComponent implements OnInit {
 
   createProduct() {
     // Aquí puedes agregar la lógica para crear un producto en el futuro
+  }
+
+  async toggleRecording() {
+    if (this.recording) {
+      await this.stopRecording();
+    } else {
+      await this.startRecording();
+    }
+  }
+
+  async startRecording() {
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.recorder = new RecordRTC(this.stream, {
+        type: 'audio',
+        mimeType: 'audio/wav',
+        recorderType: RecordRTC.StereoAudioRecorder,
+        desiredSampRate: 16000,
+        numberOfAudioChannels: 1,
+      });
+      this.recorder.startRecording();
+      this.recording = true;
+    } catch (err) {
+      console.error('No se pudo acceder al micrófono:', err);
+    }
+  }
+
+  async stopRecording() {
+    if (this.recorder && this.recording) {
+      await new Promise(resolve => this.recorder.stopRecording(resolve));
+      const audioBlob = this.recorder.getBlob();
+      this.recording = false;
+      if (this.stream) {
+        this.stream.getTracks().forEach(track => track.stop());
+        this.stream = null;
+      }
+      this.downloadAudio(audioBlob); // For debugging: download the audio file
+      this.sendAudioForTranscription(audioBlob);
+    }
+  }
+
+  sendAudioForTranscription(audioBlob: Blob) {
+    this.productsService.speechToText(audioBlob).subscribe({
+      next: (result) => {
+        if (result && result.text) {
+          this.searchCtrl.setValue(result.text);
+        }
+      },
+      error: (err) => {
+        console.error('Error en transcripción de audio:', err);
+      }
+    });
+  }
+
+  // Add this method for debugging
+  private downloadAudio(audioBlob: Blob) {
+    const url = URL.createObjectURL(audioBlob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = 'test.wav';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 }
