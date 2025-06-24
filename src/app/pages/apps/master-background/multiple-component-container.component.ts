@@ -1,8 +1,11 @@
-import { Component, Type } from '@angular/core';
+import { Component, Type, OnInit, OnDestroy } from '@angular/core';
 import { ProductListComponent } from '../products/product-list/product-list.component';
 import { ContactsTableComponent } from '../contacts/contacts-table/contacts-table.component';
 import { ProductEditComponent } from '../products/product-edit/product-edit.component';
 import { NgIf, NgFor, NgComponentOutlet } from '@angular/common';
+import { TabActionService } from './tab-action.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 interface Tab {
   title: string;
@@ -17,10 +20,24 @@ interface Tab {
   styleUrl: './multiple-component-container.component.scss',
   imports: [NgIf, NgFor, NgComponentOutlet, ProductListComponent, ContactsTableComponent, ProductEditComponent],
 })
-export class MultipleComponentContainerComponent {
+export class MultipleComponentContainerComponent implements OnInit, OnDestroy {
   tabs: Tab[] = [];
   activeTabIndex = 0;
   private tabIdCounter = 0;
+  private destroy$ = new Subject<void>();
+
+  constructor(private tabActionService: TabActionService) {}
+
+  ngOnInit() {
+    this.tabActionService.openProductListTab$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.openProductListTab());
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   openTab(title: string, component: Type<any>) {
     let uniqueTitle = title;
