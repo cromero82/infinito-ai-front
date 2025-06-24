@@ -110,17 +110,23 @@ export const appRoutes: VexRoutes = [
             }
           },
           {
-      path: 'products',
-      children: [
-        {
-          path: 'list',
-          loadComponent: () =>
-            import('./pages/apps/products/product-list/product-list.component').then(
-              (m) => m.ProductListComponent
+            path: 'products',
+            children: [
+              {
+                path: 'list',
+                loadComponent: () =>
+                  import('./pages/apps/products/product-list/product-list.component').then(
+                    (m) => m.ProductListComponent
+                  )
+              }
+            ]
+          },
+          {
+            path: 'master',
+            loadComponent: () => import('./pages/apps/master-background/multiple-component-container.component').then(
+              (m) => m.MultipleComponentContainerComponent
             )
-        }
-      ]
-    },
+          },
         ]
       },
       {

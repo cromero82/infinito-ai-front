@@ -1,0 +1,23 @@
+<div class="multiple-component-container">
+  <div class="tab-actions">
+    <button (click)="openProductListTab()">Open Product List</button>
+    <button (click)="openContactsTableTab()">Open Contacts Table</button>
+    <button (click)="openProductEditTab()">Open Product Edit</button>
+  </div>
+  <div class="tabs-wrapper" *ngIf="tabs.length > 0">
+    <ul class="tab-list">
+      <li *ngFor="let tab of tabs; let i = index" [class.active]="i === activeTabIndex">
+        <span (click)="activeTabIndex = i">{{ tab.title }}</span>
+        <button (click)="closeTab(i)" class="close-btn">&times;</button>
+      </li>
+    </ul>
+    <div class="tab-content">
+      <ng-container *ngFor="let tab of tabs; let i = index; trackBy: trackByTabId">
+        <div [hidden]="i !== activeTabIndex">
+          <ng-container *ngComponentOutlet="tab.component; ngComponentOutletContext: { tabId: tab.id }"></ng-container>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+  <div *ngIf="tabs.length === 0" class="empty-state"></div>
+</div>
