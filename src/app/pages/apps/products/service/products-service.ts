@@ -24,4 +24,12 @@ export class ProductsService {
     formData.append('file', file);
     return this.http.post( this.apiUrl + "/speech-to-text", formData);
   }
+
+  getProductsSmart(query: string = '', page: number = 0, size: number = 10): Observable<any> {
+    let params = new HttpParams()
+      .set('q', query)
+      .set('page', page)
+      .set('size', size);
+    return this.http.get<any>('http://localhost:8080/api/mongoquery/products/page-smart-search', { params });
+  }
 }

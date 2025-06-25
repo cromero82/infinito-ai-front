@@ -45,7 +45,9 @@ import * as RecordRTC from 'recordrtc';
   styleUrl: './product-list.component.scss'
 })
 export class ProductListComponent implements OnInit {
-  displayedColumns: string[] = ['barcode', 'nombre', 'precio', 'foto'];
+  displayedColumns: string[] = [
+    'barcode', 'nombre', 'tokens', 'features', 'referencia', 'tipo', 'price', 'photo'
+  ];
   dataSource: any[] = [];
   totalElements = 0;
   loading = false;
@@ -76,12 +78,11 @@ export class ProductListComponent implements OnInit {
 
   fetchProducts(page: number = this.pageIndex, size: number = this.pageSize) {
     this.loading = true;
-    let barcode = this.searchCtrl.value || '';
-    barcode = barcode.toUpperCase();
+    let q = this.searchCtrl.value || '';
     this.productsService
-      .obtenerProductos(barcode, page, size)
+      .getProductsSmart(q, page, size)
       .pipe(finalize(() => (this.loading = false)))
-      .subscribe((result: ProductPage) => {
+      .subscribe((result: any) => {
         this.dataSource = result.content;
         this.totalElements = result.totalElements;
       });

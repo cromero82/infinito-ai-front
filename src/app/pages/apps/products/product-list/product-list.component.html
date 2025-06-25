@@ -53,16 +53,49 @@
           <th *matHeaderCellDef mat-header-cell mat-sort-header>Nombre</th>
           <td *matCellDef="let product" mat-cell>{{ product.nombre }}</td>
         </ng-container>
+        <!-- Tokens Column -->
+        <ng-container matColumnDef="tokens">
+          <th *matHeaderCellDef mat-header-cell>Tokens</th>
+          <td *matCellDef="let product" mat-cell>
+            <ng-container *ngIf="product.tokens && product.tokens.length; else noTokens">
+              <span *ngFor="let token of product.tokens; let last = last">{{ token }}<span *ngIf="!last">, </span></span>
+            </ng-container>
+            <ng-template #noTokens><span class="text-gray-400">-</span></ng-template>
+          </td>
+        </ng-container>
+        <!-- Features Column -->
+        <ng-container matColumnDef="features">
+          <th *matHeaderCellDef mat-header-cell>Características</th>
+          <td *matCellDef="let product" mat-cell>
+            <ng-container *ngIf="product.features && product.features.length; else noFeatures">
+              <span *ngFor="let feature of product.features; let last = last">{{ feature }}<span *ngIf="!last">, </span></span>
+            </ng-container>
+            <ng-template #noFeatures><span class="text-gray-400">-</span></ng-template>
+          </td>
+        </ng-container>
+        <!-- Referencia Column -->
+        <ng-container matColumnDef="referencia">
+          <th *matHeaderCellDef mat-header-cell>Referencia</th>
+          <td *matCellDef="let product" mat-cell>{{ product.referencia || '-' }}</td>
+        </ng-container>
+        <!-- Tipo Column -->
+        <ng-container matColumnDef="tipo">
+          <th *matHeaderCellDef mat-header-cell>Tipo</th>
+          <td *matCellDef="let product" mat-cell>{{ product.type || '-' }}</td>
+        </ng-container>
         <!-- Price Column -->
-        <ng-container matColumnDef="precio">
+        <ng-container matColumnDef="price">
           <th *matHeaderCellDef mat-header-cell mat-sort-header>Precio</th>
-          <td *matCellDef="let product" mat-cell>${{ product.precio | number:'1.2-2' }}</td>
+          <td *matCellDef="let product" mat-cell>${{ product.price | number:'1.2-2' }}</td>
         </ng-container>
         <!-- Photo Column -->
-        <ng-container matColumnDef="foto">
+        <ng-container matColumnDef="photo">
           <th *matHeaderCellDef mat-header-cell>Foto</th>
           <td *matCellDef="let product" mat-cell>
-            <img [src]="product.foto" alt="{{ product.nombre }}" class="h-10 w-10 object-cover rounded" />
+            <img *ngIf="product.photo && product.photo !== 'undefined'; else noPhoto" [src]="product.photo" alt="{{ product.nombre }}" class="h-10 w-10 object-cover rounded" />
+            <ng-template #noPhoto>
+              <img src="assets/img/icons/custom/no_picture.png" alt="Sin foto" class="h-10 w-10 object-cover rounded" />
+            </ng-template>
           </td>
         </ng-container>
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
