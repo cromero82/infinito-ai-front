@@ -1,0 +1,9 @@
+img.h-10.w-10.object-cover.rounded {
+  transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+img.h-10.w-10.object-cover.rounded:hover {
+  transform: scale(2.5);
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  position: relative;
+}

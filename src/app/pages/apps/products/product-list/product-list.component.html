@@ -44,39 +44,14 @@
       </div>
       <table class="w-full" mat-table [dataSource]="dataSource" matSort>
         <!-- Barcode Column -->
-        <ng-container matColumnDef="barcode">
-          <th *matHeaderCellDef mat-header-cell mat-sort-header>Código</th>
-          <td *matCellDef="let product" mat-cell>{{ product.barcode }}</td>
+        <ng-container matColumnDef="id">
+          <th *matHeaderCellDef mat-header-cell mat-sort-header>Código barras</th>
+          <td *matCellDef="let product" mat-cell>{{ product.id }}</td>
         </ng-container>
         <!-- Name Column -->
         <ng-container matColumnDef="nombre">
           <th *matHeaderCellDef mat-header-cell mat-sort-header>Nombre</th>
           <td *matCellDef="let product" mat-cell>{{ product.nombre }}</td>
-        </ng-container>
-        <!-- Tokens Column -->
-        <ng-container matColumnDef="tokens">
-          <th *matHeaderCellDef mat-header-cell>Tokens</th>
-          <td *matCellDef="let product" mat-cell>
-            <ng-container *ngIf="product.tokens && product.tokens.length; else noTokens">
-              <span *ngFor="let token of product.tokens; let last = last">{{ token }}<span *ngIf="!last">, </span></span>
-            </ng-container>
-            <ng-template #noTokens><span class="text-gray-400">-</span></ng-template>
-          </td>
-        </ng-container>
-        <!-- Features Column -->
-        <ng-container matColumnDef="features">
-          <th *matHeaderCellDef mat-header-cell>Características</th>
-          <td *matCellDef="let product" mat-cell>
-            <ng-container *ngIf="product.features && product.features.length; else noFeatures">
-              <span *ngFor="let feature of product.features; let last = last">{{ feature }}<span *ngIf="!last">, </span></span>
-            </ng-container>
-            <ng-template #noFeatures><span class="text-gray-400">-</span></ng-template>
-          </td>
-        </ng-container>
-        <!-- Referencia Column -->
-        <ng-container matColumnDef="referencia">
-          <th *matHeaderCellDef mat-header-cell>Referencia</th>
-          <td *matCellDef="let product" mat-cell>{{ product.referencia || '-' }}</td>
         </ng-container>
         <!-- Tipo Column -->
         <ng-container matColumnDef="tipo">

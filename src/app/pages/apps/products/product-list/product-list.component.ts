@@ -46,7 +46,7 @@ import * as RecordRTC from 'recordrtc';
 })
 export class ProductListComponent implements OnInit {
   displayedColumns: string[] = [
-    'barcode', 'nombre', 'tokens', 'features', 'referencia', 'tipo', 'price', 'photo'
+    'id', 'nombre', 'tipo', 'price', 'photo'
   ];
   dataSource: any[] = [];
   totalElements = 0;
