@@ -36,4 +36,8 @@ export class ProductsService {
   addProduct(product: any): Observable<any> {
     return this.http.post<any>('http://localhost:8080/api/mongoquery/products/add', product);
   }
+
+  modifyProduct(id: string, product: any): Observable<any> {
+    return this.http.put<any>(`http://localhost:8080/api/mongoquery/products/edit/${id}`, product);
+  }
 }

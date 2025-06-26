@@ -48,7 +48,7 @@ import { ProductEditComponent } from '../product-edit/product-edit.component';
 })
 export class ProductListComponent implements OnInit {
   displayedColumns: string[] = [
-    'id', 'nombre', 'tipo', 'price', 'photo'
+    'id', 'nombre', 'tipo', 'price', 'photo', 'edit'
   ];
   dataSource: any[] = [];
   totalElements = 0;
@@ -108,6 +108,18 @@ export class ProductListComponent implements OnInit {
     });
   }
 
+  editProduct(product: any) {
+    const dialogRef = this.dialog.open(ProductEditComponent, {
+      width: '600px',
+      data: product
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result._edit) {
+        this.fetchProducts();
+      }
+    });
+  }
+
   async toggleRecording() {
     if (this.recording) {
       await this.stopRecording();
@@ -142,7 +154,6 @@ export class ProductListComponent implements OnInit {
         this.stream.getTracks().forEach(track => track.stop());
         this.stream = null;
       }
-      this.downloadAudio(audioBlob); // For debugging: download the audio file
       this.sendAudioForTranscription(audioBlob);
     }
   }
@@ -160,15 +171,4 @@ export class ProductListComponent implements OnInit {
     });
   }
 
-  // Add this method for debugging
-  private downloadAudio(audioBlob: Blob) {
-    const url = URL.createObjectURL(audioBlob);
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = url;
-    a.download = 'test.wav';
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }
 }

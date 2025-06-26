@@ -1,33 +1,64 @@
-<p>product-edit works!</p>
-<form [formGroup]="form" (ngSubmit)="save()">
+<form (ngSubmit)="save()" [formGroup]="form">
+  <div class="flex items-center" mat-dialog-title>
+    <h2 class="headline m-0 flex-auto">
+      {{ form.controls['nombre'].value || (data ? 'Editar producto' : 'Nuevo producto') }}
+    </h2>
+    <button class="text-secondary" mat-dialog-close mat-icon-button type="button">
+      <mat-icon svgIcon="mat:close"></mat-icon>
+    </button>
+  </div>
+  <mat-divider class="text-border"></mat-divider>
   <mat-dialog-content class="flex flex-col">
-    <mat-form-field class="mt-6">
+    <mat-form-field class="mt-6 flex-1">
       <mat-label>Nombre</mat-label>
-      <input formControlName="nombre" matInput />
+      <div class="flex items-center">
+        <input cdkFocusInitial formControlName="nombre" matInput (blur)="autoSelectCompany()" class="flex-1" />
+        <button mat-icon-button class="ml-2 flex-none" matTooltip="Buscar por voz" type="button" (click)="toggleRecording()">
+          <mat-icon svgIcon="mat:mic"></mat-icon>
+        </button>
+      </div>
+      <mat-icon matIconPrefix svgIcon="mat:label"></mat-icon>
     </mat-form-field>
     <mat-form-field>
       <mat-label>Código de barras</mat-label>
       <input formControlName="barcode" matInput />
+      <mat-icon matIconPrefix svgIcon="mat:qr_code"></mat-icon>
     </mat-form-field>
     <mat-form-field>
       <mat-label>Precio</mat-label>
       <input formControlName="price" matInput type="number" />
+      <mat-icon matIconPrefix svgIcon="mat:attach_money"></mat-icon>
     </mat-form-field>
     <mat-form-field>
       <mat-label>Tipo</mat-label>
-      <mat-select formControlName="type">
-        <mat-option *ngFor="let t of types" [value]="t.name">{{ t.name }}</mat-option>
-      </mat-select>
+      <input matInput [matAutocomplete]="autoType" [formControl]="typeCtrl" />
+      <button *ngIf="typeCtrl.value" mat-icon-button matSuffix type="button" (click)="clearTypeInput()" tabindex="-1">
+        <mat-icon svgIcon="mat:close"></mat-icon>
+      </button>
+      <mat-autocomplete #autoType="matAutocomplete" (optionSelected)="onTypeSelected($event)">
+        <mat-option [value]="''">(Sin tipo)</mat-option>
+        <mat-option *ngFor="let t of filteredTypes$ | async" [value]="t.name">{{ t.name }}</mat-option>
+      </mat-autocomplete>
+      <mat-icon matIconPrefix svgIcon="mat:category"></mat-icon>
     </mat-form-field>
     <mat-form-field>
       <mat-label>Compañía</mat-label>
-      <mat-select formControlName="company_id">
-        <mat-option *ngFor="let c of companies" [value]="c.id">{{ c.name }}</mat-option>
-      </mat-select>
+      <input matInput [matAutocomplete]="autoCompany" [formControl]="companyCtrl" />
+      <button *ngIf="companyCtrl.value" mat-icon-button matSuffix type="button" (click)="clearCompanyInput()" tabindex="-1">
+        <mat-icon svgIcon="mat:close"></mat-icon>
+      </button>
+      <mat-autocomplete #autoCompany="matAutocomplete" (optionSelected)="onCompanySelected($event)">
+        <mat-option [value]="''">(Sin compañía)</mat-option>
+        <mat-option *ngFor="let c of filteredCompanies$ | async" [value]="c.name">{{ c.name }}</mat-option>
+      </mat-autocomplete>
+      <mat-icon matIconPrefix svgIcon="mat:business"></mat-icon>
     </mat-form-field>
   </mat-dialog-content>
   <mat-dialog-actions align="end">
     <button mat-button mat-dialog-close type="button">Cancelar</button>
-    <button color="primary" mat-flat-button type="submit" [disabled]="form.invalid">Guardar</button>
+    <button color="primary" mat-flat-button type="submit" [disabled]="form.invalid">
+      <ng-container *ngIf="data">Actualizar producto</ng-container>
+      <ng-container *ngIf="!data">Crear producto</ng-container>
+    </button>
   </mat-dialog-actions>
 </form>
