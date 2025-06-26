@@ -19,6 +19,8 @@ import { UntypedFormControl, ReactiveFormsModule, FormsModule } from '@angular/f
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import * as RecordRTC from 'recordrtc';
+import { MatDialog } from '@angular/material/dialog';
+import { ProductEditComponent } from '../product-edit/product-edit.component';
 
 @Component({
   selector: 'vex-product-list',
@@ -61,7 +63,7 @@ export class ProductListComponent implements OnInit {
   private recorder: any = null;
   private stream: MediaStream | null = null;
 
-  constructor(private productsService: ProductsService, private http: HttpClient) {}
+  constructor(private productsService: ProductsService, private http: HttpClient, private dialog: MatDialog) {}
 
   ngOnInit() {
     this.fetchProducts();
@@ -95,7 +97,15 @@ export class ProductListComponent implements OnInit {
   }
 
   createProduct() {
-    // Aquí puedes agregar la lógica para crear un producto en el futuro
+    const dialogRef = this.dialog.open(ProductEditComponent, {
+      width: '600px',
+      data: null
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.fetchProducts();
+      }
+    });
   }
 
   async toggleRecording() {

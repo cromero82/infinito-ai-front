@@ -32,4 +32,8 @@ export class ProductsService {
       .set('size', size);
     return this.http.get<any>('http://localhost:8080/api/mongoquery/products/page-smart-search', { params });
   }
+
+  addProduct(product: any): Observable<any> {
+    return this.http.post<any>('http://localhost:8080/api/mongoquery/products/add', product);
+  }
 }

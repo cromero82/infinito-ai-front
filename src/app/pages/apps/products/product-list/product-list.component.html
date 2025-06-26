@@ -46,7 +46,7 @@
         <!-- Barcode Column -->
         <ng-container matColumnDef="id">
           <th *matHeaderCellDef mat-header-cell mat-sort-header>Código barras</th>
-          <td *matCellDef="let product" mat-cell>{{ product.id }}</td>
+          <td *matCellDef="let product" mat-cell>{{ product.reference?.barcode }}</td>
         </ng-container>
         <!-- Name Column -->
         <ng-container matColumnDef="nombre">

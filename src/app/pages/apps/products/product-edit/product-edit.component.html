@@ -1,1 +1,33 @@
 <p>product-edit works!</p>
+<form [formGroup]="form" (ngSubmit)="save()">
+  <mat-dialog-content class="flex flex-col">
+    <mat-form-field class="mt-6">
+      <mat-label>Nombre</mat-label>
+      <input formControlName="nombre" matInput />
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Código de barras</mat-label>
+      <input formControlName="barcode" matInput />
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Precio</mat-label>
+      <input formControlName="price" matInput type="number" />
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Tipo</mat-label>
+      <mat-select formControlName="type">
+        <mat-option *ngFor="let t of types" [value]="t.name">{{ t.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Compañía</mat-label>
+      <mat-select formControlName="company_id">
+        <mat-option *ngFor="let c of companies" [value]="c.id">{{ c.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close type="button">Cancelar</button>
+    <button color="primary" mat-flat-button type="submit" [disabled]="form.invalid">Guardar</button>
+  </mat-dialog-actions>
+</form>
