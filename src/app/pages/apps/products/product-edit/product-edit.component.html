@@ -11,7 +11,7 @@
   <mat-dialog-content class="flex flex-col">
     <mat-form-field class="mt-6 flex-1">
       <mat-label>Código de barras</mat-label>
-      <input formControlName="barcode" matInput cdkFocusInitial />
+      <input formControlName="barcode" matInput cdkFocusInitial (paste)="onBarcodePasteOrInput($event)" (input)="onBarcodePasteOrInput($event)" />
       <mat-icon matIconPrefix svgIcon="mat:qr_code"></mat-icon>
     </mat-form-field>
     <mat-form-field class="flex-1">
@@ -55,11 +55,25 @@
     </mat-form-field>
     <!-- Imagen field, styled separately -->
     <div class="flex items-center gap-4 mt-4 mb-2">
-      <img [src]="photoPreviewUrl" alt="Imagen del producto" class="h-16 w-16 object-cover rounded border" />
-      <div class="flex flex-col gap-2">
-        <!-- <img src="https://i.ibb.co/hJr8xfwb/test-image.webp" alt="test-image" border="0"> -->
-        <button mat-stroked-button type="button" (click)="onSelectImage()">Subir imagen</button>
-        <button mat-stroked-button type="button" (click)="onTakePhoto()">Tomar foto</button>
+      <div class="flex items-center">
+        <img [src]="photoPreviewUrl" alt="Imagen del producto" class="product-img-preview w-20 object-cover rounded border transition-transform duration-200 hover:scale-150 hover:z-10 hover:shadow-2xl cursor-pointer" (click)="onImageClick()" />
+        <div class="flex flex-col gap-2 ml-4">
+          <button mat-stroked-button type="button" (click)="onSelectImage()">Subir imagen</button>
+          <button mat-stroked-button type="button" (click)="onTakePhoto()">Tomar foto</button>
+        </div>
+      </div>
+      <div class="flex-1 text-right" *ngIf="productInfoErrorOrEmpty as msg">
+        <span [ngClass]="getProductInfoMsgClass(msg)">{{ msg }}</span>
+      </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div *ngIf="showImageModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" (click)="closeImageModal()">
+      <div class="relative" (click)="$event.stopPropagation()">
+        <img [src]="photoPreviewUrl" alt="Imagen ampliada" class="max-h-[80vh] max-w-[90vw] rounded shadow-2xl" />
+        <button (click)="closeImageModal()" class="absolute top-2 right-2 bg-white bg-opacity-80 rounded-full p-1 hover:bg-opacity-100">
+          <mat-icon svgIcon="mat:close"></mat-icon>
+        </button>
       </div>
     </div>
   </mat-dialog-content>

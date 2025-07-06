@@ -1,0 +1,74 @@
+.product-img-preview {
+  transition: transform 0.2s cubic-bezier(0.4,0,0.2,1), box-shadow 0.2s cubic-bezier(0.4,0,0.2,1), z-index 0.2s;
+  cursor: pointer;
+  z-index: 1;
+}
+.product-img-preview:hover {
+  transform: scale(1.5);
+  z-index: 20;
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.25);
+}
+
+.fixed {
+  position: fixed !important;
+}
+.inset-0 {
+  top: 0; right: 0; bottom: 0; left: 0;
+}
+.z-50 {
+  z-index: 50;
+}
+.bg-black {
+  background-color: #000;
+}
+.bg-opacity-70 {
+  background-color: rgba(0,0,0,0.7);
+}
+.flex {
+  display: flex;
+}
+.items-center {
+  align-items: center;
+}
+.justify-center {
+  justify-content: center;
+}
+.relative {
+  position: relative;
+}
+.max-h-\[80vh\] {
+  max-height: 80vh;
+}
+.max-w-\[90vw\] {
+  max-width: 90vw;
+}
+.shadow-2xl {
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.25);
+}
+.absolute {
+  position: absolute;
+}
+.top-2 {
+  top: 0.5rem;
+}
+.right-2 {
+  right: 0.5rem;
+}
+.bg-white {
+  background: #fff;
+}
+.bg-opacity-80 {
+  background-color: rgba(255,255,255,0.8);
+}
+.bg-opacity-100 {
+  background-color: rgba(255,255,255,1);
+}
+.rounded-full {
+  border-radius: 9999px;
+}
+.p-1 {
+  padding: 0.25rem;
+}
+.hover\:bg-opacity-100:hover {
+  background-color: rgba(255,255,255,1);
+}

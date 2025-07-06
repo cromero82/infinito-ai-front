@@ -56,4 +56,12 @@ export class ProductsService {
     if (expiration) formData.append('expiration', expiration);
     return this.http.post<any>('http://localhost:8080/api/images/upload', formData);
   }
+
+  /**
+   * Gets product info from external barcode service
+   * @param barcode The barcode to query
+   */
+  getProductInfo(barcode: string): Observable<any> {
+    return this.http.get<any>(`http://localhost:8080/api/product-info/barcode/${barcode}`);
+  }
 }

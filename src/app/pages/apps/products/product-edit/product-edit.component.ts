@@ -15,6 +15,7 @@ import { FilterTypePipe, FilterCompanyPipe } from './filter-pipes';
 import { FormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Observable, startWith, map } from 'rxjs';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'vex-product-edit',
@@ -34,7 +35,8 @@ import { Observable, startWith, map } from 'rxjs';
     MatDividerModule,
     AsyncPipe,
     FilterTypePipe,
-    FilterCompanyPipe
+    FilterCompanyPipe,
+    NgClass
   ],
   templateUrl: './product-edit.component.html',
   styleUrl: './product-edit.component.scss'
@@ -54,6 +56,8 @@ export class ProductEditComponent implements OnInit {
   companyCtrl = new FormControl('');
   photoPreviewUrl: string = 'assets/img/icons/custom/no_picture.png';
   private photoFile: File | null = null;
+  productExternalInfo: any = null;
+  showImageModal = false;
 
   constructor(
     private fb: FormBuilder,
@@ -280,5 +284,65 @@ export class ProductEditComponent implements OnInit {
     } catch (err) {
       alert('No se pudo acceder a la cámara.');
     }
+  }
+
+  onBarcodePasteOrInput(event: ClipboardEvent | Event) {
+    const value = (event.target as HTMLInputElement).value;
+    if (value && value.length >= 8) {
+      this.getProductInfoFromBarcode(value);
+    }
+  }
+
+  // Helper to check if productExternalInfo is empty, error, or success
+  get productInfoErrorOrEmpty(): string | null {
+    if (this.productExternalInfo === null) return null;
+    if (this.productExternalInfo === false) return 'Error consultando: open FOODS Facts';
+    // Accept both { product: ... } and direct product object
+    if (this.productExternalInfo.product || this.productExternalInfo.product_name_es || this.productExternalInfo.product_name) {
+      return 'OK Consultando: open FOODS Facts';
+    }
+    return 'Ningún dato encontrado';
+  }
+
+  getProductInfoMsgClass(msg: string): string {
+    if (!msg) return '';
+    if (msg.startsWith('Error') || msg.startsWith('Ningún')) return 'text-red-500';
+    if (msg.startsWith('Datos consultados')) return 'text-green-600';
+    return '';
+  }
+
+  getProductInfoFromBarcode(barcode: string) {
+    this.productsService.getProductInfo(barcode).subscribe({
+      next: (result) => {
+        if (result && result.product) {
+          this.productExternalInfo = result.product;
+          // Patch form fields with external info
+          const nombre = [
+            result.product.product_name_es || result.product.product_name || '',
+            result.product.brands || '',
+            (result.product.serving_quantity ? result.product.serving_quantity + ' ' + (result.product.serving_quantity_unit || '') : '')
+          ].filter(Boolean).join(' - ');
+          this.form.controls['nombre'].setValue(nombre);
+          this.typeCtrl.setValue(result.product.brands || '');
+          this.companyCtrl.setValue(result.product.brands || '');
+          if (result.product.image_url) {
+            this.photoPreviewUrl = result.product.image_url;
+          }
+        } else {
+          this.productExternalInfo = {};
+        }
+      },
+      error: (err) => {
+        this.productExternalInfo = false;
+      }
+    });
+  }
+
+  onImageClick() {
+    this.showImageModal = true;
+  }
+
+  closeImageModal() {
+    this.showImageModal = false;
   }
 }
