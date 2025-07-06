@@ -10,19 +10,19 @@
   <mat-divider class="text-border"></mat-divider>
   <mat-dialog-content class="flex flex-col">
     <mat-form-field class="mt-6 flex-1">
+      <mat-label>Código de barras</mat-label>
+      <input formControlName="barcode" matInput cdkFocusInitial />
+      <mat-icon matIconPrefix svgIcon="mat:qr_code"></mat-icon>
+    </mat-form-field>
+    <mat-form-field class="flex-1">
       <mat-label>Nombre</mat-label>
       <div class="flex items-center">
-        <input cdkFocusInitial formControlName="nombre" matInput (blur)="autoSelectCompany()" class="flex-1" />
+        <input formControlName="nombre" matInput (blur)="autoSelectCompany()" class="flex-1" />
         <button mat-icon-button class="ml-2 flex-none" matTooltip="Buscar por voz" type="button" (click)="toggleRecording()">
           <mat-icon svgIcon="mat:mic"></mat-icon>
         </button>
       </div>
       <mat-icon matIconPrefix svgIcon="mat:label"></mat-icon>
-    </mat-form-field>
-    <mat-form-field>
-      <mat-label>Código de barras</mat-label>
-      <input formControlName="barcode" matInput />
-      <mat-icon matIconPrefix svgIcon="mat:qr_code"></mat-icon>
     </mat-form-field>
     <mat-form-field>
       <mat-label>Precio</mat-label>
@@ -53,6 +53,15 @@
       </mat-autocomplete>
       <mat-icon matIconPrefix svgIcon="mat:business"></mat-icon>
     </mat-form-field>
+    <!-- Imagen field, styled separately -->
+    <div class="flex items-center gap-4 mt-4 mb-2">
+      <img [src]="photoPreviewUrl" alt="Imagen del producto" class="h-16 w-16 object-cover rounded border" />
+      <div class="flex flex-col gap-2">
+        <!-- <img src="https://i.ibb.co/hJr8xfwb/test-image.webp" alt="test-image" border="0"> -->
+        <button mat-stroked-button type="button" (click)="onSelectImage()">Subir imagen</button>
+        <button mat-stroked-button type="button" (click)="onTakePhoto()">Tomar foto</button>
+      </div>
+    </div>
   </mat-dialog-content>
   <mat-dialog-actions align="end">
     <button mat-button mat-dialog-close type="button">Cancelar</button>

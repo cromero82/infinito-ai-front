@@ -40,4 +40,20 @@ export class ProductsService {
   modifyProduct(id: string, product: any): Observable<any> {
     return this.http.put<any>(`http://localhost:8080/api/mongoquery/products/edit/${id}`, product);
   }
+
+  /**
+   * Uploads an image for a product after add/edit.
+   * @param productId The product ID returned from backend
+   * @param file The image file to upload
+   * @param name Optional image name
+   * @param expiration Optional expiration date
+   */
+  uploadProductImage(productId: string, file: File, name?: string, expiration?: string): Observable<any> {
+    const formData = new FormData();
+    formData.append('productId', productId);
+    formData.append('file', file);
+    if (name) formData.append('name', name);
+    if (expiration) formData.append('expiration', expiration);
+    return this.http.post<any>('http://localhost:8080/api/images/upload', formData);
+  }
 }

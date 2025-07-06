@@ -52,6 +52,8 @@ export class ProductEditComponent implements OnInit {
   filteredCompanies$: Observable<any[]> = new Observable<any[]>();
   typeCtrl = new FormControl('');
   companyCtrl = new FormControl('');
+  photoPreviewUrl: string = 'assets/img/icons/custom/no_picture.png';
+  private photoFile: File | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -71,7 +73,7 @@ export class ProductEditComponent implements OnInit {
     if (data) {
       this.form.patchValue({
         nombre: data.nombre,
-        barcode: data.reference?.barcode || data.id,
+        barcode: data.reference?.barcode || '',
         price: data.price,
         type: data.type,
         company_id: data.reference?.company_id
@@ -109,6 +111,11 @@ export class ProductEditComponent implements OnInit {
       const company = this.companies.find(c => c.id === this.form.controls['company_id'].value);
       this.companyInput = company ? company.name : '';
     }
+    // Set initial photo preview
+    const photo = this.data?.photo;
+    if (photo && photo !== 'undefined' && photo !== null) {
+      this.photoPreviewUrl = photo;
+    }
   }
 
   save() {
@@ -125,17 +132,30 @@ export class ProductEditComponent implements OnInit {
       price: form.price,
       photo: 'undefined'
     };
+    const handleImageUpload = (productId: string, closeResult: any) => {
+      if (this.photoFile) {
+        this.productsService.uploadProductImage(productId, this.photoFile, this.photoFile.name).subscribe({
+          next: () => this.dialogRef.close(closeResult),
+          error: (err) => {
+            alert('Producto guardado, pero error al subir la imagen: ' + (err?.error?.message || err.message || err));
+            this.dialogRef.close(closeResult);
+          }
+        });
+      } else {
+        this.dialogRef.close(closeResult);
+      }
+    };
     if (this.data) {
       // Edit mode
       this.productsService.modifyProduct(this.data.id, product).subscribe({
-        next: (result) => this.dialogRef.close({ ...result, _edit: true }),
+        next: (result) => handleImageUpload(this.data.id, { ...result, _edit: true }),
         error: (err) => alert('Error al actualizar el producto: ' + (err?.error?.message || err.message || err))
       });
     } else {
       // Add mode
       const newProduct = { ...product, id: form.barcode, tokens: [], features: [] };
       this.productsService.addProduct(newProduct).subscribe({
-        next: (result) => this.dialogRef.close(result),
+        next: (result) => handleImageUpload(result.id || form.barcode, result),
         error: (err) => alert('Error al guardar el producto: ' + (err?.error?.message || err.message || err))
       });
     }
@@ -212,5 +232,53 @@ export class ProductEditComponent implements OnInit {
   clearCompany(companySelect: any) {
     this.form.controls['company_id'].setValue('');
     setTimeout(() => companySelect.close(), 0);
+  }
+
+  onSelectImage() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (event: any) => {
+      const file = event.target.files[0];
+      if (file) {
+        this.photoFile = file;
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          this.photoPreviewUrl = e.target.result;
+          this.form.patchValue({ photo: e.target.result });
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  }
+
+  async onTakePhoto() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const video = document.createElement('video');
+      video.autoplay = true;
+      video.srcObject = stream;
+      video.style.display = 'none';
+      document.body.appendChild(video);
+      await new Promise(resolve => video.onloadedmetadata = resolve);
+      video.play();
+      // Show a dialog or overlay to let user take a snapshot
+      // For simplicity, take snapshot after 1 second
+      setTimeout(() => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/png');
+        this.photoPreviewUrl = dataUrl;
+        this.form.patchValue({ photo: dataUrl });
+        stream.getTracks().forEach(track => track.stop());
+        document.body.removeChild(video);
+      }, 1000);
+    } catch (err) {
+      alert('No se pudo acceder a la cámara.');
+    }
   }
 }
