@@ -64,4 +64,16 @@ export class ProductsService {
   getProductInfo(barcode: string): Observable<any> {
     return this.http.get<any>(`http://localhost:8080/api/product-info/barcode/${barcode}`);
   }
+
+  /**
+   * Adds a new type to the backend.
+   * @param name The type name
+   * @param percentProfit The percent profit (default 0)
+   */
+  addType(name: string, percentProfit: number = 0): Observable<any> {
+    return this.http.post<any>('http://localhost:8080/api/types', {
+      name,
+      percentProfit
+    });
+  }
 }

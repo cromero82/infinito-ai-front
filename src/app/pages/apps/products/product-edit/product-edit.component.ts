@@ -293,6 +293,27 @@ export class ProductEditComponent implements OnInit {
     }
   }
 
+  /**
+   * Checks if the type exists in the list, and adds it if not. If the backend returns a translated/modified name, set it on the typeCtrl.
+   */
+  ensureTypeExistsAndAddIfNeeded(typeName: string) {
+    if (!typeName) return;
+    const exists = this.types.some(t => t.name?.toLowerCase() === typeName.toLowerCase());
+    if (!exists) {
+      this.productsService.addType(typeName, 0).subscribe({
+        next: (newType) => {
+          this.types.push(newType);
+          if (newType && newType.name && newType.name !== typeName) {
+            this.typeCtrl.setValue(newType.name);
+          }
+        },
+        error: (err) => {
+          // Optionally show error
+        }
+      });
+    }
+  }
+
   // Helper to check if productExternalInfo is empty, error, or success
   get productInfoErrorOrEmpty(): string | null {
     if (this.productExternalInfo === null) return null;
@@ -323,7 +344,9 @@ export class ProductEditComponent implements OnInit {
             (result.product.serving_quantity ? result.product.serving_quantity + ' ' + (result.product.serving_quantity_unit || '') : '')
           ].filter(Boolean).join(' - ');
           this.form.controls['nombre'].setValue(nombre);
-          this.typeCtrl.setValue(result.product.brands || '');
+          const firstCategory = (result.product.categories || '').split(',')[0]?.trim() || '';
+          this.typeCtrl.setValue(firstCategory);
+          this.ensureTypeExistsAndAddIfNeeded(firstCategory);
           this.companyCtrl.setValue(result.product.brands || '');
           if (result.product.image_url) {
             this.photoPreviewUrl = result.product.image_url;
