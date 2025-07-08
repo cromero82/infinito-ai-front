@@ -313,10 +313,10 @@ export class ProductEditComponent implements OnInit {
       });
     }
   }
-
+ 
   /**
    * Checks if the company exists in the list, and adds it if not. If the backend returns a translated/modified name, set it on the companyCtrl.
-   */
+   */ 
   ensureCompanyExistsAndAddIfNeeded(companyName: string) {
     if (!companyName) return;
     const exists = this.companies.some(c => c.name?.toLowerCase() === companyName.toLowerCase());
