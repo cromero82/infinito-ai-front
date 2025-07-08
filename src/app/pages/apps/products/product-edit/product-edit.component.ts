@@ -314,6 +314,27 @@ export class ProductEditComponent implements OnInit {
     }
   }
 
+  /**
+   * Checks if the company exists in the list, and adds it if not. If the backend returns a translated/modified name, set it on the companyCtrl.
+   */
+  ensureCompanyExistsAndAddIfNeeded(companyName: string) {
+    if (!companyName) return;
+    const exists = this.companies.some(c => c.name?.toLowerCase() === companyName.toLowerCase());
+    if (!exists) {
+      this.productsService.addCompany(companyName).subscribe({
+        next: (newCompany) => {
+          this.companies.push(newCompany);
+          if (newCompany && newCompany.name && newCompany.name !== companyName) {
+            this.companyCtrl.setValue(newCompany.name);
+          }
+        },
+        error: (err) => {
+          // Optionally show error
+        }
+      });
+    }
+  }
+
   // Helper to check if productExternalInfo is empty, error, or success
   get productInfoErrorOrEmpty(): string | null {
     if (this.productExternalInfo === null) return null;
@@ -347,7 +368,9 @@ export class ProductEditComponent implements OnInit {
           const firstCategory = (result.product.categories || '').split(',')[0]?.trim() || '';
           this.typeCtrl.setValue(firstCategory);
           this.ensureTypeExistsAndAddIfNeeded(firstCategory);
-          this.companyCtrl.setValue(result.product.brands || '');
+          const firstBrand = (result.product.brands || '').split(',')[0]?.trim() || '';
+          this.companyCtrl.setValue(firstBrand);
+          this.ensureCompanyExistsAndAddIfNeeded(firstBrand);
           if (result.product.image_url) {
             this.photoPreviewUrl = result.product.image_url;
           }

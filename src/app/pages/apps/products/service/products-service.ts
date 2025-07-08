@@ -76,4 +76,18 @@ export class ProductsService {
       percentProfit
     });
   }
+
+  /**
+   * Adds a new company to the backend.
+   * @param name The company name
+   */
+  addCompany(name: string): Observable<any> {
+    return this.http.post<any>('http://localhost:8080/api/mongoquery/companies', {
+      name,
+      description: '',
+      email: '',
+      telefono: '',
+      contact_name: ''
+    });
+  }
 }
