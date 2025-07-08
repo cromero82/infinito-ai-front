@@ -156,7 +156,7 @@ export class ProductListComponent implements OnInit {
       }
       this.sendAudioForTranscription(audioBlob);
     }
-  }
+  } 
 
   sendAudioForTranscription(audioBlob: Blob) {
     this.productsService.speechToText(audioBlob).subscribe({

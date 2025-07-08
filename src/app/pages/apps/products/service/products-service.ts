@@ -78,7 +78,7 @@ export class ProductsService {
   }
 
   /**
-   * Adds a new company to the backend.
+   * Adds a new company to the backend. 
    * @param name The company name
    */
   addCompany(name: string): Observable<any> {
