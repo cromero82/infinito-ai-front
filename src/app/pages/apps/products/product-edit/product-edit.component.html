@@ -1,0 +1,87 @@
+<form (ngSubmit)="save()" [formGroup]="form">
+  <div class="flex items-center" mat-dialog-title>
+    <h2 class="headline m-0 flex-auto">
+      {{ form.controls['nombre'].value || (data ? 'Editar producto' : 'Nuevo producto') }}
+    </h2>
+    <button class="text-secondary" mat-dialog-close mat-icon-button type="button">
+      <mat-icon svgIcon="mat:close"></mat-icon>
+    </button>
+  </div>
+  <mat-divider class="text-border"></mat-divider>
+  <mat-dialog-content class="flex flex-col">
+    <mat-form-field class="mt-6 flex-1">
+      <mat-label>Código de barras</mat-label>
+      <input formControlName="barcode" matInput cdkFocusInitial (paste)="onBarcodePasteOrInput($event)" (input)="onBarcodePasteOrInput($event)" />
+      <mat-icon matIconPrefix svgIcon="mat:qr_code"></mat-icon>
+    </mat-form-field>
+    <mat-form-field class="flex-1">
+      <mat-label>Nombre</mat-label>
+      <div class="flex items-center">
+        <input formControlName="nombre" matInput (blur)="autoSelectCompany()" class="flex-1" />
+        <button mat-icon-button class="ml-2 flex-none" matTooltip="Buscar por voz" type="button" (click)="toggleRecording()">
+          <mat-icon svgIcon="mat:mic"></mat-icon>
+        </button>
+      </div>
+      <mat-icon matIconPrefix svgIcon="mat:label"></mat-icon>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Precio</mat-label>
+      <input formControlName="price" matInput type="number" />
+      <mat-icon matIconPrefix svgIcon="mat:attach_money"></mat-icon>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Tipo</mat-label>
+      <input matInput [matAutocomplete]="autoType" [formControl]="typeCtrl" />
+      <button *ngIf="typeCtrl.value" mat-icon-button matSuffix type="button" (click)="clearTypeInput()" tabindex="-1">
+        <mat-icon svgIcon="mat:close"></mat-icon>
+      </button>
+      <mat-autocomplete #autoType="matAutocomplete" (optionSelected)="onTypeSelected($event)">
+        <mat-option [value]="''">(Sin tipo)</mat-option>
+        <mat-option *ngFor="let t of filteredTypes$ | async" [value]="t.name">{{ t.name }}</mat-option>
+      </mat-autocomplete>
+      <mat-icon matIconPrefix svgIcon="mat:category"></mat-icon>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Compañía</mat-label>
+      <input matInput [matAutocomplete]="autoCompany" [formControl]="companyCtrl" />
+      <button *ngIf="companyCtrl.value" mat-icon-button matSuffix type="button" (click)="clearCompanyInput()" tabindex="-1">
+        <mat-icon svgIcon="mat:close"></mat-icon>
+      </button>
+      <mat-autocomplete #autoCompany="matAutocomplete" (optionSelected)="onCompanySelected($event)">
+        <mat-option [value]="''">(Sin compañía)</mat-option>
+        <mat-option *ngFor="let c of filteredCompanies$ | async" [value]="c.name">{{ c.name }}</mat-option>
+      </mat-autocomplete>
+      <mat-icon matIconPrefix svgIcon="mat:business"></mat-icon>
+    </mat-form-field>
+    <!-- Imagen field, styled separately -->
+    <div class="flex items-center gap-4 mt-4 mb-2">
+      <div class="flex items-center">
+        <img [src]="photoPreviewUrl" alt="Imagen del producto" class="product-img-preview w-20 object-cover rounded border transition-transform duration-200 hover:scale-150 hover:z-10 hover:shadow-2xl cursor-pointer" (click)="onImageClick()" />
+        <div class="flex flex-col gap-2 ml-4">
+          <button mat-stroked-button type="button" (click)="onSelectImage()">Subir imagen</button>
+          <button mat-stroked-button type="button" (click)="onTakePhoto()">Tomar foto</button>
+        </div>
+      </div>
+      <div class="flex-1 text-right" *ngIf="productInfoErrorOrEmpty as msg">
+        <span [ngClass]="getProductInfoMsgClass(msg)">{{ msg }}</span>
+      </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div *ngIf="showImageModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" (click)="closeImageModal()">
+      <div class="relative" (click)="$event.stopPropagation()">
+        <img [src]="photoPreviewUrl" alt="Imagen ampliada" class="max-h-[80vh] max-w-[90vw] rounded shadow-2xl" />
+        <button (click)="closeImageModal()" class="absolute top-2 right-2 bg-white bg-opacity-80 rounded-full p-1 hover:bg-opacity-100">
+          <mat-icon svgIcon="mat:close"></mat-icon>
+        </button>
+      </div>
+    </div>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close type="button">Cancelar</button>
+    <button color="primary" mat-flat-button type="submit" [disabled]="form.invalid">
+      <ng-container *ngIf="data">Actualizar producto</ng-container>
+      <ng-container *ngIf="!data">Crear producto</ng-container>
+    </button>
+  </mat-dialog-actions>
+</form>

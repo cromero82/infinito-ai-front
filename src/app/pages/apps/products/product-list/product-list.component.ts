@@ -19,6 +19,8 @@ import { UntypedFormControl, ReactiveFormsModule, FormsModule } from '@angular/f
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import * as RecordRTC from 'recordrtc';
+import { MatDialog } from '@angular/material/dialog';
+import { ProductEditComponent } from '../product-edit/product-edit.component';
 
 @Component({
   selector: 'vex-product-list',
@@ -45,7 +47,9 @@ import * as RecordRTC from 'recordrtc';
   styleUrl: './product-list.component.scss'
 })
 export class ProductListComponent implements OnInit {
-  displayedColumns: string[] = ['barcode', 'nombre', 'precio', 'foto'];
+  displayedColumns: string[] = [
+    'id', 'nombre', 'tipo', 'price', 'photo', 'edit'
+  ];
   dataSource: any[] = [];
   totalElements = 0;
   loading = false;
@@ -59,7 +63,7 @@ export class ProductListComponent implements OnInit {
   private recorder: any = null;
   private stream: MediaStream | null = null;
 
-  constructor(private productsService: ProductsService, private http: HttpClient) {}
+  constructor(private productsService: ProductsService, private http: HttpClient, private dialog: MatDialog) {}
 
   ngOnInit() {
     this.fetchProducts();
@@ -76,12 +80,11 @@ export class ProductListComponent implements OnInit {
 
   fetchProducts(page: number = this.pageIndex, size: number = this.pageSize) {
     this.loading = true;
-    let barcode = this.searchCtrl.value || '';
-    barcode = barcode.toUpperCase();
+    let q = this.searchCtrl.value || '';
     this.productsService
-      .obtenerProductos(barcode, page, size)
+      .getProductsSmart(q, page, size)
       .pipe(finalize(() => (this.loading = false)))
-      .subscribe((result: ProductPage) => {
+      .subscribe((result: any) => {
         this.dataSource = result.content;
         this.totalElements = result.totalElements;
       });
@@ -94,7 +97,27 @@ export class ProductListComponent implements OnInit {
   }
 
   createProduct() {
-    // Aquí puedes agregar la lógica para crear un producto en el futuro
+    const dialogRef = this.dialog.open(ProductEditComponent, {
+      width: '600px',
+      data: null
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.fetchProducts();
+      }
+    });
+  }
+
+  editProduct(product: any) {
+    const dialogRef = this.dialog.open(ProductEditComponent, {
+      width: '600px',
+      data: product
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result._edit) {
+        this.fetchProducts();
+      }
+    });
   }
 
   async toggleRecording() {
@@ -131,7 +154,6 @@ export class ProductListComponent implements OnInit {
         this.stream.getTracks().forEach(track => track.stop());
         this.stream = null;
       }
-      this.downloadAudio(audioBlob); // For debugging: download the audio file
       this.sendAudioForTranscription(audioBlob);
     }
   }
@@ -149,15 +171,4 @@ export class ProductListComponent implements OnInit {
     });
   }
 
-  // Add this method for debugging
-  private downloadAudio(audioBlob: Blob) {
-    const url = URL.createObjectURL(audioBlob);
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = url;
-    a.download = 'test.wav';
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }
 }

@@ -4,7 +4,8 @@ import {
   ElementRef,
   HostBinding,
   inject,
-  OnInit
+  OnInit,
+  ViewChild
 } from '@angular/core';
 import { VexLayoutService } from '@vex/services/vex-layout.service';
 import { VexConfigService } from '@vex/config/vex-config.service';
@@ -25,6 +26,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { NavigationItem } from '../../../core/navigation/navigation-item.interface';
 import { checkRouterChildsData } from '@vex/utils/check-router-childs-data';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TabActionService } from 'src/app/pages/apps/master-background/tab-action.service';
 
 @Component({
   selector: 'vex-toolbar',
@@ -81,7 +83,8 @@ export class ToolbarComponent implements OnInit {
     private readonly configService: VexConfigService,
     private readonly navigationService: NavigationService,
     private readonly popoverService: VexPopoverService,
-    private readonly router: Router
+    private readonly router: Router,
+    private tabActionService: TabActionService
   ) {}
 
   ngOnInit() {
@@ -136,5 +139,9 @@ export class ToolbarComponent implements OnInit {
 
   openSearch(): void {
     this.layoutService.openSearch();
+  }
+
+  openProductsList(): void {
+    this.tabActionService.triggerOpenProductListTab();
   }
 }

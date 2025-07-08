@@ -44,25 +44,42 @@
       </div>
       <table class="w-full" mat-table [dataSource]="dataSource" matSort>
         <!-- Barcode Column -->
-        <ng-container matColumnDef="barcode">
-          <th *matHeaderCellDef mat-header-cell mat-sort-header>Código</th>
-          <td *matCellDef="let product" mat-cell>{{ product.barcode }}</td>
+        <ng-container matColumnDef="id">
+          <th *matHeaderCellDef mat-header-cell mat-sort-header>Código barras</th>
+          <td *matCellDef="let product" mat-cell>{{ product.reference?.barcode }}</td>
         </ng-container>
         <!-- Name Column -->
         <ng-container matColumnDef="nombre">
           <th *matHeaderCellDef mat-header-cell mat-sort-header>Nombre</th>
           <td *matCellDef="let product" mat-cell>{{ product.nombre }}</td>
         </ng-container>
+        <!-- Tipo Column -->
+        <ng-container matColumnDef="tipo">
+          <th *matHeaderCellDef mat-header-cell>Tipo</th>
+          <td *matCellDef="let product" mat-cell>{{ product.type || '-' }}</td>
+        </ng-container>
         <!-- Price Column -->
-        <ng-container matColumnDef="precio">
+        <ng-container matColumnDef="price">
           <th *matHeaderCellDef mat-header-cell mat-sort-header>Precio</th>
-          <td *matCellDef="let product" mat-cell>${{ product.precio | number:'1.2-2' }}</td>
+          <td *matCellDef="let product" mat-cell>${{ product.price | number:'1.2-2' }}</td>
         </ng-container>
         <!-- Photo Column -->
-        <ng-container matColumnDef="foto">
+        <ng-container matColumnDef="photo">
           <th *matHeaderCellDef mat-header-cell>Foto</th>
           <td *matCellDef="let product" mat-cell>
-            <img [src]="product.foto" alt="{{ product.nombre }}" class="h-10 w-10 object-cover rounded" />
+            <img *ngIf="product.photo && product.photo !== 'undefined'; else noPhoto" [src]="product.photo" alt="{{ product.nombre }}" class="h-10 w-10 object-cover rounded" />
+            <ng-template #noPhoto>
+              <img src="assets/img/icons/custom/no_picture.png" alt="Sin foto" class="h-10 w-10 object-cover rounded" />
+            </ng-template>
+          </td>
+        </ng-container>
+        <!-- Edit Column -->
+        <ng-container matColumnDef="edit">
+          <th *matHeaderCellDef mat-header-cell></th>
+          <td *matCellDef="let product" mat-cell>
+            <button mat-icon-button color="accent" (click)="editProduct(product)">
+              <mat-icon svgIcon="mat:edit"></mat-icon>
+            </button>
           </td>
         </ng-container>
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

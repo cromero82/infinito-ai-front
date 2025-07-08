@@ -39,9 +39,34 @@ export class NavigationLoaderService {
         children: [
           {
             type: 'link',
+            label: 'Main',
+            route: '/apps/master',
+            icon: 'mat:home',
+            routerLinkActiveOptions: { exact: true }
+          },
+          {
+            type: 'link',
             label: 'Products',
             route: '/apps/products/list',
             icon: 'mat:shopping_cart'
+          },
+          {
+            type: 'link',
+            label: 'Product Details',
+            route: '/apps/products/details',
+            icon: 'mat:info'
+          },
+          {
+            type: 'link',
+            label: 'Product Create',
+            route: '/apps/products/create',
+            icon: 'mat:add_circle_outline'
+          },
+          {
+            type: 'link',
+            label: 'Products Table',
+            route: '/apps/products/table',
+            icon: 'mat:list_alt'
           },
           {
             type: 'link',
