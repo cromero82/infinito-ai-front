@@ -82,6 +82,7 @@ export class ProductEditComponent implements OnInit {
         type: data.type,
         company_id: data.reference?.company_id
       });
+      // Removed setting companyCtrl here; will set after companies are loaded in ngOnInit
     }
   }
 
@@ -89,8 +90,20 @@ export class ProductEditComponent implements OnInit {
     this.domainService.getTypes().subscribe(types => {
       this.types = types;
       // Set initial value for type
-      const initialType = this.form.controls['type'].value || '';
-      this.typeCtrl.setValue(initialType);
+      let initialType = this.form.controls['type'].value || '';
+      // If editing, ensure we use the canonical type name from backend
+      if (this.data && initialType) {
+        const foundType = types.find(t => t.name === initialType);
+        if (foundType) {
+          initialType = foundType.name;
+          this.typeCtrl.setValue(initialType);
+          this.form.controls['type'].setValue(foundType.name); // or foundType.id if backend expects id
+        } else {
+          this.typeCtrl.setValue(initialType);
+        }
+      } else {
+        this.typeCtrl.setValue(initialType);
+      }
       this.filteredTypes$ = this.typeCtrl.valueChanges.pipe(
         startWith(initialType),
         map(val => typeof val === 'string' ? this.types.filter(t => t.name.toLowerCase().includes(val.toLowerCase())) : this.types)
@@ -100,8 +113,17 @@ export class ProductEditComponent implements OnInit {
       this.companies = companies;
       // Set initial value for company
       const initialCompanyId = this.form.controls['company_id'].value;
-      const initialCompany = companies.find(c => c.id === initialCompanyId)?.name || '';
-      this.companyCtrl.setValue(initialCompany);
+      let initialCompany = '';
+      if (initialCompanyId !== undefined && initialCompanyId !== null && initialCompanyId !== '') {
+        // Compare as numbers to handle both string and number ids
+        const foundCompany = companies.find(c => Number(c.id) === Number(initialCompanyId));
+        if (foundCompany) {
+          initialCompany = foundCompany.name;
+          this.companyCtrl.setValue(initialCompany);
+          // Always set form control to ensure sync
+          this.form.controls['company_id'].setValue(foundCompany.id);
+        }
+      }
       this.filteredCompanies$ = this.companyCtrl.valueChanges.pipe(
         startWith(initialCompany),
         map(val => typeof val === 'string' ? this.companies.filter(c => c.name.toLowerCase().includes(val.toLowerCase())) : this.companies)
@@ -112,8 +134,7 @@ export class ProductEditComponent implements OnInit {
     // Patch initial values for autocomplete fields
     if (this.data) {
       this.typeInput = this.form.controls['type'].value || '';
-      const company = this.companies.find(c => c.id === this.form.controls['company_id'].value);
-      this.companyInput = company ? company.name : '';
+      // Removed companyInput logic here; handled after companies are loaded
     }
     // Set initial photo preview
     const photo = this.data?.photo;
@@ -132,9 +153,9 @@ export class ProductEditComponent implements OnInit {
         company_id: form.company_id,
         marca: null
       },
-      type: form.type,
+      type: this.typeCtrl.value,
       price: form.price,
-      photo: 'undefined'
+      photo: this.photoPreviewUrl && this.photoPreviewUrl !== 'assets/img/icons/custom/no_picture.png' ? this.photoPreviewUrl : 'undefined'
     };
     const handleImageUpload = (productId: string, closeResult: any) => {
       if (this.photoFile) {
@@ -324,14 +345,21 @@ export class ProductEditComponent implements OnInit {
       this.productsService.addCompany(companyName).subscribe({
         next: (newCompany) => {
           this.companies.push(newCompany);
-          if (newCompany && newCompany.name && newCompany.name !== companyName) {
+          if (newCompany && newCompany.name) {
             this.companyCtrl.setValue(newCompany.name);
+            // Set form value as in onCompanySelected
+            const found = this.companies.find(c => c.name === newCompany.name);
+            this.form.controls['company_id'].setValue(found ? found.id : '');
           }
         },
         error: (err) => {
           // Optionally show error
         }
       });
+    } else {
+      // If already exists, set form value as in onCompanySelected
+      const found = this.companies.find(c => c.name === companyName);
+      this.form.controls['company_id'].setValue(found ? found.id : '');
     }
   }
 
