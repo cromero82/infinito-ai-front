@@ -16,6 +16,9 @@ import { FormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Observable, startWith, map } from 'rxjs';
 import { NgClass } from '@angular/common';
+import { OpenFoodFactsSite } from '../service/product-info-strategy';
+import { MatDialog } from '@angular/material/dialog';
+import { ProductPriceComparatorComponent } from '../product-price-comparator/product-price-comparator.component';
 
 @Component({
   selector: 'vex-product-edit',
@@ -65,7 +68,9 @@ export class ProductEditComponent implements OnInit {
     private dialogRef: MatDialogRef<ProductEditComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private productsService: ProductsService,
-    private audioRecorder: AudioRecorderService
+    private audioRecorder: AudioRecorderService,
+    private openFoodFactsSite: OpenFoodFactsSite,
+    private dialog: MatDialog
   ) {
     this.form = this.fb.group({
       nombre: ['', Validators.required],
@@ -382,13 +387,13 @@ export class ProductEditComponent implements OnInit {
   }
 
   getProductInfoFromBarcode(barcode: string) {
-    this.productsService.getProductInfo(barcode).subscribe({
+    this.openFoodFactsSite.getProduct(barcode).subscribe({
       next: (result) => {
         if (result && result.product) {
           this.productExternalInfo = result.product;
           // Patch form fields with external info
           const nombre = [
-            result.product.product_name_es || result.product.product_name || '',
+            result.product.product_name || result.product.generic_name || '',
             result.product.brands || '',
             (result.product.serving_quantity ? result.product.serving_quantity + ' ' + (result.product.serving_quantity_unit || '') : '')
           ].filter(Boolean).join(' - ');
@@ -402,6 +407,23 @@ export class ProductEditComponent implements OnInit {
           if (result.product.image_url) {
             this.photoPreviewUrl = result.product.image_url;
           }
+          // Open the price comparator modal
+          const dialogRef = this.dialog.open(ProductPriceComparatorComponent, {
+            data: { barcode, product: result.product, nombre }
+          });
+          dialogRef.afterClosed().subscribe((selected: any) => {
+            if (selected) {
+              if (selected.price) {
+                this.form.controls['price'].setValue(selected.price);
+              }
+              if (selected.image) {
+                this.photoPreviewUrl = selected.image;
+              }
+              if (selected.nombre) {
+                this.form.controls['nombre'].setValue(selected.nombre);
+              }
+            }
+          });
         } else {
           this.productExternalInfo = {};
         }

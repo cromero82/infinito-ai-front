@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ProductPage } from '../model/producto';
+import { ProductInfo } from '../model/product-info.model';
 
 @Injectable({
   providedIn: 'root',
@@ -61,8 +62,8 @@ export class ProductsService {
    * Gets product info from external barcode service
    * @param barcode The barcode to query
    */
-  getProductInfo(barcode: string): Observable<any> {
-    return this.http.get<any>(`http://localhost:8080/api/product-info/barcode/${barcode}`);
+  getProductInfo(barcode: string): Observable<ProductInfo> {
+    return this.http.get<ProductInfo>(`http://localhost:8080/api/product-info/barcode/${barcode}`);
   }
 
   /**
