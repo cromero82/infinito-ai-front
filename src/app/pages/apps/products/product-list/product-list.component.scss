@@ -6,4 +6,37 @@ img.h-10.w-10.object-cover.rounded:hover {
   z-index: 10;
   box-shadow: 0 4px 16px rgba(0,0,0,0.25);
   position: relative;
-} 
+}
+
+// Custom adjustments based on diff
+vex-page-layout-header {
+  height: 68px !important;
+  padding: 0 24px 61px !important;
+}
+
+vex-page-layout-header .container {
+  padding: 0 24px 0 20px !important;
+}
+
+.bg-app-bar {
+  height: 57px !important;
+}
+
+// Card margin adjustment
+.card {
+  margin-top: -113px !important;
+}
+
+// Search input field height adjustments
+.search-input .mat-mdc-form-field-flex {
+  height: 38px !important;
+}
+
+.search-input .mat-mdc-form-field-flex > .mat-mdc-form-field-infix {
+  height: 30px !important;
+}
+
+// Produtos heading font size
+.bg-app-bar h2 {
+  font-size: 25px !important;
+}
