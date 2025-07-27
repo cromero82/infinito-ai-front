@@ -52,6 +52,12 @@ export class NavigationLoaderService {
           },
           {
             type: 'link',
+            label: 'Tipos',
+            route: '/apps/tipos',
+            icon: 'mat:category'
+          },
+          {
+            type: 'link',
             label: 'Product Details',
             route: '/apps/products/details',
             icon: 'mat:info'

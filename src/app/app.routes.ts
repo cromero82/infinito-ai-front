@@ -127,6 +127,10 @@ export const appRoutes: VexRoutes = [
               (m) => m.MultipleComponentContainerComponent
             )
           },
+          {
+            path: 'tipos',
+            loadChildren: () => import('./pages/apps/tipos/tipos.routes')
+          },
         ]
       },
       {
