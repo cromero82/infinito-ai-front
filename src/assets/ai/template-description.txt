@@ -1,0 +1,41 @@
+# Design System Guidelines
+
+## Main forms
+- Table. Title:All-In-One Table. url-reference: http://localhost:4200/apps/aio-table.
+    located: 
+    Elements: breadcrum, table, buttons: add.
+    Descriptions: Static It has a table with rows, to edit when clic on each row and modal edit, buttons: add, modify and delete. it shows icons on row. table pagination. 
+    screenshoot: 
+
+## Component Usage
+- Use `ButtonPrimary` for main actions, located in `src/components/ui/buttons/ButtonPrimary.tsx`
+- Use `CardProduct` for product listings, located in `src/components/cards/CardProduct.tsx`
+- Use `HeaderMain` for page headers, located in `src/layout/HeaderMain.tsx`
+
+## Layout Rules
+- Pages should follow a 12-column grid using Tailwind’s `grid-cols-12`
+- Use `Container` component for consistent padding and max-width
+- Avoid inline styles; use utility classes or styled components
+
+## Styling
+- Primary color: `#1E88E5` (Velocity Blue)
+- Font family: `Inter`, fallback to `sans-serif`
+- Border radius: `8px` for cards and buttons
+- Shadows: use `shadow-md` for elevation
+
+## Naming Conventions
+- All components use PascalCase
+- Props should be camelCase
+- Avoid abbreviations in prop names
+
+## File Structure
+- Components: `src/components/`
+- Layouts: `src/layout/`
+- Pages: `src/pages/`
+- Styles: `src/styles/`
+
+## Additional Notes
+- Prefer reusable components over one-off elements
+- Use `ProductGrid` for displaying multiple items
+- Use `ModalConfirm` for confirmation dialogs
+

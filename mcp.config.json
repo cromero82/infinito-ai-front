@@ -1,0 +1,22 @@
+{
+  "github": {
+    "token": "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",
+    "repos": [
+      "cromero82/infinito-ai-front",
+      "cromero82/infinito-ai-backend"
+    ]
+  },
+  "swagger": {
+    "url": "http://localhost:8080/swagger-ui/index.html"
+  },
+  "databases": {
+    "mongodb": {
+      "uri": "mongodb://admin:admin@localhost:27017/test?retryWrites=true&loadBalanced=false&connectTimeoutMS=10000&authSource=admin&authMechanism=SCRAM-SHA-1"
+    },
+    "postgresql": {
+      "url": "jdbc:postgresql://localhost:5432/project_bd",
+      "username": "romax-admin",
+      "password": "f4ast3rv3rs10n*"
+    }
+  }
+}
