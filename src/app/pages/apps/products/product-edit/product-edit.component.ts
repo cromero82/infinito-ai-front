@@ -426,10 +426,52 @@ export class ProductEditComponent implements OnInit {
           });
         } else {
           this.productExternalInfo = {};
+          // Open the price comparator modal with dummy data when no product found
+          const dialogRef = this.dialog.open(ProductPriceComparatorComponent, {
+            data: { 
+              barcode, 
+              product: undefined, 
+              nombre: this.form.controls['nombre'].value || 'Producto no encontrado'
+            }
+          });
+          dialogRef.afterClosed().subscribe((selected: any) => {
+            if (selected) {
+              if (selected.price) {
+                this.form.controls['price'].setValue(selected.price);
+              }
+              if (selected.image) {
+                this.photoPreviewUrl = selected.image;
+              }
+              if (selected.nombre) {
+                this.form.controls['nombre'].setValue(selected.nombre);
+              }
+            }
+          });
         }
       },
       error: (err) => {
         this.productExternalInfo = false;
+        // Open the price comparator modal with dummy data when there's an error
+        const dialogRef = this.dialog.open(ProductPriceComparatorComponent, {
+          data: { 
+            barcode, 
+            product: undefined, 
+            nombre: this.form.controls['nombre'].value || 'Error al consultar producto'
+          }
+        });
+        dialogRef.afterClosed().subscribe((selected: any) => {
+          if (selected) {
+            if (selected.price) {
+              this.form.controls['price'].setValue(selected.price);
+            }
+            if (selected.image) {
+              this.photoPreviewUrl = selected.image;
+            }
+            if (selected.nombre) {
+              this.form.controls['nombre'].setValue(selected.nombre);
+            }
+          }
+        });
       }
     });
   }
