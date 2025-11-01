@@ -41,7 +41,7 @@ export const appConfig: ApplicationConfig = {
        * The config that will be used by default.
        * This can be changed at runtime via the config panel or using the VexConfigService.
        */
-      config: vexConfigs.poseidon,
+      config: vexConfigs.ikaros,
       /**
        * Only themes that are available in the config in tailwind.config.ts should be listed here.
        * Any theme not listed here will not be available in the config panel.
