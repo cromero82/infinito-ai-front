@@ -57,13 +57,16 @@
         <ng-container matColumnDef="edit">
           <th *matHeaderCellDef mat-header-cell></th>
           <td *matCellDef="let product" mat-cell>
-            <button mat-icon-button color="accent" (click)="editProduct(product)">
+            <button mat-icon-button color="accent" (click)="editProduct(product); $event.stopPropagation()">
               <mat-icon svgIcon="mat:edit"></mat-icon>
             </button>
           </td>
         </ng-container>
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        <tr mat-row 
+            *matRowDef="let row; columns: displayedColumns"
+            (click)="onRowClick(row)"
+            [class.selected-row]="isRowSelected(row)"></tr>
       </table>
     </div>
 

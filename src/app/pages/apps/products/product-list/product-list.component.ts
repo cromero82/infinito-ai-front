@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { VexPageLayoutComponent } from '@vex/components/vex-page-layout/vex-page-layout.component';
 import { VexPageLayoutHeaderDirective } from '@vex/components/vex-page-layout/vex-page-layout-header.directive';
 import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/vex-page-layout-content.directive';
@@ -57,6 +57,7 @@ export class ProductListComponent implements OnInit, AfterViewInit {
   pageIndex = 0;
   searchCtrl = new UntypedFormControl('');
   private justClosedDialog = false; // Flag to prevent auto-edit after dialog closes
+  selectedProductId: number | null = null; // Track selected product ID
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
@@ -89,6 +90,85 @@ export class ProductListComponent implements OnInit, AfterViewInit {
         this.searchInput.nativeElement.focus();
       }
     }, 100);
+  }
+
+  /**
+   * Handle keyboard events for "-" key to delete selected product
+   */
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent) {
+    // Check for minus key (support both regular minus and numeric keypad minus)
+    const isMinusKey = event.key === '-' || 
+                       event.key === 'Minus' || 
+                       event.code === 'Minus' || 
+                       event.code === 'NumpadSubtract';
+    
+    // Only handle "-" key if a product is selected and not typing in an input
+    if (isMinusKey && this.selectedProductId !== null) {
+      const target = event.target as HTMLElement;
+      // Don't delete if user is typing in search input or other inputs
+      if (target && target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+        // Additional check: don't delete if the input is focused
+        const activeElement = document.activeElement;
+        if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        this.deleteSelectedProduct();
+      }
+    }
+  }
+
+  /**
+   * Handle row click to select/deselect product
+   */
+  onRowClick(product: Producto) {
+    if (this.selectedProductId === product.id) {
+      // Deselect if clicking the same row
+      this.selectedProductId = null;
+    } else {
+      // Select new row
+      this.selectedProductId = product.id || null;
+    }
+  }
+
+  /**
+   * Check if a product row is selected
+   */
+  isRowSelected(product: Producto): boolean {
+    return this.selectedProductId === product.id;
+  }
+
+  /**
+   * Delete the selected product
+   */
+  deleteSelectedProduct() {
+    if (this.selectedProductId === null) {
+      return;
+    }
+
+    const productId = this.selectedProductId;
+    if (confirm(`¿Está seguro de que desea eliminar el producto con ID ${productId}?`)) {
+      this.loading = true;
+      this.relationalProductService.deleteProduct(productId)
+        .pipe(finalize(() => {
+          this.loading = false;
+          this.selectedProductId = null; // Clear selection after deletion
+        }))
+        .subscribe({
+          next: () => {
+            // Refresh the product list
+            this.fetchProducts();
+            // Focus back on search input
+            this.focusSearchInput();
+          },
+          error: (err) => {
+            alert('Error al eliminar el producto: ' + (err?.error?.message || err.message || err));
+            this.focusSearchInput();
+          }
+        });
+    }
   }
 
   private isNumericBarcode(value: string): boolean {

@@ -57,4 +57,16 @@ export class RelationalProductService {
 
     return this.http.put<Producto>(`${this.apiUrl}/${productId}`, product, { headers });
   }
+
+  /**
+   * Deletes a product by ID
+   * @param productId The ID of the product to delete
+   */
+  deleteProduct(productId: number): Observable<void> {
+    const headers = new HttpHeaders({
+      'Accept': 'application/json'
+    });
+
+    return this.http.delete<void>(`${this.apiUrl}/${productId}`, { headers });
+  }
 }
