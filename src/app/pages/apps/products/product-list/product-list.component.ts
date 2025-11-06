@@ -1,11 +1,11 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { VexPageLayoutComponent } from '@vex/components/vex-page-layout/vex-page-layout.component';
 import { VexPageLayoutHeaderDirective } from '@vex/components/vex-page-layout/vex-page-layout-header.directive';
 import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/vex-page-layout-content.directive';
 import { VexBreadcrumbsComponent } from '@vex/components/vex-breadcrumbs/vex-breadcrumbs.component';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
-import { ProductsService } from '../service/products-service';
+import { RelationalProductService } from '../service/relational-product.service';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -46,9 +46,9 @@ import { ProductEditComponent } from '../product-edit/product-edit.component';
   templateUrl: './product-list.component.html',
   styleUrl: './product-list.component.scss'
 })
-export class ProductListComponent implements OnInit {
+export class ProductListComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = [
-    'id', 'nombre', 'tipo', 'price', 'photo', 'edit'
+    'id', 'nombre', 'price', 'edit'
   ];
   dataSource: any[] = [];
   totalElements = 0;
@@ -56,14 +56,16 @@ export class ProductListComponent implements OnInit {
   pageSize = 10;
   pageIndex = 0;
   searchCtrl = new UntypedFormControl('');
+  private justClosedDialog = false; // Flag to prevent auto-edit after dialog closes
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
   recording = false;
   private recorder: any = null;
   private stream: MediaStream | null = null;
 
-  constructor(private productsService: ProductsService, private http: HttpClient, private dialog: MatDialog) {}
+  constructor(private relationalProductService: RelationalProductService, private http: HttpClient, private dialog: MatDialog) {}
 
   ngOnInit() {
     this.fetchProducts();
@@ -73,102 +75,110 @@ export class ProductListComponent implements OnInit {
         distinctUntilChanged()
       )
       .subscribe((value) => {
+        // Reset flag when user types in search (allows auto-edit)
+        this.justClosedDialog = false;
         this.pageIndex = 0;
-        this.fetchProducts();
+        this.fetchProducts(true);
       });
   }
 
-  fetchProducts(page: number = this.pageIndex, size: number = this.pageSize) {
+  ngAfterViewInit() {
+    // Focus on search input when component loads
+    setTimeout(() => {
+      if (this.searchInput?.nativeElement) {
+        this.searchInput.nativeElement.focus();
+      }
+    }, 100);
+  }
+
+  private isNumericBarcode(value: string): boolean {
+    // Check if the value is a numeric barcode (all digits, typically 8-13 digits)
+    if (!value || value.trim() === '') return false;
+    return /^\d{8,}$/.test(value.trim());
+  }
+
+  fetchProducts(shouldAutoEdit: boolean = false, page: number = this.pageIndex, size: number = this.pageSize) {
     this.loading = true;
     let q = this.searchCtrl.value || '';
-    this.productsService
-      .getProductsSmart(q, page, size)
+    this.relationalProductService
+      .getProducts(q, page, size)
       .pipe(finalize(() => (this.loading = false)))
-      .subscribe((result: any) => {
+      .subscribe((result: ProductPage) => {
         this.dataSource = result.content;
         this.totalElements = result.totalElements;
+        
+        // Auto-open edit dialog only if:
+        // 1. shouldAutoEdit is true (user typed in search)
+        // 2. Exactly 1 product found
+        // 3. We didn't just close a dialog (prevents auto-edit after dialog close)
+        if (shouldAutoEdit && !this.justClosedDialog && result.totalElements === 1 && result.content.length > 0) {
+          this.editProduct(result.content[0]);
+        }
+        
+        // Auto-open create product dialog only if:
+        // 1. No products found
+        // 2. Search text is a barcode
+        // 3. We didn't just close a dialog (prevents auto-create after dialog close)
+        if (result.totalElements === 0 && !this.justClosedDialog) {
+          const searchQuery = q.trim();
+          // Only create product if the search query is a numeric barcode
+          if (searchQuery && this.isNumericBarcode(searchQuery)) {
+            this.createProduct(searchQuery);
+          }
+        }
       });
   }
 
-  onPageChange(event: any) {
-    this.pageIndex = event.pageIndex;
-    this.pageSize = event.pageSize;
-    this.fetchProducts();
-  }
-
-  createProduct() {
+  createProduct(barcode?: string) {
+    // Only pass barcode if it has a value (trim and check)
+    const trimmedBarcode = barcode?.trim();
+    const dialogData = trimmedBarcode ? { barcode: trimmedBarcode } : null;
     const dialogRef = this.dialog.open(ProductEditComponent, {
       width: '600px',
-      data: null
+      data: dialogData
     });
     dialogRef.afterClosed().subscribe(result => {
+      // Set flag to prevent auto-edit after dialog closes
+      this.justClosedDialog = true;
       if (result) {
-        this.fetchProducts();
+        // Set searchCtrl to the barcode of the created product
+        if (result.barcode) {
+          this.searchCtrl.setValue(result.barcode);
+        }
+        this.fetchProducts(); // This won't auto-edit because justClosedDialog is true
       }
+      // Always focus on search input when dialog closes (cancelled or saved)
+      this.focusSearchInput();
     });
   }
 
-  editProduct(product: any) {
+  editProduct(product?: any) {
     const dialogRef = this.dialog.open(ProductEditComponent, {
       width: '600px',
       data: product
     });
     dialogRef.afterClosed().subscribe(result => {
+      // Set flag to prevent auto-edit after dialog closes
+      this.justClosedDialog = true;
       if (result && result._edit) {
-        this.fetchProducts();
+        this.fetchProducts(); // This won't auto-edit because justClosedDialog is true
       }
+      // Always focus on search input when dialog closes (cancelled or saved)
+      this.focusSearchInput();
     });
   }
 
-  async toggleRecording() {
-    if (this.recording) {
-      await this.stopRecording();
-    } else {
-      await this.startRecording();
-    }
-  }
-
-  async startRecording() {
-    try {
-      this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this.recorder = new RecordRTC(this.stream, {
-        type: 'audio',
-        mimeType: 'audio/wav',
-        recorderType: RecordRTC.StereoAudioRecorder,
-        desiredSampRate: 16000,
-        numberOfAudioChannels: 1,
-      });
-      this.recorder.startRecording();
-      this.recording = true;
-    } catch (err) {
-      console.error('No se pudo acceder al micrófono:', err);
-    }
-  }
-
-  async stopRecording() {
-    if (this.recorder && this.recording) {
-      await new Promise(resolve => this.recorder.stopRecording(resolve));
-      const audioBlob = this.recorder.getBlob();
-      this.recording = false;
-      if (this.stream) {
-        this.stream.getTracks().forEach(track => track.stop());
-        this.stream = null;
-      }
-      this.sendAudioForTranscription(audioBlob);
-    }
-  } 
-
-  sendAudioForTranscription(audioBlob: Blob) {
-    this.productsService.speechToText(audioBlob).subscribe({
-      next: (result) => {
-        if (result && result.text) {
-          this.searchCtrl.setValue(result.text);
+  private focusSearchInput() {
+    // Always focus on search input when dialog closes
+    if (this.searchInput?.nativeElement) {
+      setTimeout(() => {
+        this.searchInput.nativeElement.focus();
+        // If there's text, select all
+        if (this.searchCtrl.value) {
+          this.searchInput.nativeElement.select();
         }
-      },
-      error: (err) => {
-        console.error('Error en transcripción de audio:', err);
-      }
-    });
+      }, 100);
+    }
   }
 
 }

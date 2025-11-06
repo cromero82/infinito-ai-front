@@ -18,59 +18,40 @@
         <div class="flex items-center" style="height: 48px;">
           <mat-form-field appearance="outline" class="search-input my-auto">
             <mat-label>Buscar producto</mat-label>
-            <input matInput [formControl]="searchCtrl" placeholder="Código o nombre" />
+            <input #searchInput matInput [formControl]="searchCtrl" placeholder="Código o nombre" />
             <button mat-icon-button matSuffix *ngIf="searchCtrl.value" aria-label="Limpiar búsqueda" (click)="searchCtrl.setValue('')">
               <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
             </button>
           </mat-form-field>
-          <button mat-icon-button class="ml-2 flex-none" matTooltip="Buscar por voz" type="button" (click)="toggleRecording()">
-            <mat-icon svgIcon="mat:mic"></mat-icon>
-          </button>
-        </div>
-        <span class="flex-1"></span>
-        <button mat-icon-button matTooltip="Ordenar" type="button" class="ml-4 flex-none">
-          <mat-icon svgIcon="mat:sort"></mat-icon>
-        </button>
-        <button
-          (click)="createProduct()"
+          <button
+          (click)="createProduct(searchCtrl.value)"
           class="ml-4 flex-none"
           color="primary"
           mat-mini-fab
           matTooltip="Agregar producto"
           type="button">
           <mat-icon svgIcon="mat:add" class="icon-sm"></mat-icon>
+          <span class="flex-1"></span>
         </button>
+        </div>
+      
+    
       </div>
       <table class="w-full" mat-table [dataSource]="dataSource" matSort>
         <!-- Barcode Column -->
         <ng-container matColumnDef="id">
           <th *matHeaderCellDef mat-header-cell mat-sort-header>Código barras</th>
-          <td *matCellDef="let product" mat-cell>{{ product.reference?.barcode }}</td>
+          <td *matCellDef="let product" mat-cell>{{ product.barcode }}</td>
         </ng-container>
         <!-- Name Column -->
         <ng-container matColumnDef="nombre">
-          <th *matHeaderCellDef mat-header-cell mat-sort-header>Nombre</th>
+          <th *matHeaderCellDef mat-header-cell mat-sort-header>Producto</th>
           <td *matCellDef="let product" mat-cell>{{ product.nombre }}</td>
-        </ng-container>
-        <!-- Tipo Column -->
-        <ng-container matColumnDef="tipo">
-          <th *matHeaderCellDef mat-header-cell>Tipo</th>
-          <td *matCellDef="let product" mat-cell>{{ product.type || '-' }}</td>
         </ng-container>
         <!-- Price Column -->
         <ng-container matColumnDef="price">
           <th *matHeaderCellDef mat-header-cell mat-sort-header>Precio</th>
-          <td *matCellDef="let product" mat-cell>${{ product.price | number:'1.2-2' }}</td>
-        </ng-container>
-        <!-- Photo Column -->
-        <ng-container matColumnDef="photo">
-          <th *matHeaderCellDef mat-header-cell>Foto</th>
-          <td *matCellDef="let product" mat-cell>
-            <img *ngIf="product.photo && product.photo !== 'undefined'; else noPhoto" [src]="product.photo" alt="{{ product.nombre }}" class="h-10 w-10 object-cover rounded" />
-            <ng-template #noPhoto>
-              <img src="assets/img/icons/custom/no_picture.png" alt="Sin foto" class="h-10 w-10 object-cover rounded" />
-            </ng-template>
-          </td>
+          <td *matCellDef="let product" mat-cell>${{ product.precio | number:'1.2-2' }}</td>
         </ng-container>
         <!-- Edit Column -->
         <ng-container matColumnDef="edit">
@@ -84,14 +65,6 @@
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
       </table>
-      <mat-paginator
-        [length]="totalElements"
-        [pageSize]="pageSize"
-        [pageIndex]="pageIndex"
-        [pageSizeOptions]="[5, 10, 20, 50]"
-        (page)="onPageChange($event)"
-        class="sticky left-0 mt-2">
-      </mat-paginator>
     </div>
 
   </vex-page-layout-content>

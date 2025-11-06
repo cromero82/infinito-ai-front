@@ -22,13 +22,13 @@ export class NavigationLoaderService {
     this._items.next([
       {
         type: 'link',
-        label: 'Facturas',
+        label: 'Ventas',
         route: '/apps/aio-table',
             icon: 'mat:assignment'
       },
       {
         type: 'link',
-        label: 'ProductosV2',
+        label: 'Productos',
         route: '/apps/products/list',
         icon: 'mat:shopping_cart'
       },

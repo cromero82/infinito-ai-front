@@ -1,24 +1,15 @@
-import { Component, Inject, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormControl } from '@angular/forms';
+import { Component, Inject, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { NgFor, NgIf, AsyncPipe } from '@angular/common';
-import { DomainService } from '../service/domain-service';
-import { ProductsService } from '../service/products-service';
+import { NgFor, NgIf } from '@angular/common';
+import { RelationalProductService } from '../service/relational-product.service';
+import { Producto } from '../model/producto';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
-import { AudioRecorderService } from '../service/audio-recorder.service';
-import { FilterTypePipe, FilterCompanyPipe } from './filter-pipes';
 import { FormsModule } from '@angular/forms';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { Observable, startWith, map } from 'rxjs';
-import { NgClass } from '@angular/common';
-import { OpenFoodFactsSite } from '../service/product-info-strategy';
-import { MatDialog } from '@angular/material/dialog';
-import { ProductPriceComparatorComponent } from '../product-price-comparator/product-price-comparator.component';
 
 @Component({
   selector: 'vex-product-edit',
@@ -31,456 +22,222 @@ import { ProductPriceComparatorComponent } from '../product-price-comparator/pro
     NgFor,
     MatFormFieldModule,
     MatInputModule,
-    MatAutocompleteModule,
-    MatSelectModule,
     MatButtonModule,
     MatIconModule,
-    MatDividerModule,
-    AsyncPipe,
-    FilterTypePipe,
-    FilterCompanyPipe,
-    NgClass
+    MatDividerModule
   ],
   templateUrl: './product-edit.component.html',
   styleUrl: './product-edit.component.scss'
 })
-export class ProductEditComponent implements OnInit {
+export class ProductEditComponent implements OnInit, AfterViewInit {
   form: FormGroup;
-  types: any[] = [];
-  companies: any[] = [];
-  recording = false;
-  typeFilter: string = '';
-  companyFilter: string = '';
-  typeInput: string = '';
-  companyInput: string = '';
-  filteredTypes$: Observable<any[]> = new Observable<any[]>();
-  filteredCompanies$: Observable<any[]> = new Observable<any[]>();
-  typeCtrl = new FormControl('');
-  companyCtrl = new FormControl('');
-  photoPreviewUrl: string = 'assets/img/icons/custom/no_picture.png';
-  private photoFile: File | null = null;
-  productExternalInfo: any = null;
-  showImageModal = false;
+  @ViewChild('barcodeInput') barcodeInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('nombreInput') nombreInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('precioInput') precioInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('buyPriceInput') buyPriceInput!: ElementRef<HTMLInputElement>;
 
   constructor(
     private fb: FormBuilder,
-    private domainService: DomainService,
     private dialogRef: MatDialogRef<ProductEditComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
-    private productsService: ProductsService,
-    private audioRecorder: AudioRecorderService,
-    private openFoodFactsSite: OpenFoodFactsSite,
-    private dialog: MatDialog
+    private relationalProductService: RelationalProductService
   ) {
     this.form = this.fb.group({
       nombre: ['', Validators.required],
       barcode: [''],
-      price: ['', Validators.required],
-      type: [''],
-      company_id: ['']
+      precio: ['', Validators.required],
+      buy_price: ['']
     });
     if (data) {
-      this.form.patchValue({
-        nombre: data.nombre,
-        barcode: data.reference?.barcode || '',
-        price: data.price,
-        type: data.type,
-        company_id: data.reference?.company_id
-      });
-      // Removed setting companyCtrl here; will set after companies are loaded in ngOnInit
+      const patchValue: any = {};
+      
+      // Handle barcode - can come directly from data.barcode or from data.reference.barcode
+      let barcodeValue = data.barcode || data?.reference?.barcode;
+      if (barcodeValue) {
+        barcodeValue = String(barcodeValue).trim();
+      }
+      
+      // For NEW products: if barcode is not numeric, move it to nombre and clear barcode
+      const isNewProduct = !data.id;
+      if (isNewProduct && barcodeValue && barcodeValue.length > 0 && !this.isNumericBarcode(barcodeValue)) {
+        // Move non-numeric barcode to nombre (uppercase it)
+        patchValue.nombre = barcodeValue.toUpperCase();
+        patchValue.barcode = ''; // Clear barcode
+        // Mark that we moved barcode to nombre (for focus management)
+        (this.form as any)._barcodeMovedToNombre = true;
+      } else {
+        // Normal flow: set fields from data
+        if (data.nombre !== undefined) {
+          patchValue.nombre = data.nombre;
+        }
+        if (barcodeValue !== undefined && barcodeValue !== null && barcodeValue !== '') {
+          patchValue.barcode = barcodeValue;
+        }
+      }
+      
+      if (data.precio !== undefined || data.price !== undefined) {
+        patchValue.precio = data.precio || data.price;
+      }
+      
+      if (data.precioCompra !== undefined || data.buy_price !== undefined) {
+        patchValue.buy_price = data.precioCompra || data.buy_price;
+      }
+      
+      // Apply all patches at once
+      if (Object.keys(patchValue).length > 0) {
+        this.form.patchValue(patchValue);
+      }
     }
   }
 
   ngOnInit() {
-    this.domainService.getTypes().subscribe(types => {
-      this.types = types;
-      // Set initial value for type
-      let initialType = this.form.controls['type'].value || '';
-      // If editing, ensure we use the canonical type name from backend
-      if (this.data && initialType) {
-        const foundType = types.find(t => t.name === initialType);
-        if (foundType) {
-          initialType = foundType.name;
-          this.typeCtrl.setValue(initialType);
-          this.form.controls['type'].setValue(foundType.name); // or foundType.id if backend expects id
-        } else {
-          this.typeCtrl.setValue(initialType);
-        }
-      } else {
-        this.typeCtrl.setValue(initialType);
-      }
-      this.filteredTypes$ = this.typeCtrl.valueChanges.pipe(
-        startWith(initialType),
-        map(val => typeof val === 'string' ? this.types.filter(t => t.name.toLowerCase().includes(val.toLowerCase())) : this.types)
-      );
-    });
-    this.domainService.getCompanies().subscribe(companies => {
-      this.companies = companies;
-      // Set initial value for company
-      const initialCompanyId = this.form.controls['company_id'].value;
-      let initialCompany = '';
-      if (initialCompanyId !== undefined && initialCompanyId !== null && initialCompanyId !== '') {
-        // Compare as numbers to handle both string and number ids
-        const foundCompany = companies.find(c => Number(c.id) === Number(initialCompanyId));
-        if (foundCompany) {
-          initialCompany = foundCompany.name;
-          this.companyCtrl.setValue(initialCompany);
-          // Always set form control to ensure sync
-          this.form.controls['company_id'].setValue(foundCompany.id);
-        }
-      }
-      this.filteredCompanies$ = this.companyCtrl.valueChanges.pipe(
-        startWith(initialCompany),
-        map(val => typeof val === 'string' ? this.companies.filter(c => c.name.toLowerCase().includes(val.toLowerCase())) : this.companies)
-      );
-    });
-    this.audioRecorder.recording$.subscribe(blob => this.sendAudioForTranscription(blob));
+    // Component initialization
+  }
 
-    // Patch initial values for autocomplete fields
-    if (this.data) {
-      this.typeInput = this.form.controls['type'].value || '';
-      // Removed companyInput logic here; handled after companies are loaded
+  ngAfterViewInit() {
+    // Focus management: wait for Material dialog to fully initialize
+    // Using afterOpened ensures all ARIA attributes and focus trap are ready
+    this.dialogRef.afterOpened().subscribe(() => {
+      // Use requestAnimationFrame to ensure DOM is ready after dialog animation
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          this.setInitialFocus();
+        }, 50);
+      });
+    });
+  }
+
+  private isNumericBarcode(value: string): boolean {
+    // Check if the value is a numeric barcode (all digits, typically 8-13 digits)
+    if (!value || value.trim() === '') return false;
+    return /^\d{8,}$/.test(value.trim());
+  }
+
+  private setInitialFocus() {
+    // Focus on first empty field, respecting Material's focus trap
+    try {
+      const barcodeValue = this.form.controls['barcode'].value;
+      const nombreValue = this.form.controls['nombre'].value;
+      const precioValue = this.form.controls['precio'].value;
+      
+      // Check if barcode was moved to nombre (for new products with non-numeric barcode)
+      const barcodeMovedToNombre = (this.form as any)._barcodeMovedToNombre;
+      
+      // Check if all fields are filled (editing existing product)
+      const allFieldsFilled = barcodeValue && nombreValue && precioValue !== null && precioValue !== undefined && precioValue !== '';
+      
+      // Priority 1: If barcode was moved to nombre, focus on precio
+      if (barcodeMovedToNombre && nombreValue && !precioValue) {
+        if (this.precioInput?.nativeElement) {
+          this.precioInput.nativeElement.focus({ preventScroll: true });
+          this.precioInput.nativeElement.select();
+        }
+        return; // Exit early to prevent other focus logic
+      }
+      
+      // Priority 2: All fields filled (editing existing product)
+      if (allFieldsFilled && this.precioInput?.nativeElement) {
+        this.precioInput.nativeElement.focus({ preventScroll: true });
+        this.precioInput.nativeElement.select();
+        return;
+      }
+      
+      // Priority 3: Barcode is empty and wasn't moved - focus on it (only if nombre is also empty)
+      if (!barcodeValue && !barcodeMovedToNombre && !nombreValue && this.barcodeInput?.nativeElement) {
+        this.barcodeInput.nativeElement.focus({ preventScroll: true });
+        return;
+      }
+      
+      // Priority 4: Barcode has value - check if numeric
+      if (barcodeValue) {
+        if (this.isNumericBarcode(barcodeValue)) {
+          // Numeric barcode - focus on next empty field
+          if (!nombreValue && this.nombreInput?.nativeElement) {
+            this.nombreInput.nativeElement.focus({ preventScroll: true });
+          } else if (!precioValue && precioValue !== 0 && this.precioInput?.nativeElement) {
+            this.precioInput.nativeElement.focus({ preventScroll: true });
+            this.precioInput.nativeElement.select();
+          }
+          return;
+        }
+        // Non-numeric barcode should have been moved (for new products)
+        // If it still exists, focus on precio (fallback)
+        if (this.precioInput?.nativeElement) {
+          this.precioInput.nativeElement.focus({ preventScroll: true });
+          this.precioInput.nativeElement.select();
+        }
+        return;
+      }
+      
+      // Priority 5: Nombre is empty and barcode is handled
+      if (!nombreValue && this.nombreInput?.nativeElement) {
+        this.nombreInput.nativeElement.focus({ preventScroll: true });
+        return;
+      }
+      
+      // Priority 6: Focus on precio if everything else is filled
+      if (this.precioInput?.nativeElement) {
+        this.precioInput.nativeElement.focus({ preventScroll: true });
+        this.precioInput.nativeElement.select();
+      }
+    } catch (e) {
+      // Silently fail if focus cannot be set (e.g., if element is not in the DOM)
+      console.debug('Focus management skipped:', e);
     }
-    // Set initial photo preview
-    const photo = this.data?.photo;
-    if (photo && photo !== 'undefined' && photo !== null) {
-      this.photoPreviewUrl = photo;
+  }
+
+  onPrecioFocus() {
+    // Select all text when precio input receives focus
+    if (this.precioInput?.nativeElement) {
+      setTimeout(() => {
+        this.precioInput.nativeElement.select();
+      }, 0);
+    }
+  }
+
+  onBuyPriceFocus() {
+    // Select all text when buy_price input receives focus
+    if (this.buyPriceInput?.nativeElement) {
+      setTimeout(() => {
+        this.buyPriceInput.nativeElement.select();
+      }, 0);
+    }
+  }
+
+  onBarcodeFocus() {
+    // Select all text in barcode field if it's not a numeric barcode
+    const barcodeValue = this.form.controls['barcode'].value;
+    if (this.barcodeInput?.nativeElement && barcodeValue && !this.isNumericBarcode(barcodeValue)) {
+      setTimeout(() => {
+        this.barcodeInput.nativeElement.select();
+      }, 0);
     }
   }
 
   save() {
     if (this.form.invalid) return;
     const form = this.form.value;
-    const product = {
+    const product: Producto = {
       nombre: form.nombre,
-      reference: {
-        barcode: form.barcode,
-        company_id: form.company_id,
-        marca: null
-      },
-      type: this.typeCtrl.value,
-      price: form.price,
-      photo: this.photoPreviewUrl && this.photoPreviewUrl !== 'assets/img/icons/custom/no_picture.png' ? this.photoPreviewUrl : 'undefined'
+      barcode: form.barcode,
+      precio: form.precio,
+      precioCompra: form.buy_price || undefined,
+      foto: this.data?.foto || '',
+      company: this.data?.company
     };
-    const handleImageUpload = (productId: string, closeResult: any) => {
-      if (this.photoFile) {
-        this.productsService.uploadProductImage(productId, this.photoFile, this.photoFile.name).subscribe({
-          next: () => this.dialogRef.close(closeResult),
-          error: (err) => {
-            alert('Producto guardado, pero error al subir la imagen: ' + (err?.error?.message || err.message || err));
-            this.dialogRef.close(closeResult);
-          }
-        });
-      } else {
-        this.dialogRef.close(closeResult);
-      }
-    };
-    if (this.data) {
+    if (this.data && this.data.id) {
       // Edit mode
-      this.productsService.modifyProduct(this.data.id, product).subscribe({
-        next: (result) => handleImageUpload(this.data.id, { ...result, _edit: true }),
+      const productId = typeof this.data.id === 'string' ? parseInt(this.data.id) : this.data.id;
+      this.relationalProductService.updateProduct(productId, product).subscribe({
+        next: (result) => this.dialogRef.close({ ...result, _edit: true }),
         error: (err) => alert('Error al actualizar el producto: ' + (err?.error?.message || err.message || err))
       });
     } else {
       // Add mode
-      const newProduct = { ...product, id: form.barcode, tokens: [], features: [] };
-      this.productsService.addProduct(newProduct).subscribe({
-        next: (result) => handleImageUpload(result.id || form.barcode, result),
+      this.relationalProductService.createProduct(product).subscribe({
+        next: (result) => this.dialogRef.close(result),
         error: (err) => alert('Error al guardar el producto: ' + (err?.error?.message || err.message || err))
       });
     }
-  }
-
-  autoSelectCompany() {
-    const nombre = this.form.controls['nombre'].value?.toLowerCase() || '';
-    if (!nombre || !this.companies?.length) return;
-    const found = this.companies.find(c => nombre.includes((c.name || '').toLowerCase()));
-    if (found) {
-      this.form.controls['company_id'].setValue(found.id);
-    }
-  }
-
-  async toggleRecording() {
-    if (this.audioRecorder.isRecordingActive) {
-      await this.audioRecorder.stopRecording();
-      this.recording = false;
-    } else {
-      try {
-        // Ensure RecordRTC is loaded
-        if (!(window as any).RecordRTC) {
-          const module = await import('recordrtc');
-          (window as any).RecordRTC = module.default || module;
-        }
-        await this.audioRecorder.startRecording();
-        this.recording = true;
-      } catch (err) {
-        this.recording = false;
-        alert('No se pudo acceder al micrófono.');
-      }
-    }
-  }
-
-  sendAudioForTranscription(audioBlob: Blob) {
-    this.productsService.speechToText(audioBlob).subscribe({
-      next: (result) => {
-        if (result && result.text) {
-          this.form.controls['nombre'].setValue(result.text);
-        }
-      },
-      error: (err) => {
-        console.error('Error en transcripción de audio:', err);
-      }
-    });
-  }
-
-  onTypeSelected(event: any) {
-    this.form.controls['type'].setValue(event.option.value);
-    this.typeCtrl.setValue(event.option.value);
-  }
-
-  clearTypeInput() {
-    this.typeCtrl.setValue('');
-    this.form.controls['type'].setValue('');
-  }
-
-  onCompanySelected(event: any) {
-    const found = this.companies.find(c => c.name === event.option.value);
-    this.form.controls['company_id'].setValue(found ? found.id : '');
-    this.companyCtrl.setValue(event.option.value);
-  }
-
-  clearCompanyInput() {
-    this.companyCtrl.setValue('');
-    this.form.controls['company_id'].setValue('');
-  }
-
-  clearType(typeSelect: any) {
-    this.form.controls['type'].setValue('');
-    setTimeout(() => typeSelect.close(), 0);
-  }
-
-  clearCompany(companySelect: any) {
-    this.form.controls['company_id'].setValue('');
-    setTimeout(() => companySelect.close(), 0);
-  }
-
-  onSelectImage() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = (event: any) => {
-      const file = event.target.files[0];
-      if (file) {
-        this.photoFile = file;
-        const reader = new FileReader();
-        reader.onload = (e: any) => {
-          this.photoPreviewUrl = e.target.result;
-          this.form.patchValue({ photo: e.target.result });
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-    input.click();
-  }
-
-  async onTakePhoto() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      const video = document.createElement('video');
-      video.autoplay = true;
-      video.srcObject = stream;
-      video.style.display = 'none';
-      document.body.appendChild(video);
-      await new Promise(resolve => video.onloadedmetadata = resolve);
-      video.play();
-      // Show a dialog or overlay to let user take a snapshot
-      // For simplicity, take snapshot after 1 second
-      setTimeout(() => {
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/png');
-        this.photoPreviewUrl = dataUrl;
-        this.form.patchValue({ photo: dataUrl });
-        stream.getTracks().forEach(track => track.stop());
-        document.body.removeChild(video);
-      }, 1000);
-    } catch (err) {
-      alert('No se pudo acceder a la cámara.');
-    }
-  }
-
-  onBarcodePasteOrInput(event: ClipboardEvent | Event) {
-    const value = (event.target as HTMLInputElement).value;
-    if (value && value.length >= 8) {
-      this.getProductInfoFromBarcode(value);
-    }
-  }
-
-  /**
-   * Checks if the type exists in the list, and adds it if not. If the backend returns a translated/modified name, set it on the typeCtrl.
-   */
-  ensureTypeExistsAndAddIfNeeded(typeName: string) {
-    if (!typeName) return;
-    const exists = this.types.some(t => t.name?.toLowerCase() === typeName.toLowerCase());
-    if (!exists) {
-      this.productsService.addType(typeName, 0).subscribe({
-        next: (newType) => {
-          this.types.push(newType);
-          if (newType && newType.name && newType.name !== typeName) {
-            this.typeCtrl.setValue(newType.name);
-          }
-        },
-        error: (err) => {
-          // Optionally show error
-        }
-      });
-    }
-  }
- 
-  /**
-   * Checks if the company exists in the list, and adds it if not. If the backend returns a translated/modified name, set it on the companyCtrl.
-   */ 
-  ensureCompanyExistsAndAddIfNeeded(companyName: string) {
-    if (!companyName) return;
-    const exists = this.companies.some(c => c.name?.toLowerCase() === companyName.toLowerCase());
-    if (!exists) {
-      this.productsService.addCompany(companyName).subscribe({
-        next: (newCompany) => {
-          this.companies.push(newCompany);
-          if (newCompany && newCompany.name) {
-            this.companyCtrl.setValue(newCompany.name);
-            // Set form value as in onCompanySelected
-            const found = this.companies.find(c => c.name === newCompany.name);
-            this.form.controls['company_id'].setValue(found ? found.id : '');
-          }
-        },
-        error: (err) => {
-          // Optionally show error
-        }
-      });
-    } else {
-      // If already exists, set form value as in onCompanySelected
-      const found = this.companies.find(c => c.name === companyName);
-      this.form.controls['company_id'].setValue(found ? found.id : '');
-    }
-  }
-
-  // Helper to check if productExternalInfo is empty, error, or success
-  get productInfoErrorOrEmpty(): string | null {
-    if (this.productExternalInfo === null) return null;
-    if (this.productExternalInfo === false) return 'Error consultando: open FOODS Facts';
-    // Accept both { product: ... } and direct product object
-    if (this.productExternalInfo.product || this.productExternalInfo.product_name_es || this.productExternalInfo.product_name) {
-      return 'OK Consultando: open FOODS Facts';
-    }
-    return 'Ningún dato encontrado';
-  }
-
-  getProductInfoMsgClass(msg: string): string {
-    if (!msg) return '';
-    if (msg.startsWith('Error') || msg.startsWith('Ningún')) return 'text-red-500';
-    if (msg.startsWith('Datos consultados')) return 'text-green-600';
-    return '';
-  }
-
-  getProductInfoFromBarcode(barcode: string) {
-    this.openFoodFactsSite.getProduct(barcode).subscribe({
-      next: (result) => {
-        if (result && result.product) {
-          this.productExternalInfo = result.product;
-          // Patch form fields with external info
-          const nombre = [
-            result.product.product_name || result.product.generic_name || '',
-            result.product.brands || '',
-            (result.product.serving_quantity ? result.product.serving_quantity + ' ' + (result.product.serving_quantity_unit || '') : '')
-          ].filter(Boolean).join(' - ');
-          this.form.controls['nombre'].setValue(nombre);
-          const firstCategory = (result.product.categories || '').split(',')[0]?.trim() || '';
-          this.typeCtrl.setValue(firstCategory);
-          this.ensureTypeExistsAndAddIfNeeded(firstCategory);
-          const firstBrand = (result.product.brands || '').split(',')[0]?.trim() || '';
-          this.companyCtrl.setValue(firstBrand);
-          this.ensureCompanyExistsAndAddIfNeeded(firstBrand);
-          if (result.product.image_url) {
-            this.photoPreviewUrl = result.product.image_url;
-          }
-          // Open the price comparator modal
-          const dialogRef = this.dialog.open(ProductPriceComparatorComponent, {
-            data: { barcode, product: result.product, nombre }
-          });
-          dialogRef.afterClosed().subscribe((selected: any) => {
-            if (selected) {
-              if (selected.price) {
-                this.form.controls['price'].setValue(selected.price);
-              }
-              if (selected.image) {
-                this.photoPreviewUrl = selected.image;
-              }
-              if (selected.nombre) {
-                this.form.controls['nombre'].setValue(selected.nombre);
-              }
-            }
-          });
-        } else {
-          this.productExternalInfo = {};
-          // Open the price comparator modal with dummy data when no product found
-          const dialogRef = this.dialog.open(ProductPriceComparatorComponent, {
-            data: { 
-              barcode, 
-              product: undefined, 
-              nombre: this.form.controls['nombre'].value || 'Producto no encontrado'
-            }
-          });
-          dialogRef.afterClosed().subscribe((selected: any) => {
-            if (selected) {
-              if (selected.price) {
-                this.form.controls['price'].setValue(selected.price);
-              }
-              if (selected.image) {
-                this.photoPreviewUrl = selected.image;
-              }
-              if (selected.nombre) {
-                this.form.controls['nombre'].setValue(selected.nombre);
-              }
-            }
-          });
-        }
-      },
-      error: (err) => {
-        this.productExternalInfo = false;
-        // Open the price comparator modal with dummy data when there's an error
-        const dialogRef = this.dialog.open(ProductPriceComparatorComponent, {
-          data: { 
-            barcode, 
-            product: undefined, 
-            nombre: this.form.controls['nombre'].value || 'Error al consultar producto'
-          }
-        });
-        dialogRef.afterClosed().subscribe((selected: any) => {
-          if (selected) {
-            if (selected.price) {
-              this.form.controls['price'].setValue(selected.price);
-            }
-            if (selected.image) {
-              this.photoPreviewUrl = selected.image;
-            }
-            if (selected.nombre) {
-              this.form.controls['nombre'].setValue(selected.nombre);
-            }
-          }
-        });
-      }
-    });
-  }
-
-  onImageClick() {
-    this.showImageModal = true;
-  }
-
-  closeImageModal() {
-    this.showImageModal = false;
   }
 }
