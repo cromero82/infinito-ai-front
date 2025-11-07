@@ -122,6 +122,13 @@ export const appRoutes: VexRoutes = [
             ]
           },
           {
+            path: 'ventas',
+            loadComponent: () =>
+              import('./pages/apps/ventas/tickets-recibo/tickets-recibo.component').then(
+                (m) => m.TicketsReciboComponent
+              )
+          },
+          {
             path: 'master',
             loadComponent: () => import('./pages/apps/master-background/multiple-component-container.component').then(
               (m) => m.MultipleComponentContainerComponent

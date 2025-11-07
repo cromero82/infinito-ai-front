@@ -23,7 +23,7 @@ export class NavigationLoaderService {
       {
         type: 'link',
         label: 'Ventas',
-        route: '/apps/aio-table',
+        route: '/apps/ventas',
             icon: 'mat:assignment'
       },
       {

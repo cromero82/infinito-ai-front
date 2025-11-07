@@ -1,0 +1,36 @@
+:host {
+  display: block;
+}
+
+vex-page-layout-header {
+  height: 68px !important;
+  padding: 0 24px 32px !important;
+}
+
+vex-page-layout-header .container {
+  padding: 0 24px 0 20px !important;
+}
+
+.tickets-card {
+  overflow: hidden;
+  margin-top: -90px;
+}
+
+.tabs-container {
+  width: 100%;
+  margin: 0;
+}
+
+.ticket-tab-group {
+  width: 100%;
+}
+
+:host ::ng-deep .ticket-tab-group .mat-mdc-tab {
+  flex: 0 0 auto;
+  max-width: 200px;
+}
+
+:host ::ng-deep .ticket-tab-group .mat-mdc-tab .mdc-tab__content {
+  justify-content: center;
+}
+
