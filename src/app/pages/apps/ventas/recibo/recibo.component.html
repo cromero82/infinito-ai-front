@@ -1,5 +1,60 @@
 <div class="recibo-container p-4">
   <h3 class="m-0">Recibo</h3>
-  <p class="text-secondary">Contenido del recibo próximamente...</p>
+  <p class="text-secondary mb-2">
+    Ticket actual: <strong>{{ ticket?.nombre || 'Sin nombre' }}</strong>
+  </p>
+
+  <ng-container *ngIf="reciboId !== null; else noReciboSeleccionado">
+    <div *ngIf="loading" class="text-secondary">Cargando recibo...</div>
+    <div *ngIf="!loading && recibo; else reciboNoDisponible">
+      <p class="text-secondary mb-2">
+        Número de recibo:
+        <strong>{{ recibo ? ('#' + recibo.id) : 'Sin recibo' }}</strong>
+      </p>
+      <p class="text-secondary mb-2">
+        Cliente:
+        <strong>{{ recibo && recibo.cliente ? recibo.cliente.nombre : 'Sin cliente' }}</strong>
+        <span *ngIf="recibo && recibo.cliente && recibo.cliente.documento">
+          ({{ recibo.cliente.documento }})
+        </span>
+      </p>
+      <p class="text-secondary mb-2">
+        Creado:
+        {{
+          recibo
+            ? (recibo.fechaCreacion | date: 'medium')
+            : ('Sin fecha')
+        }}
+      </p>
+      <p class="text-secondary mb-2">
+        Estado: <strong>{{ recibo ? recibo.estado : 'Sin estado' }}</strong>
+      </p>
+      <p class="text-secondary mb-2">
+        Total:
+        <strong>
+          {{
+            recibo
+              ? (recibo.total | currency:'USD':'symbol':'1.2-2')
+              : ('0' | currency:'USD':'symbol':'1.2-2')
+          }}
+        </strong>
+      </p>
+      <p class="text-secondary mb-2">
+        Método de pago:
+        <strong>{{ recibo ? (recibo.metodoPagoId != null ? recibo.metodoPagoId : 'Sin asignar') : 'Sin asignar' }}</strong>
+      </p>
+      <p class="text-secondary mt-4">Contenido del recibo próximamente...</p>
+    </div>
+  </ng-container>
+
+  <ng-template #noReciboSeleccionado>
+    <p class="text-secondary">Seleccione un ticket con recibo asociado para ver detalles.</p>
+  </ng-template>
+
+  <ng-template #reciboNoDisponible>
+    <div class="text-secondary">
+      {{ error || 'No se encontró información del recibo.' }}
+    </div>
+  </ng-template>
 </div>
 

@@ -1,20 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatButtonModule } from '@angular/material/button';
 import { NgIf, NgFor } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
 import { ReciboComponent } from '../recibo/recibo.component';
-import { environment } from '../../../../../environments/environment';
 import { VexPageLayoutComponent } from '@vex/components/vex-page-layout/vex-page-layout.component';
 import { VexPageLayoutHeaderDirective } from '@vex/components/vex-page-layout/vex-page-layout-header.directive';
 import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/vex-page-layout-content.directive';
 import { VexBreadcrumbsComponent } from '@vex/components/vex-breadcrumbs/vex-breadcrumbs.component';
-
-interface TicketDto {
-  id: number;
-  sessionId: number;
-  nombre: string;
-  fechaCreacion: string;
-}
+import { TicketsService, TicketDto } from '../service/tickets.service';
+import { TicketReciboService } from '../service/ticket-recibo.service';
 
 @Component({
   selector: 'vex-tickets-recibo',
@@ -25,6 +20,8 @@ interface TicketDto {
     VexPageLayoutContentDirective,
     VexBreadcrumbsComponent,
     MatTabsModule,
+    MatButtonModule,
+    MatIconModule,
     NgIf,
     NgFor,
     ReciboComponent
@@ -34,23 +31,127 @@ interface TicketDto {
 })
 export class TicketsReciboComponent implements OnInit {
   tickets: TicketDto[] = [];
+  selectedIndex = 0;
+  sessionId: number | null = null;
+  loading = false;
+  currentReciboId: number | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private ticketsService: TicketsService,
+    private ticketReciboService: TicketReciboService
+  ) {}
 
   ngOnInit(): void {
     const stored = localStorage.getItem('session-id');
-    const sessionId = stored ? Number(stored) : NaN;
-    if (!sessionId || Number.isNaN(sessionId)) {
+    const parsed = stored ? Number(stored) : NaN;
+    if (!parsed || Number.isNaN(parsed)) {
       this.tickets = [];
+      this.sessionId = null;
       return;
     }
 
-    const baseUrl = environment.apiUrlRelationalDb || 'http://localhost:8080';
-    const url = `${baseUrl}/tickets/session/${sessionId}`;
-    const headers = new HttpHeaders({ 'Accept': 'application/json' });
-    this.http.get<TicketDto[]>(url, { headers }).subscribe({
-      next: (resp) => (this.tickets = resp || []),
-      error: () => (this.tickets = [])
+    this.sessionId = parsed;
+    this.loadTickets(parsed);
+  }
+
+  newTicket(): void {
+    if (this.sessionId === null) {
+      return;
+    }
+    const nextNumber = (this.tickets?.length || 0) + 1;
+    const nombre = `Ticket ${nextNumber}`;
+    this.loading = true;
+    this.ticketsService.createTicket(this.sessionId, nombre).subscribe({
+      next: (ticket) => {
+        this.tickets = [...this.tickets, ticket];
+        this.selectedIndex = this.tickets.length - 1;
+        this.fetchReciboForTicket(ticket.id);
+        this.loading = false;
+      },
+      error: (err) => {
+        this.loading = false;
+        console.error('Error creating ticket', err);
+      }
+    });
+  }
+
+  selectTicket(index: number): void {
+    if (index < 0 || index >= this.tickets.length) {
+      return;
+    }
+    this.selectedIndex = index;
+    const ticket = this.tickets[index];
+    this.fetchReciboForTicket(ticket.id);
+  }
+
+  deleteTicket(ticket: TicketDto, index: number, event: MouseEvent): void {
+    event.stopPropagation();
+    if (this.loading) {
+      return;
+    }
+    this.loading = true;
+    this.ticketsService.deleteTicket(ticket.id).subscribe({
+      next: () => {
+        const updated = [...this.tickets];
+        updated.splice(index, 1);
+        this.tickets = updated;
+        if (this.tickets.length === 0) {
+          this.selectedIndex = -1;
+          this.currentReciboId = null;
+        } else if (this.selectedIndex >= this.tickets.length) {
+          this.selectedIndex = this.tickets.length - 1;
+          this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
+        } else if (this.selectedIndex === index) {
+          this.selectedIndex = Math.max(0, index - 1);
+          this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
+        } else {
+          this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
+        }
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error deleting ticket', err);
+        this.loading = false;
+      }
+    });
+  }
+
+  private loadTickets(sessionId: number): void {
+    this.loading = true;
+    this.ticketsService.getTicketsBySession(sessionId).subscribe({
+      next: (resp) => {
+        this.tickets = resp || [];
+        this.selectedIndex = this.tickets.length > 0 ? 0 : -1;
+        if (this.selectedIndex >= 0) {
+          this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
+        } else {
+          this.currentReciboId = null;
+        }
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error loading tickets', err);
+        this.tickets = [];
+        this.selectedIndex = -1;
+        this.currentReciboId = null;
+        this.loading = false;
+      }
+    });
+  }
+
+  private fetchReciboForTicket(ticketId: number): void {
+    if (!ticketId) {
+      this.currentReciboId = null;
+      return;
+    }
+    this.ticketReciboService.getByTicketId(ticketId).subscribe({
+      next: (relation) => {
+        this.currentReciboId = relation?.reciboId ?? null;
+      },
+      error: (err) => {
+        console.error('Error loading ticket recibo relation', err);
+        this.currentReciboId = null;
+      }
     });
   }
 }
