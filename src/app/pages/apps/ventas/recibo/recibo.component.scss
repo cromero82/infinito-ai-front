@@ -8,3 +8,54 @@
   margin: 0;
 }
 
+.product-search {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.detalle-header,
+.detalle-row {
+  display: grid;
+  grid-template-columns: 1fr 120px 140px;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 16px;
+}
+
+.detalle-header {
+  font-weight: 600;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.detalle-row {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+
+  &:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.005);
+  }
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.01);
+  }
+
+  &.selected-detalle {
+    background-color: rgba(63, 81, 181, 0.15);
+    border-left: 3px solid #3f51b5;
+
+    &:hover {
+      background-color: rgba(63, 81, 181, 0.2);
+    }
+  }
+}
+
+.detalle-col.subtotal {
+  text-align: right;
+  font-weight: 600;
+}
+
+.detalle-col.cantidad {
+  text-align: center;
+}
+
