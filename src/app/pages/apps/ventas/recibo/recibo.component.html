@@ -1,106 +1,80 @@
-<div class="recibo-container p-4">
-  <h3 class="m-0">Recibo</h3>
-  <p class="text-secondary mb-2">
-    Ticket actual: <strong>{{ ticket?.nombre || 'Sin nombre' }}</strong>
-  </p>
-
+<div class="recibo-container">
   <ng-container *ngIf="reciboId !== null; else noReciboSeleccionado">
     <div *ngIf="loading" class="text-secondary">Cargando recibo...</div>
     <div *ngIf="!loading && recibo; else reciboNoDisponible">
-      <p class="text-secondary mb-2">
-        Número de recibo:
-        <strong>{{ recibo ? ('#' + recibo.id) : 'Sin recibo' }}</strong>
-      </p>
-      <p class="text-secondary mb-2">
-        Cliente:
-        <strong>{{ recibo && recibo.cliente ? recibo.cliente.nombre : 'Sin cliente' }}</strong>
-        <span *ngIf="recibo && recibo.cliente && recibo.cliente.documento">
-          ({{ recibo.cliente.documento }})
-        </span>
-      </p>
-      <p class="text-secondary mb-2">
-        Creado:
-        {{
-          recibo
-            ? (recibo.fechaCreacion | date: 'medium')
-            : ('Sin fecha')
-        }}
-      </p>
-      <p class="text-secondary mb-2">
-        Estado: <strong>{{ recibo ? recibo.estado : 'Sin estado' }}</strong>
-      </p>
-      <p class="text-secondary mb-2">
-        Total:
-        <strong>
-          {{
-            recibo
-              ? (recibo.total | currency:'USD':'symbol':'1.2-2')
-              : ('0' | currency:'USD':'symbol':'1.2-2')
-          }}
-        </strong>
-      </p>
-      <p class="text-secondary mb-2">
-        Método de pago:
-        <strong>{{ recibo ? (recibo.metodoPagoId != null ? recibo.metodoPagoId : 'Sin asignar') : 'Sin asignar' }}</strong>
-      </p>
-      <p class="text-secondary mt-4">Contenido del recibo próximamente...</p>
-
-      <div class="product-search mt-6">
-        <mat-form-field appearance="outline" class="flex-auto">
-          <mat-label>Agregar producto (código o nombre)</mat-label>
-          <input
-            #productSearchInput
-            matInput
-            [formControl]="productSearchCtrl"
-            (keyup.enter)="searchAndAddProduct()"
-            [disabled]="!reciboId || searchingProduct || loading"
-            placeholder="Ej. código de barras" />
-        </mat-form-field>
-        <button
-          mat-flat-button
-          color="primary"
-          type="button"
-          (click)="searchAndAddProduct()"
-          [disabled]="!reciboId || searchingProduct || loading">
-          {{ searchingProduct ? 'Buscando...' : 'Agregar' }}
-        </button>
-      </div>
-      <div class="text-warn mt-2" *ngIf="productSearchError">
-        {{ productSearchError }}
-      </div>
-
-      <div class="mt-6">
-        <h4 class="subtitle-2 mb-2">Detalles</h4>
-        <div *ngIf="detallesLoading" class="text-secondary">Cargando detalles...</div>
-        <div *ngIf="!detallesLoading && detallesError" class="text-warn">
-          {{ detallesError }}
+      <div class="mt-2">
+        <div class="product-search">
+          <mat-form-field appearance="outline" class="flex-auto search-input">
+            <mat-label>Agregar producto (código o nombre)</mat-label>
+            <input
+              #productSearchInput
+              matInput
+              [formControl]="productSearchCtrl"
+              (keyup.enter)="searchAndAddProduct()"
+              [disabled]="!reciboId || searchingProduct || loading"
+              placeholder="Ej. código de barras" />
+          </mat-form-field>
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            (click)="searchAndAddProduct()"
+            [disabled]="!reciboId || searchingProduct || loading">
+            {{ searchingProduct ? 'Buscando...' : 'Agregar' }}
+          </button>
         </div>
-        <div *ngIf="!detallesLoading && !detallesError">
-          <div *ngIf="detalles.length > 0; else sinDetalles">
-            <div class="detalle-header">
-              <span class="detalle-col producto">Producto</span>
-              <span class="detalle-col cantidad">Cantidad</span>
-              <span class="detalle-col subtotal">Subtotal</span>
-            </div>
-            <div
-              class="detalle-row"
-              *ngFor="let det of detalles; let i = index"
-              [class.selected-detalle]="selectedDetalleIndex === i"
-              (click)="selectDetalle(i)">
-              <span class="detalle-col producto">
-                {{ det.producto ? det.producto.nombre : ('Producto ' + det.productoId) }}
-              </span>
-              <span class="detalle-col cantidad">
-                {{ det.cantidad }}
-              </span>
-              <span class="detalle-col subtotal">
-                {{ det.subtotal | currency:'USD':'symbol':'1.2-2' }}
-              </span>
-            </div>
+        <div class="text-warn mt-2" *ngIf="productSearchError">
+          {{ productSearchError }}
+        </div>
+
+        <div class="detalle-wrapper">
+          <div *ngIf="detallesLoading" class="text-secondary">Cargando detalles...</div>
+          <div *ngIf="!detallesLoading && detallesError" class="text-warn">
+            {{ detallesError }}
           </div>
-          <ng-template #sinDetalles>
-            <div class="text-secondary">Este recibo no tiene detalles registrados.</div>
-          </ng-template>
+          <div *ngIf="!detallesLoading && !detallesError">
+            <div *ngIf="detalles.length > 0; else sinDetalles">
+              <div class="detalle-header">
+                <span class="detalle-col producto">Producto</span>
+                <span class="detalle-col unitario">Valor unitario</span>
+                <span class="detalle-col cantidad">Cantidad</span>
+                <span class="detalle-col subtotal">Subtotal</span>
+              </div>
+              <div
+                class="detalle-row"
+                *ngFor="let det of detalles; let i = index"
+                [class.selected-detalle]="selectedDetalleIndex === i"
+                (click)="selectDetalle(i)">
+                <span class="detalle-col producto">
+                  {{ det.producto ? det.producto.nombre : ('Producto ' + det.productoId) }}
+                </span>
+                <span class="detalle-col unitario">
+                  {{ (det.producto?.precio ?? (det.cantidad ? det.subtotal / det.cantidad : 0)) | currency:'USD':'symbol':'1.2-2' }}
+                </span>
+                <span class="detalle-col cantidad">
+                  {{ det.cantidad }}
+                </span>
+                <span class="detalle-col subtotal">
+                  {{ det.subtotal | currency:'USD':'symbol':'1.2-2' }}
+                </span>
+              </div>
+              <div class="detalle-footer">
+                <span class="detalle-col producto total-label"></span>
+                <span class="detalle-col unitario">Total</span>
+                <span class="detalle-col cantidad"></span>
+                <span class="detalle-col subtotal total-value">
+                  {{
+                    recibo
+                      ? (recibo.total | currency:'USD':'symbol':'1.2-2')
+                      : ('0' | currency:'USD':'symbol':'1.2-2')
+                  }}
+                </span>
+              </div>
+            </div>
+            <ng-template #sinDetalles>
+              <div class="text-secondary">Este recibo no tiene detalles registrados.</div>
+            </ng-template>
+          </div>
         </div>
       </div>
     </div>
@@ -116,4 +90,3 @@
     </div>
   </ng-template>
 </div>
-

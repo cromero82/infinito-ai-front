@@ -27,6 +27,13 @@ export interface CreateReciboDetalleRequest {
   subtotal: number;
 }
 
+export interface UpdateReciboDetalleRequest {
+  reciboId: number;
+  productoId: number;
+  cantidad: number;
+  subtotal: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -46,6 +53,19 @@ export class ReciboDetalleService {
       'Accept': 'application/json'
     });
     return this.http.post<ReciboDetalleDto>(this.apiUrl, payload, { headers });
+  }
+
+  updateDetalle(
+    detalleId: number,
+    payload: UpdateReciboDetalleRequest
+  ): Observable<ReciboDetalleDto> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    });
+    return this.http.put<ReciboDetalleDto>(`${this.apiUrl}/${detalleId}`, payload, {
+      headers
+    });
   }
 
   deleteDetalle(detalleId: number): Observable<void> {

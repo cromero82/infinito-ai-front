@@ -5,10 +5,10 @@
   </vex-page-layout-header>
   <vex-page-layout-content [class.container]="true" class="-mt-6 pb-6">
     <div class="card tickets-card">
-      <div class="bg-app-bar px-6 h-16 border-b sticky left-0 flex items-center">
+      <div class="bg-app-bar px-6 h-12 border-b sticky left-0 flex items-center">
         <h2 class="title my-0">Ventas</h2>
       </div>
-      <div class="p-4">
+      <div class="px-4">
         <div class="tabs-container" *ngIf="tickets?.length; else noTickets">
           <div class="tabs-row">
             <nav
@@ -56,4 +56,3 @@
     </div>
   </vex-page-layout-content>
 </vex-page-layout>
-

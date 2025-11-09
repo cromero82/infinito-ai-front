@@ -6,18 +6,24 @@
 .recibo-container {
   width: 100%;
   margin: 0;
+  padding: 0 0 24px;
 }
 
 .product-search {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
+
+  .search-input {
+    min-width: 240px;
+  }
 }
 
 .detalle-header,
 .detalle-row {
   display: grid;
-  grid-template-columns: 1fr 120px 140px;
+  grid-template-columns: 1fr 140px 100px 140px;
   gap: 12px;
   padding: 8px 0;
   font-size: 16px;
@@ -55,7 +61,28 @@
   font-weight: 600;
 }
 
+.detalle-col.unitario,
 .detalle-col.cantidad {
-  text-align: center;
+  text-align: right;
+}
+
+.detalle-footer {
+  display: grid;
+  grid-template-columns: 1fr 140px 100px 140px;
+  gap: 12px;
+  padding: 12px 0 0;
+  margin-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  font-size: 17px;
+  font-weight: 600;
+
+  .total-label {
+    text-align: right;
+    padding-right: 12px;
+  }
+
+  .total-value {
+    text-align: right;
+  }
 }
 

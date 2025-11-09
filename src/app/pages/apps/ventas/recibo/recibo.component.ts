@@ -18,7 +18,8 @@ import { ReciboService, ReciboDto } from '../service/recibo.service';
 import {
   ReciboDetalleService,
   ReciboDetalleDto,
-  CreateReciboDetalleRequest
+  CreateReciboDetalleRequest,
+  UpdateReciboDetalleRequest
 } from '../service/recibo-detalle.service';
 import { RelationalProductService } from '../../products/service/relational-product.service';
 import { Producto, ProductPage } from '../../products/model/producto';
@@ -96,27 +97,50 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   @HostListener('document:keydown', ['$event'])
-  handleDeleteKey(event: KeyboardEvent): void {
+  handleKeyboardShortcuts(event: KeyboardEvent): void {
+    if (this.selectedDetalleIndex < 0) {
+      return;
+    }
+
     const isMinusKey =
       event.key === '-' ||
       event.key === 'Minus' ||
       event.code === 'Minus' ||
       event.code === 'NumpadSubtract';
 
-    if (!isMinusKey || this.selectedDetalleIndex < 0) {
+    const isPlusKey =
+      event.key === '+' ||
+      event.key === 'Add' ||
+      event.code === 'NumpadAdd' ||
+      (event.code === 'Equal' && event.shiftKey);
+
+    if (!isMinusKey && !isPlusKey) {
       return;
     }
 
-    const target = event.target as HTMLElement;
-    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
-      if (target === this.productSearchInput?.nativeElement) {
-        return;
-      }
+    const target = event.target as HTMLElement | null;
+    const isTextInput =
+      target !== null &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        (target as HTMLElement).isContentEditable);
+    const isSearchInput = target === this.productSearchInput?.nativeElement;
+
+    if (isTextInput && !isSearchInput) {
+      return;
     }
 
     event.preventDefault();
     event.stopPropagation();
-    this.deleteSelectedDetalle();
+
+    if (isMinusKey) {
+      this.decrementSelectedDetalleQuantity();
+      return;
+    }
+
+    if (isPlusKey) {
+      this.incrementSelectedDetalleQuantity();
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -369,6 +393,133 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       },
       error: (err: unknown) => {
         console.error('Error deleting detalle', err);
+      }
+    });
+  }
+
+  private incrementSelectedDetalleQuantity(): void {
+    if (this.selectedDetalleIndex < 0 || this.selectedDetalleIndex >= this.detalles.length) {
+      return;
+    }
+
+    const detalle = this.detalles[this.selectedDetalleIndex];
+    const currentCantidad = Number(detalle.cantidad ?? 0);
+    const unitPrice =
+      detalle.producto?.precio ??
+      (currentCantidad > 0 ? Number(detalle.subtotal ?? 0) / currentCantidad : 0);
+
+    if (!detalle.id || unitPrice <= 0 || !detalle.reciboId || !detalle.productoId) {
+      return;
+    }
+
+    const newCantidad = currentCantidad + 1;
+    const newSubtotal = unitPrice * newCantidad;
+    const previousDetalle = { ...detalle };
+
+    const payload: UpdateReciboDetalleRequest = {
+      reciboId: detalle.reciboId,
+      productoId: detalle.productoId,
+      cantidad: newCantidad,
+      subtotal: newSubtotal
+    };
+
+    const optimisticDetalle: ReciboDetalleDto = {
+      ...detalle,
+      cantidad: newCantidad,
+      subtotal: newSubtotal
+    };
+
+    const updatedList = [...this.detalles];
+    updatedList[this.selectedDetalleIndex] = optimisticDetalle;
+    this.detalles = updatedList;
+    this.recalculateTotal();
+
+    // Keep focus on search input
+    this.focusSearchInput();
+
+    this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
+      next: (updatedDetalle) => {
+        const updatedListFinal = [...this.detalles];
+        const detalleActualizado = {
+          ...optimisticDetalle,
+          ...updatedDetalle,
+          cantidad: newCantidad,
+          subtotal: newSubtotal
+        };
+        updatedListFinal[this.selectedDetalleIndex] = detalleActualizado;
+        this.detalles = updatedListFinal;
+        this.recalculateTotal();
+      },
+      error: (err: unknown) => {
+        const revertedList = [...this.detalles];
+        revertedList[this.selectedDetalleIndex] = previousDetalle;
+        this.detalles = revertedList;
+        this.recalculateTotal();
+        console.error('Error updating detalle quantity', err);
+      }
+    });
+  }
+
+  private decrementSelectedDetalleQuantity(): void {
+    if (this.selectedDetalleIndex < 0 || this.selectedDetalleIndex >= this.detalles.length) {
+      return;
+    }
+
+    const detalle = this.detalles[this.selectedDetalleIndex];
+    const currentCantidad = Number(detalle.cantidad ?? 0);
+    if (currentCantidad <= 1) {
+      this.deleteSelectedDetalle();
+      return;
+    }
+
+    const unitPrice =
+      detalle.producto?.precio ??
+      (currentCantidad > 0 ? Number(detalle.subtotal ?? 0) / currentCantidad : 0);
+
+    if (!detalle.id || unitPrice <= 0 || !detalle.reciboId || !detalle.productoId) {
+      return;
+    }
+
+    const newCantidad = currentCantidad - 1;
+    const newSubtotal = unitPrice * newCantidad;
+    const previousDetalle = { ...detalle };
+
+    const payload: UpdateReciboDetalleRequest = {
+      reciboId: detalle.reciboId,
+      productoId: detalle.productoId,
+      cantidad: newCantidad,
+      subtotal: newSubtotal
+    };
+
+    const optimisticDetalle: ReciboDetalleDto = {
+      ...detalle,
+      cantidad: newCantidad,
+      subtotal: newSubtotal
+    };
+
+    const updatedList = [...this.detalles];
+    updatedList[this.selectedDetalleIndex] = optimisticDetalle;
+    this.detalles = updatedList;
+    this.recalculateTotal();
+    this.focusSearchInput();
+
+    this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
+      next: () => {
+        const updatedListFinal = [...this.detalles];
+        updatedListFinal[this.selectedDetalleIndex] = {
+          ...optimisticDetalle,
+          cantidad: newCantidad,
+          subtotal: newSubtotal
+        };
+        this.detalles = updatedListFinal;
+        this.recalculateTotal();
+      },
+      error: (err: unknown) => {
+        const revertedList = [...this.detalles];
+        revertedList[this.selectedDetalleIndex] = previousDetalle;
+        this.detalles = revertedList;
+        this.recalculateTotal();
+        console.error('Error updating detalle quantity', err);
       }
     });
   }
