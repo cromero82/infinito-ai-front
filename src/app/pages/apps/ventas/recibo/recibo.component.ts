@@ -5,9 +5,9 @@ import {
   SimpleChanges,
   OnInit,
   OnDestroy,
-  ViewChild,
-  ElementRef,
-  HostListener
+  HostListener,
+  Output,
+  EventEmitter
 } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -50,6 +50,8 @@ import {
 export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   @Input() ticket: any;
   @Input() reciboId: number | null = null;
+  @Input() searchInputElement: HTMLInputElement | null = null;
+  @Output() focusSearchInputRequest = new EventEmitter<void>();
 
   recibo: ReciboDto | null = null;
   detalles: ReciboDetalleDto[] = [];
@@ -64,8 +66,6 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   productSearchError: string | null = null;
   searchingProduct = false;
   private destroy$ = new Subject<void>();
-  @ViewChild('productSearchInput') productSearchInput?: ElementRef<HTMLInputElement>;
-
   constructor(
     private reciboService: ReciboService,
     private reciboDetalleService: ReciboDetalleService,
@@ -88,7 +88,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         }
         this.performProductSearch(term, true);
       });
-    this.focusSearchInput();
+    this.focusSearchInputRequest.emit();
   }
 
   ngOnDestroy(): void {
@@ -124,7 +124,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       (target.tagName === 'INPUT' ||
         target.tagName === 'TEXTAREA' ||
         (target as HTMLElement).isContentEditable);
-    const isSearchInput = target === this.productSearchInput?.nativeElement;
+    const isSearchInput = target === this.searchInputElement;
 
     if (isTextInput && !isSearchInput) {
       return;
@@ -217,13 +217,13 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         this.detalles = [...this.detalles, detalleConProducto];
         this.recalculateTotal();
         this.selectedDetalleIndex = this.detalles.length - 1;
-        this.focusSearchInput();
+        this.focusSearchInputRequest.emit();
       },
       error: (err: unknown) => {
         console.error('Error agregando producto al recibo', err);
         this.productSearchError = 'No se pudo agregar el producto.';
         this.searchingProduct = false;
-        this.focusSearchInput();
+        this.focusSearchInputRequest.emit();
       }
     });
   }
@@ -280,7 +280,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     this.productSearchCtrl.setValue('');
     this.productSearchError = null;
     this.searchingProduct = false;
-    this.focusSearchInput();
+    this.focusSearchInputRequest.emit();
   }
 
   private performProductSearch(term: string, triggeredAutomatically: boolean): void {
@@ -309,7 +309,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
           if (!triggeredAutomatically) {
             this.productSearchError = 'Producto no encontrado.';
           }
-          this.focusSearchInput();
+          this.focusSearchInputRequest.emit();
           return;
         }
 
@@ -328,7 +328,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
           if (selected) {
             this.addProductToRecibo(selected);
           } else {
-            this.focusSearchInput();
+            this.focusSearchInputRequest.emit();
           }
         });
       },
@@ -338,18 +338,9 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         if (!triggeredAutomatically) {
           this.productSearchError = 'Error al buscar el producto.';
         }
-        this.focusSearchInput();
+        this.focusSearchInputRequest.emit();
       }
     });
-  }
-
-  private focusSearchInput(): void {
-    setTimeout(() => {
-      if (this.productSearchInput?.nativeElement) {
-        this.productSearchInput.nativeElement.focus();
-        this.productSearchInput.nativeElement.select();
-      }
-    }, 100);
   }
 
   private recalculateTotal(): void {
@@ -372,6 +363,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     } else {
       this.selectedDetalleIndex = index;
     }
+    this.focusSearchInputRequest.emit();
   }
 
   deleteSelectedDetalle(): void {
@@ -389,7 +381,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
           this.detalles.length === 0
             ? -1
             : Math.min(this.selectedDetalleIndex, this.detalles.length - 1);
-        this.focusSearchInput();
+        this.focusSearchInputRequest.emit();
       },
       error: (err: unknown) => {
         console.error('Error deleting detalle', err);
@@ -435,7 +427,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     this.recalculateTotal();
 
     // Keep focus on search input
-    this.focusSearchInput();
+        this.focusSearchInputRequest.emit();
 
     this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
       next: (updatedDetalle) => {
@@ -501,7 +493,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     updatedList[this.selectedDetalleIndex] = optimisticDetalle;
     this.detalles = updatedList;
     this.recalculateTotal();
-    this.focusSearchInput();
+    this.focusSearchInputRequest.emit();
 
     this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
       next: () => {

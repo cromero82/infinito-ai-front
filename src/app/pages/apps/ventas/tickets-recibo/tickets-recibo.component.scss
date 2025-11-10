@@ -16,6 +16,39 @@ vex-page-layout-header .container {
   margin-top: -90px;
 }
 
+:host ::ng-deep .tickets-card .bg-app-bar {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 16px;
+}
+
+.search-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 620px;
+  width: 100%;
+
+  .search-wrapper {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+
+    .search-input {
+      flex: 1 1 auto;
+      min-width: 240px;
+    }
+  }
+}
+
 .tabs-container {
   width: 100%;
   margin: 0;

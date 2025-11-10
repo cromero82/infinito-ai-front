@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonModule } from '@angular/material/button';
 import { NgIf, NgFor } from '@angular/common';
@@ -10,6 +10,9 @@ import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/v
 import { VexBreadcrumbsComponent } from '@vex/components/vex-breadcrumbs/vex-breadcrumbs.component';
 import { TicketsService, TicketDto } from '../service/tickets.service';
 import { TicketReciboService } from '../service/ticket-recibo.service';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'vex-tickets-recibo',
@@ -22,6 +25,9 @@ import { TicketReciboService } from '../service/ticket-recibo.service';
     MatTabsModule,
     MatButtonModule,
     MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    ReactiveFormsModule,
     NgIf,
     NgFor,
     ReciboComponent
@@ -29,12 +35,14 @@ import { TicketReciboService } from '../service/ticket-recibo.service';
   templateUrl: './tickets-recibo.component.html',
   styleUrls: ['./tickets-recibo.component.scss']
 })
-export class TicketsReciboComponent implements OnInit {
+export class TicketsReciboComponent implements OnInit, AfterViewInit {
   tickets: TicketDto[] = [];
   selectedIndex = 0;
   sessionId: number | null = null;
   loading = false;
   currentReciboId: number | null = null;
+  @ViewChild('productSearchInput') productSearchInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('reciboCmp') reciboComponent?: ReciboComponent;
 
   constructor(
     private ticketsService: TicketsService,
@@ -52,6 +60,34 @@ export class TicketsReciboComponent implements OnInit {
 
     this.sessionId = parsed;
     this.loadTickets(parsed);
+  }
+
+  ngAfterViewInit(): void {
+    this.focusProductSearch(false);
+  }
+
+  focusProductSearch(select: boolean = true): void {
+    setTimeout(() => {
+      const input = this.productSearchInput?.nativeElement;
+      if (input) {
+        input.focus();
+        if (select) {
+          input.select();
+        }
+      }
+    }, 0);
+  }
+
+  triggerProductSearch(): void {
+    this.reciboComponent?.searchAndAddProduct();
+    this.focusProductSearch(false);
+  }
+
+  clearProductSearch(): void {
+    if (this.reciboComponent) {
+      this.reciboComponent.productSearchCtrl.setValue('');
+      this.focusProductSearch(false);
+    }
   }
 
   newTicket(): void {
@@ -147,6 +183,9 @@ export class TicketsReciboComponent implements OnInit {
     this.ticketReciboService.getByTicketId(ticketId).subscribe({
       next: (relation) => {
         this.currentReciboId = relation?.reciboId ?? null;
+        if (this.currentReciboId) {
+          this.focusProductSearch(false);
+        }
       },
       error: (err) => {
         console.error('Error loading ticket recibo relation', err);
