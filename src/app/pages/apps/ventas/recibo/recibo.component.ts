@@ -7,7 +7,9 @@ import {
   OnDestroy,
   HostListener,
   Output,
-  EventEmitter
+  EventEmitter,
+  ViewChild,
+  ElementRef
 } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -66,6 +68,13 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   productSearchError: string | null = null;
   searchingProduct = false;
   private destroy$ = new Subject<void>();
+  @ViewChild('detalleList') detalleListRef?: ElementRef<HTMLDivElement>;
+  private readonly currencyFormatter = new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
   constructor(
     private reciboService: ReciboService,
     private reciboDetalleService: ReciboDetalleService,
@@ -218,6 +227,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         this.recalculateTotal();
         this.selectedDetalleIndex = this.detalles.length - 1;
         this.focusSearchInputRequest.emit();
+        this.scrollDetalleListToBottom();
       },
       error: (err: unknown) => {
         console.error('Error agregando producto al recibo', err);
@@ -514,6 +524,22 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         console.error('Error updating detalle quantity', err);
       }
     });
+  }
+
+  private scrollDetalleListToBottom(): void {
+    const listEl = this.detalleListRef?.nativeElement;
+    if (!listEl) {
+      return;
+    }
+    requestAnimationFrame(() => {
+      listEl.scrollTop = listEl.scrollHeight;
+    });
+  }
+
+  formatCurrency(value: number | null | undefined): string {
+    const numericValue = Number(value ?? 0);
+    const formatted = this.currencyFormatter.format(numericValue);
+    return formatted.replace('COP', '$').trim();
   }
 }
 

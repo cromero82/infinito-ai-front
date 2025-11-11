@@ -24,23 +24,24 @@ vex-page-layout-header .container {
 .header-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   width: 100%;
-  gap: 16px;
+  gap: 24px;
 }
 
 .search-controls {
   display: flex;
   align-items: center;
   gap: 12px;
-  max-width: 620px;
-  width: 100%;
+  max-width: 380px;
+  width: auto;
+  flex: 0 1 380px;
 
   .search-wrapper {
     height: 48px;
     display: flex;
     align-items: center;
-    flex: 1 1 auto;
+    flex: 1 1 100%;
 
     .search-input {
       flex: 1 1 auto;
@@ -150,5 +151,36 @@ vex-page-layout-header .container {
 
 .ticket-panel {
   margin-top: 16px;
-}
+  min-height: calc(100vh - 280px);
+  display: flex;
+  flex-direction: column;
 
+  ::ng-deep .recibo-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+  }
+
+  ::ng-deep .detalle-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  ::ng-deep .detalle-wrapper {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  ::ng-deep .detalle-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+
+  ::ng-deep .detalle-footer-wrapper {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: flex-end;
+  }
+}

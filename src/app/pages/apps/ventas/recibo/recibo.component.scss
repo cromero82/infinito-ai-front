@@ -3,68 +3,98 @@
   width: 100%;
 }
 
+:host {
+  display: block;
+  width: 100%;
+}
+
 .recibo-container {
   width: 100%;
   margin: 0;
   padding: 0 0 24px;
 }
 
-.detalle-header,
-.detalle-row {
-  display: grid;
-  grid-template-columns: 1fr 140px 100px 140px;
-  gap: 12px;
-  padding: 8px 0;
-  font-size: 16px;
-  padding-left: 12px;
+.detalle-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 440px;
+}
+
+.detalle-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
 }
 
 .detalle-header {
+  display: grid;
+  grid-template-columns: 1fr 140px 100px 140px;
+  gap: 12px;
+  padding: 8px 12px;
+  font-size: 16px;
   font-weight: 600;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-.detalle-row {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-  cursor: pointer;
+.detalle-list {
+  flex: 1 1 auto;
+  max-height: min(480px, calc(100vh - 360px));
+  overflow-y: auto;
 
-  &:nth-child(even) {
-    background-color: rgba(0, 0, 0, 0.005);
-  }
+  .detalle-row {
+    display: grid;
+    grid-template-columns: 1fr 140px 100px 140px;
+    gap: 12px;
+    padding: 8px 12px;
+    font-size: 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    cursor: pointer;
 
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.01);
-  }
-
-  &.selected-detalle {
-    background-color: rgba(63, 81, 181, 0.15);
-    border-left: 3px solid #3f51b5;
+    &:nth-child(even) {
+      background-color: rgba(0, 0, 0, 0.005);
+    }
 
     &:hover {
-      background-color: rgba(63, 81, 181, 0.2);
+      background-color: rgba(0, 0, 0, 0.01);
+    }
+
+    &.selected-detalle {
+      background-color: rgba(63, 81, 181, 0.15);
+      border-left: 3px solid #3f51b5;
+
+      &:hover {
+        background-color: rgba(63, 81, 181, 0.2);
+      }
+    }
+
+    .detalle-col.unitario,
+    .detalle-col.cantidad,
+    .detalle-col.subtotal {
+      text-align: right;
+    }
+
+    .detalle-col.subtotal {
+      font-weight: 600;
     }
   }
 }
 
-.detalle-col.subtotal {
-  text-align: right;
-  font-weight: 600;
-}
-
-.detalle-col.unitario,
-.detalle-col.cantidad {
-  text-align: right;
+.detalle-footer-wrapper {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .detalle-footer {
   display: grid;
   grid-template-columns: 1fr 140px 100px 140px;
   gap: 12px;
-  padding: 12px 0 0;
-  margin-top: 8px;
+  padding: 12px 12px 0;
   border-top: 1px solid rgba(0, 0, 0, 0.12);
   font-size: 17px;
   font-weight: 600;
+  width: 100%;
+  max-width: 800px;
 
   .total-label {
     text-align: right;
@@ -73,6 +103,14 @@
 
   .total-value {
     text-align: right;
+  }
+
+  .total-value--highlight {
+    background-color: rgba(76, 175, 80, 0.15);
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 22px;
   }
 }
 
