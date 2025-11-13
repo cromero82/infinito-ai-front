@@ -75,7 +75,8 @@
               [ticket]="activeTicket"
               [reciboId]="currentReciboId"
               [searchInputElement]="productSearchInput?.nativeElement || null"
-              (focusSearchInputRequest)="focusProductSearch()"></vex-recibo>
+              (focusSearchInputRequest)="focusProductSearch()"
+              (metodoPagoActualizado)="recargarRecibo()"></vex-recibo>
           </div>
           <ng-template #noTicketSelected>
             <div class="ticket-panel-empty"></div>

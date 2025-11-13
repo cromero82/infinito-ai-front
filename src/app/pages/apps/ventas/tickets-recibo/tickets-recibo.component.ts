@@ -90,6 +90,12 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit {
     }
   }
 
+  recargarRecibo(): void {
+    if (this.selectedIndex >= 0 && this.selectedIndex < this.tickets.length) {
+      this.fetchReciboForTicket(this.tickets[this.selectedIndex].id, true);
+    }
+  }
+
   newTicket(): void {
     if (this.sessionId === null) {
       return;
@@ -175,16 +181,25 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit {
     });
   }
 
-  private fetchReciboForTicket(ticketId: number): void {
+  private fetchReciboForTicket(ticketId: number, forceReload: boolean = false): void {
     if (!ticketId) {
       this.currentReciboId = null;
       return;
     }
     this.ticketReciboService.getByTicketId(ticketId).subscribe({
       next: (relation) => {
-        this.currentReciboId = relation?.reciboId ?? null;
-        if (this.currentReciboId) {
-          this.focusProductSearch(false);
+        const nuevoReciboId = relation?.reciboId ?? null;
+        if (forceReload && nuevoReciboId && this.currentReciboId === nuevoReciboId) {
+          this.currentReciboId = null;
+          setTimeout(() => {
+            this.currentReciboId = nuevoReciboId;
+            this.focusProductSearch(false);
+          }, 0);
+        } else {
+          this.currentReciboId = nuevoReciboId;
+          if (this.currentReciboId) {
+            this.focusProductSearch(false);
+          }
         }
       },
       error: (err) => {

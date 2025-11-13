@@ -46,8 +46,33 @@
 
   <div class="detalle-footer-wrapper" *ngIf="!loading && recibo">
     <div class="detalle-footer">
-      <span class="detalle-col producto total-label"></span>
-      <span class="detalle-col unitario"></span>
+        <span class="detalle-col producto total-label">
+          <div class="metodos-pago" *ngIf="detalles.length > 0">
+            <ng-container *ngFor="let metodo of metodosPago">
+              <button
+                *ngIf="metodo.estado !== 'inactivo'"
+                type="button"
+                class="metodo-pago-btn"
+                mat-icon-button
+                [matTooltip]="metodo.descripcion"
+                (click)="seleccionarMetodoPago(metodo)"
+                [disabled]="actualizandoMetodoPago"
+                [class.metodo-pago-seleccionado]="recibo && recibo.metodoPagoId === metodo.id"
+                (click)="seleccionarMetodoPago(metodo)">
+                <img
+                  [src]="'assets/img/icons/payments/' + metodo.file"
+                  [alt]="metodo.descripcion"
+                  class="metodo-pago-icon" />
+                <mat-icon
+                  *ngIf="metodo.estado !== 'activo'"
+                  class="metodo-pago-warning"
+                  svgIcon="mat:warning">
+                </mat-icon>
+              </button>
+            </ng-container>
+          </div>
+        </span>
+        <span class="detalle-col unitario"></span>
       <span class="detalle-col cantidad">TOTAL</span>
       <span class="detalle-col subtotal total-value total-value--highlight">
         {{ formatCurrency(recibo ? recibo.total : 0) }}

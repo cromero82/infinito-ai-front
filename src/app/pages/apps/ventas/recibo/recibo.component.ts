@@ -16,22 +16,32 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { ReciboService, ReciboDto } from '../service/recibo.service';
+import { RelationalProductService } from '../../products/service/relational-product.service';
+import { Producto, ProductPage } from '../../products/model/producto';
+import { Subject, of, throwError, Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil, switchMap, tap, map, finalize } from 'rxjs/operators';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatIconModule } from '@angular/material/icon';
 import {
   ReciboDetalleService,
   ReciboDetalleDto,
   CreateReciboDetalleRequest,
   UpdateReciboDetalleRequest
 } from '../service/recibo-detalle.service';
-import { RelationalProductService } from '../../products/service/relational-product.service';
-import { Producto, ProductPage } from '../../products/model/producto';
-import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MetodoPagoService, MetodoPagoDto } from '../service/metodo-pago.service';
+import { ReciboService, ReciboDto, ActualizarReciboRequest } from '../service/recibo.service';
+import { TicketReciboService, TicketReciboDto } from '../service/ticket-recibo.service';
 import {
   ProductListSelectComponent,
   ProductListSelectData
 } from '../product-list-select/product-list-select.component';
+
+const ESTADOS_RECIBO = {
+  PENDIENTE_PAGO: 1,
+  PAGADO: 2,
+  ANULADO: 3
+} as const;
 
 @Component({
   selector: 'vex-recibo',
@@ -43,6 +53,8 @@ import {
     MatInputModule,
     MatButtonModule,
     MatDialogModule,
+    MatIconModule,
+    MatTooltipModule,
     CurrencyPipe,
     DatePipe
   ],
@@ -54,6 +66,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   @Input() reciboId: number | null = null;
   @Input() searchInputElement: HTMLInputElement | null = null;
   @Output() focusSearchInputRequest = new EventEmitter<void>();
+  @Output() metodoPagoActualizado = new EventEmitter<void>();
 
   recibo: ReciboDto | null = null;
   detalles: ReciboDetalleDto[] = [];
@@ -75,11 +88,15 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   });
+  metodosPago: MetodoPagoDto[] = [];
+  actualizandoMetodoPago = false;
   constructor(
     private reciboService: ReciboService,
     private reciboDetalleService: ReciboDetalleService,
     private relationalProductService: RelationalProductService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private metodoPagoService: MetodoPagoService,
+    private ticketReciboService: TicketReciboService
   ) {}
 
   ngOnInit(): void {
@@ -98,6 +115,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         this.performProductSearch(term, true);
       });
     this.focusSearchInputRequest.emit();
+    this.cargarMetodosPago();
   }
 
   ngOnDestroy(): void {
@@ -536,10 +554,107 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     });
   }
 
+  private cargarMetodosPago(): void {
+    this.metodoPagoService
+      .obtenerMetodosPago()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (metodos) =>
+          (this.metodosPago = (metodos ?? []).slice().sort((a, b) => a.id - b.id)),
+        error: (err) => console.error('Error cargando métodos de pago', err)
+      });
+  }
+
   formatCurrency(value: number | null | undefined): string {
     const numericValue = Number(value ?? 0);
     const formatted = this.currencyFormatter.format(numericValue);
     return formatted.replace('COP', '$').trim();
+  }
+
+  seleccionarMetodoPago(metodo: MetodoPagoDto): void {
+    if (!metodo || metodo.estado === 'inactivo' || !this.recibo || !this.reciboId || this.actualizandoMetodoPago) {
+      return;
+    }
+
+    if (this.recibo.metodoPagoId === metodo.id) {
+      return;
+    }
+
+    this.actualizandoMetodoPago = true;
+
+    this.obtenerTicketAsociado()
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap((ticketId) => {
+          const payload: ActualizarReciboRequest = {
+            clienteId: this.recibo!.clienteId,
+            ticketId,
+            estadoId: ESTADOS_RECIBO.PAGADO,
+            metodoPagoId: metodo.id,
+            total: Number(this.recibo!.total ?? 0).toFixed(2)
+          };
+
+          return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
+            switchMap(() =>
+              this.ticketReciboService.getByTicketId(ticketId).pipe(
+                tap((relacion) => {
+                  if (!relacion?.reciboId) {
+                    throw new Error('No se encontró relación recibo para este ticket.');
+                  }
+                }),
+                map((relacion) => relacion!.reciboId)
+              )
+            )
+          );
+        }),
+        finalize(() => {
+          this.actualizandoMetodoPago = false;
+        })
+      )
+      .subscribe({
+        next: (reciboIdActualizado) => {
+          this.reciboService
+            .getRecibo(reciboIdActualizado)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: (reciboActualizado) => {
+                this.recibo = {
+                  ...this.recibo!,
+                  ...reciboActualizado
+                };
+                this.fetchDetalles(reciboIdActualizado);
+                this.metodoPagoActualizado.emit();
+              },
+              error: (err) => {
+                console.error('Error recargando recibo actualizado', err);
+              }
+            });
+        },
+        error: (err: unknown) => {
+          console.error('Error actualizando método de pago', err);
+          }
+      });
+  }
+
+  private obtenerTicketAsociado(): Observable<number> {
+    if (this.ticket?.id) {
+      return of(this.ticket.id);
+    }
+    if (this.recibo?.ticketId) {
+      return of(this.recibo.ticketId);
+    }
+    if (!this.recibo?.id) {
+      return throwError(() => new Error('Recibo no válido para determinar ticket.'));
+    }
+
+    return this.ticketReciboService.getByReciboId(this.recibo.id).pipe(
+      map((relacion) => {
+        if (!relacion?.ticketId) {
+          throw new Error('No se encontró un ticket asociado al recibo.');
+        }
+        return relacion.ticketId;
+      })
+    );
   }
 }
 

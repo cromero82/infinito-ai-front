@@ -17,6 +17,15 @@ export interface ReciboDto {
   estado: string;
   metodoPagoId: number | null;
   total: number;
+  ticketId?: number;
+}
+
+export interface ActualizarReciboRequest {
+  clienteId: number;
+  ticketId: number;
+  estadoId: number;
+  metodoPagoId: number;
+  total: string;
 }
 
 @Injectable({
@@ -30,6 +39,17 @@ export class ReciboService {
   getRecibo(reciboId: number): Observable<ReciboDto> {
     const headers = new HttpHeaders({ 'Accept': 'application/json' });
     return this.http.get<ReciboDto>(`${this.apiUrl}/${reciboId}`, { headers });
+  }
+
+  actualizarRecibo(
+    reciboId: number,
+    payload: ActualizarReciboRequest
+  ): Observable<ReciboDto> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    });
+    return this.http.put<ReciboDto>(`${this.apiUrl}/${reciboId}`, payload, { headers });
   }
 }
 

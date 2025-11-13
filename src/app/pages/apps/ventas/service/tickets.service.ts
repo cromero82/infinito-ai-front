@@ -8,6 +8,7 @@ export interface TicketDto {
   sessionId: number;
   nombre: string;
   fechaCreacion: string;
+  reciboId?: number | null;
 }
 
 @Injectable({
