@@ -221,6 +221,81 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
+    // Check if product already exists in detalles
+    const existingDetalleIndex = this.detalles.findIndex(
+      (det) => det.productoId === product.id
+    );
+
+    if (existingDetalleIndex >= 0) {
+      // Product exists, increment quantity
+      const existingDetalle = this.detalles[existingDetalleIndex];
+      const currentCantidad = Number(existingDetalle.cantidad ?? 0);
+      const unitPrice =
+        existingDetalle.producto?.precio ??
+        (currentCantidad > 0 ? Number(existingDetalle.subtotal ?? 0) / currentCantidad : product.precio ?? 0);
+
+      if (!existingDetalle.id || unitPrice <= 0 || !existingDetalle.reciboId || !existingDetalle.productoId) {
+        this.productSearchError = 'No se pudo actualizar el producto existente.';
+        this.searchingProduct = false;
+        this.focusSearchInputRequest.emit();
+        return;
+      }
+
+      const newCantidad = currentCantidad + 1;
+      const newSubtotal = unitPrice * newCantidad;
+      const previousDetalle = { ...existingDetalle };
+
+      const payload: UpdateReciboDetalleRequest = {
+        reciboId: existingDetalle.reciboId,
+        productoId: existingDetalle.productoId,
+        cantidad: newCantidad,
+        subtotal: newSubtotal
+      };
+
+      const optimisticDetalle: ReciboDetalleDto = {
+        ...existingDetalle,
+        cantidad: newCantidad,
+        subtotal: newSubtotal
+      };
+
+      const updatedList = [...this.detalles];
+      updatedList[existingDetalleIndex] = optimisticDetalle;
+      this.detalles = updatedList;
+      this.recalculateTotal();
+      this.selectedDetalleIndex = existingDetalleIndex;
+      this.productSearchCtrl.setValue('');
+      this.searchingProduct = false;
+      this.productSearchError = null;
+      this.focusSearchInputRequest.emit();
+      this.scrollDetalleListToBottom();
+
+      this.reciboDetalleService.updateDetalle(existingDetalle.id, payload).subscribe({
+        next: (updatedDetalle) => {
+          const updatedListFinal = [...this.detalles];
+          const detalleActualizado = {
+            ...optimisticDetalle,
+            ...updatedDetalle,
+            cantidad: newCantidad,
+            subtotal: newSubtotal,
+            producto: updatedDetalle.producto ?? existingDetalle.producto
+          };
+          updatedListFinal[existingDetalleIndex] = detalleActualizado;
+          this.detalles = updatedListFinal;
+          this.recalculateTotal();
+        },
+        error: (err: unknown) => {
+          const revertedList = [...this.detalles];
+          revertedList[existingDetalleIndex] = previousDetalle;
+          this.detalles = revertedList;
+          this.recalculateTotal();
+          console.error('Error actualizando cantidad del producto', err);
+          this.productSearchError = 'No se pudo actualizar la cantidad.';
+        }
+      });
+      return;
+    }
+
+    // Product doesn't exist, create new detail
     const cantidad = 1;
     const subtotal = (product.precio ?? 0) * cantidad;
     const payload: CreateReciboDetalleRequest = {
