@@ -85,6 +85,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   productSearchCtrl = new FormControl('', { nonNullable: true });
   productSearchError: string | null = null;
   searchingProduct = false;
+  private dialogAbierto = false;
   private destroy$ = new Subject<void>();
   @ViewChild('detalleList') detalleListRef?: ElementRef<HTMLDivElement>;
   private readonly currencyFormatter = new Intl.NumberFormat('es-CO', {
@@ -126,6 +127,8 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.dialogAbierto = false;
+    this.searchingProduct = false;
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -313,11 +316,12 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     this.productSearchCtrl.setValue('');
     this.productSearchError = null;
     this.searchingProduct = false;
+    this.dialogAbierto = false;
     this.focusSearchInputRequest.emit();
   }
 
   private performProductSearch(term: string, triggeredAutomatically: boolean): void {
-    if (this.searchingProduct) {
+    if (this.searchingProduct || this.dialogAbierto) {
       return;
     }
     if (!this.reciboId) {
@@ -347,6 +351,10 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         }
 
         // total > 1
+        if (this.dialogAbierto) {
+          return;
+        }
+        this.dialogAbierto = true;
         const dialogRef = this.dialog.open<
           ProductListSelectComponent,
           ProductListSelectData,
@@ -358,6 +366,8 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         });
 
         dialogRef.afterClosed().subscribe((selected) => {
+          this.dialogAbierto = false;
+          this.searchingProduct = false;
           if (selected) {
             this.addProductToRecibo(selected);
           } else {
