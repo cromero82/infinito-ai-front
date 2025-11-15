@@ -1,0 +1,53 @@
+<h2 mat-dialog-title class="dialog-title">Pago en efectivo</h2>
+
+<div mat-dialog-content class="dialog-content extra-spacing">
+  <div class="total-a-pagar">
+    <span class="label">Total a pagar:</span>
+    <span class="value">{{ formatCurrency(total) }}</span>
+  </div>
+
+      <div class="total-a-pagar">
+        <span class="label">Paga con:</span>
+        <mat-form-field appearance="outline" class="paga-con-field">
+          <input
+            matInput
+            #pagaConInput
+            class="paga-con-input"
+            type="text"
+            [formControl]="pagaConCtrl"
+            (keydown)="onPagaConKeydown($event)" />
+        </mat-form-field>
+      </div>
+
+      <div class="billetes-grid">
+        <button
+          type="button"
+          mat-stroked-button
+          class="billete"
+          *ngFor="let billete of billetes"
+          [class.selected]="esBilleteSeleccionado(billete.valor)"
+          (click)="seleccionarBillete(billete.valor)">
+          <img [src]="billete.imagen" [alt]="billete.label" />
+          <span class="billete-label">{{ billete.label }}</span>
+        </button>
+      </div>
+
+      <div class="cambio" [class.cambio-insuficiente]="pagoInsuficiente">
+        <span class="label">Cambio:</span>
+        <span class="value">{{ formatCurrency(cambioParaMostrar) }}</span>
+      </div>
+</div>
+
+<div mat-dialog-actions align="end" class="dialog-actions">
+  <button mat-stroked-button type="button" (click)="cancelar()">Cancelar</button>
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        (click)="confirmar()"
+        [disabled]="!pagaConCtrl.value || pagoInsuficiente">
+    Confirmar
+  </button>
+</div>
+
+

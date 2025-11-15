@@ -18,7 +18,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { RelationalProductService } from '../../products/service/relational-product.service';
 import { Producto, ProductPage } from '../../products/model/producto';
-import { Subject, of, throwError, Observable } from 'rxjs';
+import { Subject, of, throwError, Observable, EMPTY } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil, switchMap, tap, map, finalize } from 'rxjs/operators';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -36,6 +36,11 @@ import {
   ProductListSelectComponent,
   ProductListSelectData
 } from '../product-list-select/product-list-select.component';
+import {
+  PagoEfectivoCambioComponent,
+  PagoEfectivoCambioData,
+  PagoEfectivoCambioResultado
+} from '../pago-efectivo-cambio/pago-efectivo-cambio.component';
 
 const ESTADOS_RECIBO = {
   PENDIENTE_PAGO: 1,
@@ -580,11 +585,37 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
+    const preProceso$: Observable<void> =
+      metodo.id === 1
+        ? this.dialog
+            .open<PagoEfectivoCambioComponent, PagoEfectivoCambioData, PagoEfectivoCambioResultado>(
+              PagoEfectivoCambioComponent,
+              {
+                width: '640px',
+                data: {
+                  total: Number(this.recibo?.total ?? 0)
+                },
+                autoFocus: false,
+                disableClose: true
+              }
+            )
+            .afterClosed()
+            .pipe(
+              switchMap((resultado) => {
+                if (!resultado) {
+                  return EMPTY;
+                }
+                return of(void 0);
+              })
+            )
+        : of(void 0);
+
     this.actualizandoMetodoPago = true;
 
-    this.obtenerTicketAsociado()
+    preProceso$
       .pipe(
         takeUntil(this.destroy$),
+        switchMap(() => this.obtenerTicketAsociado()),
         switchMap((ticketId) => {
           const payload: ActualizarReciboRequest = {
             clienteId: this.recibo!.clienteId,
@@ -597,42 +628,39 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
           return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
             switchMap(() =>
               this.ticketReciboService.getByTicketId(ticketId).pipe(
-                tap((relacion) => {
+                map((relacion) => {
                   if (!relacion?.reciboId) {
                     throw new Error('No se encontró relación recibo para este ticket.');
                   }
-                }),
-                map((relacion) => relacion!.reciboId)
+                  return relacion.reciboId;
+                })
               )
             )
           );
         }),
+        switchMap((reciboIdActualizado) =>
+          this.reciboService.getRecibo(reciboIdActualizado).pipe(
+            tap((reciboActualizado) => {
+              this.recibo = {
+                ...this.recibo!,
+                ...reciboActualizado
+              };
+              this.fetchDetalles(reciboActualizado.id);
+            }),
+            map(() => reciboIdActualizado)
+          )
+        ),
         finalize(() => {
           this.actualizandoMetodoPago = false;
         })
       )
       .subscribe({
-        next: (reciboIdActualizado) => {
-          this.reciboService
-            .getRecibo(reciboIdActualizado)
-            .pipe(takeUntil(this.destroy$))
-            .subscribe({
-              next: (reciboActualizado) => {
-                this.recibo = {
-                  ...this.recibo!,
-                  ...reciboActualizado
-                };
-                this.fetchDetalles(reciboIdActualizado);
-                this.metodoPagoActualizado.emit();
-              },
-              error: (err) => {
-                console.error('Error recargando recibo actualizado', err);
-              }
-            });
+        next: () => {
+          this.metodoPagoActualizado.emit();
         },
         error: (err: unknown) => {
           console.error('Error actualizando método de pago', err);
-          }
+        }
       });
   }
 
