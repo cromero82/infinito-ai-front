@@ -23,6 +23,7 @@ import { debounceTime, distinctUntilChanged, takeUntil, switchMap, tap, map, fin
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import {
   ReciboDetalleService,
   ReciboDetalleDto,
@@ -60,6 +61,7 @@ const ESTADOS_RECIBO = {
     MatDialogModule,
     MatIconModule,
     MatTooltipModule,
+    MatSnackBarModule,
     CurrencyPipe,
     DatePipe
   ],
@@ -102,7 +104,8 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     private relationalProductService: RelationalProductService,
     private dialog: MatDialog,
     private metodoPagoService: MetodoPagoService,
-    private ticketReciboService: TicketReciboService
+    private ticketReciboService: TicketReciboService,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
@@ -697,6 +700,9 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
 
     this.actualizandoMetodoPago = true;
 
+    // Capture total before starting the update process
+    const totalARegistrar = Number(this.recibo!.total ?? 0);
+
     preProceso$
       .pipe(
         takeUntil(this.destroy$),
@@ -707,7 +713,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
             ticketId,
             estadoId: ESTADOS_RECIBO.PAGADO,
             metodoPagoId: metodo.id,
-            total: Number(this.recibo!.total ?? 0).toFixed(2)
+            total: totalARegistrar.toFixed(2)
           };
 
           return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
@@ -717,14 +723,14 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
                   if (!relacion?.reciboId) {
                     throw new Error('No se encontró relación recibo para este ticket.');
                   }
-                  return relacion.reciboId;
+                  return { reciboId: relacion.reciboId, totalGuardado: totalARegistrar };
                 })
               )
             )
           );
         }),
-        switchMap((reciboIdActualizado) =>
-          this.reciboService.getRecibo(reciboIdActualizado).pipe(
+        switchMap(({ reciboId, totalGuardado }) =>
+          this.reciboService.getRecibo(reciboId).pipe(
             tap((reciboActualizado) => {
               this.recibo = {
                 ...this.recibo!,
@@ -732,7 +738,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
               };
               this.fetchDetalles(reciboActualizado.id);
             }),
-            map(() => reciboIdActualizado)
+            map(() => totalGuardado)
           )
         ),
         finalize(() => {
@@ -740,11 +746,57 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         })
       )
       .subscribe({
-        next: () => {
+        next: (totalGuardado) => {
+          const totalFormateado = this.formatCurrency(totalGuardado);
+          const snackBarRef = this.snackBar.open(
+            `Recibo por valor de ${totalFormateado} guardado correctamente`,
+            undefined,
+            {
+              duration: 5000,
+              horizontalPosition: 'right',
+              panelClass: ['recibo-snackbar-success']
+            }
+          );
+          // Make the currency value bold
+          setTimeout(() => {
+            const snackBarElement = document.querySelector('.recibo-snackbar-success .mat-mdc-snack-bar-label');
+            if (snackBarElement) {
+              const text = snackBarElement.textContent || '';
+              const currencyRegex = /\$\s*[\d.,]+/;
+              const match = text.match(currencyRegex);
+              if (match) {
+                const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+                snackBarElement.innerHTML = boldText;
+              }
+            }
+          }, 0);
           this.metodoPagoActualizado.emit();
         },
         error: (err: unknown) => {
           console.error('Error actualizando método de pago', err);
+          const totalFormateado = this.formatCurrency(totalARegistrar);
+          const snackBarRef = this.snackBar.open(
+            `No fue posible registrar el recibo - total: ${totalFormateado}`,
+            undefined,
+            {
+              duration: 7000,
+              horizontalPosition: 'right',
+              panelClass: ['recibo-snackbar-error']
+            }
+          );
+          // Make the currency value bold
+          setTimeout(() => {
+            const snackBarElement = document.querySelector('.recibo-snackbar-error .mat-mdc-snack-bar-label');
+            if (snackBarElement) {
+              const text = snackBarElement.textContent || '';
+              const currencyRegex = /\$\s*[\d.,]+/;
+              const match = text.match(currencyRegex);
+              if (match) {
+                const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+                snackBarElement.innerHTML = boldText;
+              }
+            }
+          }, 0);
         }
       });
   }
