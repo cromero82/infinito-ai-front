@@ -18,6 +18,7 @@ export interface ReciboDto {
   metodoPagoId: number | null;
   total: number;
   ticketId?: number;
+  sesionId?: number;
 }
 
 export interface ActualizarReciboRequest {
@@ -26,6 +27,7 @@ export interface ActualizarReciboRequest {
   estadoId: number;
   metodoPagoId: number;
   total: string;
+  sesionId?: number;
 }
 
 @Injectable({

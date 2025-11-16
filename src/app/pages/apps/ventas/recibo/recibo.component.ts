@@ -72,6 +72,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   @Input() ticket: any;
   @Input() reciboId: number | null = null;
   @Input() searchInputElement: HTMLInputElement | null = null;
+  @Input() sessionId: number | null = null;
   @Output() focusSearchInputRequest = new EventEmitter<void>();
   @Output() metodoPagoActualizado = new EventEmitter<void>();
 
@@ -347,7 +348,10 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     this.error = null;
     this.reciboService.getRecibo(id).subscribe({
       next: (resp) => {
-        this.recibo = resp;
+        this.recibo = {
+          ...resp,
+          sesionId: this.sessionId ?? resp.sesionId
+        };
         this.loading = false;
         this.fetchDetalles(id);
       },
@@ -708,25 +712,31 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         takeUntil(this.destroy$),
         switchMap(() => this.obtenerTicketAsociado()),
         switchMap((ticketId) => {
+          const sesionId = this.getSessionId();
           const payload: ActualizarReciboRequest = {
             clienteId: this.recibo!.clienteId,
             ticketId,
             estadoId: ESTADOS_RECIBO.PAGADO,
             metodoPagoId: metodo.id,
-            total: totalARegistrar.toFixed(2)
+            total: totalARegistrar.toFixed(2),
+            sesionId: sesionId ?? undefined
           };
 
           return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
-            switchMap(() =>
-              this.ticketReciboService.getByTicketId(ticketId).pipe(
+            switchMap(() => {
+              const sessionId = this.getSessionId();
+              if (!sessionId) {
+                throw new Error('No se encontró sessionId.');
+              }
+              return this.ticketReciboService.getByTicketId(ticketId, sessionId).pipe(
                 map((relacion) => {
                   if (!relacion?.reciboId) {
                     throw new Error('No se encontró relación recibo para este ticket.');
                   }
                   return { reciboId: relacion.reciboId, totalGuardado: totalARegistrar };
                 })
-              )
-            )
+              );
+            })
           );
         }),
         switchMap(({ reciboId, totalGuardado }) =>
@@ -734,7 +744,8 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
             tap((reciboActualizado) => {
               this.recibo = {
                 ...this.recibo!,
-                ...reciboActualizado
+                ...reciboActualizado,
+                sesionId: this.sessionId ?? reciboActualizado.sesionId
               };
               this.fetchDetalles(reciboActualizado.id);
             }),
@@ -820,6 +831,20 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         return relacion.ticketId;
       })
     );
+  }
+
+  private getSessionId(): number | null {
+    // First try to use the input sessionId
+    if (this.sessionId !== null && this.sessionId !== undefined) {
+      return this.sessionId;
+    }
+    // Fallback to localStorage
+    const stored = localStorage.getItem('session-id');
+    const parsed = stored ? Number(stored) : NaN;
+    if (!parsed || Number.isNaN(parsed)) {
+      return null;
+    }
+    return parsed;
   }
 }
 

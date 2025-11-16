@@ -131,6 +131,9 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit {
     if (this.loading) {
       return;
     }
+    if (this.sessionId === null) {
+      return;
+    }
     this.loading = true;
     this.ticketsService.deleteTicket(ticket.id).subscribe({
       next: () => {
@@ -138,18 +141,40 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit {
         updated.splice(index, 1);
         this.tickets = updated;
         if (this.tickets.length === 0) {
-          this.selectedIndex = -1;
-          this.currentReciboId = null;
+          // No tickets left, create a new one
+          if (this.sessionId === null) {
+            this.selectedIndex = -1;
+            this.currentReciboId = null;
+            this.loading = false;
+            return;
+          }
+          const nombre = 'Ticket 1';
+          this.ticketsService.createTicket(this.sessionId, nombre).subscribe({
+            next: (newTicket) => {
+              this.tickets = [newTicket];
+              this.selectedIndex = 0;
+              this.fetchReciboForTicket(newTicket.id);
+              this.loading = false;
+            },
+            error: (err) => {
+              console.error('Error creating ticket after deletion', err);
+              this.selectedIndex = -1;
+              this.currentReciboId = null;
+              this.loading = false;
+            }
+          });
         } else if (this.selectedIndex >= this.tickets.length) {
           this.selectedIndex = this.tickets.length - 1;
           this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
+          this.loading = false;
         } else if (this.selectedIndex === index) {
           this.selectedIndex = Math.max(0, index - 1);
           this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
+          this.loading = false;
         } else {
           this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
+          this.loading = false;
         }
-        this.loading = false;
       },
       error: (err) => {
         console.error('Error deleting ticket', err);
@@ -162,14 +187,31 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit {
     this.loading = true;
     this.ticketsService.getTicketsBySession(sessionId).subscribe({
       next: (resp) => {
-        this.tickets = resp || [];
-        this.selectedIndex = this.tickets.length > 0 ? 0 : -1;
-        if (this.selectedIndex >= 0) {
-          this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
+        const tickets = resp || [];
+        if (tickets.length === 0) {
+          // No tickets found, create a new one
+          const nombre = 'Ticket 1';
+          this.ticketsService.createTicket(sessionId, nombre).subscribe({
+            next: (newTicket) => {
+              this.tickets = [newTicket];
+              this.selectedIndex = 0;
+              this.fetchReciboForTicket(newTicket.id);
+              this.loading = false;
+            },
+            error: (err) => {
+              console.error('Error creating initial ticket', err);
+              this.tickets = [];
+              this.selectedIndex = -1;
+              this.currentReciboId = null;
+              this.loading = false;
+            }
+          });
         } else {
-          this.currentReciboId = null;
+          this.tickets = tickets;
+          this.selectedIndex = 0;
+          this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
+          this.loading = false;
         }
-        this.loading = false;
       },
       error: (err) => {
         console.error('Error loading tickets', err);
@@ -186,7 +228,11 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit {
       this.currentReciboId = null;
       return;
     }
-    this.ticketReciboService.getByTicketId(ticketId).subscribe({
+    if (this.sessionId === null) {
+      this.currentReciboId = null;
+      return;
+    }
+    this.ticketReciboService.getByTicketId(ticketId, this.sessionId).subscribe({
       next: (relation) => {
         const nuevoReciboId = relation?.reciboId ?? null;
         if (forceReload && nuevoReciboId && this.currentReciboId === nuevoReciboId) {
