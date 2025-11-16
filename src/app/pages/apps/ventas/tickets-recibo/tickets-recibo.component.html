@@ -68,6 +68,16 @@
               <mat-icon class="ltr:mr-2 rtl:ml-2 ltr:-ml-1 rtl:-mr-1 icon-sm" svgIcon="mat:add"></mat-icon>
               <span>Nuevo ticket</span>
             </button>
+            <button
+              mat-flat-button
+              color="accent"
+              class="quick-recibo-btn ltr:ml-2 rtl:mr-2 flex-none"
+              type="button"
+              [disabled]="sessionId === null || loading"
+              (click)="openQuickRecibo()">
+              <mat-icon class="ltr:mr-2 rtl:ml-2 ltr:-ml-1 rtl:-mr-1 icon-sm" svgIcon="mat:receipt"></mat-icon>
+              <span>Recibo rápido</span>
+            </button>
           </div>
           <div class="ticket-panel" *ngIf="tickets[selectedIndex] as activeTicket; else noTicketSelected">
             <vex-recibo

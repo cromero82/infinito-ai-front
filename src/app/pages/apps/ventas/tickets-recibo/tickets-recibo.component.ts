@@ -13,6 +13,8 @@ import { TicketReciboService } from '../service/ticket-recibo.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ReactiveFormsModule } from '@angular/forms';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { QuickReciboComponent, QuickReciboData } from '../quick-recibo/quick-recibo.component';
 
 @Component({
   selector: 'vex-tickets-recibo',
@@ -28,6 +30,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     MatFormFieldModule,
     MatInputModule,
     ReactiveFormsModule,
+    MatDialogModule,
     NgIf,
     NgFor,
     ReciboComponent
@@ -46,7 +49,8 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit {
 
   constructor(
     private ticketsService: TicketsService,
-    private ticketReciboService: TicketReciboService
+    private ticketReciboService: TicketReciboService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -113,6 +117,27 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit {
       error: (err) => {
         this.loading = false;
         console.error('Error creating ticket', err);
+      }
+    });
+  }
+
+  openQuickRecibo(): void {
+    if (this.sessionId === null) {
+      return;
+    }
+    const dialogRef = this.dialog.open<QuickReciboComponent, QuickReciboData, boolean>(
+      QuickReciboComponent,
+      {
+        width: '600px',
+        data: { sesionId: this.sessionId },
+        autoFocus: false
+      }
+    );
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        // Optionally reload tickets or show success message
+        // this.loadTickets(this.sessionId!);
       }
     });
   }
