@@ -146,6 +146,39 @@
         box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
       }
     }
+
+    .valor-unitario-input {
+      width: 100%;
+      max-width: 120px;
+      text-align: right;
+      border: 1px solid rgba(63, 81, 181, 0.5);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 16px;
+      background: white;
+      outline: none;
+
+      &:focus {
+        border-color: #3f51b5;
+        box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
+      }
+    }
+
+    .producto-input {
+      width: 100%;
+      text-align: left;
+      border: 1px solid rgba(63, 81, 181, 0.5);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 16px;
+      background: white;
+      outline: none;
+
+      &:focus {
+        border-color: #3f51b5;
+        box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
+      }
+    }
   }
 }
 

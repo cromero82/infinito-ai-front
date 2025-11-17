@@ -1,10 +1,15 @@
 <h2 mat-dialog-title>Seleccionar Producto</h2>
 
 <div mat-dialog-content class="dialog-content">
-  <mat-form-field appearance="outline" class="search-field">
-    <mat-label>Buscar producto</mat-label>
-    <input #searchInput matInput [formControl]="searchCtrl" placeholder="Nombre o código" />
-  </mat-form-field>
+  <div class="search-field-wrapper">
+    <input
+      #searchInput
+      id="searchInput"
+      class="search-input"
+      [formControl]="searchCtrl"
+      placeholder="Nombre o código"
+      type="text" />
+  </div>
 
   <div class="table-container">
     <div class="loading" *ngIf="loading">Cargando productos...</div>

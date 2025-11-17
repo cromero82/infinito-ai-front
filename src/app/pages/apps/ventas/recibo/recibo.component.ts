@@ -80,7 +80,11 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   detalles: ReciboDetalleDto[] = [];
   selectedDetalleIndex = -1;
   editingDetalleIndex = -1;
+  editingUnitarioIndex = -1;
+  editingProductoIndex = -1;
   editingCantidadCtrl = new FormControl<string>('', { nonNullable: true });
+  editingUnitarioCtrl = new FormControl<string>('', { nonNullable: true });
+  editingProductoCtrl = new FormControl<string>('', { nonNullable: true });
 
   loading = false;
   detallesLoading = false;
@@ -499,12 +503,51 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     if (index < 0 || index >= this.detalles.length) {
       return;
     }
+    const target = event.target as HTMLElement;
     const detalle = this.detalles[index];
+    
+    // Check if double-click was on "Valor unitario" field
+    if (target.classList.contains('detalle-col') && target.classList.contains('unitario')) {
+      this.onUnitarioDoubleClick(index, event);
+      return;
+    }
+    
+    // Check if double-click was on "Producto" field
+    if (target.classList.contains('detalle-col') && target.classList.contains('producto')) {
+      this.onProductoDoubleClick(index, event);
+      return;
+    }
+    
+    // Default: edit cantidad
     this.editingDetalleIndex = index;
     this.editingCantidadCtrl.setValue(String(detalle.cantidad ?? 1));
     // Focus the input after a short delay to ensure it's rendered
     setTimeout(() => {
       const input = document.querySelector(`.cantidad-input-${index}`) as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }, 0);
+  }
+
+  onUnitarioDoubleClick(index: number, event: MouseEvent): void {
+    event.stopPropagation();
+    if (index < 0 || index >= this.detalles.length) {
+      return;
+    }
+    const detalle = this.detalles[index];
+    if (!detalle.producto?.id) {
+      return;
+    }
+    
+    const currentPrecio = detalle.producto.precio ?? (detalle.cantidad > 0 ? detalle.subtotal / detalle.cantidad : 0);
+    this.editingUnitarioIndex = index;
+    this.editingUnitarioCtrl.setValue(String(currentPrecio));
+    
+    // Focus the input after a short delay to ensure it's rendered
+    setTimeout(() => {
+      const input = document.querySelector(`.valor-unitario-input-${index}`) as HTMLInputElement;
       if (input) {
         input.focus();
         input.select();
@@ -641,6 +684,280 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   cancelCantidadEdit(): void {
     this.editingDetalleIndex = -1;
     this.editingCantidadCtrl.setValue('');
+  }
+
+  onUnitarioInputKeydown(event: Event, index: number): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (keyboardEvent.key === 'Enter' || keyboardEvent.key === 'NumpadEnter') {
+      keyboardEvent.preventDefault();
+      keyboardEvent.stopPropagation();
+      setTimeout(() => {
+        this.saveUnitarioEdit(index);
+      }, 0);
+    } else if (keyboardEvent.key === 'Escape') {
+      keyboardEvent.preventDefault();
+      keyboardEvent.stopPropagation();
+      this.cancelUnitarioEdit();
+    }
+  }
+
+  onUnitarioInputBlur(index: number): void {
+    setTimeout(() => {
+      if (this.editingUnitarioIndex === index) {
+        this.saveUnitarioEdit(index);
+      }
+    }, 150);
+  }
+
+  saveUnitarioEdit(index: number): void {
+    if (this.editingUnitarioIndex !== index || index < 0 || index >= this.detalles.length) {
+      this.cancelUnitarioEdit();
+      return;
+    }
+
+    const detalle = this.detalles[index];
+    if (!detalle.producto?.id) {
+      this.cancelUnitarioEdit();
+      return;
+    }
+
+    const inputElement = document.querySelector(`.valor-unitario-input-${index}`) as HTMLInputElement;
+    const newPrecioStr = inputElement?.value?.trim() || this.editingUnitarioCtrl.value?.trim() || '';
+    const newPrecio = Number(newPrecioStr);
+
+    if (isNaN(newPrecio) || newPrecio <= 0) {
+      this.cancelUnitarioEdit();
+      return;
+    }
+
+    const currentPrecio = detalle.producto.precio ?? (detalle.cantidad > 0 ? detalle.subtotal / detalle.cantidad : 0);
+    if (newPrecio === currentPrecio) {
+      this.cancelUnitarioEdit();
+      return;
+    }
+
+    // Clear editing state immediately
+    this.editingUnitarioIndex = -1;
+    this.editingUnitarioCtrl.setValue('');
+
+    // Update product via RelationalProductService
+    const productUpdate: Producto = {
+      ...detalle.producto,
+      precio: newPrecio,
+      foto: detalle.producto.foto ?? ''
+    };
+
+    this.relationalProductService.updateProduct(detalle.producto.id, productUpdate).subscribe({
+      next: (updatedProduct) => {
+        // Find all detalles that use this product
+        const detallesToUpdate = this.detalles.filter((det) => det.productoId === updatedProduct.id);
+        
+        // Optimistically update all detalles
+        const updatedList = this.detalles.map((det) => {
+          if (det.productoId === updatedProduct.id) {
+            const newSubtotal = updatedProduct.precio * det.cantidad;
+            return {
+              ...det,
+              subtotal: newSubtotal,
+              producto: {
+                ...det.producto!,
+                ...updatedProduct,
+                precio: updatedProduct.precio
+              }
+            };
+          }
+          return det;
+        });
+        this.detalles = updatedList;
+        this.recalculateTotal();
+        
+        // Update each detalle via API
+        detallesToUpdate.forEach((det) => {
+          if (!det.id) {
+            return;
+          }
+          const newSubtotal = updatedProduct.precio * det.cantidad;
+          const payload: UpdateReciboDetalleRequest = {
+            reciboId: det.reciboId,
+            productoId: det.productoId,
+            cantidad: det.cantidad,
+            subtotal: newSubtotal
+          };
+          
+          this.reciboDetalleService.updateDetalle(det.id, payload).subscribe({
+            next: (apiUpdatedDetalle: ReciboDetalleDto) => {
+              const finalIndex = this.detalles.findIndex((d) => d.id === det.id);
+              if (finalIndex >= 0) {
+                const finalList = [...this.detalles];
+                const newSubtotal = updatedProduct.precio * det.cantidad;
+                finalList[finalIndex] = {
+                  ...apiUpdatedDetalle,
+                  subtotal: newSubtotal,
+                  cantidad: det.cantidad,
+                  producto: apiUpdatedDetalle.producto
+                    ? {
+                        ...apiUpdatedDetalle.producto,
+                        precio: updatedProduct.precio
+                      }
+                    : {
+                        ...det.producto!,
+                        precio: updatedProduct.precio
+                      }
+                };
+                this.detalles = finalList;
+                this.recalculateTotal();
+              }
+            },
+            error: (err) => {
+              console.error('Error updating detalle after product price change', err);
+            }
+          });
+        });
+        
+        // Update recibo total on backend
+        const finalTotal = this.recalculateTotal();
+        if (this.recibo && this.recibo.id && this.recibo.ticketId && this.recibo.clienteId) {
+          this.reciboService.actualizarRecibo(this.recibo.id, {
+            clienteId: this.recibo.clienteId,
+            ticketId: this.recibo.ticketId,
+            estadoId: this.recibo.estadoId ?? ESTADOS_RECIBO.PENDIENTE_PAGO,
+            metodoPagoId: this.recibo.metodoPagoId ?? 0,
+            total: String(finalTotal.toFixed(2)),
+            sesionId: this.recibo.sesionId
+          }).subscribe({
+            next: (updatedRecibo) => {
+              this.recibo = updatedRecibo;
+            },
+            error: (err) => {
+              console.error('Error updating recibo total', err);
+            }
+          });
+        }
+        this.focusSearchInputRequest.emit();
+      },
+      error: (err: unknown) => {
+        console.error('Error updating product price', err);
+        this.cancelUnitarioEdit();
+      }
+    });
+  }
+
+  cancelUnitarioEdit(): void {
+    this.editingUnitarioIndex = -1;
+    this.editingUnitarioCtrl.setValue('');
+  }
+
+  onProductoDoubleClick(index: number, event: MouseEvent): void {
+    event.stopPropagation();
+    if (index < 0 || index >= this.detalles.length) {
+      return;
+    }
+    const detalle = this.detalles[index];
+    if (!detalle.producto?.id || !detalle.producto?.nombre) {
+      return;
+    }
+    
+    this.editingProductoIndex = index;
+    this.editingProductoCtrl.setValue(detalle.producto.nombre);
+    
+    // Focus the input after a short delay to ensure it's rendered
+    setTimeout(() => {
+      const input = document.querySelector(`.producto-input-${index}`) as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }, 0);
+  }
+
+  onProductoInputKeydown(event: Event, index: number): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (keyboardEvent.key === 'Enter' || keyboardEvent.key === 'NumpadEnter') {
+      keyboardEvent.preventDefault();
+      keyboardEvent.stopPropagation();
+      setTimeout(() => {
+        this.saveProductoEdit(index);
+      }, 0);
+    } else if (keyboardEvent.key === 'Escape') {
+      keyboardEvent.preventDefault();
+      keyboardEvent.stopPropagation();
+      this.cancelProductoEdit();
+    }
+  }
+
+  onProductoInputBlur(index: number): void {
+    setTimeout(() => {
+      if (this.editingProductoIndex === index) {
+        this.saveProductoEdit(index);
+      }
+    }, 150);
+  }
+
+  saveProductoEdit(index: number): void {
+    if (this.editingProductoIndex !== index || index < 0 || index >= this.detalles.length) {
+      this.cancelProductoEdit();
+      return;
+    }
+
+    const detalle = this.detalles[index];
+    if (!detalle.producto?.id) {
+      this.cancelProductoEdit();
+      return;
+    }
+
+    const inputElement = document.querySelector(`.producto-input-${index}`) as HTMLInputElement;
+    const newNombre = (inputElement?.value?.trim() || this.editingProductoCtrl.value?.trim() || '').trim();
+
+    if (!newNombre || newNombre.length === 0) {
+      this.cancelProductoEdit();
+      return;
+    }
+
+    if (newNombre === detalle.producto.nombre) {
+      this.cancelProductoEdit();
+      return;
+    }
+
+    // Clear editing state immediately
+    this.editingProductoIndex = -1;
+    this.editingProductoCtrl.setValue('');
+
+    // Update product via RelationalProductService
+    const productUpdate: Producto = {
+      ...detalle.producto,
+      nombre: newNombre,
+      foto: detalle.producto.foto ?? ''
+    };
+
+    this.relationalProductService.updateProduct(detalle.producto.id, productUpdate).subscribe({
+      next: (updatedProduct) => {
+        // Update all detalles that use this product
+        const updatedList = this.detalles.map((det) => {
+          if (det.productoId === updatedProduct.id) {
+            return {
+              ...det,
+              producto: {
+                ...det.producto!,
+                ...updatedProduct,
+                nombre: updatedProduct.nombre
+              }
+            };
+          }
+          return det;
+        });
+        this.detalles = updatedList;
+        this.focusSearchInputRequest.emit();
+      },
+      error: (err: unknown) => {
+        console.error('Error updating product name', err);
+        this.cancelProductoEdit();
+      }
+    });
+  }
+
+  cancelProductoEdit(): void {
+    this.editingProductoIndex = -1;
+    this.editingProductoCtrl.setValue('');
   }
 
   deleteSelectedDetalle(): void {

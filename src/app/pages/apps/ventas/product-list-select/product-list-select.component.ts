@@ -72,8 +72,13 @@ export class ProductListSelectComponent implements OnInit, AfterViewInit, OnDest
 
   ngAfterViewInit(): void {
     setTimeout(() => {
-      this.searchInput?.nativeElement.focus();
-      this.searchInput?.nativeElement.select();
+      if (this.searchInput?.nativeElement) {
+        const input = this.searchInput.nativeElement;
+        input.focus();
+        // Move cursor to end instead of selecting all text
+        const length = input.value.length;
+        input.setSelectionRange(length, length);
+      }
     }, 100);
   }
 
