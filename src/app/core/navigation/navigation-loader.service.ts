@@ -32,6 +32,12 @@ export class NavigationLoaderService {
         route: '/apps/products/list',
         icon: 'mat:shopping_cart'
       },
+      {
+        type: 'link',
+        label: 'Historial Ventas',
+        route: '/apps/ventas/historial',
+        icon: 'mat:history'
+      },
     ]);
   }
 }

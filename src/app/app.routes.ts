@@ -123,10 +123,22 @@ export const appRoutes: VexRoutes = [
           },
           {
             path: 'ventas',
-            loadComponent: () =>
-              import('./pages/apps/ventas/tickets-recibo/tickets-recibo.component').then(
-                (m) => m.TicketsReciboComponent
-              )
+            children: [
+              {
+                path: '',
+                loadComponent: () =>
+                  import('./pages/apps/ventas/tickets-recibo/tickets-recibo.component').then(
+                    (m) => m.TicketsReciboComponent
+                  )
+              },
+              {
+                path: 'historial',
+                loadComponent: () =>
+                  import('./pages/apps/ventas/historial-ventas/historial-ventas.component').then(
+                    (m) => m.HistorialVentasComponent
+                  )
+              }
+            ]
           },
           {
             path: 'master',

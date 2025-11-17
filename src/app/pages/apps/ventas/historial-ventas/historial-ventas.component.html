@@ -1,0 +1,65 @@
+<div class="card flex flex-col sm:flex-row historial-ventas-container">
+  <!-- Left side -->
+  <div class="left-side">
+    <h2 class="title mt-0 mb-4">Ventas</h2>
+    
+    <div class="filter-section">
+      <button
+        mat-flat-button
+        color="primary"
+        [class.selected]="selectedFilter === 'todos'"
+        (click)="selectFilter('todos')"
+        type="button"
+        class="filter-button">
+        Todos
+      </button>
+    </div>
+
+    <div class="fecha-section">
+      <mat-form-field appearance="outline" class="fecha-field">
+        <mat-label>Fecha</mat-label>
+        <input
+          matInput
+          [matDatepicker]="picker"
+          [formControl]="fechaCtrl"
+          (dateChange)="onFechaChange()" />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <div class="recibos-list-container">
+      <div class="loading" *ngIf="loading">Cargando...</div>
+      <div class="error" *ngIf="!loading && error">{{ error }}</div>
+      
+      <div 
+        class="recibos-list" 
+        #recibosList
+        (scroll)="onRecibosListScroll()"
+        *ngIf="!loading && !error">
+        <div
+          *ngFor="let recibo of historialRecibos"
+          class="recibo-item"
+          (click)="selectRecibo(recibo)">
+          <span class="recibo-total" [innerHTML]="formatCurrencyWithBold(recibo.total)"></span>
+          <span class="recibo-fecha">{{ formatDate(recibo.fechaCreacion) }}</span>
+        </div>
+        <div class="loading-more" *ngIf="loadingMore">
+          Cargando más...
+        </div>
+        <div class="empty-message" *ngIf="historialRecibos.length === 0 && !loadingMore">
+          No hay recibos disponibles
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right side -->
+  <div class="right-side border-l flex-1">
+    <div class="p-6">
+      <h2 class="title mt-0 mb-4">Detalles</h2>
+      <p class="text-secondary">Seleccione un recibo para ver los detalles</p>
+    </div>
+  </div>
+</div>
+
