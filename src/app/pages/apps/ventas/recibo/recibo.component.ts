@@ -79,6 +79,8 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   recibo: ReciboDto | null = null;
   detalles: ReciboDetalleDto[] = [];
   selectedDetalleIndex = -1;
+  editingDetalleIndex = -1;
+  editingCantidadCtrl = new FormControl<string>('', { nonNullable: true });
 
   loading = false;
   detallesLoading = false;
@@ -468,9 +470,9 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     });
   }
 
-  private recalculateTotal(): void {
+  private recalculateTotal(): number {
     if (!this.recibo) {
-      return;
+      return 0;
     }
     const sum = this.detalles.reduce(
       (acc, det) => acc + Number(det?.subtotal ?? 0),
@@ -480,6 +482,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       ...this.recibo,
       total: sum
     };
+    return sum;
   }
 
   selectDetalle(index: number): void {
@@ -489,6 +492,155 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       this.selectedDetalleIndex = index;
     }
     this.focusSearchInputRequest.emit();
+  }
+
+  onDetalleDoubleClick(index: number, event: MouseEvent): void {
+    event.stopPropagation();
+    if (index < 0 || index >= this.detalles.length) {
+      return;
+    }
+    const detalle = this.detalles[index];
+    this.editingDetalleIndex = index;
+    this.editingCantidadCtrl.setValue(String(detalle.cantidad ?? 1));
+    // Focus the input after a short delay to ensure it's rendered
+    setTimeout(() => {
+      const input = document.querySelector(`.cantidad-input-${index}`) as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }, 0);
+  }
+
+  onCantidadInputKeydown(event: Event, index: number): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (keyboardEvent.key === 'Enter' || keyboardEvent.key === 'NumpadEnter') {
+      keyboardEvent.preventDefault();
+      keyboardEvent.stopPropagation();
+      // Use setTimeout to ensure the form control value is updated
+      setTimeout(() => {
+        this.saveCantidadEdit(index);
+      }, 0);
+    } else if (keyboardEvent.key === 'Escape') {
+      keyboardEvent.preventDefault();
+      keyboardEvent.stopPropagation();
+      this.cancelCantidadEdit();
+    }
+  }
+
+  onCantidadInputBlur(index: number): void {
+    // Use setTimeout to allow click events to fire first
+    setTimeout(() => {
+      if (this.editingDetalleIndex === index) {
+        this.saveCantidadEdit(index);
+      }
+    }, 150);
+  }
+
+  saveCantidadEdit(index: number): void {
+    if (this.editingDetalleIndex !== index || index < 0 || index >= this.detalles.length) {
+      this.cancelCantidadEdit();
+      return;
+    }
+
+    const detalle = this.detalles[index];
+    // Get value directly from the input element if possible, otherwise from form control
+    const inputElement = document.querySelector(`.cantidad-input-${index}`) as HTMLInputElement;
+    const newCantidadStr = inputElement?.value?.trim() || this.editingCantidadCtrl.value?.trim() || '';
+    const newCantidad = Number(newCantidadStr);
+
+    if (isNaN(newCantidad) || newCantidad <= 0) {
+      this.cancelCantidadEdit();
+      return;
+    }
+
+    if (newCantidad === detalle.cantidad) {
+      this.cancelCantidadEdit();
+      return;
+    }
+
+    const unitPrice =
+      detalle.producto?.precio ??
+      (detalle.cantidad > 0 ? Number(detalle.subtotal ?? 0) / detalle.cantidad : 0);
+
+    if (!detalle.id || unitPrice <= 0 || !detalle.reciboId || !detalle.productoId) {
+      this.cancelCantidadEdit();
+      return;
+    }
+
+    const newSubtotal = unitPrice * newCantidad;
+    const previousDetalle = { ...detalle };
+
+    const payload: UpdateReciboDetalleRequest = {
+      reciboId: detalle.reciboId,
+      productoId: detalle.productoId,
+      cantidad: newCantidad,
+      subtotal: newSubtotal
+    };
+
+    const optimisticDetalle: ReciboDetalleDto = {
+      ...detalle,
+      cantidad: newCantidad,
+      subtotal: newSubtotal
+    };
+
+    // Clear editing state immediately to return to normal display
+    this.editingDetalleIndex = -1;
+    this.editingCantidadCtrl.setValue('');
+    
+    const updatedList = [...this.detalles];
+    updatedList[index] = optimisticDetalle;
+    this.detalles = updatedList;
+    const newTotal = this.recalculateTotal();
+    this.focusSearchInputRequest.emit();
+
+    this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
+      next: (updatedDetalle) => {
+        const updatedListFinal = [...this.detalles];
+        const detalleActualizado = {
+          ...optimisticDetalle,
+          ...updatedDetalle,
+          cantidad: newCantidad,
+          subtotal: newSubtotal,
+          producto: updatedDetalle.producto ?? detalle.producto
+        };
+        updatedListFinal[index] = detalleActualizado;
+        this.detalles = updatedListFinal;
+        const finalTotal = this.recalculateTotal();
+        
+        // Update recibo total on backend
+        if (this.recibo && this.recibo.id && this.recibo.ticketId && this.recibo.clienteId) {
+          this.reciboService.actualizarRecibo(this.recibo.id, {
+            clienteId: this.recibo.clienteId,
+            ticketId: this.recibo.ticketId,
+            estadoId: this.recibo.estadoId ?? ESTADOS_RECIBO.PENDIENTE_PAGO,
+            metodoPagoId: this.recibo.metodoPagoId ?? 0,
+            total: String(finalTotal.toFixed(2)),
+            sesionId: this.recibo.sesionId
+          }).subscribe({
+            next: (updatedRecibo) => {
+              this.recibo = updatedRecibo;
+            },
+            error: (err) => {
+              console.error('Error updating recibo total', err);
+            }
+          });
+        }
+      },
+      error: (err: unknown) => {
+        const revertedList = [...this.detalles];
+        revertedList[index] = previousDetalle;
+        this.detalles = revertedList;
+        this.recalculateTotal();
+        console.error('Error updating detalle quantity', err);
+        this.cancelCantidadEdit();
+      }
+    });
+  }
+
+  cancelCantidadEdit(): void {
+    this.editingDetalleIndex = -1;
+    this.editingCantidadCtrl.setValue('');
   }
 
   deleteSelectedDetalle(): void {

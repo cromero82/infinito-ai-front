@@ -1,13 +1,16 @@
 import { Component, Inject, OnDestroy, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { RelationalProductService } from '../../products/service/relational-product.service';
 import { Producto, ProductPage } from '../../products/model/producto';
+import { ProductEditComponent } from '../../products/product-edit/product-edit.component';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
@@ -25,7 +28,9 @@ export interface ProductListSelectData {
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatTableModule
+    MatTableModule,
+    MatIconModule,
+    MatTooltipModule
   ],
   templateUrl: './product-list-select.component.html',
   styleUrls: ['./product-list-select.component.scss']
@@ -42,6 +47,7 @@ export class ProductListSelectComponent implements OnInit, AfterViewInit, OnDest
   constructor(
     private dialogRef: MatDialogRef<ProductListSelectComponent>,
     private relationalProductService: RelationalProductService,
+    private dialog: MatDialog,
     @Inject(MAT_DIALOG_DATA) public data: ProductListSelectData
   ) {}
 
@@ -82,6 +88,33 @@ export class ProductListSelectComponent implements OnInit, AfterViewInit, OnDest
 
   close(): void {
     this.dialogRef.close();
+  }
+
+  editProduct(product: Producto, event: Event): void {
+    event.stopPropagation();
+    const editDialogRef = this.dialog.open(ProductEditComponent, {
+      width: '600px',
+      data: {
+        id: product.id,
+        nombre: product.nombre,
+        barcode: product.barcode,
+        precio: product.precio,
+        precioCompra: product.precioCompra,
+        foto: product.foto,
+        company: (product as any).company
+      },
+      autoFocus: false
+    });
+
+    editDialogRef.afterClosed().subscribe((result) => {
+      if (result && result._edit) {
+        // Product was updated, refresh the product list
+        const currentTerm = this.searchCtrl.value?.trim() || '';
+        if (currentTerm) {
+          this.fetchProducts(currentTerm);
+        }
+      }
+    });
   }
 
   private fetchProducts(term: string): void {

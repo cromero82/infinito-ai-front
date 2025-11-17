@@ -20,7 +20,8 @@
                 class="detalle-row"
                 *ngFor="let det of detalles; let i = index"
                 [class.selected-detalle]="selectedDetalleIndex === i"
-                (click)="selectDetalle(i)">
+                (click)="selectDetalle(i)"
+                (dblclick)="onDetalleDoubleClick(i, $event)">
                 <span class="detalle-col producto">
                   {{ det.producto ? det.producto.nombre : ('Producto ' + det.productoId) }}
                 </span>
@@ -28,7 +29,18 @@
                   {{ formatCurrency(det.producto?.precio ?? (det.cantidad ? det.subtotal / det.cantidad : 0)) }}
                 </span>
                 <span class="detalle-col cantidad">
-                  {{ det.cantidad }}
+                  <input
+                    *ngIf="editingDetalleIndex === i"
+                    class="cantidad-input cantidad-input-{{ i }}"
+                    type="number"
+                    min="1"
+                    [formControl]="editingCantidadCtrl"
+                    (keydown.enter)="onCantidadInputKeydown($event, i)"
+                    (keydown.escape)="cancelCantidadEdit()"
+                    (blur)="onCantidadInputBlur(i)"
+                    (click)="$event.stopPropagation()"
+                    (input)="$event.stopPropagation()" />
+                  <span *ngIf="editingDetalleIndex !== i">{{ det.cantidad }}</span>
                 </span>
                 <span class="detalle-col subtotal">
                   {{ formatCurrency(det.subtotal) }}

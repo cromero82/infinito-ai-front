@@ -79,6 +79,14 @@
   font-size: 16px;
   font-weight: 600;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  .detalle-col {
+    text-align: right;
+
+    &.producto {
+      text-align: left;
+    }
+  }
 }
 
 .detalle-list {
@@ -121,6 +129,23 @@
     .detalle-col.subtotal {
       font-weight: 600;
     }
+
+    .cantidad-input {
+      width: 100%;
+      max-width: 80px;
+      text-align: right;
+      border: 1px solid rgba(63, 81, 181, 0.5);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 16px;
+      background: white;
+      outline: none;
+
+      &:focus {
+        border-color: #3f51b5;
+        box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
+      }
+    }
   }
 }
 
@@ -139,14 +164,21 @@
   font-weight: 600;
   width: 100%;
   max-width: 800px;
+  align-items: center;
 
   .total-label {
     text-align: right;
     padding-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
   }
 
   .total-value {
     text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
   }
 
   .total-value--highlight {
@@ -154,7 +186,7 @@
     font-weight: 700;
     border-radius: 4px;
     padding: 6px 10px;
-    font-size: 22px;
+    font-size: 28px;
   }
 }
 
