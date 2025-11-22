@@ -1,0 +1,44 @@
+.metodos-pago {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .metodo-pago-btn {
+    width: 84px;
+    height: 48px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.05);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, transform 0.2s ease;
+    position: relative;
+
+    &:hover:not(:disabled) {
+      background: rgba(0, 0, 0, 0.12);
+      transform: translateY(-1px);
+    }
+
+    &.metodo-pago-seleccionado {
+      background: rgba(76, 175, 80, 0.18);
+      border: 2px solid rgba(76, 175, 80, 0.7);
+      transform: none;
+    }
+
+    .metodo-pago-icon {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .metodo-pago-warning {
+      position: absolute;
+      right: 6px;
+      top: 6px;
+      font-size: 18px;
+      color: #ff9800;
+    }
+  }
+}
+

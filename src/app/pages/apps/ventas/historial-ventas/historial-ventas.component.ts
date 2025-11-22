@@ -6,7 +6,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { HistorialReciboService, HistorialReciboDto, HistorialReciboPage } from '../service/historial-recibo.service';
+import { HistorialReciboDetalleService, HistorialReciboDetalleDto } from '../service/historial-recibo-detalle.service';
+import { EstadoRecibosService, EstadoReciboDto } from '../service/estado-recibos.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -20,7 +23,8 @@ import { takeUntil } from 'rxjs/operators';
     MatFormFieldModule,
     MatInputModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    MatSnackBarModule
   ],
   templateUrl: './historial-ventas.component.html',
   styleUrls: ['./historial-ventas.component.scss']
@@ -39,10 +43,40 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   @ViewChild('recibosList', { static: false }) recibosListRef?: ElementRef<HTMLDivElement>;
 
-  constructor(private historialReciboService: HistorialReciboService) {}
+  // Detalles state
+  selectedReciboId: number | null = null;
+  detalles: HistorialReciboDetalleDto[] = [];
+  detallesLoading = false;
+  detallesError: string | null = null;
+
+  // Estados state
+  estadosRecibos: EstadoReciboDto[] = [];
+  anulandoRecibo = false;
+  volviendoAEditar = false;
+
+  constructor(
+    private historialReciboService: HistorialReciboService,
+    private historialReciboDetalleService: HistorialReciboDetalleService,
+    private estadoRecibosService: EstadoRecibosService,
+    private snackBar: MatSnackBar
+  ) {}
 
   ngOnInit(): void {
+    this.loadEstadosRecibos();
     this.loadHistorialRecibos();
+  }
+
+  loadEstadosRecibos(): void {
+    this.estadoRecibosService.getEstadosRecibos().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (estados) => {
+        this.estadosRecibos = estados;
+      },
+      error: (err) => {
+        console.error('Error loading estados recibos', err);
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -201,8 +235,198 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   }
 
   selectRecibo(recibo: HistorialReciboDto): void {
-    // TODO: Handle recibo selection - show details on right side
-    console.log('Selected recibo:', recibo);
+    if (this.selectedReciboId === recibo.id) {
+      return; // Already selected
+    }
+    
+    this.selectedReciboId = recibo.id;
+    this.detalles = [];
+    this.detallesError = null;
+    this.loadDetalles(recibo.id);
+  }
+
+  loadDetalles(reciboId: number): void {
+    this.detallesLoading = true;
+    this.detallesError = null;
+    
+    this.historialReciboDetalleService.getDetallesByReciboId(reciboId).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (detalles) => {
+        this.detalles = detalles;
+        this.detallesLoading = false;
+      },
+      error: (err) => {
+        console.error('Error loading detalles', err);
+        this.detallesError = 'Error al cargar los detalles del recibo.';
+        this.detallesLoading = false;
+      }
+    });
+  }
+
+  getTotalDetalles(): number {
+    return this.detalles.reduce((sum, detalle) => sum + Number(detalle.subtotal ?? 0), 0);
+  }
+
+  getSelectedRecibo(): HistorialReciboDto | null {
+    if (!this.selectedReciboId) {
+      return null;
+    }
+    return this.historialRecibos.find(r => r.id === this.selectedReciboId) || null;
+  }
+
+  isReciboAnulado(): boolean {
+    const recibo = this.getSelectedRecibo();
+    if (!recibo) {
+      return false;
+    }
+    const estadoAnulado = this.estadosRecibos.find(e => e.sigla === 'AN');
+    if (!estadoAnulado) {
+      return false;
+    }
+    return recibo.estadoId === estadoAnulado.id;
+  }
+
+  anularFactura(): void {
+    const recibo = this.getSelectedRecibo();
+    if (!recibo) {
+      return;
+    }
+
+    // Find the estado with sigla = "AN"
+    const estadoAnulado = this.estadosRecibos.find(e => e.sigla === 'AN');
+    if (!estadoAnulado) {
+      console.error('Estado "AN" (anulado) not found');
+      return;
+    }
+
+    this.anulandoRecibo = true;
+
+    // Send all required fields with updated estadoId (sesionId goes as query parameter)
+    const updatePayload = {
+      clienteId: recibo.clienteId,
+      estadoId: estadoAnulado.id,
+      metodoPagoId: recibo.metodoPagoId,
+      total: recibo.total
+    };
+
+    this.historialReciboService.updateHistorialRecibo(recibo.id, recibo.sesionId, updatePayload).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (updatedRecibo) => {
+        // Show success snackbar
+        const totalFormateado = this.formatCurrency(recibo.total);
+        const snackBarRef = this.snackBar.open(
+          `Venta por valor de ${totalFormateado} Anulada correctamente`,
+          undefined,
+          {
+            duration: 5000,
+            horizontalPosition: 'right',
+            panelClass: ['historial-ventas-snackbar-success']
+          }
+        );
+        // Make the currency value bold
+        setTimeout(() => {
+          const snackBarElement = document.querySelector('.historial-ventas-snackbar-success .mat-mdc-snack-bar-label');
+          if (snackBarElement) {
+            const text = snackBarElement.textContent || '';
+            const currencyRegex = /\$\s*[\d.,]+/;
+            const match = text.match(currencyRegex);
+            if (match) {
+              const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+              snackBarElement.innerHTML = boldText;
+            }
+          }
+        }, 0);
+
+        // Clear the selection and details
+        this.selectedReciboId = null;
+        this.detalles = [];
+        this.detallesError = null;
+        
+        // Reload the historial recibos list to reflect the updated estado
+        this.page = 1;
+        this.historialRecibos = [];
+        this.loadHistorialRecibos();
+        
+        this.anulandoRecibo = false;
+      },
+      error: (err) => {
+        console.error('Error anulando recibo', err);
+        this.anulandoRecibo = false;
+      }
+    });
+  }
+
+  volverAEditar(): void {
+    const recibo = this.getSelectedRecibo();
+    if (!recibo) {
+      return;
+    }
+
+    // Find the estado with sigla = "ED"
+    const estadoEditar = this.estadosRecibos.find(e => e.sigla === 'ED');
+    if (!estadoEditar) {
+      console.error('Estado "ED" (editar) not found');
+      return;
+    }
+
+    // Get sesionId from localStorage
+    const stored = localStorage.getItem('session-id');
+    const sesionId = stored ? Number(stored) : null;
+    if (!sesionId || Number.isNaN(sesionId)) {
+      console.error('No se encontró sesionId en localStorage');
+      return;
+    }
+
+    this.volviendoAEditar = true;
+
+    this.historialReciboService.volverAEditar(recibo.id, sesionId, estadoEditar.id).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (updatedRecibo) => {
+        // Show success snackbar
+        const totalFormateado = this.formatCurrency(recibo.total);
+        const snackBarRef = this.snackBar.open(
+          `Venta por valor de ${totalFormateado} vuelta a editar correctamente`,
+          undefined,
+          {
+            duration: 5000,
+            horizontalPosition: 'right',
+            panelClass: ['historial-ventas-snackbar-success']
+          }
+        );
+        // Make the currency value bold
+        setTimeout(() => {
+          const snackBarElement = document.querySelector('.historial-ventas-snackbar-success .mat-mdc-snack-bar-label');
+          if (snackBarElement) {
+            const text = snackBarElement.textContent || '';
+            const currencyRegex = /\$\s*[\d.,]+/;
+            const match = text.match(currencyRegex);
+            if (match) {
+              const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+              snackBarElement.innerHTML = boldText;
+            }
+          }
+        }, 0);
+
+        // Clear the selection and details
+        this.selectedReciboId = null;
+        this.detalles = [];
+        this.detallesError = null;
+        
+        // Reload the historial recibos list to reflect the updated estado
+        this.page = 1;
+        this.historialRecibos = [];
+        this.loadHistorialRecibos();
+        
+        this.volviendoAEditar = false;
+      },
+      error: (err) => {
+        console.error('Error volviendo a editar recibo', err);
+        this.volviendoAEditar = false;
+      }
+    });
   }
 }
 

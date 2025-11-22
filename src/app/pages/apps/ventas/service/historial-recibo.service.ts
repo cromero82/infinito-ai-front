@@ -84,5 +84,33 @@ export class HistorialReciboService {
     
     return this.http.get<HistorialReciboPage>(`${this.apiUrl}/search`, { headers, params });
   }
+
+  updateHistorialRecibo(
+    reciboId: number,
+    sesionId: number,
+    payload: {
+      clienteId: number;
+      estadoId: number;
+      metodoPagoId: number;
+      total: number;
+    }
+  ): Observable<HistorialReciboDto> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    });
+    const params = new HttpParams().set('sesionId', String(sesionId));
+    return this.http.put<HistorialReciboDto>(`${this.apiUrl}/${reciboId}`, payload, { headers, params });
+  }
+
+  volverAEditar(reciboId: number, sesionId: number, estadoId: number): Observable<HistorialReciboDto> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    });
+    const params = new HttpParams().set('sesionId', String(sesionId));
+    const payload = { estadoId };
+    return this.http.put<HistorialReciboDto>(`${this.apiUrl}/${reciboId}`, payload, { headers, params });
+  }
 }
 

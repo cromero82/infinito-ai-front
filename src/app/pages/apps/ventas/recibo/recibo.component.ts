@@ -33,6 +33,7 @@ import {
 import { MetodoPagoService, MetodoPagoDto } from '../service/metodo-pago.service';
 import { ReciboService, ReciboDto, ActualizarReciboRequest } from '../service/recibo.service';
 import { TicketReciboService, TicketReciboDto } from '../service/ticket-recibo.service';
+import { EstadoRecibosService, EstadoReciboDto } from '../service/estado-recibos.service';
 import {
   ProductListSelectComponent,
   ProductListSelectData
@@ -42,11 +43,14 @@ import {
   PagoEfectivoCambioData,
   PagoEfectivoCambioResultado
 } from '../pago-efectivo-cambio/pago-efectivo-cambio.component';
+import { EdicionReciboComponent } from '../edicion-recibo/edicion-recibo.component';
+import { MetodosPagoComponent } from '../metodos-pago/metodos-pago.component';
 
 const ESTADOS_RECIBO = {
   PENDIENTE_PAGO: 1,
   PAGADO: 2,
-  ANULADO: 3
+  ANULADO: 3,
+  SIGLA_EDICION: 'ED'
 } as const;
 
 @Component({
@@ -63,7 +67,9 @@ const ESTADOS_RECIBO = {
     MatTooltipModule,
     MatSnackBarModule,
     CurrencyPipe,
-    DatePipe
+    DatePipe,
+    EdicionReciboComponent,
+    MetodosPagoComponent
   ],
   templateUrl: './recibo.component.html',
   styleUrls: ['./recibo.component.scss']
@@ -103,8 +109,9 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   });
-  metodosPago: MetodoPagoDto[] = [];
   actualizandoMetodoPago = false;
+  estadosRecibos: EstadoReciboDto[] = [];
+  estaEnEdicion = false;
   constructor(
     private reciboService: ReciboService,
     private reciboDetalleService: ReciboDetalleService,
@@ -112,7 +119,8 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     private dialog: MatDialog,
     private metodoPagoService: MetodoPagoService,
     private ticketReciboService: TicketReciboService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private estadoRecibosService: EstadoRecibosService
   ) {}
 
   ngOnInit(): void {
@@ -131,7 +139,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         this.performProductSearch(term, true);
       });
     this.focusSearchInputRequest.emit();
-    this.cargarMetodosPago();
+    this.cargarEstadosRecibos();
   }
 
   ngOnDestroy(): void {
@@ -358,12 +366,14 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
           ...resp,
           sesionId: this.sessionId ?? resp.sesionId
         };
+        this.actualizarEstadoEdicion();
         this.loading = false;
         this.fetchDetalles(id);
       },
       error: (err: unknown) => {
         console.error('Error loading recibo', err);
         this.recibo = null;
+        this.estaEnEdicion = false;
         this.error = 'No se pudo cargar el recibo.';
         this.loading = false;
         this.detalles = [];
@@ -405,6 +415,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     this.productSearchError = null;
     this.searchingProduct = false;
     this.dialogAbierto = false;
+    this.estaEnEdicion = false;
     this.focusSearchInputRequest.emit();
   }
 
@@ -1120,15 +1131,196 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     });
   }
 
-  private cargarMetodosPago(): void {
-    this.metodoPagoService
-      .obtenerMetodosPago()
+  onMetodoPagoSeleccionado(metodo: MetodoPagoDto): void {
+    this.seleccionarMetodoPago(metodo);
+  }
+
+  onMetodoPagoSeleccionadoDesdeEdicion(event: { metodo: MetodoPagoDto; valorReferencia: number | null }): void {
+    // Cuando se selecciona un método de pago desde el componente de edición,
+    // usar valorReferencia (diferencia) para el diálogo, pero procesar el total completo
+    const metodo = event.metodo;
+    const valorReferencia = event.valorReferencia;
+
+    if (!metodo || metodo.estado === 'inactivo' || !this.recibo || !this.reciboId || this.actualizandoMetodoPago) {
+      return;
+    }
+
+    if (this.recibo.metodoPagoId === metodo.id) {
+      return;
+    }
+
+    // Obtener el total del recibo completo para el PUT
+    const totalARegistrar = Number(this.recibo!.total ?? 0);
+    // Usar valorReferencia (diferencia) para el diálogo de pago en efectivo
+    const valorParaDialogo = valorReferencia !== null && valorReferencia > 0 ? valorReferencia : totalARegistrar;
+
+    const preProceso$: Observable<void> =
+      metodo.id === 1
+        ? this.dialog
+            .open<PagoEfectivoCambioComponent, PagoEfectivoCambioData, PagoEfectivoCambioResultado>(
+              PagoEfectivoCambioComponent,
+              {
+                width: '640px',
+                data: {
+                  // Usar la diferencia (valorReferencia) para el diálogo
+                  total: valorParaDialogo
+                },
+                autoFocus: false,
+                disableClose: true
+              }
+            )
+            .afterClosed()
+            .pipe(
+              switchMap((resultado) => {
+                if (!resultado) {
+                  return EMPTY;
+                }
+                return of(void 0);
+              })
+            )
+        : of(void 0);
+
+    this.actualizandoMetodoPago = true;
+
+    preProceso$
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap(() => this.obtenerTicketAsociado()),
+        switchMap((ticketId) => {
+          const sesionId = this.getSessionId();
+          const payload: ActualizarReciboRequest = {
+            clienteId: this.recibo!.clienteId,
+            ticketId,
+            estadoId: ESTADOS_RECIBO.PAGADO,
+            metodoPagoId: metodo.id,
+            total: totalARegistrar.toFixed(2),
+            sesionId: sesionId ?? undefined
+          };
+
+          return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
+            switchMap(() => {
+              const sessionId = this.getSessionId();
+              if (!sessionId) {
+                throw new Error('No se encontró sessionId.');
+              }
+              return this.ticketReciboService.getByTicketId(ticketId, sessionId).pipe(
+                map((relacion) => {
+                  if (!relacion?.reciboId) {
+                    throw new Error('No se encontró relación recibo para este ticket.');
+                  }
+                  return { reciboId: relacion.reciboId, totalGuardado: totalARegistrar };
+                })
+              );
+            })
+          );
+        }),
+        switchMap(({ reciboId, totalGuardado }) =>
+          this.reciboService.getRecibo(reciboId).pipe(
+            tap((reciboActualizado) => {
+              this.recibo = {
+                ...this.recibo!,
+                ...reciboActualizado,
+                sesionId: this.sessionId ?? reciboActualizado.sesionId
+              };
+              this.fetchDetalles(reciboActualizado.id);
+            }),
+            map(() => totalGuardado)
+          )
+        ),
+        finalize(() => {
+          this.actualizandoMetodoPago = false;
+        })
+      )
+      .subscribe({
+        next: (totalGuardado) => {
+          const totalFormateado = this.formatCurrency(totalGuardado);
+          const snackBarRef = this.snackBar.open(
+            `Recibo por valor de ${totalFormateado} guardado correctamente`,
+            undefined,
+            {
+              duration: 5000,
+              horizontalPosition: 'right',
+              panelClass: ['recibo-snackbar-success']
+            }
+          );
+          // Make the currency value bold
+          setTimeout(() => {
+            const snackBarElement = document.querySelector('.recibo-snackbar-success .mat-mdc-snack-bar-label');
+            if (snackBarElement) {
+              const text = snackBarElement.textContent || '';
+              const currencyRegex = /\$\s*[\d.,]+/;
+              const match = text.match(currencyRegex);
+              if (match) {
+                const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+                snackBarElement.innerHTML = boldText;
+              }
+            }
+          }, 0);
+          this.metodoPagoActualizado.emit();
+        },
+        error: (err: unknown) => {
+          console.error('Error actualizando método de pago', err);
+          const totalFormateado = this.formatCurrency(totalARegistrar);
+          const snackBarRef = this.snackBar.open(
+            `No fue posible registrar el recibo - total: ${totalFormateado}`,
+            undefined,
+            {
+              duration: 7000,
+              horizontalPosition: 'right',
+              panelClass: ['recibo-snackbar-error']
+            }
+          );
+          // Make the currency value bold
+          setTimeout(() => {
+            const snackBarElement = document.querySelector('.recibo-snackbar-error .mat-mdc-snack-bar-label');
+            if (snackBarElement) {
+              const text = snackBarElement.textContent || '';
+              const currencyRegex = /\$\s*[\d.,]+/;
+              const match = text.match(currencyRegex);
+              if (match) {
+                const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+                snackBarElement.innerHTML = boldText;
+              }
+            }
+          }, 0);
+        }
+      });
+  }
+
+  private cargarEstadosRecibos(): void {
+    this.estadoRecibosService
+      .getEstadosRecibos()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (metodos) =>
-          (this.metodosPago = (metodos ?? []).slice().sort((a, b) => a.id - b.id)),
-        error: (err) => console.error('Error cargando métodos de pago', err)
+        next: (estados) => {
+          this.estadosRecibos = estados ?? [];
+          // Si ya hay un recibo cargado, actualizar el estado de edición
+          if (this.recibo) {
+            this.actualizarEstadoEdicion();
+          }
+        },
+        error: (err) => console.error('Error cargando estados de recibo', err)
       });
+  }
+
+  private actualizarEstadoEdicion(): void {
+    if (!this.recibo || this.estadosRecibos.length === 0) {
+      this.estaEnEdicion = false;
+      return;
+    }
+
+    // Buscar el estado con sigla "ED"
+    const estadoEdicion = this.estadosRecibos.find(
+      (e) => e.sigla === ESTADOS_RECIBO.SIGLA_EDICION
+    );
+
+    if (!estadoEdicion) {
+      this.estaEnEdicion = false;
+      return;
+    }
+
+    // Verificar si el recibo está en estado de edición
+    this.estaEnEdicion = this.recibo.estadoId === estadoEdicion.id;
   }
 
   formatCurrency(value: number | null | undefined): string {
