@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -20,6 +21,7 @@ import { takeUntil } from 'rxjs/operators';
     CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
+    MatButtonToggleModule,
     MatFormFieldModule,
     MatInputModule,
     MatDatepickerModule,
@@ -30,7 +32,7 @@ import { takeUntil } from 'rxjs/operators';
   styleUrls: ['./historial-ventas.component.scss']
 })
 export class HistorialVentasComponent implements OnInit, OnDestroy {
-  selectedFilter = 'todos';
+  selectedFilter = 'pagado'; // Por defecto "pagado"
   fechaCtrl = new FormControl<Date | null>(null);
   historialRecibos: HistorialReciboDto[] = [];
   loading = false;
@@ -63,7 +65,6 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadEstadosRecibos();
-    this.loadHistorialRecibos();
   }
 
   loadEstadosRecibos(): void {
@@ -72,9 +73,13 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: (estados) => {
         this.estadosRecibos = estados;
+        // Cargar recibos después de cargar los estados para poder usar el filtro por defecto
+        this.loadHistorialRecibos();
       },
       error: (err) => {
         console.error('Error loading estados recibos', err);
+        // Cargar recibos incluso si hay error cargando estados
+        this.loadHistorialRecibos();
       }
     });
   }
@@ -89,6 +94,24 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     this.page = 1;
     this.historialRecibos = [];
     this.loadHistorialRecibos();
+  }
+
+  getEstadoIdByFilter(filter: string): number | undefined {
+    if (filter === 'todos') {
+      return undefined; // No filtrar por estado
+    }
+    
+    // Buscar el estado por sigla
+    const estado = this.estadosRecibos.find(e => {
+      if (filter === 'pagado') {
+        return e.sigla === 'P';
+      } else if (filter === 'anulados') {
+        return e.sigla === 'AN';
+      }
+      return false;
+    });
+    
+    return estado?.id;
   }
 
   onFechaChange(): void {
@@ -116,7 +139,10 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
       fechaParam = `${year}-${month}-${day}`;
     }
     
-    this.historialReciboService.searchHistorialRecibos(this.page, this.size, 'fechaCreacion,desc', fechaParam).pipe(
+    // Get estadoId based on selected filter (default to pagado if not todos)
+    const estadoId = this.getEstadoIdByFilter(this.selectedFilter);
+    
+    this.historialReciboService.searchHistorialRecibos(this.page, this.size, 'fechaCreacion,desc', fechaParam, estadoId).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
       next: (page: HistorialReciboPage) => {

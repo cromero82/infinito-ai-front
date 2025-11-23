@@ -4,15 +4,11 @@
     <h2 class="title mt-0 mb-4">Historial de Ventas</h2>
     
     <div class="filter-section">
-      <button
-        mat-flat-button
-        color="primary"
-        [class.selected]="selectedFilter === 'todos'"
-        (click)="selectFilter('todos')"
-        type="button"
-        class="filter-button">
-        Todos
-      </button>
+      <mat-button-toggle-group [value]="selectedFilter" (valueChange)="selectFilter($event)">
+        <mat-button-toggle value="todos">Todos</mat-button-toggle>
+        <mat-button-toggle value="pagado">Pagado</mat-button-toggle>
+        <mat-button-toggle value="anulados">Anulados</mat-button-toggle>
+      </mat-button-toggle-group>
     </div>
 
     <div class="fecha-section">

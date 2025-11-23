@@ -69,7 +69,8 @@ export class HistorialReciboService {
     page: number = 1,
     size: number = 10,
     sort: string = 'fechaCreacion,desc',
-    fecha?: string
+    fecha?: string,
+    estadoId?: number
   ): Observable<HistorialReciboPage> {
     const headers = new HttpHeaders({ 'Accept': 'application/json' });
     let params = new HttpParams()
@@ -80,6 +81,11 @@ export class HistorialReciboService {
     // Add fecha parameter if provided
     if (fecha) {
       params = params.set('fecha', fecha);
+    }
+    
+    // Add estadoId parameter if provided
+    if (estadoId !== undefined && estadoId !== null) {
+      params = params.set('estadoId', String(estadoId));
     }
     
     return this.http.get<HistorialReciboPage>(`${this.apiUrl}/search`, { headers, params });
