@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
 import { EdicionReciboDetalleService, EdicionReciboDetalleDto } from '../service/edicion-recibo-detalle.service';
 import { ReciboDetalleDto } from '../service/recibo-detalle.service';
 import { ReciboDto } from '../service/recibo.service';
@@ -21,7 +22,7 @@ export interface CambioDetalle {
 @Component({
   selector: 'vex-edicion-recibo',
   standalone: true,
-  imports: [CommonModule, MetodosPagoComponent],
+  imports: [CommonModule, MetodosPagoComponent, MatButtonModule],
   templateUrl: './edicion-recibo.component.html',
   styleUrls: ['./edicion-recibo.component.scss']
 })
@@ -31,6 +32,7 @@ export class EdicionReciboComponent implements OnInit, OnChanges, OnDestroy {
   @Input() recibo: ReciboDto | null = null;
 
   @Output() metodoPagoSeleccionado = new EventEmitter<{ metodo: MetodoPagoDto; valorReferencia: number | null }>();
+  @Output() finalizar = new EventEmitter<void>();
 
   edicionDetalles: EdicionReciboDetalleDto[] = [];
   cambios: CambioDetalle[] = [];
@@ -192,6 +194,11 @@ export class EdicionReciboComponent implements OnInit, OnChanges, OnDestroy {
 
   onMetodoPagoSeleccionado(metodo: MetodoPagoDto): void {
     this.metodoPagoSeleccionado.emit({ metodo, valorReferencia: this.diferencia });
+  }
+
+  onFinalizar(): void {
+    console.log('onFinalizar called in edicion-recibo component');
+    this.finalizar.emit();
   }
 }
 

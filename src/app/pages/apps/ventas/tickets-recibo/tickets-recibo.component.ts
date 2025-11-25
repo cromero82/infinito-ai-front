@@ -95,7 +95,10 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit {
   }
 
   recargarRecibo(): void {
-    if (this.selectedIndex >= 0 && this.selectedIndex < this.tickets.length) {
+    // Recargar tickets cuando se actualiza el recibo
+    if (this.sessionId !== null) {
+      this.loadTickets(this.sessionId);
+    } else if (this.selectedIndex >= 0 && this.selectedIndex < this.tickets.length) {
       this.fetchReciboForTicket(this.tickets[this.selectedIndex].id, true);
     }
   }

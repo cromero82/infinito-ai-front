@@ -116,6 +116,7 @@
     [reciboId]="reciboId"
     [detalles]="detalles"
     [recibo]="recibo"
-    (metodoPagoSeleccionado)="onMetodoPagoSeleccionadoDesdeEdicion($event)">
+    (metodoPagoSeleccionado)="onMetodoPagoSeleccionadoDesdeEdicion($event)"
+    (finalizar)="onFinalizarEdicion()">
   </vex-edicion-recibo>
 </div>

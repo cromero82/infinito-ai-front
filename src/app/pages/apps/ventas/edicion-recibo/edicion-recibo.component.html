@@ -107,8 +107,22 @@
     </div>
 
     <!-- Mensaje de devolución -->
-    <div *ngIf="diferencia < 0" class="devolucion-message">
-      Devolver al usuario: {{ formatCurrency(getDiferenciaAbsoluta()) }}
+    <div *ngIf="diferencia < 0" class="devolucion-section">
+      <div class="devolucion-message">
+        Devolver al usuario: {{ formatCurrency(getDiferenciaAbsoluta()) }}
+      </div>
+      <div class="finalizar-button-container">
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          class="finalizar-button"
+          (click)="onFinalizar(); $event.stopPropagation(); $event.preventDefault()"
+          [disabled]="false"
+          style="pointer-events: auto; z-index: 1000;">
+          Finalizar
+        </button>
+      </div>
     </div>
 
     <!-- Mensaje de pago adicional -->
