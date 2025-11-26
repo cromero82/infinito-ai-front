@@ -10,6 +10,7 @@ import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/v
 import { VexBreadcrumbsComponent } from '@vex/components/vex-breadcrumbs/vex-breadcrumbs.component';
 import { TicketsService, TicketDto } from '../service/tickets.service';
 import { TicketReciboService } from '../service/ticket-recibo.service';
+import { SesionesService, SesionDto } from '../service/sesiones.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -50,7 +51,8 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit {
   constructor(
     private ticketsService: TicketsService,
     private ticketReciboService: TicketReciboService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private sesionesService: SesionesService
   ) {}
 
   ngOnInit(): void {
@@ -236,9 +238,30 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit {
           });
         } else {
           this.tickets = tickets;
-          this.selectedIndex = 0;
-          this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
-          this.loading = false;
+
+          // Consultar la sesión para obtener ultimoTicketId y seleccionar ese ticket
+          this.sesionesService.getSesionById(sessionId).subscribe({
+            next: (sesion: SesionDto) => {
+              const ultimoId = sesion?.ultimoTicketId ?? null;
+
+              if (ultimoId) {
+                const index = this.tickets.findIndex((t) => t.id === ultimoId);
+                this.selectedIndex = index >= 0 ? index : 0;
+              } else {
+                this.selectedIndex = 0;
+              }
+
+              this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
+              this.loading = false;
+            },
+            error: (err) => {
+              console.error('Error loading session info', err);
+              // Fallback al comportamiento anterior
+              this.selectedIndex = 0;
+              this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
+              this.loading = false;
+            }
+          });
         }
       },
       error: (err) => {
