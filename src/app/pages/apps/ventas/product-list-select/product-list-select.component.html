@@ -11,7 +11,7 @@
       type="text" />
   </div>
 
-  <div class="table-container">
+  <div class="table-container" (scroll)="onTableScroll($event)">
     <div class="loading" *ngIf="loading">Cargando productos...</div>
     <div class="error" *ngIf="!loading && error">{{ error }}</div>
 

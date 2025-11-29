@@ -39,8 +39,12 @@ export class ProductListSelectComponent implements OnInit, AfterViewInit, OnDest
   searchCtrl = new FormControl('', { nonNullable: true });
   products: Producto[] = [];
   loading = false;
+  loadingMore = false;
   error: string | null = null;
   displayedColumns = ['nombre', 'barcode', 'precio', 'acciones'];
+  page = 0;
+  size = 20;
+  totalPages = 0;
   private destroy$ = new Subject<void>();
   @ViewChild('searchInput') searchInput?: ElementRef<HTMLInputElement>;
 
@@ -54,7 +58,7 @@ export class ProductListSelectComponent implements OnInit, AfterViewInit, OnDest
   ngOnInit(): void {
     if (this.data?.term) {
       this.searchCtrl.setValue(this.data.term);
-      this.fetchProducts(this.data.term);
+      this.fetchProducts(this.data.term, true);
     }
 
     this.searchCtrl.valueChanges
@@ -64,9 +68,11 @@ export class ProductListSelectComponent implements OnInit, AfterViewInit, OnDest
         if (!term) {
           this.products = [];
           this.error = null;
+          this.page = 0;
+          this.totalPages = 0;
           return;
         }
-        this.fetchProducts(term);
+        this.fetchProducts(term, true);
       });
   }
 
@@ -116,30 +122,82 @@ export class ProductListSelectComponent implements OnInit, AfterViewInit, OnDest
         // Product was updated, refresh the product list
         const currentTerm = this.searchCtrl.value?.trim() || '';
         if (currentTerm) {
-          this.fetchProducts(currentTerm);
+          this.fetchProducts(currentTerm, true);
         }
       }
     });
   }
 
-  private fetchProducts(term: string): void {
-    this.loading = true;
+  private fetchProducts(term: string, reset: boolean): void {
+    if (reset) {
+      this.page = 0;
+      this.totalPages = 0;
+      this.products = [];
+      this.loading = true;
+      this.loadingMore = false;
+    } else {
+      if (this.loading || this.loadingMore) {
+        return;
+      }
+      this.loadingMore = true;
+    }
+
     this.error = null;
-    this.relationalProductService.getProducts(term, 0, 20).subscribe({
-      next: (page: ProductPage) => {
-        this.products = page?.content ?? [];
+    const pageToLoad = reset ? 0 : this.page + 1;
+
+    this.relationalProductService.getProducts(term, pageToLoad, this.size).subscribe({
+      next: (resp: ProductPage) => {
+        const content = resp?.content ?? [];
+        this.totalPages = resp?.totalPages ?? 0;
+        this.page = pageToLoad;
+
+        if (reset) {
+          this.products = content;
+        } else {
+          this.products = this.products.concat(content);
+        }
+
         if (this.products.length === 0) {
           this.error = 'No se encontraron productos.';
         }
         this.loading = false;
+        this.loadingMore = false;
       },
       error: (err) => {
         console.error('Error fetching products', err);
-        this.products = [];
-        this.error = 'Error al cargar productos.';
+        if (reset) {
+          this.products = [];
+          this.error = 'Error al cargar productos.';
+        }
         this.loading = false;
+        this.loadingMore = false;
       }
     });
+  }
+
+  onTableScroll(event: Event): void {
+    const element = event.target as HTMLElement;
+    if (!element) {
+      return;
+    }
+
+    const scrollTop = element.scrollTop;
+    const scrollHeight = element.scrollHeight;
+    const clientHeight = element.clientHeight;
+    const remaining = scrollHeight - (scrollTop + clientHeight);
+
+    const isNearBottom = remaining < 80;
+
+    const currentTerm = this.searchCtrl.value?.trim();
+    if (
+      isNearBottom &&
+      !this.loading &&
+      !this.loadingMore &&
+      currentTerm &&
+      (this.totalPages === 0 || this.page + 1 < this.totalPages)
+    ) {
+      this.fetchProducts(currentTerm, false);
+    }
   }
 }
 
