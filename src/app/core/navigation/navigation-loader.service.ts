@@ -38,6 +38,12 @@ export class NavigationLoaderService {
         route: '/apps/ventas/historial',
         icon: 'mat:history'
       },
+      {
+        type: 'link',
+        label: 'Dashboard Ventas',
+        route: '/apps/ventas/dashboard',
+        icon: 'mat:dashboard'
+      },
     ]);
   }
 }

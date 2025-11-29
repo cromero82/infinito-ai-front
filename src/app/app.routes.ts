@@ -137,6 +137,13 @@ export const appRoutes: VexRoutes = [
                   import('./pages/apps/ventas/historial-ventas/historial-ventas.component').then(
                     (m) => m.HistorialVentasComponent
                   )
+              },
+              {
+                path: 'dashboard',
+                loadComponent: () =>
+                  import('./pages/apps/ventas/ventas-dashboard/ventas-dashboard.component').then(
+                    (m) => m.VentasDashboardComponent
+                  )
               }
             ]
           },

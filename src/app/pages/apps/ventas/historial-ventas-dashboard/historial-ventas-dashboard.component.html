@@ -1,0 +1,109 @@
+<div class="card">
+  <div class="border-b py-2 px-6 flex items-center">
+    <h2 class="m-0 title flex-auto">Historial de Ventas</h2>
+
+    <button mat-icon-button type="button" (click)="cargarVentasDelDia()" matTooltip="Cargar ventas del día">
+      <mat-icon class="text-secondary" svgIcon="mat:refresh"></mat-icon>
+    </button>
+  </div>
+
+  <div class="pt-4 pb-6 px-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Sección izquierda: Filtros -->
+    <div class="flex flex-col gap-4">
+      <div>
+        <h3 class="title font-medium mb-4">Filtros</h3>
+        
+        <div class="flex flex-col gap-4">
+          <mat-form-field appearance="outline">
+            <mat-label>Fecha Inicio</mat-label>
+            <input matInput [matDatepicker]="pickerInicio" [formControl]="fechaInicioCtrl">
+            <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+            <mat-datepicker #pickerInicio></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Fecha Fin</mat-label>
+            <input matInput [matDatepicker]="pickerFin" [formControl]="fechaFinCtrl">
+            <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
+            <mat-datepicker #pickerFin></mat-datepicker>
+          </mat-form-field>
+
+          <button 
+            mat-flat-button 
+            color="primary" 
+            type="button"
+            [disabled]="!fechaInicioCtrl.value || !fechaFinCtrl.value || loading"
+            (click)="aplicarFiltro()">
+            Aplicar Filtro
+          </button>
+
+          <button 
+            mat-button 
+            type="button"
+            [disabled]="loading"
+            (click)="cargarVentasDelDia()">
+            Ver Ventas del Día
+          </button>
+        </div>
+      </div>
+
+      <!-- Resumen -->
+      <div class="mt-4">
+        <h3 class="title font-medium mb-4">Resumen</h3>
+        <div class="pb-6 pt-4 px-6 flex flex-col">
+          <h2 class="display-2 font-bold m-0">{{ formatCurrency(totalGeneral) }}</h2>
+          <h3 class="title font-medium mt-2 mb-0">Total General</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección derecha: Gráfico y detalles -->
+    <div class="md:col-span-2 flex flex-col">
+      <div *ngIf="loading" class="text-secondary py-8 text-center">
+        Cargando ventas...
+      </div>
+
+      <div *ngIf="!loading && error" class="text-warn py-8 text-center">
+        {{ error }}
+      </div>
+
+      <div *ngIf="!loading && !error && ventasPorFecha.length === 0" class="text-secondary py-8 text-center">
+        No hay ventas disponibles para el período seleccionado.
+      </div>
+
+      <div *ngIf="!loading && !error && ventasPorFecha.length > 0">
+        <vex-chart [options]="chartOptions" [series]="chartSeries"></vex-chart>
+
+        <!-- Tabla de detalles -->
+        <div class="mt-6">
+          <h3 class="title font-medium mb-4">Detalles por Fecha</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+              <thead>
+                <tr class="border-b">
+                  <th class="text-left py-2 px-4">Fecha</th>
+                  <th class="text-right py-2 px-4">Total</th>
+                  <th class="text-left py-2 px-4">Métodos de Pago</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let venta of ventasPorFecha" class="border-b hover:bg-gray-50">
+                  <td class="py-2 px-4">{{ formatDate(venta.fecha) }}</td>
+                  <td class="text-right py-2 px-4 font-medium">{{ formatCurrency(venta.total) }}</td>
+                  <td class="py-2 px-4">
+                    <div class="flex flex-col gap-1">
+                      <span *ngFor="let detalle of venta.detalles" class="text-sm">
+                        {{ detalle.metodoPagoNombre }}: {{ formatCurrency(detalle.total) }}
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

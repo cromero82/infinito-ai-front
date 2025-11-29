@@ -8,6 +8,8 @@ export interface MetodoPagoDto {
   descripcion: string;
   estado: string;
   file: string;
+  sigla: string;
+  color: string;
 }
 
 @Injectable({
