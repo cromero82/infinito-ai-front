@@ -13,6 +13,7 @@ import { HistorialReciboDetalleService, HistorialReciboDetalleDto } from '../ser
 import { EstadoRecibosService, EstadoReciboDto } from '../service/estado-recibos.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'vex-historial-ventas',
@@ -60,7 +61,8 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     private historialReciboService: HistorialReciboService,
     private historialReciboDetalleService: HistorialReciboDetalleService,
     private estadoRecibosService: EstadoRecibosService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -447,6 +449,9 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
         this.loadHistorialRecibos();
         
         this.volviendoAEditar = false;
+
+        // Redirigir a la pantalla de ventas
+        this.router.navigate(['/apps/ventas']);
       },
       error: (err) => {
         console.error('Error volviendo a editar recibo', err);

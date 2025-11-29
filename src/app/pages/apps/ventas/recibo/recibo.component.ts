@@ -1157,8 +1157,9 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         const metodo = this.metodosPago.find(m => m.id === this.recibo!.metodoPagoId);
         console.log('metodo encontrado:', metodo);
         if (metodo) {
-          // Llamar directamente a la lógica de pago sin verificar si ya está seleccionado
-          this.ejecutarPago(metodo);
+          // Ejecutar el pago usando el método ya seleccionado,
+          // omitiendo el diálogo de efectivo si aplica
+          this.ejecutarPago(metodo, true);
         } else {
           console.error('No se encontró el método de pago con id:', this.recibo.metodoPagoId);
         }
@@ -1169,7 +1170,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
           const metodo = this.metodosPago.find(m => m.id === this.recibo!.metodoPagoId);
           if (metodo) {
             console.log('metodo encontrado después de esperar:', metodo);
-            this.ejecutarPago(metodo);
+            this.ejecutarPago(metodo, true);
           } else {
             console.error('No se encontró el método de pago después de esperar');
           }
@@ -1180,7 +1181,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     }
   }
 
-  private ejecutarPago(metodo: MetodoPagoDto): void {
+  private ejecutarPago(metodo: MetodoPagoDto, omitirDialogoEfectivo: boolean = false): void {
     console.log('ejecutarPago called with:', { metodo, recibo: this.recibo, reciboId: this.reciboId, actualizandoMetodoPago: this.actualizandoMetodoPago });
     
     if (!metodo || metodo.estado === 'inactivo' || !this.recibo || !this.reciboId || this.actualizandoMetodoPago) {
@@ -1197,7 +1198,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     console.log('Ejecutando pago con método:', metodo);
 
     const preProceso$: Observable<void> =
-      metodo.id === 1
+      metodo.id === 1 && !omitirDialogoEfectivo
         ? this.dialog
             .open<PagoEfectivoCambioComponent, PagoEfectivoCambioData, PagoEfectivoCambioResultado>(
               PagoEfectivoCambioComponent,
@@ -1353,10 +1354,6 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     const valorReferencia = event.valorReferencia;
 
     if (!metodo || metodo.estado === 'inactivo' || !this.recibo || !this.reciboId || this.actualizandoMetodoPago) {
-      return;
-    }
-
-    if (this.recibo.metodoPagoId === metodo.id) {
       return;
     }
 

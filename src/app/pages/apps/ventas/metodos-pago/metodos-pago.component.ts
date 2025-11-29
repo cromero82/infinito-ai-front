@@ -26,6 +26,7 @@ export class MetodosPagoComponent implements OnInit, OnDestroy {
   @Input() detalles: ReciboDetalleDto[] = [];
   @Input() disabled: boolean = false;
   @Input() valorReferencia: number | null = null; // Para usar diferencia en edición recibo
+  @Input() permitirReSeleccionar: boolean = false; // Permitir seleccionar de nuevo el mismo método
 
   @Output() metodoPagoSeleccionado = new EventEmitter<MetodoPagoDto>();
 
@@ -61,7 +62,7 @@ export class MetodosPagoComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.recibo && this.recibo.metodoPagoId === metodo.id) {
+    if (this.recibo && this.recibo.metodoPagoId === metodo.id && !this.permitirReSeleccionar) {
       return;
     }
 

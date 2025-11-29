@@ -88,7 +88,7 @@
           <vex-metodos-pago
             [recibo]="recibo"
             [detalles]="detalles"
-            [disabled]="actualizandoMetodoPago"
+            [disabled]="actualizandoMetodoPago || estaEnEdicion"
             (metodoPagoSeleccionado)="onMetodoPagoSeleccionado($event)">
           </vex-metodos-pago>
         </span>
