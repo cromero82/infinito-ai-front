@@ -65,5 +65,18 @@ export class VentasTipoService {
       .set('fechaFin', fechaFin);
     return this.http.get<VentasTipoDto[]>(`${this.apiUrl}/by-fecha-range`, { headers, params });
   }
+
+  /**
+   * Registra una venta por tipo de método de pago
+   * @param venta Datos de la venta (metodoPagoId, fecha, total)
+   * @returns Observable con la venta creada
+   */
+  crearVentaTipo(venta: { metodoPagoId: number; fecha: string; total: number }): Observable<VentasTipoDto> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    });
+    return this.http.post<VentasTipoDto>(this.apiUrl, venta, { headers });
+  }
 }
 
