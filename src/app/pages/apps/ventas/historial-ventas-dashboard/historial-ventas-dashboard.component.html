@@ -7,13 +7,13 @@
     </button>
   </div>
 
-  <div class="pt-4 pb-6 px-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+  <div class="pt-3 pb-4 px-4 split-pane-container">
     <!-- Sección izquierda: Filtros -->
-    <div class="flex flex-col gap-4">
+    <div class="split-pane-left" [style.width.px]="leftPanelWidth">
       <div>
-        <h3 class="title font-medium mb-4">Filtros</h3>
+        <h3 class="title font-medium mb-2">Filtros</h3>
         
-        <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-3">
           <mat-form-field appearance="outline">
             <mat-label>Fecha Inicio</mat-label>
             <input matInput [matDatepicker]="pickerInicio" [formControl]="fechaInicioCtrl">
@@ -48,17 +48,40 @@
       </div>
 
       <!-- Resumen -->
-      <div class="mt-4">
-        <h3 class="title font-medium mb-4">Resumen</h3>
-        <div class="pb-6 pt-4 px-6 flex flex-col">
-          <h2 class="display-2 font-bold m-0">{{ formatCurrency(totalGeneral) }}</h2>
-          <h3 class="title font-medium mt-2 mb-0">Total General</h3>
+      <div class="mt-2">
+        <h3 class="title font-medium mb-2">Resumen</h3>
+        
+        <!-- Promedio de ventas del rango -->
+        <div class="pb-2 pt-2 px-4 flex flex-col border-b">
+          <h2 class="resumen-total font-bold m-0 text-primary">{{ formatCurrency(promedioVentas) }}</h2>
+          <h3 class="title font-medium mt-1 mb-0 text-sm">Promedio de Ventas</h3>
+          <p class="text-secondary text-xs mt-0.5">Promedio del rango seleccionado</p>
+        </div>
+
+        <!-- Ventas del día actual -->
+        <div class="pb-2 pt-2 px-4 flex flex-col">
+          <div *ngIf="cargandoVentasDiaActual" class="text-secondary text-sm">
+            Cargando...
+          </div>
+          <div *ngIf="!cargandoVentasDiaActual">
+            <h2 class="resumen-total font-bold m-0 text-green-600">{{ formatCurrency(ventasDiaActual) }}</h2>
+            <h3 class="title font-medium mt-1 mb-0 text-sm">Ventas del Día</h3>
+            <p class="text-secondary text-xs mt-0.5">Ventas de hoy</p>
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- Divisor redimensionable -->
+    <div 
+      class="split-pane-divider"
+      (mousedown)="startResize($event)"
+      [class.resizing]="isResizing">
+      <div class="divider-handle"></div>
+    </div>
+
     <!-- Sección derecha: Gráfico y detalles -->
-    <div class="md:col-span-2 flex flex-col">
+    <div class="split-pane-right flex flex-col">
       <div *ngIf="loading" class="text-secondary py-8 text-center">
         Cargando ventas...
       </div>
@@ -67,16 +90,65 @@
         {{ error }}
       </div>
 
+      <!-- Botones de navegación (siempre visibles) -->
+      <div *ngIf="!loading && !error" class="flex justify-center items-center gap-6 mt-4 mb-6">
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          [disabled]="!puedeNavegarIzquierda() || loading"
+          (click)="navegarIzquierda()"
+          matTooltip="7 días anteriores"
+          class="navigation-button">
+          <mat-icon svgIcon="mat:chevron_left"></mat-icon>
+          <span class="ml-2">Anterior</span>
+        </button>
+        
+        <div class="text-center">
+          <div class="text-secondary text-sm font-medium">
+            <span *ngIf="fechaInicioActual && fechaFinActual">
+              {{ formatDateRange(fechaInicioActual, fechaFinActual) }}
+            </span>
+            <span *ngIf="!fechaInicioActual || !fechaFinActual">
+              Cargando...
+            </span>
+          </div>
+          <div class="text-secondary text-xs mt-1">
+            <span *ngIf="ventasPorFecha.length > 0">
+              {{ ventasPorFecha.length }} día{{ ventasPorFecha.length !== 1 ? 's' : '' }} con ventas
+            </span>
+            <span *ngIf="ventasPorFecha.length === 0" class="text-warn">
+              No hay ventas en este período
+            </span>
+          </div>
+        </div>
+        
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          [disabled]="!puedeNavegarDerecha() || loading"
+          (click)="navegarDerecha()"
+          matTooltip="7 días siguientes"
+          class="navigation-button">
+          <span class="mr-2">Siguiente</span>
+          <mat-icon svgIcon="mat:chevron_right"></mat-icon>
+        </button>
+      </div>
+
+      <!-- Gráfico (solo si hay datos) -->
+      <div *ngIf="!loading && !error && ventasPorFecha.length > 0">
+        <vex-chart [options]="chartOptions" [series]="chartSeries"></vex-chart>
+      </div>
+
+      <!-- Mensaje cuando no hay datos -->
       <div *ngIf="!loading && !error && ventasPorFecha.length === 0" class="text-secondary py-8 text-center">
         No hay ventas disponibles para el período seleccionado.
       </div>
 
-      <div *ngIf="!loading && !error && ventasPorFecha.length > 0">
-        <vex-chart [options]="chartOptions" [series]="chartSeries"></vex-chart>
-
-        <!-- Tabla de detalles -->
-        <div class="mt-6">
-          <h3 class="title font-medium mb-4">Detalles por Fecha</h3>
+      <!-- Tabla de detalles (solo si hay datos) -->
+      <div *ngIf="!loading && !error && ventasPorFecha.length > 0" class="mt-6">
+        <h3 class="title font-medium mb-4">Detalles por Fecha</h3>
           <div class="overflow-x-auto">
             <table class="w-full border-collapse">
               <thead>
@@ -87,7 +159,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let venta of ventasPorFecha" class="border-b hover:bg-gray-50">
+                <tr *ngFor="let venta of ventasPorFechaVisibles" class="border-b hover:bg-gray-50">
                   <td class="py-2 px-4">{{ formatDate(venta.fecha) }}</td>
                   <td class="text-right py-2 px-4 font-medium">{{ formatCurrency(venta.total) }}</td>
                   <td class="py-2 px-4">
@@ -102,7 +174,6 @@
             </table>
           </div>
         </div>
-      </div>
     </div>
   </div>
 </div>

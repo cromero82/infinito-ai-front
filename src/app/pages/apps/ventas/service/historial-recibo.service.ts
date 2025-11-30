@@ -118,5 +118,16 @@ export class HistorialReciboService {
     const payload = { estadoId };
     return this.http.put<HistorialReciboDto>(`${this.apiUrl}/${reciboId}`, payload, { headers, params });
   }
+
+  /**
+   * Obtiene el total de ventas para una fecha específica
+   * @param fecha Fecha en formato YYYY-MM-DD (ej: "2025-11-29")
+   * @returns Observable con el total de ventas (número escalar)
+   */
+  getTotalByDate(fecha: string): Observable<number> {
+    const headers = new HttpHeaders({ 'Accept': 'application/json' });
+    const params = new HttpParams().set('fecha', fecha);
+    return this.http.get<number>(`${this.apiUrl}/total-by-date`, { headers, params });
+  }
 }
 
