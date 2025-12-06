@@ -8,9 +8,11 @@ export interface Company {
 }
 
 export interface Producto {
+  id?: number;
   barcode: string;
   nombre: string;
   precio: number;
+  precioCompra?: number;
   foto: string;
   company?: Company;
 }

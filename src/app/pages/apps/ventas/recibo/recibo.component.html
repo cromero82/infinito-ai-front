@@ -1,0 +1,122 @@
+<div class="recibo-container">
+  <ng-container *ngIf="reciboId !== null; else noReciboSeleccionado">
+    <div *ngIf="loading" class="text-secondary">Cargando recibo...</div>
+    <div *ngIf="!loading && recibo; else reciboNoDisponible" class="detalle-container">
+      <div class="detalle-wrapper mt-2">
+        <div *ngIf="detallesLoading" class="text-secondary">Cargando detalles...</div>
+        <div *ngIf="!detallesLoading && detallesError" class="text-warn">
+          {{ detallesError }}
+        </div>
+        <div *ngIf="!detallesLoading && !detallesError" class="detalle-content">
+          <div *ngIf="detalles.length > 0; else sinDetalles">
+            <div class="detalle-header">
+              <span class="detalle-col producto">Producto</span>
+              <span class="detalle-col unitario">Valor unitario</span>
+              <span class="detalle-col cantidad">Cantidad</span>
+              <span class="detalle-col subtotal">Subtotal</span>
+            </div>
+            <div class="detalle-list" #detalleList>
+              <div
+                class="detalle-row"
+                *ngFor="let det of detalles; let i = index"
+                [class.selected-detalle]="selectedDetalleIndex === i"
+                (click)="selectDetalle(i)"
+                (dblclick)="onDetalleDoubleClick(i, $event)">
+                <span class="detalle-col producto" (dblclick)="onProductoDoubleClick(i, $event)">
+                  <input
+                    *ngIf="editingProductoIndex === i"
+                    class="producto-input producto-input-{{ i }}"
+                    type="text"
+                    [formControl]="editingProductoCtrl"
+                    (keydown.enter)="onProductoInputKeydown($event, i)"
+                    (keydown.escape)="cancelProductoEdit()"
+                    (blur)="onProductoInputBlur(i)"
+                    (click)="$event.stopPropagation()"
+                    (input)="$event.stopPropagation()" />
+                  <span *ngIf="editingProductoIndex !== i">
+                    {{ det.producto ? det.producto.nombre : ('Producto ' + det.productoId) }}
+                  </span>
+                </span>
+                <span class="detalle-col unitario" (dblclick)="onUnitarioDoubleClick(i, $event)">
+                  <input
+                    *ngIf="editingUnitarioIndex === i"
+                    class="valor-unitario-input valor-unitario-input-{{ i }}"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    [formControl]="editingUnitarioCtrl"
+                    (keydown.enter)="onUnitarioInputKeydown($event, i)"
+                    (keydown.escape)="cancelUnitarioEdit()"
+                    (blur)="onUnitarioInputBlur(i)"
+                    (click)="$event.stopPropagation()"
+                    (input)="$event.stopPropagation()" />
+                  <span *ngIf="editingUnitarioIndex !== i">
+                    {{ formatCurrency(det.producto?.precio ?? (det.cantidad ? det.subtotal / det.cantidad : 0)) }}
+                  </span>
+                </span>
+                <span class="detalle-col cantidad">
+                  <input
+                    *ngIf="editingDetalleIndex === i"
+                    class="cantidad-input cantidad-input-{{ i }}"
+                    type="number"
+                    min="1"
+                    [formControl]="editingCantidadCtrl"
+                    (keydown.enter)="onCantidadInputKeydown($event, i)"
+                    (keydown.escape)="cancelCantidadEdit()"
+                    (blur)="onCantidadInputBlur(i)"
+                    (click)="$event.stopPropagation()"
+                    (input)="$event.stopPropagation()" />
+                  <span *ngIf="editingDetalleIndex !== i">{{ det.cantidad }}</span>
+                </span>
+                <span class="detalle-col subtotal">
+                  {{ formatCurrency(det.subtotal) }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <ng-template #sinDetalles>
+            <div class="text-secondary">Este recibo no tiene detalles registrados.</div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <div class="detalle-footer-wrapper" *ngIf="!loading && recibo">
+    <div class="detalle-footer">
+        <span class="detalle-col producto total-label">
+          <vex-metodos-pago
+            [recibo]="recibo"
+            [detalles]="detalles"
+            [disabled]="actualizandoMetodoPago || estaEnEdicion"
+            (metodoPagoSeleccionado)="onMetodoPagoSeleccionado($event)">
+          </vex-metodos-pago>
+        </span>
+        <span class="detalle-col unitario"></span>
+      <span class="detalle-col cantidad">TOTAL</span>
+      <span class="detalle-col subtotal total-value total-value--highlight">
+        {{ formatCurrency(recibo ? recibo.total : 0) }}
+      </span>
+    </div>
+  </div>
+
+  <ng-template #noReciboSeleccionado>
+    <p class="text-secondary">Seleccione un ticket con recibo asociado para ver detalles.</p>
+  </ng-template>
+
+  <ng-template #reciboNoDisponible>
+    <div class="text-secondary">
+      {{ error || 'No se encontró información del recibo.' }}
+    </div>
+  </ng-template>
+
+  <!-- Componente de Edición Recibo -->
+  <vex-edicion-recibo
+    *ngIf="estaEnEdicion && reciboId"
+    [reciboId]="reciboId"
+    [detalles]="detalles"
+    [recibo]="recibo"
+    (metodoPagoSeleccionado)="onMetodoPagoSeleccionadoDesdeEdicion($event)"
+    (finalizar)="onFinalizarEdicion()">
+  </vex-edicion-recibo>
+</div>

@@ -1,0 +1,205 @@
+.edicion-recibo-container {
+  padding: 16px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 16px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.loading-message,
+.error-message {
+  padding: 16px;
+  text-align: center;
+  color: #666;
+}
+
+.error-message {
+  color: #d32f2f;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.cambios-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+
+  &.agregado {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: #2e7d32;
+  }
+
+  &.eliminado {
+    background-color: rgba(211, 47, 47, 0.1);
+    color: #c62828;
+  }
+
+  &.modificado {
+    background-color: rgba(255, 152, 0, 0.1);
+    color: #e65100;
+  }
+}
+
+.cambios-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  thead {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  }
+
+  td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  &.agregado {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #2e7d32;
+  }
+
+  &.eliminado {
+    background-color: rgba(211, 47, 47, 0.2);
+    color: #c62828;
+  }
+
+  &.modificado {
+    background-color: rgba(255, 152, 0, 0.2);
+    color: #e65100;
+  }
+}
+
+.no-cambios {
+  padding: 24px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+.totales-section {
+  margin-top: 24px;
+  padding: 16px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+
+  &.diferencia {
+    padding-top: 12px;
+    border-top: 2px solid rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+    font-size: 16px;
+  }
+}
+
+.total-label {
+  color: #666;
+}
+
+.total-value {
+  font-weight: 600;
+  color: #333;
+
+  &.negativa {
+    color: #d32f2f;
+  }
+}
+
+.devolucion-section {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.devolucion-message {
+  padding: 16px;
+  background-color: rgba(211, 47, 47, 0.1);
+  border-left: 4px solid #d32f2f;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #c62828;
+  text-align: center;
+  font-size: 16px;
+}
+
+.finalizar-button-container {
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 0;
+  margin-top: 8px;
+}
+
+.finalizar-button {
+  min-width: 120px;
+  z-index: 10;
+  position: relative;
+}
+
+.pago-adicional-message {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: rgba(76, 175, 80, 0.1);
+  border-left: 4px solid #4caf50;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #2e7d32;
+  text-align: center;
+  font-size: 16px;
+}
+
+.metodos-pago-section {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 4px;
+}
+

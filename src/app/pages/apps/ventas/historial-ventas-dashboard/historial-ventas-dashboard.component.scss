@@ -1,0 +1,164 @@
+.card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+table {
+  font-size: 14px;
+}
+
+table th {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+table td {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.navigation-button {
+  min-width: 120px;
+  height: 40px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  
+  &:hover:not(:disabled) {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+// Split pane (paneles redimensionables)
+.split-pane-container {
+  display: flex;
+  height: calc(100vh - 200px);
+  min-height: 600px;
+  position: relative;
+}
+
+.split-pane-left {
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding-right: 8px;
+  border-right: 1px solid rgba(0, 0, 0, 0.12);
+  min-width: 200px; // Ancho mínimo para asegurar que los filtros sean legibles
+  transition: width 0.3s ease;
+  
+  &.oculto {
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    border-right: none;
+    
+    > * {
+      display: none;
+    }
+  }
+}
+
+.split-pane-divider {
+  width: 8px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background-color: transparent;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, width 0.3s ease;
+
+  &:hover:not(.oculto) {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  &.resizing {
+    background-color: rgba(25, 118, 210, 0.2);
+    cursor: col-resize;
+  }
+
+  &.oculto {
+    width: 40px;
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0.02);
+    
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  .divider-handle {
+    width: 4px;
+    height: 40px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+    transition: background-color 0.2s ease;
+  }
+
+  &:hover:not(.oculto) .divider-handle,
+  &.resizing .divider-handle {
+    background-color: rgba(25, 118, 210, 0.6);
+  }
+}
+
+.toggle-filtros-btn {
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.toggle-filtros-btn-divider {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: rgba(0, 0, 0, 0.6);
+  }
+  
+  &:hover mat-icon {
+    color: rgba(0, 0, 0, 0.87);
+  }
+}
+
+.split-pane-right {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding-left: 12px;
+}
+
+// Asegurar que el contenido del panel izquierdo se ajuste automáticamente
+.split-pane-left > * {
+  width: 100%;
+}
+
+// Estilos para los totales del resumen (tamaño reducido)
+.resumen-total {
+  font-size: 1.75rem; // Más pequeño que display-2 (2.5rem) pero más grande que display-3 (1.5rem)
+  line-height: 1.2;
+}
+

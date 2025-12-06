@@ -40,3 +40,62 @@ vex-page-layout-header .container {
 .bg-app-bar h2 {
   font-size: 25px !important;
 }
+
+// Table font size - increase font size for better readability
+table.mat-mdc-table {
+  font-size: 16px !important;
+  
+  // Table header cells
+  th.mat-mdc-header-cell {
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    padding: 2px 12px !important;
+    line-height: 1.2 !important;
+    height: 36px !important;
+  }
+  
+  // Table data cells
+  td.mat-mdc-cell {
+    font-size: 16px !important;
+    padding: 2px 12px !important;
+    line-height: 1.2 !important;
+    height: 36px !important;
+  }
+  
+  // Table rows - reduced height for more compact display
+  tr.mat-mdc-row {
+    height: 36px !important;
+    cursor: pointer;
+    
+    // Zebra striping - even rows (almost white, very subtle)
+    &:nth-child(even) {
+      background-color: rgba(0, 0, 0, 0.005) !important;
+    }
+    
+    // Zebra striping - odd rows (default background)
+    &:nth-child(odd) {
+      background-color: transparent !important;
+    }
+    
+    // Hover effect (almost white, very subtle)
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.01) !important;
+    }
+
+    // Selected row style
+    &.selected-row {
+      background-color: rgba(63, 81, 181, 0.15) !important; // Material blue with transparency
+      border-left: 3px solid #3f51b5;
+      
+      &:hover {
+        background-color: rgba(63, 81, 181, 0.2) !important;
+      }
+    }
+  }
+  
+  // Header row - reduced height for more compact display (almost white, very subtle)
+  tr.mat-mdc-header-row {
+    height: 36px !important;
+    background-color: rgba(0, 0, 0, 0.008) !important;
+  }
+}

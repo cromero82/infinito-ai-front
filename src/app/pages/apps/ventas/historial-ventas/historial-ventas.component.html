@@ -1,0 +1,134 @@
+<div class="card flex flex-col sm:flex-row historial-ventas-container">
+  <!-- Left side -->
+  <div class="left-side">
+    <h2 class="title mt-0 mb-4">Historial de Ventas</h2>
+    
+    <div class="filter-section">
+      <mat-button-toggle-group [value]="selectedFilter" (valueChange)="selectFilter($event)">
+        <mat-button-toggle value="todos">Todos</mat-button-toggle>
+        <mat-button-toggle value="pagado">Pagado</mat-button-toggle>
+        <mat-button-toggle value="anulados">Anulados</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <div class="fecha-section">
+      <mat-form-field appearance="outline" class="fecha-field">
+        <mat-label>Fecha</mat-label>
+        <input
+          matInput
+          [matDatepicker]="picker"
+          [formControl]="fechaCtrl"
+          (dateChange)="onFechaChange()" />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <div class="recibos-list-container">
+      <div class="loading" *ngIf="loading">Cargando...</div>
+      <div class="error" *ngIf="!loading && error">{{ error }}</div>
+      
+      <div 
+        class="recibos-list" 
+        #recibosList
+        (scroll)="onRecibosListScroll()"
+        *ngIf="!loading && !error">
+        <div
+          *ngFor="let recibo of historialRecibos"
+          class="recibo-item"
+          [class.selected]="selectedReciboId === recibo.id"
+          (click)="selectRecibo(recibo)">
+          <span class="recibo-total" [innerHTML]="formatCurrencyWithBold(recibo.total)"></span>
+          <span class="recibo-fecha">{{ formatDate(recibo.fechaCreacion) }}</span>
+        </div>
+        <div class="loading-more" *ngIf="loadingMore">
+          Cargando más...
+        </div>
+        <div class="empty-message" *ngIf="historialRecibos.length === 0 && !loadingMore">
+          No hay recibos disponibles
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right side -->
+  <div class="right-side border-l flex-1">
+    <div class="p-6">
+      <div class="right-header">
+        <h2 class="title mt-0 mb-4">Detalles</h2>
+        <div class="action-section" *ngIf="selectedReciboId">
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            class="editar-button"
+            [disabled]="volviendoAEditar || isReciboAnulado()"
+            (click)="volverAEditar()">
+            {{ volviendoAEditar ? 'Editando...' : 'Editar en Ventas' }}
+          </button>
+          <button
+            mat-flat-button
+            color="warn"
+            type="button"
+            class="anular-button"
+            [disabled]="anulandoRecibo || isReciboAnulado()"
+            (click)="anularFactura()">
+            {{ anulandoRecibo ? 'Anulando...' : 'Anular factura' }}
+          </button>
+        </div>
+      </div>
+      
+      <div *ngIf="!selectedReciboId" class="text-secondary">
+        Seleccione un recibo para ver los detalles
+      </div>
+
+      <div *ngIf="selectedReciboId && detallesLoading" class="loading">
+        Cargando detalles...
+      </div>
+
+      <div *ngIf="selectedReciboId && detallesError" class="error">
+        {{ detallesError }}
+      </div>
+
+      <div *ngIf="selectedReciboId && !detallesLoading && !detallesError" class="detalle-content">
+        <div class="detalle-container">
+          <div class="detalle-wrapper">
+            <div class="detalle-header">
+              <span class="detalle-col producto">Producto</span>
+              <span class="detalle-col unitario">Valor unitario</span>
+              <span class="detalle-col cantidad">Cantidad</span>
+              <span class="detalle-col subtotal">Subtotal</span>
+            </div>
+            <div class="detalle-list">
+              <div
+                class="detalle-row"
+                *ngFor="let detalle of detalles">
+                <span class="detalle-col producto">
+                  {{ detalle.producto ? detalle.producto.nombre : ('Producto ' + detalle.productoId) }}
+                </span>
+                <span class="detalle-col unitario">
+                  {{ formatCurrency(detalle.producto?.precio ?? (detalle.cantidad ? detalle.subtotal / detalle.cantidad : 0)) }}
+                </span>
+                <span class="detalle-col cantidad">
+                  {{ detalle.cantidad }}
+                </span>
+                <span class="detalle-col subtotal">
+                  {{ formatCurrency(detalle.subtotal) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detalle-footer" *ngIf="detalles.length > 0">
+          <span class="detalle-col producto"></span>
+          <span class="detalle-col unitario"></span>
+          <span class="detalle-col cantidad">TOTAL</span>
+          <span class="detalle-col subtotal total-value total-value--highlight">
+            {{ formatCurrency(getTotalDetalles()) }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

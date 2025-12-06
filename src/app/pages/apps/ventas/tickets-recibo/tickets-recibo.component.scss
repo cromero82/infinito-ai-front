@@ -1,0 +1,186 @@
+:host {
+  display: block;
+}
+
+vex-page-layout-header {
+  height: 68px !important;
+  padding: 0 24px 32px !important;
+}
+
+vex-page-layout-header .container {
+  padding: 0 24px 0 20px !important;
+}
+
+.tickets-card {
+  overflow: hidden;
+  margin-top: -90px;
+}
+
+:host ::ng-deep .tickets-card .bg-app-bar {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  gap: 24px;
+}
+
+.search-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 380px;
+  width: auto;
+  flex: 0 1 380px;
+
+  .search-wrapper {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    flex: 1 1 100%;
+
+    .search-input {
+      flex: 1 1 auto;
+      min-width: 240px;
+    }
+  }
+}
+
+.tabs-container {
+  width: 100%;
+  margin: 0;
+}
+
+
+.tabs-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.ticket-tab-nav {
+  flex: 1 1 auto;
+  //max-width: 280px;
+  width: 100%;
+}
+
+:host ::ng-deep .ticket-tab-nav .mat-mdc-tab-labels {
+  justify-content: flex-start;
+}
+
+:host ::ng-deep .ticket-tab-nav .tab-item {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 12px;
+  position: relative;
+}
+
+:host ::ng-deep .ticket-tab-nav .tab-item:hover .tab-close {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+:host ::ng-deep .ticket-tab-nav .mat-mdc-tab-link:hover {
+  color: var(--mdc-theme-primary);
+}
+
+:host ::ng-deep .ticket-tab-nav .tab-link {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+
+:host ::ng-deep .ticket-tab-nav .tab-close {
+  width: 24px;
+  height: 24px;
+  margin-left: 4px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  padding: 0;
+}
+
+:host ::ng-deep .ticket-tab-nav .tab-close:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+:host ::ng-deep .ticket-tab-nav .tab-item:hover .tab-close {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+:host ::ng-deep .ticket-tab-nav .tab-close .mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+:host ::ng-deep .ticket-tab-nav .tab-close .mat-mdc-focus-indicator,
+:host ::ng-deep .ticket-tab-nav .tab-close .mat-mdc-button-touch-target {
+  display: none;
+}
+
+:host ::ng-deep .ticket-tab-nav .mat-mdc-tab-link {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.new-ticket-btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 16px;
+}
+
+.ticket-panel {
+  margin-top: 16px;
+  min-height: calc(100vh - 280px);
+  display: flex;
+  flex-direction: column;
+
+  ::ng-deep .recibo-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+  }
+
+  ::ng-deep .detalle-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  ::ng-deep .detalle-wrapper {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  ::ng-deep .detalle-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+
+  ::ng-deep .detalle-footer-wrapper {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: flex-end;
+  }
+}

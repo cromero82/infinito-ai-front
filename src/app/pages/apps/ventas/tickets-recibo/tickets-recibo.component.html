@@ -1,0 +1,102 @@
+<vex-page-layout>
+  <vex-page-layout-header class="pb-4 flex flex-col items-start justify-center">
+    <div [class.container]="true" class="w-full flex flex-col sm:flex-row justify-between">
+    </div>
+  </vex-page-layout-header>
+  <vex-page-layout-content [class.container]="true" class="-mt-6 pb-6">
+    <div class="card tickets-card">
+      <div class="bg-app-bar px-6 border-b sticky left-0 flex items-center">
+        <div class="header-row">
+          <h2 class="title my-0">Ventas</h2>
+          <div class="search-controls" *ngIf="reciboComponent as recibo">
+            <div class="flex items-center search-wrapper">
+              <mat-form-field appearance="outline" class="search-input my-auto">
+                <mat-label>Buscar producto</mat-label>
+                <input
+                  #productSearchInput
+                  matInput
+                  [formControl]="recibo.productSearchCtrl"
+                  (keyup.enter)="triggerProductSearch()"
+                  [disabled]="!currentReciboId || recibo.searchingProduct || recibo.loading"
+                  placeholder="Ej. código de barras o nombre" />
+                <button
+                  mat-icon-button
+                  matSuffix
+                  *ngIf="recibo.productSearchCtrl.value"
+                  aria-label="Limpiar búsqueda"
+                  (click)="clearProductSearch()">
+                  <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+                </button>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="px-4">
+        <div class="tabs-container" *ngIf="tickets?.length; else noTickets">
+          <div class="tabs-row">
+            <nav
+              mat-tab-nav-bar
+              class="ticket-tab-nav border-0 flex-auto"
+              [tabPanel]="tabPanel">
+              <div class="tab-item" *ngFor="let t of tickets; let i = index">
+                <a
+                  mat-tab-link
+                  [active]="selectedIndex === i"
+                  (click)="selectTicket(i)"
+                  class="tab-link">
+                  {{ t.nombre }}
+                </a>
+                <button
+                  mat-icon-button
+                  type="button"
+                  class="tab-close"
+                  [disabled]="loading"
+                  (click)="deleteTicket(t, i, $event)">
+                  <mat-icon svgIcon="mat:close"></mat-icon>
+                </button>
+              </div>
+            </nav>
+            <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
+            <button
+              mat-flat-button
+              color="primary"
+              class="new-ticket-btn ltr:ml-4 rtl:mr-4 flex-none"
+              type="button"
+              [disabled]="sessionId === null || loading"
+              (click)="newTicket()">
+              <mat-icon class="ltr:mr-2 rtl:ml-2 ltr:-ml-1 rtl:-mr-1 icon-sm" svgIcon="mat:add"></mat-icon>
+              <span>Nuevo ticket</span>
+            </button>
+            <button
+              mat-flat-button
+              color="accent"
+              class="quick-recibo-btn ltr:ml-2 rtl:mr-2 flex-none"
+              type="button"
+              [disabled]="sessionId === null || loading"
+              (click)="openQuickRecibo()">
+              <mat-icon class="ltr:mr-2 rtl:ml-2 ltr:-ml-1 rtl:-mr-1 icon-sm" svgIcon="mat:receipt"></mat-icon>
+              <span>Recibo rápido</span>
+            </button>
+          </div>
+          <div class="ticket-panel" *ngIf="tickets[selectedIndex] as activeTicket; else noTicketSelected">
+            <vex-recibo
+              #reciboCmp
+              [ticket]="activeTicket"
+              [reciboId]="currentReciboId"
+              [sessionId]="sessionId"
+              [searchInputElement]="productSearchInput?.nativeElement || null"
+              (focusSearchInputRequest)="focusProductSearch()"
+              (metodoPagoActualizado)="recargarRecibo()"></vex-recibo>
+          </div>
+          <ng-template #noTicketSelected>
+            <div class="ticket-panel-empty"></div>
+          </ng-template>
+        </div>
+        <ng-template #noTickets>
+          <div class="text-secondary">No hay tickets para esta sesión.</div>
+        </ng-template>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>

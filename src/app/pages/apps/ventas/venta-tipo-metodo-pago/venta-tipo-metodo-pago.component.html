@@ -1,0 +1,98 @@
+<h2 mat-dialog-title class="dialog-title">Registrar Venta por Método de Pago</h2>
+
+<div mat-dialog-content class="dialog-content">
+  <!-- Campo de fecha -->
+  <div class="fecha-section">
+      <mat-form-field appearance="outline" class="fecha-field">
+        <mat-label>Fecha</mat-label>
+        <input matInput [matDatepicker]="picker" [formControl]="fechaCtrl">
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker (closed)="onDatepickerClosed()"></mat-datepicker>
+        <mat-error *ngIf="fechaCtrl.hasError('required')">La fecha es requerida</mat-error>
+      </mat-form-field>
+  </div>
+
+  <!-- Tabla estilo Excel -->
+  <div class="table-container" *ngIf="!cargandoMetodos">
+    <table mat-table [dataSource]="ventasForm" class="ventas-table">
+      <!-- Columna Método de Pago -->
+      <ng-container matColumnDef="metodoPago">
+        <th mat-header-cell *matHeaderCellDef class="header-cell">Método de Pago</th>
+        <td mat-cell *matCellDef="let row" class="cell metodo-pago-cell">
+          <div class="metodo-pago-info">
+            <span class="metodo-pago-nombre">{{ row.metodoPago.descripcion }}</span>
+            <span class="metodo-pago-sigla" *ngIf="row.metodoPago.sigla">({{ row.metodoPago.sigla }})</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Columna Total -->
+      <ng-container matColumnDef="total">
+        <th mat-header-cell *matHeaderCellDef class="header-cell">Total</th>
+        <td mat-cell *matCellDef="let row; let i = index" class="cell total-cell">
+          <div class="total-input-container">
+            <mat-form-field appearance="outline" class="total-field">
+              <input
+                #primerInputTotal
+                *ngIf="i === 0; else otherInput"
+                matInput
+                type="text"
+                [formControl]="row.totalCtrl"
+                placeholder="0"
+                [attr.data-total-index]="i"
+                (input)="onTotalInput($event, row, i)"
+                (focus)="onTotalFocus($event, row, i)"
+                (blur)="onTotalBlur(row, i, $event)"
+                (keydown)="onTotalKeydown($event, row, i)">
+              <ng-template #otherInput>
+                <input
+                  matInput
+                  type="text"
+                  [formControl]="row.totalCtrl"
+                  placeholder="0"
+                  [attr.data-total-index]="i"
+                  (input)="onTotalInput($event, row, i)"
+                  (focus)="onTotalFocus($event, row, i)"
+                  (blur)="onTotalBlur(row, i, $event)"
+                  (keydown)="onTotalKeydown($event, row, i)">
+              </ng-template>
+              <span matPrefix class="currency-prefix">$</span>
+              <mat-error *ngIf="row.totalCtrl.hasError('required')">Requerido</mat-error>
+              <mat-error *ngIf="row.totalCtrl.hasError('min')">Debe ser mayor o igual a 0</mat-error>
+            </mat-form-field>
+            <!-- Mostrar valor formateado mientras se escribe -->
+            <div class="valor-formateado" *ngIf="obtenerValorFormateado(i)">
+              {{ obtenerValorFormateado(i) }}
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns" class="header-row"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns" class="data-row"></tr>
+    </table>
+  </div>
+
+  <!-- Loading de métodos -->
+  <div class="loading-container" *ngIf="cargandoMetodos">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p class="loading-text">Cargando métodos de pago...</p>
+  </div>
+</div>
+
+<div mat-dialog-actions align="end" class="dialog-actions">
+  <button mat-stroked-button type="button" (click)="cancelar()" [disabled]="loading">
+    Cancelar
+  </button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    (click)="registrar()"
+    [disabled]="!esFormularioValido() || loading || cargandoMetodos">
+    <mat-spinner diameter="20" *ngIf="loading" class="button-spinner"></mat-spinner>
+    <span *ngIf="!loading">Registrar</span>
+    <span *ngIf="loading">Registrando...</span>
+  </button>
+</div>
+

@@ -122,6 +122,32 @@ export const appRoutes: VexRoutes = [
             ]
           },
           {
+            path: 'ventas',
+            children: [
+              {
+                path: '',
+                loadComponent: () =>
+                  import('./pages/apps/ventas/tickets-recibo/tickets-recibo.component').then(
+                    (m) => m.TicketsReciboComponent
+                  )
+              },
+              {
+                path: 'historial',
+                loadComponent: () =>
+                  import('./pages/apps/ventas/historial-ventas/historial-ventas.component').then(
+                    (m) => m.HistorialVentasComponent
+                  )
+              },
+              {
+                path: 'dashboard',
+                loadComponent: () =>
+                  import('./pages/apps/ventas/ventas-dashboard/ventas-dashboard.component').then(
+                    (m) => m.VentasDashboardComponent
+                  )
+              }
+            ]
+          },
+          {
             path: 'master',
             loadComponent: () => import('./pages/apps/master-background/multiple-component-container.component').then(
               (m) => m.MultipleComponentContainerComponent

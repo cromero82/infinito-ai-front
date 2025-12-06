@@ -1,0 +1,87 @@
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 500px;
+  padding: 24px;
+}
+
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.error-message {
+  color: #d32f2f;
+  font-size: 14px;
+  padding: 8px;
+  background-color: rgba(244, 67, 54, 0.1);
+  border-radius: 4px;
+}
+
+.metodos-pago-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.metodos-pago {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  .metodo-pago-btn {
+    width: 84px;
+    height: 48px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.05);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, transform 0.2s ease;
+    position: relative;
+
+    &:hover:not(:disabled) {
+      background: rgba(0, 0, 0, 0.12);
+      transform: translateY(-1px);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &.metodo-pago-seleccionado {
+      background: rgba(76, 175, 80, 0.18);
+      border: 2px solid rgba(76, 175, 80, 0.7);
+      transform: none;
+    }
+
+    .metodo-pago-icon {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .metodo-pago-warning {
+      position: absolute;
+      right: 6px;
+      top: 6px;
+      font-size: 18px;
+      color: #ff9800;
+    }
+  }
+}
+
+::ng-deep .mat-mdc-dialog-actions {
+  padding: 16px 24px;
+  gap: 8px;
+}
+
