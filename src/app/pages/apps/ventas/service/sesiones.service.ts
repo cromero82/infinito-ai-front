@@ -9,6 +9,10 @@ export interface SesionDto {
   ultimoTicketId: number | null;
 }
 
+export interface CrearSesionRequest {
+  cookie: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -20,6 +24,31 @@ export class SesionesService {
   getSesionById(sessionId: number): Observable<SesionDto> {
     const headers = new HttpHeaders({ Accept: 'application/json' });
     return this.http.get<SesionDto>(`${this.apiUrl}/${sessionId}`, { headers });
+  }
+
+  crearSesion(cookie: string): Observable<SesionDto> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+    const body: CrearSesionRequest = { cookie };
+    return this.http.post<SesionDto>(this.apiUrl, body, { headers });
+  }
+
+  /**
+   * Genera un cookie único para la sesión
+   */
+  generarCookieUnico(): string {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 15);
+    return `${timestamp}-${random}`;
+  }
+
+  /**
+   * Elimina una sesión (libera los registros)
+   */
+  deleteSesion(sessionId: number): Observable<void> {
+    const headers = new HttpHeaders({ 'Accept': 'application/json' });
+    return this.http.delete<void>(`${this.apiUrl}/${sessionId}`, { headers });
   }
 }
 

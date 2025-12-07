@@ -14,6 +14,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { NgIf } from '@angular/common';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { AuthService } from '../service/auth.service';
+import { SesionesService } from '../../../apps/ventas/service/sesiones.service';
+import { finalize, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'vex-login',
@@ -32,34 +36,86 @@ import { MatFormFieldModule } from '@angular/material/form-field';
     MatIconModule,
     MatCheckboxModule,
     RouterLink,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatProgressSpinnerModule
   ]
 })
 export class LoginComponent {
   form = this.fb.group({
-    email: ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required]
   });
 
   inputType = 'password';
   visible = false;
+  loading = false;
 
   constructor(
     private router: Router,
     private fb: FormBuilder,
     private cd: ChangeDetectorRef,
-    private snackbar: MatSnackBar
+    private snackbar: MatSnackBar,
+    private authService: AuthService,
+    private sesionesService: SesionesService
   ) {}
 
   send() {
-    this.router.navigate(['/']);
-    this.snackbar.open(
-      "Lucky you! Looks like you didn't need a password or email address! For a real application we provide validators to prevent this. ;)",
-      'THANKS',
-      {
-        duration: 10000
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.loading = true;
+    this.cd.markForCheck();
+
+    const { email, password } = this.form.value;
+
+    this.authService.login({
+      correoElectronico: email!,
+      contrasena: password!
+    }).pipe(
+      // Después del login exitoso, crear/obtener la sesión
+      switchMap(() => {
+        const cookie = this.sesionesService.generarCookieUnico();
+        return this.sesionesService.crearSesion(cookie);
+      }),
+      finalize(() => {
+        this.loading = false;
+        this.cd.markForCheck();
+      })
+    ).subscribe({
+      next: (sesion) => {
+        // Guardar el session-id en localStorage
+        localStorage.setItem('session-id', sesion.id.toString());
+        
+        this.snackbar.open('Inicio de sesión exitoso', 'Cerrar', {
+          duration: 3000
+        });
+        this.router.navigate(['/apps/ventas']);
+      },
+      error: (error) => {
+        // Extraer el mensaje de error del servidor
+        let mensaje = 'Error al iniciar sesión';
+        
+        if (error.error) {
+          // Intentar diferentes campos donde puede estar el mensaje
+          mensaje = error.error.mensaje || 
+                   error.error.message || 
+                   error.error.error || 
+                   (typeof error.error === 'string' ? error.error : mensaje);
+        } else if (error.message) {
+          mensaje = error.message;
+        }
+
+        // Mostrar alerta tipo Bootstrap (roja/danger)
+        this.snackbar.open(mensaje, 'Cerrar', {
+          duration: 7000,
+          panelClass: ['alert-danger', 'snackbar-error'],
+          horizontalPosition: 'center',
+          verticalPosition: 'top'
+        });
       }
-    );
+    });
   }
 
   toggleVisibility() {

@@ -31,7 +31,7 @@ const baseConfig: VexConfig = {
   layout: 'horizontal',
   boxed: false,
   sidenav: {
-    title: 'VEX',
+    title: 'Gestor Market - Infinito',
     imageUrl: 'assets/img/logo/logo.png',
     showCollapsePin: true,
     user: {

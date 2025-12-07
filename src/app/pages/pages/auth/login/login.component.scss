@@ -1,26 +1,43 @@
 .bg-pattern {
-  background: linear-gradient(
-      135deg,
-      var(--vex-background-background) 22px,
-      var(--vex-background-hover) 22px,
-      var(--vex-background-hover) 24px,
-      transparent 24px,
-      transparent 67px,
-      var(--vex-background-hover) 67px,
-      var(--vex-background-hover) 69px,
-      transparent 69px
-  ),
-  linear-gradient(
-      225deg,
-      var(--vex-background-background) 22px,
-      var(--vex-background-hover) 22px,
-      var(--vex-background-hover) 24px,
-      transparent 24px,
-      transparent 67px,
-      var(--vex-background-hover) 67px,
-      var(--vex-background-hover) 69px,
-      transparent 69px
-  ) 0 64px;
+  background-image: url('/assets/img/backgrounds/abarrotes.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   background-color: var(--vex-background-background);
-  background-size: 64px 128px;
+}
+
+.button-spinner {
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+// Estilos para alertas tipo Bootstrap
+::ng-deep .alert-danger,
+::ng-deep .snackbar-error {
+  .mat-mdc-snack-bar-container {
+    background-color: #dc3545 !important;
+    color: #fff !important;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075), 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    padding: 0.75rem 1rem;
+    min-width: 300px;
+    max-width: 500px;
+  }
+
+  .mat-mdc-snack-bar-label {
+    color: #fff !important;
+    font-weight: 500;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .mat-mdc-button {
+    color: #fff !important;
+    font-weight: 600;
+    
+    &:hover {
+      opacity: 0.8;
+    }
+  }
 }

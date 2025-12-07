@@ -8,6 +8,7 @@ import { VexPopoverService } from '@vex/components/vex-popover/vex-popover.servi
 import { ToolbarUserDropdownComponent } from './toolbar-user-dropdown/toolbar-user-dropdown.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatRippleModule } from '@angular/material/core';
+import { AuthService } from '../../../../pages/pages/auth/service/auth.service';
 
 @Component({
   selector: 'vex-toolbar-user',
@@ -18,13 +19,22 @@ import { MatRippleModule } from '@angular/material/core';
 })
 export class ToolbarUserComponent implements OnInit {
   dropdownOpen: boolean = false;
+  nombreUsuario: string = 'Administrador';
 
   constructor(
     private popover: VexPopoverService,
-    private cd: ChangeDetectorRef
+    private cd: ChangeDetectorRef,
+    private authService: AuthService
   ) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    // Obtener el nombre del usuario desde localStorage
+    const nombre = this.authService.getNombre();
+    if (nombre) {
+      this.nombreUsuario = nombre;
+      this.cd.markForCheck();
+    }
+  }
 
   showPopover(originRef: HTMLElement) {
     this.dropdownOpen = true;
