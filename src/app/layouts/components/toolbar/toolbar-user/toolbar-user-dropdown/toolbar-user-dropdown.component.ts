@@ -58,62 +58,9 @@ export class ToolbarUserDropdownComponent implements OnInit {
       label: 'My Profile',
       description: 'Personal Information',
       colorClass: 'text-teal-600',
-      route: '/apps/social'
-    },
-    {
-      id: '2',
-      icon: 'mat:move_to_inbox',
-      label: 'My Inbox',
-      description: 'Messages & Latest News',
-      colorClass: 'text-primary-600',
-      route: '/apps/chat'
-    },
-    {
-      id: '3',
-      icon: 'mat:list_alt',
-      label: 'My Projects',
-      description: 'Tasks & Active Projects',
-      colorClass: 'text-amber-600',
-      route: '/apps/scrumboard'
-    },
-    {
-      id: '4',
-      icon: 'mat:table_chart',
-      label: 'Billing Information',
-      description: 'Pricing & Current Plan',
-      colorClass: 'text-purple-600',
-      route: '/pages/pricing'
+      route: '/apps/user-profile'
     }
   ];
-
-  statuses: OnlineStatus[] = [
-    {
-      id: 'online',
-      label: 'Online',
-      icon: 'mat:check_circle',
-      colorClass: 'text-green-600'
-    },
-    {
-      id: 'away',
-      label: 'Away',
-      icon: 'mat:access_time',
-      colorClass: 'text-orange-600'
-    },
-    {
-      id: 'dnd',
-      label: 'Do not disturb',
-      icon: 'mat:do_not_disturb',
-      colorClass: 'text-red-600'
-    },
-    {
-      id: 'offline',
-      label: 'Offline',
-      icon: 'mat:offline_bolt',
-      colorClass: 'text-gray-600'
-    }
-  ];
-
-  activeStatus: OnlineStatus = this.statuses[0];
 
   trackById = trackById;
   rolNombre: string = 'Administrador';
@@ -139,10 +86,6 @@ export class ToolbarUserDropdownComponent implements OnInit {
     }
   }
 
-  setStatus(status: OnlineStatus) {
-    this.activeStatus = status;
-    this.cd.markForCheck();
-  }
 
   close() {
     this.popoverRef.close();

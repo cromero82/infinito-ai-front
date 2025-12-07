@@ -7,6 +7,8 @@ export interface SesionDto {
   id: number;
   cookie: string;
   ultimoTicketId: number | null;
+  fechaInicio: string | null;
+  fechaFin: string | null;
 }
 
 export interface CrearSesionRequest {
@@ -49,6 +51,23 @@ export class SesionesService {
   deleteSesion(sessionId: number): Observable<void> {
     const headers = new HttpHeaders({ 'Accept': 'application/json' });
     return this.http.delete<void>(`${this.apiUrl}/${sessionId}`, { headers });
+  }
+
+  /**
+   * Obtiene todas las sesiones del usuario actual
+   */
+  getTodasLasSesionesUsuario(): Observable<SesionDto[]> {
+    const headers = new HttpHeaders({ 'Accept': 'application/json' });
+    return this.http.get<SesionDto[]>(`${this.apiUrl}/usuario/todas`, { headers });
+  }
+
+  /**
+   * Obtiene todos los registros del usuario actual, independiente del estado es_activo
+   * Similar a findAll() pero filtrado por usuario
+   */
+  obtenerTodosPorUsuario(): Observable<SesionDto[]> {
+    const headers = new HttpHeaders({ 'Accept': 'application/json' });
+    return this.http.get<SesionDto[]>(`${this.apiUrl}/usuario/todos`, { headers });
   }
 }
 

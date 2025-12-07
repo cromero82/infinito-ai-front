@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Link } from '@vex/interfaces/link.interface';
 import { scaleIn400ms } from '@vex/animations/scale-in.animation';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { NgFor } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
+import { AuthService } from '../../pages/auth/service/auth.service';
 
 export interface FriendSuggestion {
   name: string;
@@ -19,32 +20,33 @@ export interface FriendSuggestion {
   styleUrls: ['./social.component.scss'],
   animations: [scaleIn400ms, fadeInRight400ms],
   standalone: true,
-  imports: [MatTabsModule, NgFor, RouterLinkActive, RouterLink, RouterOutlet]
+  imports: [MatTabsModule, NgFor, NgIf, RouterLinkActive, RouterLink, RouterOutlet]
 })
 export class SocialComponent implements OnInit {
   links: Link[] = [
     {
-      label: 'ABOUT',
+      label: 'PERSONAL',
       route: './',
       routerLinkActiveOptions: { exact: true }
     },
     {
-      label: 'TIMELINE',
-      route: './timeline'
-    },
-    {
-      label: 'FRIENDS',
-      route: '',
-      disabled: true
-    },
-    {
-      label: 'PHOTOS',
-      route: '',
-      disabled: true
+      label: 'ACTIVIDAD',
+      route: './actividad'
     }
   ];
 
-  constructor() {}
+  nombreUsuario: string = 'Usuario';
 
-  ngOnInit() {}
+  constructor(
+    private authService: AuthService,
+    private cd: ChangeDetectorRef
+  ) {}
+
+  ngOnInit() {
+    const nombre = this.authService.getNombre();
+    if (nombre) {
+      this.nombreUsuario = nombre;
+      this.cd.markForCheck();
+    }
+  }
 }
