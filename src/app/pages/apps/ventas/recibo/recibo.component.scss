@@ -1,12 +1,12 @@
 .metodos-pago {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 
   .metodo-pago-btn {
-    width: 84px;
-    height: 48px;
-    border-radius: 10px;
+    width: 70px;
+    height: 42px;
+    border-radius: 8px;
     background: rgba(0, 0, 0, 0.05);
     display: inline-flex;
     align-items: center;
@@ -26,8 +26,8 @@
     }
 
     .metodo-pago-icon {
-      width: 44px;
-      height: 44px;
+      width: 36px;
+      height: 36px;
       object-fit: contain;
       display: block;
     }
@@ -55,28 +55,42 @@
 .recibo-container {
   width: 100%;
   margin: 0;
-  padding: 0 0 24px;
+  padding: 0;
+  padding-bottom: 0;
+  box-sizing: border-box;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .detalle-container {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 440px;
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 100%;
 }
 
 .detalle-wrapper {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
+  margin: 0;
+  padding: 0;
+}
+
+.detalle-content {
+  margin: 0;
+  padding: 0;
 }
 
 .detalle-header {
   display: grid;
-  grid-template-columns: 1fr 140px 100px 140px;
-  gap: 12px;
-  padding: 8px 12px;
-  font-size: 16px;
+  grid-template-columns: 1fr 100px 70px 100px;
+  gap: 8px;
+  padding: 8px 8px;
+  font-size: 14px;
   font-weight: 600;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 
@@ -90,16 +104,19 @@
 }
 
 .detalle-list {
-  flex: 1 1 auto;
-  max-height: min(480px, calc(100vh - 360px));
+  flex: 0 1 auto;
+  /* min-height se establece dinámicamente desde el componente mediante [style.min-height.px] */
+  max-height: none;
   overflow-y: auto;
+  margin: 0;
+  padding: 0 0 0 0;
 
   .detalle-row {
     display: grid;
-    grid-template-columns: 1fr 140px 100px 140px;
-    gap: 12px;
-    padding: 8px 12px;
-    font-size: 16px;
+    grid-template-columns: 1fr 100px 70px 100px;
+    gap: 8px;
+    padding: 8px 8px;
+    font-size: 14px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.04);
     cursor: pointer;
 
@@ -132,12 +149,12 @@
 
     .cantidad-input {
       width: 100%;
-      max-width: 80px;
+      max-width: 60px;
       text-align: right;
       border: 1px solid rgba(63, 81, 181, 0.5);
       border-radius: 4px;
-      padding: 4px 8px;
-      font-size: 16px;
+      padding: 4px 6px;
+      font-size: 14px;
       background: white;
       outline: none;
 
@@ -149,12 +166,12 @@
 
     .valor-unitario-input {
       width: 100%;
-      max-width: 120px;
+      max-width: 85px;
       text-align: right;
       border: 1px solid rgba(63, 81, 181, 0.5);
       border-radius: 4px;
-      padding: 4px 8px;
-      font-size: 16px;
+      padding: 4px 6px;
+      font-size: 14px;
       background: white;
       outline: none;
 
@@ -169,8 +186,8 @@
       text-align: left;
       border: 1px solid rgba(63, 81, 181, 0.5);
       border-radius: 4px;
-      padding: 4px 8px;
-      font-size: 16px;
+      padding: 4px 6px;
+      font-size: 14px;
       background: white;
       outline: none;
 
@@ -185,23 +202,28 @@
 .detalle-footer-wrapper {
   display: flex;
   justify-content: flex-end;
+  margin: 0;
+  margin-bottom: 4px;
+  padding: 0;
+  flex-shrink: 0;
 }
 
 .detalle-footer {
   display: grid;
-  grid-template-columns: 1fr 140px 100px 140px;
-  gap: 12px;
-  padding: 12px 12px 0;
+  grid-template-columns: 1fr 100px 70px 100px;
+  gap: 8px;
+  padding: 4px 8px 4px 8px;
+  margin: 0;
   border-top: 1px solid rgba(0, 0, 0, 0.12);
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 600;
   width: 100%;
-  max-width: 800px;
+  max-width: 600px;
   align-items: center;
 
   .total-label {
     text-align: right;
-    padding-right: 12px;
+    padding-right: 8px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -218,8 +240,8 @@
     background-color: rgba(76, 175, 80, 0.15);
     font-weight: 700;
     border-radius: 4px;
-    padding: 6px 10px;
-    font-size: 28px;
+    padding: 6px 8px;
+    font-size: 22px;
   }
 }
 

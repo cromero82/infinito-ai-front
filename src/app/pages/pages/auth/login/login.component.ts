@@ -17,7 +17,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../service/auth.service';
 import { SesionesService } from '../../../apps/ventas/service/sesiones.service';
-import { finalize, switchMap } from 'rxjs/operators';
+import { ConfigurationService } from '../service/configuration.service';
+import { finalize, switchMap, map, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'vex-login',
@@ -56,7 +58,8 @@ export class LoginComponent {
     private cd: ChangeDetectorRef,
     private snackbar: MatSnackBar,
     private authService: AuthService,
-    private sesionesService: SesionesService
+    private sesionesService: SesionesService,
+    private configurationService: ConfigurationService
   ) {}
 
   send() {
@@ -79,15 +82,27 @@ export class LoginComponent {
         const cookie = this.sesionesService.generarCookieUnico();
         return this.sesionesService.crearSesion(cookie);
       }),
+      // Después de crear la sesión, obtener las configuraciones
+      switchMap((sesion) => {
+        // Guardar el session-id en localStorage
+        localStorage.setItem('session-id', sesion.id.toString());
+        
+        // Obtener configuraciones de la app (si falla, continuar de todas formas)
+        return this.configurationService.obtenerTodasConfiguraciones().pipe(
+          map(() => sesion), // Devolver la sesión después de obtener configuraciones
+          catchError((error) => {
+            // Si falla la obtención de configuraciones, continuar de todas formas
+            console.warn('No se pudieron obtener las configuraciones:', error);
+            return of(sesion); // Devolver la sesión para continuar el flujo
+          })
+        );
+      }),
       finalize(() => {
         this.loading = false;
         this.cd.markForCheck();
       })
     ).subscribe({
-      next: (sesion) => {
-        // Guardar el session-id en localStorage
-        localStorage.setItem('session-id', sesion.id.toString());
-        
+      next: () => {
         this.snackbar.open('Inicio de sesión exitoso', 'Cerrar', {
           duration: 3000
         });

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 
@@ -260,6 +260,29 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     return !!this.getToken();
+  }
+
+  restaurarContrasena(correoElectronico: string): Observable<any> {
+    const params = new HttpParams().set('correoElectronico', correoElectronico);
+    
+    return this.http.post(`${this.apiUrl}/restaurar-contrasena`, {}, { 
+      params,
+      responseType: 'text' 
+    }).pipe(
+      map((response: string) => {
+        // El endpoint puede devolver texto o un objeto JSON
+        try {
+          return JSON.parse(response);
+        } catch {
+          // Si no es JSON, devolver el texto directamente
+          return { message: response || 'Solicitud procesada correctamente' };
+        }
+      }),
+      catchError(error => {
+        console.error('Error al restaurar contraseña:', error);
+        return throwError(() => error);
+      })
+    );
   }
 }
 

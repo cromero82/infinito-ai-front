@@ -151,7 +151,8 @@ vex-page-layout-header .container {
 
 .ticket-panel {
   margin-top: 16px;
-  min-height: calc(100vh - 280px);
+  margin-bottom: 0;
+  padding-bottom: 10px;
   display: flex;
   flex-direction: column;
 
@@ -162,25 +163,63 @@ vex-page-layout-header .container {
   }
 
   ::ng-deep .detalle-container {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     display: flex;
     flex-direction: column;
   }
 
   ::ng-deep .detalle-wrapper {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     display: flex;
     flex-direction: column;
   }
 
   ::ng-deep .detalle-list {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
+    /* min-height se establece dinámicamente desde el componente */
+    max-height: none;
     overflow-y: auto;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
   }
 
   ::ng-deep .detalle-footer-wrapper {
     flex: 0 0 auto;
     display: flex;
     justify-content: flex-end;
+    margin: 0 !important;
+    margin-bottom: 4px !important;
+    padding: 0 !important;
+  }
+
+  ::ng-deep .recibo-container {
+    padding: 0 !important;
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  ::ng-deep .detalle-footer {
+    padding: 4px 8px 4px 8px !important;
+    margin: 0 !important;
+  }
+
+  ::ng-deep .detalle-footer-wrapper {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  ::ng-deep .detalle-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  ::ng-deep .detalle-content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  ::ng-deep .detalle-footer {
+    padding: 4px 8px 0 !important;
+    margin-top: 0 !important;
   }
 }

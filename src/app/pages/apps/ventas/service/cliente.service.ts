@@ -13,7 +13,7 @@ export interface ClienteDto {
   providedIn: 'root'
 })
 export class ClienteService {
-  private apiUrl = 'http://localhost:8080/clients';
+  private apiUrl = 'http://localhost:8088/clients';
 
   constructor(private http: HttpClient) {}
 
