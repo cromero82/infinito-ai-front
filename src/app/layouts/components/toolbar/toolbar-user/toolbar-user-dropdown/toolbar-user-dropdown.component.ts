@@ -55,8 +55,8 @@ export class ToolbarUserDropdownComponent implements OnInit {
     {
       id: '1',
       icon: 'mat:account_circle',
-      label: 'My Profile',
-      description: 'Personal Information',
+      label: 'Perfil de Usuario',
+      description: 'Tu información Personal',
       colorClass: 'text-teal-600',
       route: '/apps/user-profile'
     }

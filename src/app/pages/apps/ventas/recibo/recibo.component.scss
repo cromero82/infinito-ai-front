@@ -68,14 +68,14 @@
   display: flex;
   flex-direction: column;
   flex: 0 1 auto;
-  min-height: 0;
-  max-height: 100%;
+  /* min-height y max-height se establecen dinámicamente desde el componente */
 }
 
 .detalle-wrapper {
   display: flex;
   flex-direction: column;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
+  min-height: 0;
   margin: 0;
   padding: 0;
 }
@@ -83,6 +83,10 @@
 .detalle-content {
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 0;
 }
 
 .detalle-header {
@@ -93,6 +97,7 @@
   font-size: 14px;
   font-weight: 600;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0; /* No permitir que el header se encoja */
 
   .detalle-col {
     text-align: right;
@@ -104,12 +109,33 @@
 }
 
 .detalle-list {
-  flex: 0 1 auto;
-  /* min-height se establece dinámicamente desde el componente mediante [style.min-height.px] */
-  max-height: none;
-  overflow-y: auto;
+  flex: 0 0 auto;
+  /* height se establece dinámicamente desde el componente */
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
   margin: 0;
-  padding: 0 0 0 0;
+  padding: 0;
+  /* Asegurar que el scrollbar sea visible */
+  -webkit-overflow-scrolling: touch;
+  
+  /* Estilo del scrollbar para navegadores WebKit (Chrome, Safari, Edge) */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    
+    &:hover {
+      background: rgba(0, 0, 0, 0.3);
+    }
+  }
 
   .detalle-row {
     display: grid;

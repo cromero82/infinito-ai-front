@@ -166,21 +166,26 @@ vex-page-layout-header .container {
     flex: 0 1 auto;
     display: flex;
     flex-direction: column;
+    overflow: hidden; /* Prevenir que el contenedor crezca */
   }
 
   ::ng-deep .detalle-wrapper {
-    flex: 0 1 auto;
+    flex: 1 1 auto;
+    min-height: 0;
     display: flex;
     flex-direction: column;
+    overflow: hidden; /* Permitir que el wrapper controle el overflow */
   }
 
   ::ng-deep .detalle-list {
-    flex: 0 1 auto;
-    /* min-height se establece dinámicamente desde el componente */
-    max-height: none;
-    overflow-y: auto;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     margin-bottom: 0 !important;
     padding-bottom: 0 !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   ::ng-deep .detalle-footer-wrapper {
@@ -216,6 +221,11 @@ vex-page-layout-header .container {
   ::ng-deep .detalle-content {
     margin: 0 !important;
     padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
   }
 
   ::ng-deep .detalle-footer {

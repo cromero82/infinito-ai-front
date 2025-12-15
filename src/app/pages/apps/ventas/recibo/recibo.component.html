@@ -6,7 +6,8 @@
     <div
       *ngIf="!loading && recibo; else reciboNoDisponible"
       class="detalle-container"
-      [style.min-height.px]="getMinHeightValue()">
+      [style.min-height.px]="getMinHeightValue()"
+      [style.max-height.px]="getMinHeightValue()">
       <div class="detalle-wrapper">
         <div *ngIf="detallesLoading" class="text-secondary">Cargando detalles...</div>
         <div *ngIf="!detallesLoading && detallesError" class="text-warn">
@@ -21,7 +22,7 @@
               <span class="detalle-col subtotal">Subtotal</span>
             </div>
             <!-- La lista ya no controla el min-height, sólo el contenedor padre -->
-            <div class="detalle-list" #detalleList>
+            <div class="detalle-list" #detalleList [style.height.px]="getMaxHeightListValue()">
               <div
                 class="detalle-row"
                 *ngFor="let det of detalles; let i = index"

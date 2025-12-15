@@ -76,7 +76,6 @@
         <div class="pb-2 pt-2 px-4 flex flex-col border-b">
           <h2 class="resumen-total font-bold m-0 text-primary">{{ formatCurrency(promedioVentas) }}</h2>
           <h3 class="title font-medium mt-1 mb-0 text-sm">Promedio de Ventas</h3>
-          <p class="text-secondary text-xs mt-0.5">Promedio del rango seleccionado</p>
         </div>
 
         <!-- Ventas del día actual -->
@@ -87,7 +86,6 @@
           <div *ngIf="!cargandoVentasDiaActual">
             <h2 class="resumen-total font-bold m-0 text-green-600">{{ formatCurrency(ventasDiaActual) }}</h2>
             <h3 class="title font-medium mt-1 mb-0 text-sm">Ventas del Día</h3>
-            <p class="text-secondary text-xs mt-0.5">Ventas de hoy</p>
           </div>
         </div>
       </div>
