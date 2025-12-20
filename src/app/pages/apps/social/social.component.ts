@@ -25,7 +25,7 @@ export interface FriendSuggestion {
 export class SocialComponent implements OnInit {
   links: Link[] = [
     {
-      label: 'PERSONAL',
+      label: 'Información Personal',
       route: './',
       routerLinkActiveOptions: { exact: true }
     },
