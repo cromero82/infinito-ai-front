@@ -14,10 +14,26 @@
     </div>
 
     <div [formGroup]="form" class="p-6 flex flex-col gap-4">
+      <!-- Campos ocultos para confundir al autocompletar -->
+      <input type="text" style="position: absolute; opacity: 0; height: 0; width: 0; pointer-events: none;" tabindex="-1" autocomplete="off">
+      <input type="password" style="position: absolute; opacity: 0; height: 0; width: 0; pointer-events: none;" tabindex="-1" autocomplete="off">
+      
       <div class="flex flex-col">
         <mat-form-field class="flex-1">
           <mat-label>Correo Electrónico</mat-label>
-          <input formControlName="email" matInput type="email" required />
+          <input 
+            formControlName="email" 
+            matInput 
+            type="text" 
+            required 
+            autocomplete="chrome-off"
+            readonly 
+            onfocus="this.removeAttribute('readonly')"
+            onkeydown="this.removeAttribute('readonly')"
+            data-lpignore="true"
+            data-form-type="other"
+            [id]="'login-email-' + fieldId"
+            [name]="'login-email-' + fieldId" />
           <mat-error *ngIf="form.controls.email.hasError('required')"
           >Se requiere un correo electrónico
           </mat-error>
@@ -31,7 +47,15 @@
             [type]="inputType"
             formControlName="password"
             matInput
-            required />
+            required
+            autocomplete="chrome-off"
+            readonly
+            onfocus="this.removeAttribute('readonly')"
+            onkeydown="this.removeAttribute('readonly')"
+            data-lpignore="true"
+            data-form-type="other"
+            [id]="'login-password-' + fieldId"
+            [name]="'login-password-' + fieldId" />
           <button
             (click)="toggleVisibility()"
             mat-icon-button

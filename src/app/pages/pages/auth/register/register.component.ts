@@ -53,6 +53,7 @@ export class RegisterComponent {
   inputType = 'password';
   visible = false;
   loading = false;
+  readonly fieldId = Math.random().toString(36).substring(7); // ID único para confundir autocompletar
 
   constructor(
     private router: Router,

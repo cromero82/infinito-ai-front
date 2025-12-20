@@ -15,6 +15,13 @@ export interface RegistroRequest {
   telefono: string;
 }
 
+export interface ActualizarUsuarioRequest {
+  nombre?: string;
+  telefono?: string;
+  contrasena?: string;
+  correoElectronico?: string;
+}
+
 export interface AuthResponse {
   token: string;
 }
@@ -280,6 +287,38 @@ export class AuthService {
       }),
       catchError(error => {
         console.error('Error al restaurar contraseña:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  actualizarUsuario(datos: ActualizarUsuarioRequest): Observable<any> {
+    // Verificar que al menos un campo esté presente
+    const camposPresentes = Object.keys(datos).filter(key => datos[key as keyof ActualizarUsuarioRequest] !== undefined && datos[key as keyof ActualizarUsuarioRequest] !== null && datos[key as keyof ActualizarUsuarioRequest] !== '');
+    
+    if (camposPresentes.length === 0) {
+      return throwError(() => new Error('Debe enviar al menos un campo para actualizar'));
+    }
+
+    // Crear objeto solo con los campos presentes
+    const datosAEnviar: any = {};
+    camposPresentes.forEach(key => {
+      datosAEnviar[key] = datos[key as keyof ActualizarUsuarioRequest];
+    });
+
+    // El interceptor authInterceptor añade automáticamente el header Authorization
+    return this.http.put(`${this.apiUrl}/actualizar-usuario`, datosAEnviar, { 
+      responseType: 'text' 
+    }).pipe(
+      map((response: string) => {
+        try {
+          return JSON.parse(response);
+        } catch {
+          return { message: response || 'Usuario actualizado correctamente' };
+        }
+      }),
+      catchError(error => {
+        console.error('Error al actualizar usuario:', error);
         return throwError(() => error);
       })
     );

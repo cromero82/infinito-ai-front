@@ -14,10 +14,23 @@
     <div
       [formGroup]="form"
       class="p-6 flex flex-col gap-4 flex-auto flex flex-col">
+      <!-- Campos ocultos para confundir al autocompletar -->
+      <input type="text" style="position: absolute; opacity: 0; height: 0; width: 0; pointer-events: none;" tabindex="-1" autocomplete="off">
+      <input type="password" style="position: absolute; opacity: 0; height: 0; width: 0; pointer-events: none;" tabindex="-1" autocomplete="off">
+      
       <div>
         <mat-form-field class="flex-1 block">
           <mat-label>Nombre</mat-label>
-          <input formControlName="name" matInput required />
+          <input 
+            formControlName="name" 
+            matInput 
+            required 
+            autocomplete="chrome-off"
+            readonly 
+            onfocus="this.removeAttribute('readonly')"
+            onkeydown="this.removeAttribute('readonly')"
+            data-lpignore="true"
+            data-form-type="other" />
           <mat-error *ngIf="form.get('name')?.hasError('required')"
           >Se requiere un nombre
           </mat-error>
@@ -25,7 +38,19 @@
 
         <mat-form-field class="flex-1 block">
           <mat-label>Correo Electrónico</mat-label>
-          <input formControlName="email" matInput type="email" required />
+          <input 
+            formControlName="email" 
+            matInput 
+            type="text" 
+            required 
+            autocomplete="chrome-off"
+            readonly 
+            onfocus="this.removeAttribute('readonly')"
+            onkeydown="this.removeAttribute('readonly')"
+            data-lpignore="true"
+            data-form-type="other"
+            [id]="'register-email-' + fieldId"
+            [name]="'register-email-' + fieldId" />
           <mat-error *ngIf="form.get('email')?.hasError('required')"
           >Se requiere un correo electrónico
           </mat-error>
@@ -36,7 +61,17 @@
 
         <mat-form-field class="flex-1 block">
           <mat-label>Teléfono</mat-label>
-          <input formControlName="telefono" matInput type="tel" required />
+          <input 
+            formControlName="telefono" 
+            matInput 
+            type="text" 
+            required 
+            autocomplete="chrome-off"
+            readonly 
+            onfocus="this.removeAttribute('readonly')"
+            onkeydown="this.removeAttribute('readonly')"
+            data-lpignore="true"
+            data-form-type="other" />
           <mat-error *ngIf="form.get('telefono')?.hasError('required')"
           >Se requiere un teléfono
           </mat-error>
@@ -48,7 +83,15 @@
             [type]="inputType"
             formControlName="password"
             matInput
-            required />
+            required
+            autocomplete="chrome-off"
+            readonly
+            onfocus="this.removeAttribute('readonly')"
+            onkeydown="this.removeAttribute('readonly')"
+            data-lpignore="true"
+            data-form-type="other"
+            [id]="'register-password-' + fieldId"
+            [name]="'register-password-' + fieldId" />
           <button
             (click)="toggleVisibility()"
             mat-icon-button
@@ -72,7 +115,15 @@
             [type]="inputType"
             formControlName="passwordConfirm"
             matInput
-            required />
+            required
+            autocomplete="chrome-off"
+            readonly
+            onfocus="this.removeAttribute('readonly')"
+            onkeydown="this.removeAttribute('readonly')"
+            data-lpignore="true"
+            data-form-type="other"
+            [id]="'register-password-confirm-' + fieldId"
+            [name]="'register-password-confirm-' + fieldId" />
           <button
             (click)="toggleVisibility()"
             mat-icon-button
