@@ -1,7 +1,7 @@
 <div class="vex-user-menu">
   <a
     (click)="close()"
-    [routerLink]="['/apps/social']"
+    [routerLink]="['/apps/user-profile']"
     class="vex-user-menu-item"
     matRipple
     matRippleColor="rgb(var(--vex-color-primary-600), 0.1)">
@@ -22,18 +22,6 @@
       svgIcon="mat:insights"></mat-icon>
     <div class="vex-user-menu-item__label">Analytics</div>
     <div class="vex-user-menu-item__badge">NEW</div>
-  </a>
-
-  <a
-    (click)="close()"
-    [routerLink]="['/apps/social/timeline']"
-    class="vex-user-menu-item"
-    matRipple
-    matRippleColor="rgb(var(--vex-color-primary-600), 0.1)">
-    <mat-icon
-      class="vex-user-menu-item__icon icon-sm"
-      svgIcon="mat:settings"></mat-icon>
-    <div class="vex-user-menu-item__label">Account Settings</div>
   </a>
 
   <div class="border-b border-divider mx-4"></div>

@@ -7,11 +7,14 @@
   "private": true,
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "concurrently \"npm run health:server\" \"npm run start:angular\"",
+    "start:angular": "wait-on http://localhost:3001/health && ng serve",
     "build": "ng build --configuration production",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "health:server": "node server.js",
+    "health:dev": "node server.js"
   },
   "dependencies": {
     "@angular/animations": "^17.0.9",
@@ -31,6 +34,7 @@
     "angular-calendar": "~0.31.0",
     "apexcharts": "~3.44.0",
     "date-fns": "~2.30.0",
+    "express": "^4.22.1",
     "highlight.js": "~11.9.0",
     "luxon": "~3.4.3",
     "ngx-quill": "~24.0.0",
@@ -58,6 +62,7 @@
     "@types/showdown": "~1.9.4",
     "autoprefixer": "^10.4.0",
     "chroma-js": "^2.4.2",
+    "concurrently": "^9.2.1",
     "jasmine-core": "~3.10.0",
     "jasmine-spec-reporter": "~5.0.0",
     "karma": "~6.3.4",
@@ -68,6 +73,7 @@
     "postcss-scss": "~4.0.4",
     "prettier": "^3.2.2",
     "ts-node": "~8.3.0",
-    "typescript": "~5.2.2"
+    "typescript": "~5.2.2",
+    "wait-on": "^9.0.3"
   }
 }

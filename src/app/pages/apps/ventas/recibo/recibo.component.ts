@@ -114,6 +114,8 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   estadosRecibos: EstadoReciboDto[] = [];
   estaEnEdicion = false;
   metodosPago: MetodoPagoDto[] = [];
+  minHeightPanelProductos: string = '420px'; // Valor por defecto
+  
   constructor(
     private reciboService: ReciboService,
     private reciboDetalleService: ReciboDetalleService,
@@ -127,6 +129,9 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Obtener la configuración de longitud vertical del panel de productos
+    this.loadMinHeightConfiguration();
+    
     this.productSearchCtrl.valueChanges
       .pipe(
         debounceTime(400),
@@ -201,6 +206,9 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    // Recargar la configuración en caso de que haya cambiado
+    this.loadMinHeightConfiguration();
+    
     if ('reciboId' in changes) {
       const change = changes['reciboId'];
       const value = change.currentValue as number | null;
@@ -1755,6 +1763,40 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       return null;
     }
     return parsed;
+  }
+
+  minHeightPanelProductosValue: number = 420; // Valor numérico por defecto
+
+  private loadMinHeightConfiguration(): void {
+    // Obtener la configuración de longitud vertical del panel de productos
+    const longitudConfig = localStorage.getItem('longitud-vertical-panel-productos');
+    if (longitudConfig && longitudConfig.trim() !== '') {
+      // Asegurarse de que el valor sea numérico y válido
+      const valorNumerico = Number(longitudConfig);
+      if (!isNaN(valorNumerico) && valorNumerico > 0) {
+        this.minHeightPanelProductosValue = valorNumerico;
+        this.minHeightPanelProductos = `${valorNumerico}px`;
+        console.log('Min-height configurado:', this.minHeightPanelProductos, 'valor numérico:', this.minHeightPanelProductosValue);
+      } else {
+        console.warn('Valor de configuración inválido:', longitudConfig);
+      }
+    } else {
+      console.log('Usando valor por defecto de min-height:', this.minHeightPanelProductos);
+    }
+  }
+
+  getMinHeightValue(): number {
+    return this.minHeightPanelProductosValue;
+  }
+
+  getMaxHeightListValue(): number {
+    // Calcular la altura de la lista restando:
+    // - Header: ~34px (padding 8px*2 + contenido)
+    // Esto asegura que la lista tenga una altura fija para que funcione el scroll
+    const headerHeight = 34; // Aproximadamente la altura del header (8px padding top + 8px padding bottom + ~18px contenido)
+    const calculatedHeight = this.minHeightPanelProductosValue - headerHeight;
+    console.log('Altura configurada:', this.minHeightPanelProductosValue, 'Altura lista:', calculatedHeight);
+    return Math.max(200, calculatedHeight);
   }
 }
 

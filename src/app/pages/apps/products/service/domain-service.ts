@@ -7,10 +7,10 @@ export class DomainService {
   constructor(private http: HttpClient) {}
 
   getTypes(): Observable<any[]> {
-    return this.http.get<any[]>('http://localhost:8080/api/types');
+    return this.http.get<any[]>('http://localhost:8088/api/types');
   }
 
   getCompanies(): Observable<any[]> {
-    return this.http.get<any[]>('http://localhost:8080/api/mongoquery/companies');
+    return this.http.get<any[]>('http://localhost:8088/api/mongoquery/companies');
   }
 }

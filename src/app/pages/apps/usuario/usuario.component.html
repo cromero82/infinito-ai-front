@@ -1,6 +1,6 @@
 <div class="container py-6">
   <div class="card overflow-hidden">
-    <div class="h-64 relative overflow-hidden">
+    <div class="h-32 relative overflow-hidden">
       <img
         class="w-full h-full object-cover"
         src="assets/img/demo/landscape.jpg" />
@@ -16,11 +16,11 @@
       <img
         @scaleIn
         class="avatar h-24 w-24 flex-none align-start hidden sm:block border-2 border-white"
-        src="assets/img/avatars/1.jpg" />
+        src="assets/img/avatars/noavatar.jpg" />
 
       <div class="max-w-full flex-auto sm:ltr:ml-6 sm:rtl:mr-6">
         <div class="h-16 flex items-end">
-          <h1 @fadeInRight class="headline text-white pb-2 m-0">David Smith</h1>
+          <h1 @fadeInRight class="headline text-white pb-2 m-0">{{ nombreUsuario }}</h1>
         </div>
 
         <nav [tabPanel]="tabPanel" class="border-0" mat-tab-nav-bar>
@@ -46,3 +46,4 @@
 
   <router-outlet></router-outlet>
 </div>
+
