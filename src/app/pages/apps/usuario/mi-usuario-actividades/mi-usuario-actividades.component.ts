@@ -10,14 +10,14 @@ import { AuthService } from '../../../pages/auth/service/auth.service';
 import { SesionesService, SesionDto } from '../../ventas/service/sesiones.service';
 
 @Component({
-  selector: 'vex-user-profile',
-  templateUrl: './user-profile.component.html',
-  styleUrls: ['./user-profile.component.scss'],
+  selector: 'gm-mi-usuario-actividades',
+  templateUrl: './mi-usuario-actividades.component.html',
+  styleUrls: ['./mi-usuario-actividades.component.scss'],
   animations: [fadeInUp400ms, fadeInRight400ms, scaleIn400ms],
   standalone: true,
   imports: [MatIconModule, NgFor, NgIf, MatButtonModule, MatTableModule, CommonModule]
 })
-export class UserProfileComponent implements OnInit {
+export class MiUsuarioActividadesComponent implements OnInit {
   displayedColumns: string[] = ['tipoActividad', 'fechaInicio', 'fechaFin'];
   sesiones: SesionDto[] = [];
   loading = false;

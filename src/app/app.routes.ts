@@ -146,23 +146,23 @@ export const appRoutes: VexRoutes = [
           {
             path: 'user-profile',
             loadComponent: () =>
-              import('./pages/apps/social/social.component').then(
-                (m) => m.SocialComponent
+              import('./pages/apps/usuario/usuario.component').then(
+                (m) => m.UsuarioComponent
               ),
             children: [
               {
                 path: '',
                 pathMatch: 'full',
                 loadComponent: () =>
-                  import('./pages/apps/social/social-profile/social-profile.component').then(
-                    (m) => m.SocialProfileComponent
+                  import('./pages/apps/usuario/mi-perfil-usuario/mi-perfil-usuario.component').then(
+                    (m) => m.MiPerfilUsuarioComponent
                   )
               },
               {
                 path: 'actividad',
                 loadComponent: () =>
-                  import('./pages/apps/social/user-profile/user-profile.component').then(
-                    (m) => m.UserProfileComponent
+                  import('./pages/apps/usuario/mi-usuario-actividades/mi-usuario-actividades.component').then(
+                    (m) => m.MiUsuarioActividadesComponent
                   )
               }
             ]

@@ -15,9 +15,9 @@ import { catchError, finalize } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 
 @Component({
-  selector: 'vex-social-profile',
-  templateUrl: './social-profile.component.html',
-  styleUrls: ['./social-profile.component.scss'],
+  selector: 'gm-mi-perfil-usuario',
+  templateUrl: './mi-perfil-usuario.component.html',
+  styleUrls: ['./mi-perfil-usuario.component.scss'],
   animations: [fadeInUp400ms, fadeInRight400ms, scaleIn400ms],
   standalone: true,
   imports: [
@@ -33,7 +33,7 @@ import { throwError } from 'rxjs';
     MatSnackBarModule
   ]
 })
-export class SocialProfileComponent implements OnInit {
+export class MiPerfilUsuarioComponent implements OnInit {
   nombreUsuario: string | null = null;
   correoUsuario: string | null = null;
   telefonoUsuario: string | null = null;
@@ -238,3 +238,4 @@ export class SocialProfileComponent implements OnInit {
     }
   }
 }
+

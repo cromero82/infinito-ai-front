@@ -51,16 +51,7 @@ export interface OnlineStatus {
   ]
 })
 export class ToolbarUserDropdownComponent implements OnInit {
-  items: MenuItem[] = [
-    {
-      id: '1',
-      icon: 'mat:account_circle',
-      label: 'Perfil de Usuario',
-      description: 'Tu información Personal',
-      colorClass: 'text-teal-600',
-      route: '/apps/user-profile'
-    }
-  ];
+  items: MenuItem[] = [];
 
   trackById = trackById;
   rolNombre: string = 'Administrador';
@@ -82,7 +73,35 @@ export class ToolbarUserDropdownComponent implements OnInit {
     const rolNombre = this.authService.getRolNombre();
     if (rolNombre) {
       this.rolNombre = rolNombre;
-      this.cd.markForCheck();
+    }
+    
+    // Construir items del menú basado en los roles del usuario
+    this.buildMenuItems();
+    this.cd.markForCheck();
+  }
+
+  private buildMenuItems(): void {
+    this.items = [
+      {
+        id: '1',
+        icon: 'mat:account_circle',
+        label: 'Perfil de Usuario',
+        description: 'Tu información Personal',
+        colorClass: 'text-teal-600',
+        route: '/apps/user-profile'
+      }
+    ];
+
+    // Agregar item de actividad de usuarios solo si el usuario es administrador
+    if (this.authService.isAdmin()) {
+      this.items.push({
+        id: '2',
+        icon: 'mat:people',
+        label: 'Actividad de Usuarios',
+        description: 'Monitoreo y gestión de usuarios',
+        colorClass: 'text-blue-600',
+        route: '/apps/user-activity'
+      });
     }
   }
 

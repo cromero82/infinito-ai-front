@@ -258,6 +258,38 @@ export class AuthService {
     return localStorage.getItem('user-rol-nombre');
   }
 
+  isAdmin(): boolean {
+    // Primero intentar obtener roles del localStorage
+    const roles = this.getRoles();
+    if (roles.length > 0) {
+      // Verificar si alguno de los roles tiene la sigla "admin" (case insensitive)
+      return roles.some(rol => rol && rol.toLowerCase() === 'admin');
+    }
+    
+    // Si no hay roles en localStorage, intentar obtener del token
+    const token = this.getToken();
+    if (token) {
+      try {
+        const payload = this.decodeJwt(token);
+        if (payload.roles && Array.isArray(payload.roles)) {
+          if (payload.roles.length > 0 && typeof payload.roles[0] === 'object') {
+            // Array de objetos: verificar siglas
+            const rolesArray = payload.roles as Array<{ sigla: string; nombre: string }>;
+            return rolesArray.some(rol => rol.sigla && rol.sigla.toLowerCase() === 'admin');
+          } else {
+            // Array de strings
+            const rolesArray = payload.roles as string[];
+            return rolesArray.some(rol => rol && rol.toLowerCase() === 'admin');
+          }
+        }
+      } catch (error) {
+        console.warn('Error al decodificar token para verificar rol admin:', error);
+      }
+    }
+    
+    return false;
+  }
+
   logout(): void {
     localStorage.removeItem('user-token');
     localStorage.removeItem('user-nombre');

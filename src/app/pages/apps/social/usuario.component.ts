@@ -15,14 +15,14 @@ export interface FriendSuggestion {
 }
 
 @Component({
-  selector: 'vex-social',
-  templateUrl: './social.component.html',
-  styleUrls: ['./social.component.scss'],
+  selector: 'gm-usuario',
+  templateUrl: './usuario.component.html',
+  styleUrls: ['./usuario.component.scss'],
   animations: [scaleIn400ms, fadeInRight400ms],
   standalone: true,
   imports: [MatTabsModule, NgFor, NgIf, RouterLinkActive, RouterLink, RouterOutlet]
 })
-export class SocialComponent implements OnInit {
+export class UsuarioComponent implements OnInit {
   links: Link[] = [
     {
       label: 'Información Personal',
@@ -30,7 +30,7 @@ export class SocialComponent implements OnInit {
       routerLinkActiveOptions: { exact: true }
     },
     {
-      label: 'ACTIVIDAD',
+      label: 'Actividad',
       route: './actividad'
     }
   ];
@@ -50,3 +50,4 @@ export class SocialComponent implements OnInit {
     }
   }
 }
+
