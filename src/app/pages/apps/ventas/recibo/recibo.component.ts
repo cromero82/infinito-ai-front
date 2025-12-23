@@ -1795,7 +1795,6 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     // Esto asegura que la lista tenga una altura fija para que funcione el scroll
     const headerHeight = 34; // Aproximadamente la altura del header (8px padding top + 8px padding bottom + ~18px contenido)
     const calculatedHeight = this.minHeightPanelProductosValue - headerHeight;
-    console.log('Altura configurada:', this.minHeightPanelProductosValue, 'Altura lista:', calculatedHeight);
     return Math.max(200, calculatedHeight);
   }
 }

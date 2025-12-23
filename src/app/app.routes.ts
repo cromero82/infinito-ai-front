@@ -168,6 +168,11 @@ export const appRoutes: VexRoutes = [
             ]
           },
           {
+            path: 'gestion-usuarios',
+            loadChildren: () =>
+              import('./pages/apps/usuario/gestion-usuarios/gestion-usuarios.routes')
+          },
+          {
             path: 'master',
             loadComponent: () => import('./pages/apps/master-background/multiple-component-container.component').then(
               (m) => m.MultipleComponentContainerComponent

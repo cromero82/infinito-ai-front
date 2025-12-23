@@ -1,0 +1,86 @@
+<div class="card flex flex-col sm:flex-row usuario-monitoreo-container">
+  <!-- Left side -->
+  <div class="left-side">
+    <h2 class="title mt-0 mb-4">Usuarios</h2>
+    
+    <div class="usuarios-list-container">
+      <div class="loading" *ngIf="loading">Cargando...</div>
+      <div class="error" *ngIf="!loading && error">{{ error }}</div>
+      
+      <div 
+        class="usuarios-list" 
+        #usuariosList
+        *ngIf="!loading && !error">
+        <div
+          *ngFor="let usuario of usuarios"
+          class="usuario-item"
+          [class.selected]="selectedUsuarioId === usuario.id"
+          (click)="selectUsuario(usuario)">
+          <div class="usuario-nombre">{{ usuario.nombre }}</div>
+          <div class="usuario-email">{{ usuario.correoElectronico }}</div>
+        </div>
+        <div class="empty-message" *ngIf="usuarios.length === 0">
+          No hay usuarios disponibles
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right side -->
+  <div class="right-side border-l flex-1">
+    <div class="p-6">
+      <div class="right-header">
+        <h2 class="title mt-0 mb-4">Bitácora de Usuario</h2>
+      </div>
+      
+      <div *ngIf="!selectedUsuarioId" class="text-secondary">
+        Seleccione un usuario para ver su bitácora
+      </div>
+
+      <div *ngIf="selectedUsuarioId && bitacoraLoading" class="loading">
+        Cargando bitácora...
+      </div>
+
+      <div *ngIf="selectedUsuarioId && bitacoraError" class="error">
+        {{ bitacoraError }}
+      </div>
+
+      <div *ngIf="selectedUsuarioId && !bitacoraLoading && !bitacoraError" class="bitacora-content">
+        <div class="bitacora-container">
+          <div class="bitacora-wrapper">
+            <div class="bitacora-header">
+              <span class="bitacora-col usuario">Usuario</span>
+              <span class="bitacora-col fecha">Fecha</span>
+              <span class="bitacora-col evento">Evento</span>
+              <span class="bitacora-col valor-antes">Valor Antes</span>
+              <span class="bitacora-col valor-despues">Valor Después</span>
+            </div>
+            <div class="bitacora-list" #bitacoraList (scroll)="onBitacoraListScroll()">
+              <div
+                class="bitacora-row"
+                *ngFor="let item of bitacora">
+                <span class="bitacora-col usuario">
+                  {{ item.usuario?.nombre || 'N/A' }}
+                </span>
+                <span class="bitacora-col fecha">
+                  {{ formatDate(item.fechaCreacion) }}
+                </span>
+                <span class="bitacora-col evento">
+                  {{ item.evento?.nombre || 'N/A' }}
+                </span>
+                <span class="bitacora-col valor-antes" [innerHTML]="formatValorAntes(item.valorAntes, item.valorDespues)"></span>
+                <span class="bitacora-col valor-despues" [innerHTML]="formatValorDespues(item.valorAntes, item.valorDespues)"></span>
+              </div>
+            </div>
+            <div class="loading-more" *ngIf="loadingMore">
+              Cargando más...
+            </div>
+            <div class="empty-message" *ngIf="bitacora.length === 0 && !loadingMore && !bitacoraLoading">
+              No hay registros de bitácora para este usuario
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -100,7 +100,7 @@ export class ToolbarUserDropdownComponent implements OnInit {
         label: 'Actividad de Usuarios',
         description: 'Monitoreo y gestión de usuarios',
         colorClass: 'text-blue-600',
-        route: '/apps/user-activity'
+        route: '/apps/gestion-usuarios'
       });
     }
   }
