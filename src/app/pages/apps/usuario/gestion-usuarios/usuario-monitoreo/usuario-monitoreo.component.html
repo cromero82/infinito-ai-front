@@ -3,6 +3,29 @@
   <div class="left-side">
     <h2 class="title mt-0 mb-4">Usuarios</h2>
     
+    <div class="fecha-section">
+      <mat-form-field appearance="outline" class="fecha-field">
+        <mat-label>Fecha</mat-label>
+        <input
+          matInput
+          [matDatepicker]="picker"
+          [formControl]="fechaCtrl"
+          (dateChange)="onFechaChange()" />
+        <span matSuffix class="fecha-suffix-container">
+          <button
+            *ngIf="fechaCtrl.value"
+            mat-icon-button
+            type="button"
+            (click)="clearFecha(); $event.stopPropagation()"
+            class="clear-button">
+            <mat-icon svgIcon="mat:close"></mat-icon>
+          </button>
+          <mat-datepicker-toggle [for]="picker"></mat-datepicker-toggle>
+        </span>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+    </div>
+    
     <div class="usuarios-list-container">
       <div class="loading" *ngIf="loading">Cargando...</div>
       <div class="error" *ngIf="!loading && error">{{ error }}</div>

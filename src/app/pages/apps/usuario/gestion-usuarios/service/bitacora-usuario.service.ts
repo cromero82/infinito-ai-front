@@ -75,7 +75,8 @@ export class BitacoraUsuarioService {
   searchBitacoraUsuario(
     userId: string,
     page: number = 0,
-    size: number = 10
+    size: number = 10,
+    fecha?: string
   ): Observable<BitacoraUsuarioPage> {
     const token = this.authService.getToken();
     
@@ -88,10 +89,14 @@ export class BitacoraUsuarioService {
       'Accept': 'application/json'
     });
 
-    const params = new HttpParams()
+    let params = new HttpParams()
       .set('userId', userId)
       .set('page', String(page))
       .set('size', String(size));
+
+    if (fecha) {
+      params = params.set('fecha', fecha);
+    }
 
     return this.http.get<BitacoraUsuarioPage>(`${this.apiUrl}/search`, { headers, params });
   }

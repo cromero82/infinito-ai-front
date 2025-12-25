@@ -1,5 +1,12 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -25,7 +32,16 @@ export interface UsuarioDto {
   templateUrl: './usuario-monitoreo.component.html',
   styleUrls: ['./usuario-monitoreo.component.scss'],
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatIconModule,
+    MatButtonModule
+  ],
   encapsulation: ViewEncapsulation.None
 })
 export class UsuarioMonitoreoComponent implements OnInit, OnDestroy {
@@ -33,6 +49,7 @@ export class UsuarioMonitoreoComponent implements OnInit, OnDestroy {
   loading = false;
   error: string | null = null;
   selectedUsuarioId: string | null = null;
+  fechaCtrl = new FormControl<Date | null>(null);
   
   // Bitácora state
   bitacora: BitacoraUsuarioDto[] = [];
@@ -93,6 +110,23 @@ export class UsuarioMonitoreoComponent implements OnInit, OnDestroy {
     this.loadBitacora(usuario.id);
   }
 
+  onFechaChange(): void {
+    if (!this.selectedUsuarioId) {
+      return;
+    }
+    
+    this.page = 0;
+    this.loadBitacora(this.selectedUsuarioId);
+  }
+
+  clearFecha(): void {
+    this.fechaCtrl.setValue(null);
+    if (this.selectedUsuarioId) {
+      this.page = 0;
+      this.loadBitacora(this.selectedUsuarioId);
+    }
+  }
+
   loadBitacora(userId: string): void {
     if (this.page === 0) {
       this.bitacoraLoading = true;
@@ -102,7 +136,17 @@ export class UsuarioMonitoreoComponent implements OnInit, OnDestroy {
     }
     this.bitacoraError = null;
     
-    this.bitacoraUsuarioService.searchBitacoraUsuario(userId, this.page, this.size).pipe(
+    // Format date as YYYY-MM-DD if a date is selected
+    let fechaParam: string | undefined;
+    if (this.fechaCtrl.value) {
+      const date = this.fechaCtrl.value;
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      fechaParam = `${year}-${month}-${day}`;
+    }
+    
+    this.bitacoraUsuarioService.searchBitacoraUsuario(userId, this.page, this.size, fechaParam).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
       next: (page: BitacoraUsuarioPage) => {
@@ -240,7 +284,7 @@ export class UsuarioMonitoreoComponent implements OnInit, OnDestroy {
       let html = '<div class="diff-json">';
       keys.forEach(key => {
         const value = JSON.stringify(obj[key]);
-        html += `<div class="${className}">"${this.escapeHtml(key)}": ${this.escapeHtml(value)}</div>`;
+        html += `<div class="${className}"><strong>${this.escapeHtml(key)}</strong>: ${this.removeQuotesFromValue(value)}</div>`;
       });
       html += '</div>';
       return html;
@@ -268,11 +312,11 @@ export class UsuarioMonitoreoComponent implements OnInit, OnDestroy {
       if (valorSimilarEnDespues) {
         // Hay un valor similar, resaltar solo las diferencias
         const highlighted = this.highlightStringDiff(valueAntes, valorSimilarEnDespues, 'removed');
-        html += `<div>"${this.escapeHtml(key)}": ${highlighted}</div>`;
+        html += `<div><strong>${this.escapeHtml(key)}</strong>: ${highlighted}</div>`;
       } else {
         // No hay valor similar, mostrar completo en rojo
         const style = 'background-color:rgba(244,67,54,0.5);color:#c62828;padding:3px 6px;border-radius:4px;font-weight:bold;';
-        html += `<div>"${this.escapeHtml(key)}": <span style="${style}">${this.escapeHtml(valueAntes)}</span></div>`;
+        html += `<div><strong>${this.escapeHtml(key)}</strong>: <span style="${style}">${this.escapeHtml(valueAntes)}</span></div>`;
       }
     });
     
@@ -287,11 +331,11 @@ export class UsuarioMonitoreoComponent implements OnInit, OnDestroy {
         const antesStr = typeof antesValue === 'string' ? antesValue : JSON.stringify(antesValue).replace(/^"|"$/g, '');
         const despuesStr = typeof despuesValue === 'string' ? despuesValue : JSON.stringify(despuesValue).replace(/^"|"$/g, '');
         const highlighted = this.highlightStringDiff(antesStr, despuesStr, 'removed');
-        html += `<div>"${this.escapeHtml(key)}": "${highlighted}"</div>`;
+        html += `<div><strong>${this.escapeHtml(key)}</strong>: ${highlighted}</div>`;
       } else {
         // Valores iguales - mostrar normal
         const valueStr = typeof antesValue === 'string' ? antesValue : JSON.stringify(antesValue);
-        html += `<div>"${this.escapeHtml(key)}": ${this.escapeHtml(valueStr)}</div>`;
+        html += `<div><strong>${this.escapeHtml(key)}</strong>: ${this.removeQuotesFromValue(valueStr)}</div>`;
       }
     });
     
@@ -319,11 +363,11 @@ export class UsuarioMonitoreoComponent implements OnInit, OnDestroy {
         const antesStr = typeof antesValue === 'string' ? antesValue : JSON.stringify(antesValue).replace(/^"|"$/g, '');
         const despuesStr = typeof despuesValue === 'string' ? despuesValue : JSON.stringify(despuesValue).replace(/^"|"$/g, '');
         const highlighted = this.highlightStringDiff(antesStr, despuesStr, 'added');
-        html += `<div>"${this.escapeHtml(key)}": "${highlighted}"</div>`;
+        html += `<div><strong>${this.escapeHtml(key)}</strong>: ${highlighted}</div>`;
       } else {
         // Valores iguales - mostrar normal
         const valueStr = typeof despuesValue === 'string' ? despuesValue : JSON.stringify(despuesValue);
-        html += `<div>"${this.escapeHtml(key)}": ${this.escapeHtml(valueStr)}</div>`;
+        html += `<div><strong>${this.escapeHtml(key)}</strong>: ${this.removeQuotesFromValue(valueStr)}</div>`;
       }
     });
     
@@ -336,11 +380,11 @@ export class UsuarioMonitoreoComponent implements OnInit, OnDestroy {
       if (valorSimilarEnAntes) {
         // Hay un valor similar, resaltar solo las diferencias
         const highlighted = this.highlightStringDiff(valorSimilarEnAntes, valueDespues, 'added');
-        html += `<div>"${this.escapeHtml(key)}": ${highlighted}</div>`;
+        html += `<div><strong>${this.escapeHtml(key)}</strong>: ${highlighted}</div>`;
       } else {
         // No hay valor similar, mostrar completo en verde
         const style = 'background-color:rgba(76,175,80,0.5);color:#2e7d32;padding:3px 6px;border-radius:4px;font-weight:bold;';
-        html += `<div>"${this.escapeHtml(key)}": <span style="${style}">${this.escapeHtml(valueDespues)}</span></div>`;
+        html += `<div><strong>${this.escapeHtml(key)}</strong>: <span style="${style}">${this.escapeHtml(valueDespues)}</span></div>`;
       }
     });
     
@@ -440,6 +484,15 @@ export class UsuarioMonitoreoComponent implements OnInit, OnDestroy {
     }
     
     return null;
+  }
+
+  private removeQuotesFromValue(value: string): string {
+    // Si el valor es un string JSON con comillas al inicio y final, removerlas
+    if (value && value.startsWith('"') && value.endsWith('"') && value.length > 1) {
+      // Escapar el contenido antes de remover las comillas
+      return this.escapeHtml(value.substring(1, value.length - 1));
+    }
+    return this.escapeHtml(value);
   }
 
   private escapeHtml(text: string): string {

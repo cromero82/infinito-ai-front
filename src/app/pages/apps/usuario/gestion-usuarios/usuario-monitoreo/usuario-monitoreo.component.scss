@@ -24,6 +24,42 @@
   margin-bottom: 16px;
 }
 
+.fecha-section {
+  margin-bottom: 16px;
+}
+
+.fecha-field {
+  width: 100%;
+}
+
+.fecha-field .fecha-suffix-container {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.fecha-field .fecha-suffix-container > * {
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.fecha-field .clear-button {
+  width: 40px;
+  height: 40px;
+  margin-right: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  
+  .mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
 .usuarios-list-container {
   flex: 1 1 auto;
   display: flex;
