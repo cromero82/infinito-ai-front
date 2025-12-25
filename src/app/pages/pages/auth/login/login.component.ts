@@ -48,7 +48,7 @@ export class LoginComponent {
     password: ['', Validators.required]
   });
 
-  inputType = 'password';
+  passwordInputType: string = 'text'; // Inicialmente texto para evitar detección de password
   visible = false;
   loading = false;
   readonly fieldId = Math.random().toString(36).substring(7); // ID único para confundir autocompletar
@@ -62,6 +62,24 @@ export class LoginComponent {
     private sesionesService: SesionesService,
     private configurationService: ConfigurationService
   ) {}
+
+  onPasswordFocus(event: any): void {
+    event.target.removeAttribute('readonly');
+    // Cambiar a password cuando el usuario hace focus
+    if (this.passwordInputType === 'text') {
+      this.passwordInputType = 'password';
+      this.cd.markForCheck();
+    }
+  }
+
+  onPasswordInput(event: any): void {
+    event.target.removeAttribute('readonly');
+    // Asegurar que sea password cuando el usuario empieza a escribir
+    if (this.passwordInputType === 'text') {
+      this.passwordInputType = 'password';
+      this.cd.markForCheck();
+    }
+  }
 
   send() {
     if (this.form.invalid) {
@@ -136,11 +154,11 @@ export class LoginComponent {
 
   toggleVisibility() {
     if (this.visible) {
-      this.inputType = 'password';
+      this.passwordInputType = 'password';
       this.visible = false;
       this.cd.markForCheck();
     } else {
-      this.inputType = 'text';
+      this.passwordInputType = 'text';
       this.visible = true;
       this.cd.markForCheck();
     }

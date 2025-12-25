@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { fadeInUp400ms } from '@vex/animations/fade-in-up.animation';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { scaleIn400ms } from '@vex/animations/scale-in.animation';
@@ -33,7 +33,7 @@ import { throwError } from 'rxjs';
     MatSnackBarModule
   ]
 })
-export class MiPerfilUsuarioComponent implements OnInit {
+export class MiPerfilUsuarioComponent implements OnInit, AfterViewInit {
   nombreUsuario: string | null = null;
   correoUsuario: string | null = null;
   telefonoUsuario: string | null = null;
@@ -57,11 +57,85 @@ export class MiPerfilUsuarioComponent implements OnInit {
   passwordInputType: string = 'text'; // Inicialmente texto para evitar detección de password
   readonly fieldId = Math.random().toString(36).substring(7); // ID único para confundir autocompletar
 
+  @ViewChild('passwordInput', { static: false }) passwordInputRef?: ElementRef<HTMLInputElement>;
+
   constructor(
     private authService: AuthService,
     private cd: ChangeDetectorRef,
     private snackBar: MatSnackBar
   ) {}
+
+  ngAfterViewInit(): void {
+    // Este método se ejecuta solo una vez al inicio, pero el campo puede no estar renderizado aún
+    // El campo se renderiza cuando modoEdicion cambia a true
+  }
+
+  private checkAndFixPasswordInput(): void {
+    if (!this.modoEdicion) return;
+    
+    // Intentar usar ViewChild primero
+    let input = this.passwordInputRef?.nativeElement;
+    
+    // Si ViewChild no está disponible (porque el campo aún no se renderizó), usar querySelector
+    if (!input) {
+      input = document.querySelector(`input[id='password-field-${this.fieldId}']`) as HTMLInputElement;
+    }
+    
+    if (input) {
+      // Forzar tipo 'text' directamente en el DOM
+      input.type = 'text';
+      
+      // Forzar autocomplete deshabilitado con múltiples valores
+      input.setAttribute('autocomplete', 'chrome-off');
+      input.setAttribute('autocomplete', 'off');
+      input.setAttribute('autocomplete', 'new-password');
+      
+      // Eliminar atributos que puedan indicar que es un campo de contraseña
+      input.removeAttribute('name');
+      input.removeAttribute('id');
+      
+      // Reestablecer con valores dinámicos después de un momento
+      setTimeout(() => {
+        input!.setAttribute('name', `password-field-${this.fieldId}`);
+        input!.setAttribute('id', `password-field-${this.fieldId}`);
+      }, 0);
+      
+      // Agregar event listeners agresivos para prevenir autocomplete
+      const preventAutocomplete = () => {
+        input!.type = 'text';
+        input!.setAttribute('autocomplete', 'off');
+        input!.removeAttribute('name');
+        setTimeout(() => {
+          input!.setAttribute('name', `password-field-${this.fieldId}`);
+        }, 0);
+      };
+      
+      input.addEventListener('focus', preventAutocomplete, true);
+      input.addEventListener('click', preventAutocomplete, true);
+      input.addEventListener('mousedown', preventAutocomplete, true);
+      input.addEventListener('touchstart', preventAutocomplete, true);
+      
+      // MutationObserver para detectar cambios en el tipo
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes') {
+            const target = mutation.target as HTMLInputElement;
+            if (target.type === 'password') {
+              target.type = 'text';
+            }
+            if (target.getAttribute('autocomplete') && target.getAttribute('autocomplete') !== 'off') {
+              target.setAttribute('autocomplete', 'off');
+            }
+          }
+        });
+      });
+      
+      observer.observe(input, {
+        attributes: true,
+        attributeFilter: ['type', 'autocomplete']
+      });
+    }
+  }
 
   ngOnInit(): void {
     this.cargarDatosUsuario();
@@ -97,35 +171,64 @@ export class MiPerfilUsuarioComponent implements OnInit {
 
   activarModoEdicion(): void {
     this.modoEdicion = true;
-    this.passwordInputType = 'text'; // Resetear a texto
+    this.passwordInputType = 'text'; // Resetear a texto para evitar detección de password
     // Reiniciar valores editados con los originales
     this.nombreEditado = this.nombreOriginal;
     this.correoEditado = this.correoOriginal;
     this.telefonoEditado = this.telefonoOriginal;
     this.passwordEditado = '';
+    this.cd.markForCheck();
     
-    // Cambiar tipo después de un pequeño delay para evitar detección
+    // Asegurar que el campo se inicialice correctamente después de renderizarse
+    // Usar múltiples timeouts para asegurar que se ejecute después de que Angular renderice
     setTimeout(() => {
-      this.passwordInputType = 'password';
-      this.cd.markForCheck();
-    }, 100);
+      this.checkAndFixPasswordInput();
+      // Intentar una segunda vez después de un pequeño delay
+      setTimeout(() => {
+        this.checkAndFixPasswordInput();
+      }, 50);
+    }, 0);
   }
 
-  onPasswordFocus(event: any): void {
-    event.target.removeAttribute('readonly');
-    // Cambiar a password cuando el usuario hace focus
-    if (this.passwordInputType === 'text') {
-      this.passwordInputType = 'password';
-      this.cd.markForCheck();
+  preventPasswordManager(event: any): void {
+    const input = event.target as HTMLInputElement;
+    if (input) {
+      input.type = 'text';
+      input.setAttribute('autocomplete', 'off');
+      input.setAttribute('autocomplete', 'chrome-off');
+      // Cambiar temporalmente el name para confundir al navegador
+      const originalName = input.getAttribute('name');
+      input.removeAttribute('name');
+      setTimeout(() => {
+        if (originalName) {
+          input.setAttribute('name', originalName);
+        }
+      }, 0);
     }
   }
 
+  onPasswordFocus(event: any): void {
+    const input = event.target as HTMLInputElement;
+    input.removeAttribute('readonly');
+    // Mantener como text inicialmente para prevenir autocomplete
+    input.type = 'text';
+    input.setAttribute('autocomplete', 'off');
+    input.setAttribute('autocomplete', 'chrome-off');
+    // Solo cambiar a password cuando el usuario empieza a escribir
+    // No cambiar en focus, solo cuando haya input
+  }
+
   onPasswordInput(event: any): void {
-    event.target.removeAttribute('readonly');
-    // Asegurar que sea password cuando el usuario empieza a escribir
-    if (this.passwordInputType === 'text') {
-      this.passwordInputType = 'password';
-      this.cd.markForCheck();
+    const input = event.target as HTMLInputElement;
+    input.removeAttribute('readonly');
+    // Cambiar a password solo cuando el usuario empieza a escribir
+    if (input.type === 'text') {
+      // Solo cambiar si hay contenido
+      if (input.value.length > 0) {
+        input.type = 'password';
+        this.passwordInputType = 'password';
+        this.cd.markForCheck();
+      }
     }
   }
 

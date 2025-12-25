@@ -128,18 +128,21 @@
             <mat-icon matPrefix svgIcon="mat:lock"></mat-icon>
             <input 
               #passwordInput
-              matInput 
-              [type]="passwordInputType" 
-              [(ngModel)]="passwordEditado" 
-              placeholder="Nueva contraseña" 
-              autocomplete="chrome-off"
-              readonly 
+              type="text"
+              [(ngModel)]="passwordEditado"
+              matInput
+              placeholder="Nueva contraseña"
+              autocomplete="off"
+              readonly
               (focus)="onPasswordFocus($event)"
               (input)="onPasswordInput($event)"
+              (mousedown)="preventPasswordManager($event)"
+              (click)="preventPasswordManager($event)"
               data-lpignore="true"
               data-form-type="other"
               [id]="'password-field-' + fieldId"
-              [name]="'password-field-' + fieldId">
+              [name]="'password-field-' + fieldId"
+              [attr.autocomplete]="'off'">
           </mat-form-field>
         </div>
 
