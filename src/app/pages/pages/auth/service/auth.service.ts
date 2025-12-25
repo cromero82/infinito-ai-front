@@ -40,7 +40,9 @@ export interface JwtPayload {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8081/auth';
+  private urlService = 'http://localhost:8081';
+  private servicePath = '/auth';
+  private apiUrl = `${this.urlService}${this.servicePath}`;
 
   constructor(private http: HttpClient) {}
 
@@ -361,6 +363,29 @@ export class AuthService {
     return this.http.get<any[]>(`${this.apiUrl}/usuarios-no-admin`).pipe(
       catchError(error => {
         console.error('Error al obtener usuarios:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  obtenerRoles(): Observable<any[]> {
+    // El interceptor authInterceptor añade automáticamente el header Authorization
+    return this.http.get<any[]>(`${this.urlService}/roles`).pipe(
+      catchError(error => {
+        console.error('Error al obtener roles:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  actualizarRolesUsuario(correoElectronico: string, roles: string[]): Observable<any> {
+    // El interceptor authInterceptor añade automáticamente el header Authorization
+    return this.http.put(`${this.apiUrl}/actualizar-roles-usuarios`, {
+      correoElectronico,
+      roles
+    }).pipe(
+      catchError(error => {
+        console.error('Error al actualizar roles de usuario:', error);
         return throwError(() => error);
       })
     );

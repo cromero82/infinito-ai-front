@@ -1,0 +1,49 @@
+.loading,
+.error {
+  padding: 20px;
+  text-align: center;
+}
+
+.error {
+  color: #d32f2f;
+}
+
+.empty-message {
+  padding: 20px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.roles-table {
+  width: 100%;
+}
+
+.roles-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.rol-activo {
+  background-color: #4caf50 !important;
+  color: white !important;
+  min-width: auto;
+  padding: 4px 12px;
+  
+  &:hover {
+    background-color: #45a049 !important;
+  }
+}
+
+.rol-inactivo {
+  background-color: #9e9e9e !important;
+  color: white !important;
+  min-width: auto;
+  padding: 4px 12px;
+  
+  &:hover {
+    background-color: #757575 !important;
+  }
+}
+

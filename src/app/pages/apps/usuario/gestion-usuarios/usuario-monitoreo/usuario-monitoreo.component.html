@@ -83,13 +83,13 @@
                 class="bitacora-row"
                 *ngFor="let item of bitacora">
                 <span class="bitacora-col usuario">
-                  {{ item.usuario?.nombre || 'N/A' }}
+                  {{ item.usuario.nombre || 'N/A' }}
                 </span>
                 <span class="bitacora-col fecha">
                   {{ formatDate(item.fechaCreacion) }}
                 </span>
                 <span class="bitacora-col evento">
-                  {{ item.evento?.nombre || 'N/A' }}
+                  {{ item.evento.nombre || 'N/A' }}
                 </span>
                 <span class="bitacora-col valor-antes" [innerHTML]="formatValorAntes(item.valorAntes, item.valorDespues)"></span>
                 <span class="bitacora-col valor-despues" [innerHTML]="formatValorDespues(item.valorAntes, item.valorDespues)"></span>
