@@ -72,3 +72,25 @@
 .hover\:bg-opacity-100:hover {
   background-color: rgba(255,255,255,1);
 }
+
+// Estilos para el arrastre del diálogo
+form[cdkDrag] {
+  cursor: move;
+  
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.dialog-header[cdkDragHandle] {
+  cursor: grab;
+  user-select: none;
+  
+  &:active {
+    cursor: grabbing;
+  }
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+}

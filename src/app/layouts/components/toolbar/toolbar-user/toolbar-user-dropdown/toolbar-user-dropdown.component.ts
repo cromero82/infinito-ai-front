@@ -102,6 +102,15 @@ export class ToolbarUserDropdownComponent implements OnInit {
         colorClass: 'text-blue-600',
         route: '/apps/gestion-usuarios'
       });
+      
+      this.items.push({
+        id: '3',
+        icon: 'mat:upload_file',
+        label: 'Carga de productos',
+        description: 'Cargar productos desde archivo Excel',
+        colorClass: 'text-green-600',
+        route: '/apps/cargue-productos'
+      });
     }
   }
 

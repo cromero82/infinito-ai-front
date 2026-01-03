@@ -173,6 +173,13 @@ export const appRoutes: VexRoutes = [
               import('./pages/apps/usuario/gestion-usuarios/gestion-usuarios.routes')
           },
           {
+            path: 'cargue-productos',
+            loadComponent: () =>
+              import('./pages/apps/cargue-productos/cargue-productos.component').then(
+                (m) => m.CargueProductosComponent
+              )
+          },
+          {
             path: 'master',
             loadComponent: () => import('./pages/apps/master-background/multiple-component-container.component').then(
               (m) => m.MultipleComponentContainerComponent

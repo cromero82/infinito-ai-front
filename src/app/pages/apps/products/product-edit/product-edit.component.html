@@ -1,5 +1,5 @@
-<form (ngSubmit)="save()" [formGroup]="form">
-  <div class="flex items-center" mat-dialog-title>
+<form (ngSubmit)="save()" [formGroup]="form" cdkDrag cdkDragRootElement=".cdk-overlay-pane">
+  <div class="flex items-center dialog-header" mat-dialog-title cdkDragHandle>
     <h2 class="headline m-0 flex-auto">
       {{ form.controls['nombre'].value || (data ? 'Editar producto' : 'Nuevo producto') }}
     </h2>
@@ -32,9 +32,8 @@
   </mat-dialog-content>
   <mat-dialog-actions align="end">
     <button mat-button mat-dialog-close type="button">Cancelar</button>
-    <button color="primary" mat-flat-button type="submit" [disabled]="form.invalid">
-      <ng-container *ngIf="data">Actualizar producto</ng-container>
-      <ng-container *ngIf="!data">Crear producto</ng-container>
+    <button [color]="isEditMode ? 'accent' : 'primary'" mat-flat-button type="submit" [disabled]="form.invalid">
+      {{ buttonLabel }}
     </button>
   </mat-dialog-actions>
 </form>

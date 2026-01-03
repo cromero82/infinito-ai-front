@@ -10,6 +10,7 @@ import { Producto } from '../model/producto';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { FormsModule } from '@angular/forms';
+import { DragDropModule, CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'vex-product-edit',
@@ -24,7 +25,10 @@ import { FormsModule } from '@angular/forms';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatDividerModule
+    MatDividerModule,
+    DragDropModule,
+    CdkDrag,
+    CdkDragHandle
   ],
   templateUrl: './product-edit.component.html',
   styleUrl: './product-edit.component.scss'
@@ -102,9 +106,20 @@ export class ProductEditComponent implements OnInit, AfterViewInit {
       requestAnimationFrame(() => {
         setTimeout(() => {
           this.setInitialFocus();
+          // Configurar el arrastre del diálogo
+          this.setupDrag();
         }, 50);
       });
     });
+  }
+
+  private setupDrag() {
+    // Obtener el elemento del overlay del diálogo
+    const overlayElement = document.querySelector('.cdk-overlay-pane');
+    if (overlayElement) {
+      // Hacer que el overlay sea arrastrable
+      (overlayElement as HTMLElement).style.position = 'relative';
+    }
   }
 
   private isNumericBarcode(value: string): boolean {
@@ -214,6 +229,15 @@ export class ProductEditComponent implements OnInit, AfterViewInit {
     }
   }
 
+  get isEditMode(): boolean {
+    // Verificar si hay ID y no es 0
+    return !!(this.data && this.data.id && this.data.id !== 0);
+  }
+
+  get buttonLabel(): string {
+    return this.isEditMode ? 'Actualizar producto' : 'Registrar producto';
+  }
+
   save() {
     if (this.form.invalid) return;
     const form = this.form.value;
@@ -225,7 +249,7 @@ export class ProductEditComponent implements OnInit, AfterViewInit {
       foto: this.data?.foto || '',
       company: this.data?.company
     };
-    if (this.data && this.data.id) {
+    if (this.isEditMode) {
       // Edit mode
       const productId = typeof this.data.id === 'string' ? parseInt(this.data.id) : this.data.id;
       this.relationalProductService.updateProduct(productId, product).subscribe({

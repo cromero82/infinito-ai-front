@@ -69,4 +69,18 @@ export class RelationalProductService {
 
     return this.http.delete<void>(`${this.apiUrl}/${productId}`, { headers });
   }
+
+  /**
+   * Searches for a product by barcode
+   * @param barcode The barcode to search for
+   */
+  searchByBarcode(barcode: string): Observable<Producto> {
+    const headers = new HttpHeaders({
+      'Accept': 'application/json'
+    });
+
+    const params = new HttpParams().set('barcode', barcode);
+
+    return this.http.get<Producto>(`${this.apiUrl}/search-by-barcode`, { params, headers });
+  }
 }
