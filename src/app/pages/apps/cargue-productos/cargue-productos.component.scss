@@ -215,9 +215,21 @@
 
 .right-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 16px;
   margin-bottom: 16px;
+
+  .title {
+    margin: 0;
+  }
+
+  .search-container {
+    width: 100%;
+
+    .search-field {
+      width: 100%;
+    }
+  }
 }
 
 .conflictos-content {
@@ -408,6 +420,35 @@
 
 .buscar-button {
   flex-shrink: 0;
+  position: relative;
+
+  &.buscar-barcode-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+
+    .icon-search {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    .icon-barcode {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-left: -4px;
+    }
+  }
+
+  &.buscar-nombre-button {
+    .mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
 }
 
 .editar-button {

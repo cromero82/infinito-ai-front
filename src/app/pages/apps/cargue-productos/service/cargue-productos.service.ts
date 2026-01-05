@@ -41,12 +41,14 @@ export interface ConflictoParsed {
 
 export enum TipoConflictoId {
   DOS_PRODUCTOS_NOMBRES_IGUALES = 1,
-  IGUAL_NOMBRE_Y_CODIGO_BARRAS = 2
+  IGUAL_NOMBRE_Y_CODIGO_BARRAS = 2,
+  NO_TIENE_PRECIO = 3
 }
 
 export const TipoConflictoLabels: Record<TipoConflictoId, string> = {
   [TipoConflictoId.DOS_PRODUCTOS_NOMBRES_IGUALES]: 'Dos productos con nombres iguales',
-  [TipoConflictoId.IGUAL_NOMBRE_Y_CODIGO_BARRAS]: 'Igual nombre y código de barras'
+  [TipoConflictoId.IGUAL_NOMBRE_Y_CODIGO_BARRAS]: 'Igual nombre y código de barras',
+  [TipoConflictoId.NO_TIENE_PRECIO]: 'No tiene precio'
 };
 
 @Injectable({

@@ -22,6 +22,8 @@ import { RelationalProductService } from '../products/service/relational-product
 import { ProductEditComponent } from '../products/product-edit/product-edit.component';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'vex-cargue-productos',
@@ -35,7 +37,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatSlideToggleModule,
     MatDialogModule,
     MatSnackBarModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatFormFieldModule,
+    MatInputModule
   ],
   templateUrl: './cargue-productos.component.html',
   styleUrls: ['./cargue-productos.component.scss']
@@ -58,6 +62,9 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
   
   // Filtro para mostrar solo conflictos no resueltos
   unicamenteNoResueltosCtrl = new FormControl<boolean>(true);
+
+  // Búsqueda/filtro
+  searchTermCtrl = new FormControl<string>('');
 
   // Ordenamiento
   sortColumn: string | null = null;
@@ -188,6 +195,25 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
           const conflictoItem: ConflictoItem = {};
           Object.entries(item).forEach(([key, value]) => {
             if (key.toLowerCase().includes('nombre')) {
+              conflictoItem.nombre = String(value);
+            } else {
+              conflictoItem[key] = value;
+            }
+          });
+          if (Object.keys(conflictoItem).length > 0) {
+            parsed.items.push(conflictoItem);
+          }
+        }
+      } else if (conflicto.tipoConflictoId === TipoConflictoId.NO_TIENE_PRECIO) {
+        // Para NO_TIENE_PRECIO, solo hay un item con codigo y nombre
+        if (datosParsed.length > 0) {
+          const item = datosParsed[0];
+          const conflictoItem: ConflictoItem = {};
+          Object.entries(item).forEach(([key, value]) => {
+            // Mapear "codigo" a "codigoBarras"
+            if (key.toLowerCase() === 'codigo') {
+              conflictoItem.codigoBarras = String(value);
+            } else if (key.toLowerCase().includes('nombre')) {
               conflictoItem.nombre = String(value);
             } else {
               conflictoItem[key] = value;
@@ -350,6 +376,10 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
     return conflictoParsed.conflicto.tipoConflictoId === TipoConflictoId.DOS_PRODUCTOS_NOMBRES_IGUALES;
   }
 
+  esTipoNoTienePrecio(conflictoParsed: ConflictoParsed): boolean {
+    return conflictoParsed.conflicto.tipoConflictoId === TipoConflictoId.NO_TIENE_PRECIO;
+  }
+
   parseDatosConflicto(datosConflicto: string): any {
     try {
       return JSON.parse(datosConflicto);
@@ -432,8 +462,8 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
     return (cargue.totalConflictosResultos || 0) > 0;
   }
 
-  registrarProducto(conflictoIndex: number, itemIndex: number): void {
-    const conflictoParsed = this.conflictosParsed[conflictoIndex];
+  registrarProducto(conflictoId: number, itemIndex: number): void {
+    const conflictoParsed = this.conflictosParsed.find(cp => cp.conflicto.id === conflictoId);
     if (!conflictoParsed || !conflictoParsed.items[itemIndex]) {
       return;
     }
@@ -462,11 +492,12 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
       nombre = nombre.split(';')[0].trim();
     }
 
-    // Solo verificar si el producto existe para conflictos tipo DOS_PRODUCTOS_NOMBRES_IGUALES
+    // Verificar si el producto existe para conflictos tipo DOS_PRODUCTOS_NOMBRES_IGUALES o NO_TIENE_PRECIO
     // y solo cuando hay código de barras
-    if (conflicto.tipoConflictoId === TipoConflictoId.DOS_PRODUCTOS_NOMBRES_IGUALES && 
+    if ((conflicto.tipoConflictoId === TipoConflictoId.DOS_PRODUCTOS_NOMBRES_IGUALES || 
+         conflicto.tipoConflictoId === TipoConflictoId.NO_TIENE_PRECIO) && 
         barcode && barcode.trim().length > 0) {
-      const key = `${conflictoIndex}-${itemIndex}`;
+      const key = `${conflictoId}-${itemIndex}`;
       this.verificandoProducto[key] = true;
 
       this.relationalProductService.searchByBarcode(barcode).pipe(
@@ -503,7 +534,7 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
           } else {
             // El producto no existe, abrir en modo creación
             this.productosExistentes[key] = false;
-            this.abrirModalRegistroProducto(conflictoIndex, itemIndex, nombre, barcode, precio, conflicto);
+            this.abrirModalRegistroProducto(conflictoId, itemIndex, nombre, barcode, precio, conflicto);
           }
         },
         error: (err) => {
@@ -512,21 +543,21 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
           this.productosExistentes[key] = false;
           
           // Si es 404 o cualquier error, asumir que no existe y permitir crear
-          this.abrirModalRegistroProducto(conflictoIndex, itemIndex, nombre, barcode, precio, conflicto);
+          this.abrirModalRegistroProducto(conflictoId, itemIndex, nombre, barcode, precio, conflicto);
         }
       });
     } else {
       // Para otros tipos de conflicto o sin código de barras, abrir directamente en modo creación
-      this.abrirModalRegistroProducto(conflictoIndex, itemIndex, nombre, barcode, precio, conflicto);
+      this.abrirModalRegistroProducto(conflictoId, itemIndex, nombre, barcode, precio, conflicto);
     }
   }
 
   private abrirModalRegistroProducto(
-    conflictoIndex: number, 
-    itemIndex: number, 
-    nombre: string, 
-    barcode: string, 
-    precio: number, 
+    conflictoId: number,
+    itemIndex: number,
+    nombre: string,
+    barcode: string,
+    precio: number,
     conflicto: CargueProductoConflictoDto
   ): void {
     // Abrir el modal de edición en modo creación (sin ID) para que el usuario pueda editar antes de registrar
@@ -553,7 +584,7 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
         
         // Si es tipo IGUAL_NOMBRE_Y_CODIGO_BARRAS, resolver el conflicto automáticamente
         if (conflicto.tipoConflictoId === TipoConflictoId.IGUAL_NOMBRE_Y_CODIGO_BARRAS) {
-          this.resolverConflicto(conflictoIndex, conflicto.id);
+          this.resolverConflicto(conflicto.id);
         } else {
           // Para otros tipos, solo recargar conflictos
           if (this.selectedCargueProductoId) {
@@ -564,17 +595,17 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
     });
   }
 
-  resolverConflicto(conflictoIndex: number, conflictoId: number): void {
-    this.resolviendoConflicto[conflictoIndex] = true;
+  resolverConflicto(conflictoId: number): void {
+    this.resolviendoConflicto[conflictoId] = true;
     
     this.cargueProductosService.resolverConflicto(conflictoId).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
       next: () => {
-        this.resolviendoConflicto[conflictoIndex] = false;
+        this.resolviendoConflicto[conflictoId] = false;
         
         // Eliminar el conflicto de la lista
-        this.conflictosParsed = this.conflictosParsed.filter((_, index) => index !== conflictoIndex);
+        this.conflictosParsed = this.conflictosParsed.filter(cp => cp.conflicto.id !== conflictoId);
         this.conflictos = this.conflictos.filter(c => c.id !== conflictoId);
         
         // Actualizar el contador de resueltos en el cargue seleccionado
@@ -590,7 +621,7 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error al resolver conflicto', err);
-        this.resolviendoConflicto[conflictoIndex] = false;
+        this.resolviendoConflicto[conflictoId] = false;
         
         this.snackBar.open(
           'Error al resolver el conflicto. Por favor intente nuevamente.',
@@ -609,17 +640,17 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
     });
   }
 
-  isResolviendoConflicto(conflictoIndex: number): boolean {
-    return this.resolviendoConflicto[conflictoIndex] || false;
+  isResolviendoConflicto(conflictoId: number): boolean {
+    return this.resolviendoConflicto[conflictoId] || false;
   }
 
-  isRegistrando(conflictoIndex: number, itemIndex: number): boolean {
-    const key = `${conflictoIndex}-${itemIndex}`;
+  isRegistrando(conflictoId: number, itemIndex: number): boolean {
+    const key = `${conflictoId}-${itemIndex}`;
     return this.registrandoProducto[key] || false;
   }
 
-  tieneCodigoBarras(conflictoIndex: number, itemIndex: number): boolean {
-    const conflictoParsed = this.conflictosParsed[conflictoIndex];
+  tieneCodigoBarras(conflictoId: number, itemIndex: number): boolean {
+    const conflictoParsed = this.conflictosParsed.find(cp => cp.conflicto.id === conflictoId);
     if (!conflictoParsed || !conflictoParsed.items[itemIndex]) {
       return false;
     }
@@ -633,32 +664,34 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
   }
 
 
-  productoExiste(conflictoIndex: number, itemIndex: number): boolean {
-    const key = `${conflictoIndex}-${itemIndex}`;
+  productoExiste(conflictoId: number, itemIndex: number): boolean {
+    const key = `${conflictoId}-${itemIndex}`;
     return this.productosExistentes[key] || false;
   }
 
-  estaVerificandoProducto(conflictoIndex: number, itemIndex: number): boolean {
-    const key = `${conflictoIndex}-${itemIndex}`;
+  estaVerificandoProducto(conflictoId: number, itemIndex: number): boolean {
+    const key = `${conflictoId}-${itemIndex}`;
     return this.verificandoProducto[key] || false;
   }
 
-  editarProducto(conflictoIndex: number, itemIndex: number): void {
-    const conflictoParsed = this.conflictosParsed[conflictoIndex];
+  editarProducto(conflictoId: number, itemIndex: number): void {
+    const conflictoParsed = this.conflictosParsed.find(cp => cp.conflicto.id === conflictoId);
     if (!conflictoParsed || !conflictoParsed.items[itemIndex]) {
       return;
     }
 
-    // Solo permitir editar para conflictos tipo DOS_PRODUCTOS_NOMBRES_IGUALES
-    if (conflictoParsed.conflicto.tipoConflictoId !== TipoConflictoId.DOS_PRODUCTOS_NOMBRES_IGUALES) {
+    // Permitir editar para conflictos tipo DOS_PRODUCTOS_NOMBRES_IGUALES o NO_TIENE_PRECIO
+    if (conflictoParsed.conflicto.tipoConflictoId !== TipoConflictoId.DOS_PRODUCTOS_NOMBRES_IGUALES &&
+        conflictoParsed.conflicto.tipoConflictoId !== TipoConflictoId.NO_TIENE_PRECIO) {
       return;
     }
 
     const item = conflictoParsed.items[itemIndex];
-    // Para el primer item usar codigoBarras, para el segundo usar codigoBarras2nd
+    // Para el primer item usar codigoBarras (o codigo para NO_TIENE_PRECIO), para el segundo usar codigoBarras2nd
     let barcode = '';
     if (itemIndex === 0) {
-      barcode = item.codigoBarras || '';
+      // Para NO_TIENE_PRECIO puede venir como "codigo", para otros tipos como "codigoBarras"
+      barcode = item.codigoBarras || item['codigo'] || '';
     } else {
       barcode = item['codigoBarras2nd'] || '';
     }
@@ -671,7 +704,7 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const key = `${conflictoIndex}-${itemIndex}`;
+    const key = `${conflictoId}-${itemIndex}`;
     this.verificandoProducto[key] = true;
 
     // Buscar el producto por código de barras - SOLO cuando se hace clic en Editar
@@ -743,8 +776,8 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
     });
   }
 
-  buscarCodigoBarrasEnGoogle(conflictoIndex: number, itemIndex: number): void {
-    const conflictoParsed = this.conflictosParsed[conflictoIndex];
+  buscarCodigoBarrasEnGoogle(conflictoId: number, itemIndex: number): void {
+    const conflictoParsed = this.conflictosParsed.find(cp => cp.conflicto.id === conflictoId);
     if (!conflictoParsed || !conflictoParsed.items[itemIndex]) {
       return;
     }
@@ -753,7 +786,8 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
     let codigoBarras = '';
 
     if (itemIndex === 0) {
-      codigoBarras = item.codigoBarras || '';
+      // Para NO_TIENE_PRECIO puede venir como "codigo", para otros tipos como "codigoBarras"
+      codigoBarras = item.codigoBarras || item['codigo'] || '';
     } else {
       codigoBarras = item['codigoBarras2nd'] || '';
     }
@@ -781,6 +815,42 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
 
     // Abrir Google con la búsqueda del código de barras
     const url = `https://www.google.com/search?q=${encodeURIComponent(codigoBarras)}`;
+    window.open(url, '_blank');
+  }
+
+  buscarNombreEnGoogle(conflictoId: number, itemIndex: number): void {
+    const conflictoParsed = this.conflictosParsed.find(cp => cp.conflicto.id === conflictoId);
+    if (!conflictoParsed || !conflictoParsed.items[itemIndex]) {
+      return;
+    }
+
+    const item = conflictoParsed.items[itemIndex];
+    let nombre = '';
+
+    // Obtener el nombre del producto
+    if (conflictoParsed.nombreExtraido) {
+      nombre = conflictoParsed.nombreExtraido;
+    } else if (conflictoParsed.conflicto.nombreProducto) {
+      nombre = conflictoParsed.conflicto.nombreProducto;
+      // Si viene con formato "NOMBRE; Precio: $XXX", extraer solo el nombre
+      if (nombre.includes(';')) {
+        nombre = nombre.split(';')[0].trim();
+      }
+    } else if (item.nombre) {
+      nombre = item.nombre;
+    }
+
+    if (!nombre || nombre.trim().length === 0) {
+      this.snackBar.open('No hay nombre de producto para buscar', 'Cerrar', {
+        duration: 3000,
+        horizontalPosition: 'right'
+      });
+      return;
+    }
+
+    // Abrir Google con la búsqueda del nombre + "PRECIO  medellin"
+    const busqueda = `${nombre} PRECIO medellin`;
+    const url = `https://www.google.com/search?q=${encodeURIComponent(busqueda)}`;
     window.open(url, '_blank');
   }
 
@@ -857,5 +927,85 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
   isSortedBy(column: string): boolean {
     return this.sortColumn === column;
   }
+
+  get filteredConflictosParsed(): ConflictoParsed[] {
+    const searchTerm = (this.searchTermCtrl.value || '').toLowerCase().trim();
+    
+    // Primero filtrar
+    let filtered = this.conflictosParsed;
+    
+    if (searchTerm) {
+      filtered = this.conflictosParsed.filter(conflictoParsed => {
+        // Buscar en tipo de conflicto
+        const tipoConflicto = this.getTipoConflictoLabel(conflictoParsed.conflicto.tipoConflictoId).toLowerCase();
+        if (tipoConflicto.includes(searchTerm)) {
+          return true;
+        }
+
+        // Buscar en nombre del producto
+        const nombreProducto = this.getNombreProductoFormateado(conflictoParsed).replace(/<br>/g, ' ').toLowerCase();
+        if (nombreProducto.includes(searchTerm)) {
+          return true;
+        }
+
+        // Buscar en datos del conflicto
+        const datosConflicto = this.formatDatosConflicto(conflictoParsed.conflicto.datosConflicto).toLowerCase();
+        if (datosConflicto.includes(searchTerm)) {
+          return true;
+        }
+
+        // Buscar en los items del conflicto (códigos de barras, precios, etc.)
+        for (const item of conflictoParsed.items) {
+          for (const key in item) {
+            if (item.hasOwnProperty(key)) {
+              const value = String(item[key]).toLowerCase();
+              if (value.includes(searchTerm)) {
+                return true;
+              }
+            }
+          }
+        }
+
+        return false;
+      });
+    }
+
+    // Luego aplicar ordenamiento si existe
+    if (this.sortColumn && filtered.length > 0) {
+      filtered = [...filtered].sort((a, b) => {
+        let valueA: any;
+        let valueB: any;
+
+        switch (this.sortColumn) {
+          case 'tipo':
+            valueA = this.getTipoConflictoLabel(a.conflicto.tipoConflictoId);
+            valueB = this.getTipoConflictoLabel(b.conflicto.tipoConflictoId);
+            break;
+          case 'producto':
+            valueA = this.getNombreProductoFormateado(a).replace(/<br>/g, ' ').toLowerCase();
+            valueB = this.getNombreProductoFormateado(b).replace(/<br>/g, ' ').toLowerCase();
+            break;
+          case 'datos':
+            valueA = this.formatDatosConflicto(a.conflicto.datosConflicto).toLowerCase();
+            valueB = this.formatDatosConflicto(b.conflicto.datosConflicto).toLowerCase();
+            break;
+          default:
+            return 0;
+        }
+
+        // Comparación alfabética
+        if (valueA < valueB) {
+          return this.sortDirection === 'asc' ? -1 : 1;
+        }
+        if (valueA > valueB) {
+          return this.sortDirection === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filtered;
+  }
+
 }
 

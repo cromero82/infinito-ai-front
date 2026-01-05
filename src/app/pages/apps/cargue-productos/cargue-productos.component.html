@@ -98,6 +98,22 @@
     <div class="p-6">
       <div class="right-header">
         <h2 class="title mt-0 mb-4">Conflictos</h2>
+        <div *ngIf="selectedCargueProductoId && !conflictosLoading && !conflictosError" class="search-container">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Buscar o filtrar</mat-label>
+            <input matInput [formControl]="searchTermCtrl" placeholder="Buscar en cualquier campo..." />
+            <mat-icon matPrefix svgIcon="mat:search"></mat-icon>
+            <button
+              *ngIf="searchTermCtrl.value"
+              mat-icon-button
+              matSuffix
+              (click)="searchTermCtrl.setValue('')"
+              type="button"
+              matTooltip="Limpiar búsqueda">
+              <mat-icon svgIcon="mat:clear"></mat-icon>
+            </button>
+          </mat-form-field>
+        </div>
       </div>
       
       <div *ngIf="!selectedCargueProductoId" class="text-secondary">
@@ -133,7 +149,7 @@
             <div class="conflictos-list">
               <div
                 class="conflicto-row"
-                *ngFor="let conflictoParsed of conflictosParsed; let i = index"
+                *ngFor="let conflictoParsed of filteredConflictosParsed; let i = index"
                 [class.resuelto]="conflictoParsed.conflicto.resuelto">
                 <span class="conflicto-col tipo">
                   {{ getTipoConflictoLabel(conflictoParsed.conflicto.tipoConflictoId) }}
@@ -156,9 +172,9 @@
                         
                         <!-- Para otros tipos, mostrar todos los campos -->
                         <ng-container *ngIf="!esTipoIgualNombreYCodigoBarras(conflictoParsed)">
-                          <div class="conflicto-field" *ngIf="item.codigoBarras">
+                          <div class="conflicto-field" *ngIf="item.codigoBarras || item['codigo']">
                             <span class="field-label">codigo barras:</span>
-                            <span class="field-value">{{ item.codigoBarras }}</span>
+                            <span class="field-value">{{ item.codigoBarras || item['codigo'] }}</span>
                           </div>
                           <div class="conflicto-field" *ngIf="item.precio">
                             <span class="field-label">precio:</span>
@@ -179,49 +195,99 @@
                         </ng-container>
                       </div>
                       <div class="conflicto-item-actions">
+                        <!-- Botón Buscar por código de barras: mostrar para todos los tipos excepto IGUAL_NOMBRE_Y_CODIGO_BARRAS -->
                         <button
                           *ngIf="!esTipoIgualNombreYCodigoBarras(conflictoParsed)"
                           mat-icon-button
                           color="accent"
                           size="small"
                           type="button"
-                          (click)="buscarCodigoBarrasEnGoogle(i, j)"
-                          [disabled]="!tieneCodigoBarras(i, j)"
+                          (click)="buscarCodigoBarrasEnGoogle(conflictoParsed.conflicto.id, j)"
+                          [disabled]="!tieneCodigoBarras(conflictoParsed.conflicto.id, j)"
                           matTooltip="Buscar código de barras en Google"
-                          class="buscar-button">
-                          <mat-icon svgIcon="mat:search"></mat-icon>
+                          class="buscar-button buscar-barcode-button">
+                          <mat-icon svgIcon="mat:search" class="icon-search"></mat-icon>
+                          <mat-icon svgIcon="mat:qr_code" class="icon-barcode"></mat-icon>
                         </button>
-                        <!-- Botón Editar: mostrar solo si el producto existe y es tipo DOS_PRODUCTOS_NOMBRES_IGUALES -->
+                        <!-- Botón Buscar por nombre: mostrar para todos los tipos excepto IGUAL_NOMBRE_Y_CODIGO_BARRAS -->
                         <button
-                          *ngIf="!esTipoIgualNombreYCodigoBarras(conflictoParsed) && productoExiste(i, j)"
-                          mat-flat-button
+                          *ngIf="!esTipoIgualNombreYCodigoBarras(conflictoParsed)"
+                          mat-icon-button
                           color="accent"
                           size="small"
                           type="button"
-                          (click)="editarProducto(i, j)"
-                          [disabled]="estaVerificandoProducto(i, j)"
-                          class="editar-button">
-                          <mat-spinner *ngIf="estaVerificandoProducto(i, j)" diameter="16" class="spinner-inline"></mat-spinner>
-                          <mat-icon *ngIf="!estaVerificandoProducto(i, j)" svgIcon="mat:edit" class="button-icon"></mat-icon>
-                          <span *ngIf="!estaVerificandoProducto(i, j)">Editar</span>
-                          <span *ngIf="estaVerificandoProducto(i, j)">Buscando...</span>
+                          (click)="buscarNombreEnGoogle(conflictoParsed.conflicto.id, j)"
+                          matTooltip="Buscar nombre del producto en Google"
+                          class="buscar-button buscar-nombre-button">
+                          <mat-icon svgIcon="mat:search"></mat-icon>
                         </button>
-                        <!-- Botón Registrar: mostrar si el producto NO existe o es tipo IGUAL_NOMBRE_Y_CODIGO_BARRAS -->
-                        <!-- Para DOS_PRODUCTOS_NOMBRES_IGUALES, este botón verificará si existe antes de abrir el modal -->
-                        <button
-                          *ngIf="esTipoIgualNombreYCodigoBarras(conflictoParsed) || !productoExiste(i, j)"
-                          mat-flat-button
-                          color="primary"
-                          size="small"
-                          type="button"
-                          (click)="registrarProducto(i, j)"
-                          [disabled]="isRegistrando(i, j) || estaVerificandoProducto(i, j)"
-                          class="registrar-button">
-                          <mat-spinner *ngIf="isRegistrando(i, j) || estaVerificandoProducto(i, j)" diameter="16" class="spinner-inline"></mat-spinner>
-                          <span *ngIf="!isRegistrando(i, j) && !estaVerificandoProducto(i, j)">Registrar</span>
-                          <span *ngIf="isRegistrando(i, j)">Registrando...</span>
-                          <span *ngIf="estaVerificandoProducto(i, j) && !isRegistrando(i, j)">Verificando...</span>
-                        </button>
+                        <!-- Para NO_TIENE_PRECIO: mostrar Editar si existe, Registrar si no existe -->
+                        <ng-container *ngIf="esTipoNoTienePrecio(conflictoParsed)">
+                          <!-- Botón Editar: mostrar solo si el producto existe -->
+                          <button
+                            *ngIf="productoExiste(conflictoParsed.conflicto.id, j)"
+                            mat-flat-button
+                            color="accent"
+                            size="small"
+                            type="button"
+                            (click)="editarProducto(conflictoParsed.conflicto.id, j)"
+                            [disabled]="estaVerificandoProducto(conflictoParsed.conflicto.id, j)"
+                            class="editar-button">
+                            <mat-spinner *ngIf="estaVerificandoProducto(conflictoParsed.conflicto.id, j)" diameter="16" class="spinner-inline"></mat-spinner>
+                            <mat-icon *ngIf="!estaVerificandoProducto(conflictoParsed.conflicto.id, j)" svgIcon="mat:edit" class="button-icon"></mat-icon>
+                            <span *ngIf="!estaVerificandoProducto(conflictoParsed.conflicto.id, j)">Editar</span>
+                            <span *ngIf="estaVerificandoProducto(conflictoParsed.conflicto.id, j)">Buscando...</span>
+                          </button>
+                          <!-- Botón Registrar: mostrar si el producto NO existe -->
+                          <button
+                            *ngIf="!productoExiste(conflictoParsed.conflicto.id, j)"
+                            mat-flat-button
+                            color="primary"
+                            size="small"
+                            type="button"
+                            (click)="registrarProducto(conflictoParsed.conflicto.id, j)"
+                            [disabled]="isRegistrando(conflictoParsed.conflicto.id, j) || estaVerificandoProducto(conflictoParsed.conflicto.id, j)"
+                            class="registrar-button">
+                            <mat-spinner *ngIf="isRegistrando(conflictoParsed.conflicto.id, j) || estaVerificandoProducto(conflictoParsed.conflicto.id, j)" diameter="16" class="spinner-inline"></mat-spinner>
+                            <span *ngIf="!isRegistrando(conflictoParsed.conflicto.id, j) && !estaVerificandoProducto(conflictoParsed.conflicto.id, j)">Registrar</span>
+                            <span *ngIf="isRegistrando(conflictoParsed.conflicto.id, j)">Registrando...</span>
+                            <span *ngIf="estaVerificandoProducto(conflictoParsed.conflicto.id, j) && !isRegistrando(conflictoParsed.conflicto.id, j)">Verificando...</span>
+                          </button>
+                        </ng-container>
+                        <!-- Para otros tipos: mostrar Editar o Registrar según corresponda -->
+                        <ng-container *ngIf="!esTipoNoTienePrecio(conflictoParsed)">
+                          <!-- Botón Editar: mostrar solo si el producto existe y es tipo DOS_PRODUCTOS_NOMBRES_IGUALES -->
+                          <button
+                            *ngIf="!esTipoIgualNombreYCodigoBarras(conflictoParsed) && productoExiste(conflictoParsed.conflicto.id, j)"
+                            mat-flat-button
+                            color="accent"
+                            size="small"
+                            type="button"
+                            (click)="editarProducto(conflictoParsed.conflicto.id, j)"
+                            [disabled]="estaVerificandoProducto(conflictoParsed.conflicto.id, j)"
+                            class="editar-button">
+                            <mat-spinner *ngIf="estaVerificandoProducto(conflictoParsed.conflicto.id, j)" diameter="16" class="spinner-inline"></mat-spinner>
+                            <mat-icon *ngIf="!estaVerificandoProducto(conflictoParsed.conflicto.id, j)" svgIcon="mat:edit" class="button-icon"></mat-icon>
+                            <span *ngIf="!estaVerificandoProducto(conflictoParsed.conflicto.id, j)">Editar</span>
+                            <span *ngIf="estaVerificandoProducto(conflictoParsed.conflicto.id, j)">Buscando...</span>
+                          </button>
+                          <!-- Botón Registrar: mostrar si el producto NO existe o es tipo IGUAL_NOMBRE_Y_CODIGO_BARRAS -->
+                          <!-- Para DOS_PRODUCTOS_NOMBRES_IGUALES, este botón verificará si existe antes de abrir el modal -->
+                          <button
+                            *ngIf="esTipoIgualNombreYCodigoBarras(conflictoParsed) || !productoExiste(conflictoParsed.conflicto.id, j)"
+                            mat-flat-button
+                            color="primary"
+                            size="small"
+                            type="button"
+                            (click)="registrarProducto(conflictoParsed.conflicto.id, j)"
+                            [disabled]="isRegistrando(conflictoParsed.conflicto.id, j) || estaVerificandoProducto(conflictoParsed.conflicto.id, j)"
+                            class="registrar-button">
+                            <mat-spinner *ngIf="isRegistrando(conflictoParsed.conflicto.id, j) || estaVerificandoProducto(conflictoParsed.conflicto.id, j)" diameter="16" class="spinner-inline"></mat-spinner>
+                            <span *ngIf="!isRegistrando(conflictoParsed.conflicto.id, j) && !estaVerificandoProducto(conflictoParsed.conflicto.id, j)">Registrar</span>
+                            <span *ngIf="isRegistrando(conflictoParsed.conflicto.id, j)">Registrando...</span>
+                            <span *ngIf="estaVerificandoProducto(conflictoParsed.conflicto.id, j) && !isRegistrando(conflictoParsed.conflicto.id, j)">Verificando...</span>
+                          </button>
+                        </ng-container>
                       </div>
                     </div>
                   </div>
@@ -234,8 +300,8 @@
                     color="primary"
                     size="small"
                     type="button"
-                    (click)="resolverConflicto(i, conflictoParsed.conflicto.id)"
-                    [disabled]="isResolviendoConflicto(i)"
+                    (click)="resolverConflicto(conflictoParsed.conflicto.id)"
+                    [disabled]="isResolviendoConflicto(conflictoParsed.conflicto.id)"
                     class="resolver-button">
                     <mat-icon svgIcon="mat:check_circle" class="button-icon-small"></mat-icon>
                     <span>Marcar resuelto</span>
@@ -247,10 +313,23 @@
                     color="accent"
                     size="small"
                     type="button"
-                    (click)="resolverConflicto(i, conflictoParsed.conflicto.id)"
-                    [disabled]="isResolviendoConflicto(i)"
+                    (click)="resolverConflicto(conflictoParsed.conflicto.id)"
+                    [disabled]="isResolviendoConflicto(conflictoParsed.conflicto.id)"
                     matTooltip="Marcar como resuelto pero NO se registrará"
                     class="resolver-button resolver-button-secondary">
+                    <mat-icon svgIcon="mat:check_circle" class="button-icon-small"></mat-icon>
+                    <span>Marcar resuelto</span>
+                  </button>
+                  <!-- Botón para NO_TIENE_PRECIO -->
+                  <button
+                    *ngIf="esTipoNoTienePrecio(conflictoParsed) && !conflictoParsed.conflicto.resuelto"
+                    mat-stroked-button
+                    color="primary"
+                    size="small"
+                    type="button"
+                    (click)="resolverConflicto(conflictoParsed.conflicto.id)"
+                    [disabled]="isResolviendoConflicto(conflictoParsed.conflicto.id)"
+                    class="resolver-button">
                     <mat-icon svgIcon="mat:check_circle" class="button-icon-small"></mat-icon>
                     <span>Marcar resuelto</span>
                   </button>
