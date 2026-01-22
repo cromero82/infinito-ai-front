@@ -100,4 +100,36 @@ export class BitacoraUsuarioService {
 
     return this.http.get<BitacoraUsuarioPage>(`${this.apiUrl}/search`, { headers, params });
   }
+
+  registrarEventoInicioSesion(): Observable<any> {
+    // Obtener fecha y hora del sistema en formato ISO
+    const fechaHora = new Date().toISOString();
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    const body = {
+      evento: 'INI_SESION',
+      valor: fechaHora
+    };
+
+    return this.http.post<any>(this.apiUrl, body, { headers });
+  }
+
+  registrarEventoFinSesion(): Observable<any> {
+    // Obtener fecha y hora del sistema en formato ISO
+    const fechaHora = new Date().toISOString();
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    const body = {
+      evento: 'FIN_SESION',
+      valor: fechaHora
+    };
+
+    return this.http.post<any>(this.apiUrl, body, { headers });
+  }
 }

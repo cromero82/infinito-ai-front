@@ -360,7 +360,7 @@ export class AuthService {
 
   obtenerUsuarios(): Observable<any[]> {
     // El interceptor authInterceptor añade automáticamente el header Authorization
-    return this.http.get<any[]>(`${this.apiUrl}/usuarios-no-admin`).pipe(
+    return this.http.get<any[]>(`${this.apiUrl}/usuarios`).pipe(
       catchError(error => {
         console.error('Error al obtener usuarios:', error);
         return throwError(() => error);

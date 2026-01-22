@@ -20,9 +20,10 @@ import { SesionesService } from '../../../../../pages/apps/ventas/service/sesion
 import { TicketsService } from '../../../../../pages/apps/ventas/service/tickets.service';
 import { TicketReciboService } from '../../../../../pages/apps/ventas/service/ticket-recibo.service';
 import { ReciboDetalleService } from '../../../../../pages/apps/ventas/service/recibo-detalle.service';
+import { BitacoraUsuarioService } from '../../../../../pages/apps/usuario/gestion-usuarios/service/bitacora-usuario.service';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../../core/components/confirm-dialog/confirm-dialog.component';
 import { forkJoin, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map, switchMap, catchError } from 'rxjs/operators';
 
 export interface OnlineStatus {
   id: 'online' | 'away' | 'dnd' | 'offline';
@@ -65,6 +66,7 @@ export class ToolbarUserDropdownComponent implements OnInit {
     private ticketsService: TicketsService,
     private ticketReciboService: TicketReciboService,
     private reciboDetalleService: ReciboDetalleService,
+    private bitacoraUsuarioService: BitacoraUsuarioService,
     private dialog: MatDialog
   ) {}
 
@@ -218,6 +220,27 @@ export class ToolbarUserDropdownComponent implements OnInit {
   }
 
   private ejecutarLogout() {
+    // Registrar evento de fin de sesión en bitácora antes de limpiar el localStorage
+    // (necesitamos el token para que el interceptor lo agregue)
+    this.bitacoraUsuarioService.registrarEventoFinSesion().pipe(
+      catchError((error) => {
+        // Si falla el registro de bitácora, continuar de todas formas (no bloquear el logout)
+        console.warn('No se pudo registrar el evento de fin de sesión en bitácora:', error);
+        return of(null);
+      })
+    ).subscribe({
+      next: () => {
+        // Después de registrar la bitácora (o si falla), proceder con el logout
+        this.completarLogout();
+      },
+      error: () => {
+        // En caso de error, proceder con el logout de todas formas
+        this.completarLogout();
+      }
+    });
+  }
+
+  private completarLogout() {
     // Limpiar todo el localStorage
     localStorage.clear();
     

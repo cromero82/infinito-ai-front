@@ -18,6 +18,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../service/auth.service';
 import { SesionesService } from '../../../apps/ventas/service/sesiones.service';
 import { ConfigurationService } from '../service/configuration.service';
+import { BitacoraUsuarioService } from '../../../apps/usuario/gestion-usuarios/service/bitacora-usuario.service';
 import { finalize, switchMap, map, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
@@ -60,7 +61,8 @@ export class LoginComponent {
     private snackbar: MatSnackBar,
     private authService: AuthService,
     private sesionesService: SesionesService,
-    private configurationService: ConfigurationService
+    private configurationService: ConfigurationService,
+    private bitacoraUsuarioService: BitacoraUsuarioService
   ) {}
 
   onPasswordFocus(event: any): void {
@@ -113,6 +115,16 @@ export class LoginComponent {
             // Si falla la obtención de configuraciones, continuar de todas formas
             console.warn('No se pudieron obtener las configuraciones:', error);
             return of(sesion); // Devolver la sesión para continuar el flujo
+          })
+        );
+      }),
+      // Después de obtener configuraciones, registrar el evento de inicio de sesión en bitácora
+      switchMap(() => {
+        return this.bitacoraUsuarioService.registrarEventoInicioSesion().pipe(
+          catchError((error) => {
+            // Si falla el registro de bitácora, continuar de todas formas (no bloquear el login)
+            console.warn('No se pudo registrar el evento de inicio de sesión en bitácora:', error);
+            return of(null); // Continuar el flujo
           })
         );
       }),
