@@ -160,6 +160,44 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
 
   @HostListener('document:keydown', ['$event'])
   handleKeyboardShortcuts(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement | null;
+    const isTextInput =
+      target !== null &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        (target as HTMLElement).isContentEditable);
+    const isSearchInput = target === this.searchInputElement;
+
+    // Manejar teclas de flecha arriba y abajo
+    const isArrowUp = event.key === 'ArrowUp' || event.code === 'ArrowUp';
+    const isArrowDown = event.key === 'ArrowDown' || event.code === 'ArrowDown';
+
+    if (isArrowUp || isArrowDown) {
+      // Solo procesar si no estamos en un input de texto (excepto el search input)
+      if (isTextInput && !isSearchInput) {
+        return;
+      }
+
+      // Solo procesar si hay detalles disponibles
+      if (this.detalles.length === 0) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (isArrowUp) {
+        this.navigateDetalleUp();
+        return;
+      }
+
+      if (isArrowDown) {
+        this.navigateDetalleDown();
+        return;
+      }
+    }
+
+    // Manejar teclas + y - solo si hay un detalle seleccionado
     if (this.selectedDetalleIndex < 0) {
       return;
     }
@@ -179,14 +217,6 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     if (!isMinusKey && !isPlusKey) {
       return;
     }
-
-    const target = event.target as HTMLElement | null;
-    const isTextInput =
-      target !== null &&
-      (target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        (target as HTMLElement).isContentEditable);
-    const isSearchInput = target === this.searchInputElement;
 
     if (isTextInput && !isSearchInput) {
       return;
@@ -517,8 +547,72 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       this.selectedDetalleIndex = -1;
     } else {
       this.selectedDetalleIndex = index;
+      this.scrollToSelectedDetalle();
     }
     this.focusSearchInputRequest.emit();
+  }
+
+  private navigateDetalleUp(): void {
+    if (this.detalles.length === 0) {
+      return;
+    }
+
+    if (this.selectedDetalleIndex <= 0) {
+      // Si estamos en el primer elemento o no hay selección, ir al último
+      this.selectedDetalleIndex = this.detalles.length - 1;
+    } else {
+      // Ir al elemento anterior
+      this.selectedDetalleIndex--;
+    }
+
+    this.scrollToSelectedDetalle();
+  }
+
+  private navigateDetalleDown(): void {
+    if (this.detalles.length === 0) {
+      return;
+    }
+
+    if (this.selectedDetalleIndex < 0 || this.selectedDetalleIndex >= this.detalles.length - 1) {
+      // Si estamos en el último elemento o no hay selección, ir al primero
+      this.selectedDetalleIndex = 0;
+    } else {
+      // Ir al elemento siguiente
+      this.selectedDetalleIndex++;
+    }
+
+    this.scrollToSelectedDetalle();
+  }
+
+  private scrollToSelectedDetalle(): void {
+    if (this.selectedDetalleIndex < 0 || this.selectedDetalleIndex >= this.detalles.length) {
+      return;
+    }
+
+    const listEl = this.detalleListRef?.nativeElement;
+    if (!listEl) {
+      return;
+    }
+
+    // Esperar a que Angular actualice el DOM
+    setTimeout(() => {
+      const selectedRow = listEl.querySelector(`.detalle-row:nth-child(${this.selectedDetalleIndex + 1})`) as HTMLElement;
+      if (selectedRow) {
+        const rowTop = selectedRow.offsetTop;
+        const rowHeight = selectedRow.offsetHeight;
+        const listTop = listEl.scrollTop;
+        const listHeight = listEl.clientHeight;
+
+        // Si el elemento está fuera de la vista superior
+        if (rowTop < listTop) {
+          listEl.scrollTop = rowTop;
+        }
+        // Si el elemento está fuera de la vista inferior
+        else if (rowTop + rowHeight > listTop + listHeight) {
+          listEl.scrollTop = rowTop + rowHeight - listHeight;
+        }
+      }
+    }, 0);
   }
 
   onDetalleDoubleClick(index: number, event: MouseEvent): void {
