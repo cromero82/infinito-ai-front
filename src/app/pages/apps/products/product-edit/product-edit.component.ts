@@ -1,7 +1,7 @@
 import { Component, Inject, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogModule, MatDialogRef, MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { NgFor, NgIf } from '@angular/common';
@@ -9,8 +9,10 @@ import { RelationalProductService } from '../service/relational-product.service'
 import { Producto } from '../model/producto';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { FormsModule } from '@angular/forms';
 import { DragDropModule, CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../core/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'vex-product-edit',
@@ -26,6 +28,7 @@ import { DragDropModule, CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
     MatButtonModule,
     MatIconModule,
     MatDividerModule,
+    MatSlideToggleModule,
     DragDropModule,
     CdkDrag,
     CdkDragHandle
@@ -35,6 +38,7 @@ import { DragDropModule, CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
 })
 export class ProductEditComponent implements OnInit, AfterViewInit {
   form: FormGroup;
+  private initialActivateValue: number = 1; // Guardar el valor inicial de activate
   @ViewChild('barcodeInput') barcodeInput!: ElementRef<HTMLInputElement>;
   @ViewChild('nombreInput') nombreInput!: ElementRef<HTMLInputElement>;
   @ViewChild('precioInput') precioInput!: ElementRef<HTMLInputElement>;
@@ -44,13 +48,15 @@ export class ProductEditComponent implements OnInit, AfterViewInit {
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<ProductEditComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
-    private relationalProductService: RelationalProductService
+    private relationalProductService: RelationalProductService,
+    private dialog: MatDialog
   ) {
     this.form = this.fb.group({
       nombre: ['', Validators.required],
       barcode: [''],
       precio: ['', Validators.required],
-      buy_price: ['']
+      buy_price: [''],
+      activate: [1] // Default: activo (1)
     });
     if (data) {
       const patchValue: any = {};
@@ -87,10 +93,20 @@ export class ProductEditComponent implements OnInit, AfterViewInit {
         patchValue.buy_price = data.precioCompra || data.buy_price;
       }
       
+      if (data.activate !== undefined) {
+        patchValue.activate = data.activate;
+        this.initialActivateValue = data.activate;
+      } else {
+        this.initialActivateValue = 1; // Default activo
+      }
+      
       // Apply all patches at once
       if (Object.keys(patchValue).length > 0) {
         this.form.patchValue(patchValue);
       }
+    } else {
+      // New product, default is active
+      this.initialActivateValue = 1;
     }
   }
 
@@ -238,6 +254,15 @@ export class ProductEditComponent implements OnInit, AfterViewInit {
     return this.isEditMode ? 'Actualizar producto' : 'Registrar producto';
   }
 
+  get isActivateChecked(): boolean {
+    return this.form.controls['activate'].value === 1;
+  }
+
+  onActivateChange(event: any) {
+    const isChecked = event.checked;
+    this.form.controls['activate'].setValue(isChecked ? 1 : 0);
+  }
+
   save() {
     if (this.form.invalid) return;
     const form = this.form.value;
@@ -247,8 +272,39 @@ export class ProductEditComponent implements OnInit, AfterViewInit {
       precio: form.precio,
       precioCompra: form.buy_price || undefined,
       foto: this.data?.foto || '',
-      company: this.data?.company
+      company: this.data?.company,
+      activate: form.activate !== undefined ? form.activate : 1
     };
+
+    // Verificar si se está desactivando el producto (solo en modo edición)
+    const isDeactivating = this.isEditMode && 
+                           this.initialActivateValue === 1 && 
+                           product.activate === 0;
+
+    if (isDeactivating) {
+      // Mostrar diálogo de confirmación antes de desactivar
+      const dialogData: ConfirmDialogData = {
+        titulo: 'Confirmar deshabilitación',
+        mensaje: `¿Estás seguro de que deseas deshabilitar el producto ${product.nombre}?`
+      };
+
+      const confirmDialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '400px',
+        data: dialogData
+      });
+
+      confirmDialogRef.afterClosed().subscribe((confirmed: boolean) => {
+        if (confirmed) {
+          this.executeSave(product);
+        }
+      });
+    } else {
+      // No se está desactivando, guardar directamente
+      this.executeSave(product);
+    }
+  }
+
+  private executeSave(product: Producto) {
     if (this.isEditMode) {
       // Edit mode
       const productId = typeof this.data.id === 'string' ? parseInt(this.data.id) : this.data.id;

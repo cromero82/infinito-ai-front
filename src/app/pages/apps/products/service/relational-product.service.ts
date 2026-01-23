@@ -83,4 +83,28 @@ export class RelationalProductService {
 
     return this.http.get<Producto>(`${this.apiUrl}/search-by-barcode`, { params, headers });
   }
+
+  /**
+   * Activates a product
+   * @param productId The ID of the product to activate
+   */
+  activateProduct(productId: number): Observable<Producto> {
+    const headers = new HttpHeaders({
+      'Accept': 'application/json'
+    });
+
+    return this.http.patch<Producto>(`${this.apiUrl}/${productId}/activate`, {}, { headers });
+  }
+
+  /**
+   * Deactivates a product
+   * @param productId The ID of the product to deactivate
+   */
+  deactivateProduct(productId: number): Observable<Producto> {
+    const headers = new HttpHeaders({
+      'Accept': 'application/json'
+    });
+
+    return this.http.patch<Producto>(`${this.apiUrl}/${productId}/deactivate`, {}, { headers });
+  }
 }

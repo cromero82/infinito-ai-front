@@ -11,6 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { NgFor, NgIf, DecimalPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { HttpClient } from '@angular/common/http';
 import { Producto, ProductPage } from '../model/producto';
 import { finalize } from 'rxjs/operators';
@@ -21,6 +22,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import * as RecordRTC from 'recordrtc';
 import { MatDialog } from '@angular/material/dialog';
 import { ProductEditComponent } from '../product-edit/product-edit.component';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../core/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'vex-product-list',
@@ -31,6 +33,7 @@ import { ProductEditComponent } from '../product-edit/product-edit.component';
     VexPageLayoutContentDirective,
     VexBreadcrumbsComponent,
     MatButtonModule,
+    MatTooltipModule,
     MatTableModule,
     MatSortModule,
     MatIconModule,
@@ -259,6 +262,73 @@ export class ProductListComponent implements OnInit, AfterViewInit {
         }
       }, 100);
     }
+  }
+
+  /**
+   * Check if a product is active
+   */
+  isProductActive(product: Producto): boolean {
+    return product.activate === 1 || product.activate === undefined;
+  }
+
+  /**
+   * Toggle product activation/deactivation
+   */
+  toggleProductActivation(product: Producto) {
+    const productId = product.id;
+    if (!productId) {
+      return;
+    }
+
+    const isCurrentlyActive = this.isProductActive(product);
+    const shouldActivate = !isCurrentlyActive;
+    
+    // Si se va a deshabilitar, mostrar diálogo de confirmación
+    if (!shouldActivate) {
+      const dialogData: ConfirmDialogData = {
+        titulo: 'Confirmar deshabilitación',
+        mensaje: `¿Estás seguro de que deseas deshabilitar el producto ${product.nombre}?`
+      };
+
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '400px',
+        data: dialogData
+      });
+
+      dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+        if (confirmed) {
+          this.executeActivationChange(product, productId, shouldActivate);
+        }
+      });
+    } else {
+      // Si se va a activar, ejecutar directamente sin confirmación
+      this.executeActivationChange(product, productId, shouldActivate);
+    }
+  }
+
+  /**
+   * Execute the activation/deactivation service call
+   */
+  private executeActivationChange(product: Producto, productId: number, shouldActivate: boolean) {
+    this.loading = true;
+
+    const operation = shouldActivate 
+      ? this.relationalProductService.activateProduct(productId)
+      : this.relationalProductService.deactivateProduct(productId);
+
+    operation
+      .pipe(finalize(() => {
+        this.loading = false;
+      }))
+      .subscribe({
+        next: (updatedProduct) => {
+          // Refresh the product list to update the search
+          this.fetchProducts();
+        },
+        error: (err) => {
+          alert('Error al ' + (shouldActivate ? 'activar' : 'desactivar') + ' el producto: ' + (err?.error?.message || err.message || err));
+        }
+      });
   }
 
 }

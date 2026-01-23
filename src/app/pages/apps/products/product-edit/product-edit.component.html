@@ -29,6 +29,13 @@
       <input #buyPriceInput formControlName="buy_price" matInput type="number" (focus)="onBuyPriceFocus()" />
       <mat-icon matIconPrefix svgIcon="mat:shopping_cart"></mat-icon>
     </mat-form-field>
+    <div class="flex items-center mt-4">
+      <mat-slide-toggle 
+        [checked]="isActivateChecked"
+        (change)="onActivateChange($event)">
+        {{ isActivateChecked ? 'Producto activo' : 'Producto inactivo' }}
+      </mat-slide-toggle>
+    </div>
   </mat-dialog-content>
   <mat-dialog-actions align="end">
     <button mat-button mat-dialog-close type="button">Cancelar</button>

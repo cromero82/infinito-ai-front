@@ -72,7 +72,6 @@
         <div class="bitacora-container">
           <div class="bitacora-wrapper">
             <div class="bitacora-header">
-              <span class="bitacora-col usuario">Usuario</span>
               <span class="bitacora-col fecha">Fecha</span>
               <span class="bitacora-col evento">Evento</span>
               <span class="bitacora-col valor-antes">Valor Antes</span>
@@ -82,9 +81,6 @@
               <div
                 class="bitacora-row"
                 *ngFor="let item of bitacora">
-                <span class="bitacora-col usuario">
-                  {{ item.usuario.nombre || 'N/A' }}
-                </span>
                 <span class="bitacora-col fecha">
                   {{ formatDate(item.fechaCreacion) }}
                 </span>

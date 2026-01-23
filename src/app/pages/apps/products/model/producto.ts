@@ -15,6 +15,7 @@ export interface Producto {
   precioCompra?: number;
   foto: string;
   company?: Company;
+  activate?: number;
 }
 
 export interface ProductPage {

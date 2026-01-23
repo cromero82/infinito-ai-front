@@ -56,9 +56,16 @@
         <!-- Edit Column -->
         <ng-container matColumnDef="edit">
           <th *matHeaderCellDef mat-header-cell></th>
-          <td *matCellDef="let product" mat-cell>
+          <td *matCellDef="let product" mat-cell class="flex items-center gap-2">
             <button mat-icon-button color="accent" (click)="editProduct(product); $event.stopPropagation()">
               <mat-icon svgIcon="mat:edit"></mat-icon>
+            </button>
+            <button 
+              mat-icon-button 
+              [color]="isProductActive(product) ? 'warn' : 'primary'"
+              (click)="toggleProductActivation(product); $event.stopPropagation()"
+              [matTooltip]="isProductActive(product) ? 'Desactivar producto' : 'Activar producto'">
+              <mat-icon svgIcon="mat:{{ isProductActive(product) ? 'block' : 'check_circle' }}"></mat-icon>
             </button>
           </td>
         </ng-container>
