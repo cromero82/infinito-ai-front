@@ -98,4 +98,17 @@ table.mat-mdc-table {
     height: 36px !important;
     background-color: rgba(0, 0, 0, 0.008) !important;
   }
+  
+  // Inactive row style - gray text for disabled products
+  tr.inactive-row {
+    opacity: 0.6;
+    
+    td.mat-mdc-cell {
+      color: rgba(0, 0, 0, 0.5) !important; // Gray text
+    }
+    
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.02) !important;
+    }
+  }
 }
