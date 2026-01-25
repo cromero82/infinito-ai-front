@@ -119,8 +119,8 @@ export class LoginComponent {
         );
       }),
       // Después de obtener configuraciones, registrar el evento de inicio de sesión en bitácora
-      switchMap(() => {
-        return this.bitacoraUsuarioService.registrarEventoInicioSesion().pipe(
+      switchMap((sesion) => {
+        return this.bitacoraUsuarioService.registrarEventoInicioSesion(sesion.id).pipe(
           catchError((error) => {
             // Si falla el registro de bitácora, continuar de todas formas (no bloquear el login)
             console.warn('No se pudo registrar el evento de inicio de sesión en bitácora:', error);

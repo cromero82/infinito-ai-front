@@ -101,7 +101,7 @@ export class BitacoraUsuarioService {
     return this.http.get<BitacoraUsuarioPage>(`${this.apiUrl}/search`, { headers, params });
   }
 
-  registrarEventoInicioSesion(): Observable<any> {
+  registrarEventoInicioSesion(referenciaId?: number): Observable<any> {
     // Obtener fecha y hora del sistema en formato ISO
     const fechaHora = new Date().toISOString();
 
@@ -109,10 +109,15 @@ export class BitacoraUsuarioService {
       'Content-Type': 'application/json'
     });
 
-    const body = {
+    const body: any = {
       evento: 'INI_SESION',
       valor: fechaHora
     };
+
+    // Agregar referenciaId si se proporciona
+    if (referenciaId !== undefined) {
+      body.referenciaId = referenciaId;
+    }
 
     return this.http.post<any>(this.apiUrl, body, { headers });
   }
