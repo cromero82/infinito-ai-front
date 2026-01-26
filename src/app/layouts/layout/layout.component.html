@@ -28,7 +28,10 @@
         <router-outlet></router-outlet>
       </main>
 
-      <vex-footer *ngIf="config.footer.visible" class="vex-footer"></vex-footer>
+      <vex-footer
+        *ngIf="config.footer.visible"
+        class="vex-footer"
+        [footerItems]="(footerItems$ | async) ?? []"></vex-footer>
     </mat-sidenav-content>
   </mat-sidenav-container>
 

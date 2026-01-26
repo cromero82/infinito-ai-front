@@ -70,7 +70,8 @@ export class HistorialReciboService {
     size: number = 10,
     sort: string = 'fechaCreacion,desc',
     fecha?: string,
-    estadoId?: number
+    estadoId?: number,
+    sesionId?: number | null
   ): Observable<HistorialReciboPage> {
     const headers = new HttpHeaders({ 'Accept': 'application/json' });
     let params = new HttpParams()
@@ -86,6 +87,11 @@ export class HistorialReciboService {
     // Add estadoId parameter if provided
     if (estadoId !== undefined && estadoId !== null) {
       params = params.set('estadoId', String(estadoId));
+    }
+    
+    // Add sesionId parameter if provided
+    if (sesionId !== undefined && sesionId !== null) {
+      params = params.set('sesionId', String(sesionId));
     }
     
     return this.http.get<HistorialReciboPage>(`${this.apiUrl}/search`, { headers, params });

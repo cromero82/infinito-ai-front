@@ -24,6 +24,15 @@
       </mat-form-field>
     </div>
 
+    <div *ngIf="sesionIdFromUrl" class="filter-labels">
+      <div *ngIf="userInfoLoading" class="text-secondary text-sm">Cargando usuario...</div>
+      <div *ngIf="!userInfoLoading && userInfo" class="flex flex-wrap gap-2 items-center">
+        <span class="filter-label filter-label--normal">sesion de:</span>
+        <span class="filter-label filter-label--success">{{ userInfo.nombre }}</span>
+        <span class="filter-label filter-label--normal">{{ userInfo.correoElectronico }}</span>
+      </div>
+    </div>
+
     <div class="recibos-list-container">
       <div class="loading" *ngIf="loading">Cargando...</div>
       <div class="error" *ngIf="!loading && error">{{ error }}</div>

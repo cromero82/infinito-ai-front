@@ -28,6 +28,7 @@ export interface BitacoraUsuarioDto {
   evento: EventoDto;
   valorAntes: string;
   valorDespues: string;
+  referenciaId: number;
   fechaCreacion: string;
   usuario: UsuarioBitacoraDto;
 }

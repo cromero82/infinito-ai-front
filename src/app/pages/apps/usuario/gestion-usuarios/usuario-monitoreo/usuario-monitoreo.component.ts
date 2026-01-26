@@ -7,9 +7,11 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { Router } from '@angular/router';
 import { AuthService } from '../../../../pages/auth/service/auth.service';
 import { BitacoraUsuarioService, BitacoraUsuarioDto, BitacoraUsuarioPage } from '../service/bitacora-usuario.service';
 
@@ -40,7 +42,8 @@ export interface UsuarioDto {
     MatDatepickerModule,
     MatNativeDateModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
+    MatTooltipModule
   ],
   encapsulation: ViewEncapsulation.None
 })
@@ -67,7 +70,8 @@ export class UsuarioMonitoreoComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private bitacoraUsuarioService: BitacoraUsuarioService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -499,5 +503,11 @@ export class UsuarioMonitoreoComponent implements OnInit, OnDestroy {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  navigateToHistorialVentas(referenciaId: number): void {
+    this.router.navigate(['/apps/ventas/historial'], { 
+      queryParams: { sesionId: referenciaId }
+    });
   }
 }

@@ -54,8 +54,35 @@
   margin-bottom: 16px;
 }
 
+.fecha-section:has(+ .filter-labels) {
+  margin-bottom: 0;
+}
+
 .fecha-field {
   width: 100%;
+}
+
+.filter-labels {
+  font-size: 0.8125rem;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.filter-label {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.filter-label--success {
+  background-color: rgba(76, 175, 80, 0.15);
+  color: #2e7d32;
+}
+
+.filter-label--normal {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.7);
 }
 
 .recibos-list-container {

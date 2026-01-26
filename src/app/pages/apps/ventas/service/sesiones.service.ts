@@ -11,6 +11,14 @@ export interface SesionDto {
   fechaFin: string | null;
 }
 
+export interface UserInfo {
+  id: string | null;
+  nombre: string;
+  correoElectronico: string;
+  telefono: string;
+  roles: Array<{ id: number; nombre: string; sigla: string }>;
+}
+
 export interface CrearSesionRequest {
   cookie: string;
 }
@@ -68,6 +76,14 @@ export class SesionesService {
   obtenerTodosPorUsuario(): Observable<SesionDto[]> {
     const headers = new HttpHeaders({ 'Accept': 'application/json' });
     return this.http.get<SesionDto[]>(`${this.apiUrl}/usuario/todos`, { headers });
+  }
+
+  /**
+   * Obtiene la información del usuario asociado a una sesión
+   */
+  getUsuarioBySesionId(sesionId: number): Observable<UserInfo> {
+    const headers = new HttpHeaders({ 'Accept': 'application/json' });
+    return this.http.get<UserInfo>(`${this.apiUrl}/${sesionId}/usuario`, { headers });
   }
 }
 

@@ -11,9 +11,11 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { HistorialReciboService, HistorialReciboDto, HistorialReciboPage } from '../service/historial-recibo.service';
 import { HistorialReciboDetalleService, HistorialReciboDetalleDto } from '../service/historial-recibo-detalle.service';
 import { EstadoRecibosService, EstadoReciboDto } from '../service/estado-recibos.service';
+import { SesionesService } from '../service/sesiones.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
+import { FooterService } from '../../../../layouts/services/footer.service';
 
 @Component({
   selector: 'vex-historial-ventas',
@@ -43,6 +45,9 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   size = 10;
   totalElements = 0;
   totalPages = 0;
+  sesionIdFromUrl: number | null = null; // Parámetro de la URL
+  userInfo: { nombre: string; correoElectronico: string } | null = null;
+  userInfoLoading = false;
   private destroy$ = new Subject<void>();
   @ViewChild('recibosList', { static: false }) recibosListRef?: ElementRef<HTMLDivElement>;
 
@@ -61,11 +66,43 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     private historialReciboService: HistorialReciboService,
     private historialReciboDetalleService: HistorialReciboDetalleService,
     private estadoRecibosService: EstadoRecibosService,
+    private sesionesService: SesionesService,
     private snackBar: MatSnackBar,
-    private router: Router
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
+    private footerService: FooterService
   ) {}
 
   ngOnInit(): void {
+    this.footerService.clearFooterItems();
+
+    // Read sesionId from URL query parameters and fetch user info
+    this.activatedRoute.queryParams.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(params => {
+      if (params['sesionId']) {
+        const id = Number(params['sesionId']);
+        this.sesionIdFromUrl = id;
+        this.userInfoLoading = true;
+        this.userInfo = null;
+        this.sesionesService.getUsuarioBySesionId(id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (u) => {
+              this.userInfo = { nombre: u.nombre, correoElectronico: u.correoElectronico };
+              this.userInfoLoading = false;
+            },
+            error: () => {
+              this.userInfoLoading = false;
+            }
+          });
+      } else {
+        this.sesionIdFromUrl = null;
+        this.userInfo = null;
+        this.userInfoLoading = false;
+      }
+    });
+
     this.loadEstadosRecibos();
   }
 
@@ -87,6 +124,7 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.footerService.clearFooterItems();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -144,7 +182,7 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     // Get estadoId based on selected filter (default to pagado if not todos)
     const estadoId = this.getEstadoIdByFilter(this.selectedFilter);
     
-    this.historialReciboService.searchHistorialRecibos(this.page, this.size, 'fechaCreacion,desc', fechaParam, estadoId).pipe(
+    this.historialReciboService.searchHistorialRecibos(this.page, this.size, 'fechaCreacion,desc', fechaParam, estadoId, this.sesionIdFromUrl).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
       next: (page: HistorialReciboPage) => {
@@ -162,6 +200,12 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
         this.totalPages = page.totalPages ?? 0;
         this.loading = false;
         this.loadingMore = false;
+
+        const totalSum = this.historialRecibos.reduce((sum, r) => sum + (r.total ?? 0), 0);
+        const totalFormatted = this.formatCurrency(totalSum);
+        this.footerService.setFooterItems([
+          { textoClave: 'Total', valorClave: totalFormatted, estiloCssClave: 'footer-item-total-highlight' }
+        ]);
       },
       error: (err) => {
         console.error('Error loading historial recibos', err);

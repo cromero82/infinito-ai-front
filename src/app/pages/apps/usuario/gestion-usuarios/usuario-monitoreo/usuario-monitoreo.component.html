@@ -85,7 +85,18 @@
                   {{ formatDate(item.fechaCreacion) }}
                 </span>
                 <span class="bitacora-col evento">
-                  {{ item.evento.nombre || 'N/A' }}
+                  <div class="evento-container">
+                    <span>{{ item.evento.nombre || 'N/A' }}</span>
+                    <button 
+                      *ngIf="item.evento.sigla === 'INI_SESION' && item.referenciaId"
+                      mat-icon-button
+                      type="button"
+                      matTooltip="Ver historial de ventas de esta sesión"
+                      (click)="navigateToHistorialVentas(item.referenciaId)"
+                      class="view-historial-button">
+                      <mat-icon svgIcon="mat:arrow_forward"></mat-icon>
+                    </button>
+                  </div>
                 </span>
                 <span class="bitacora-col valor-antes" [innerHTML]="formatValorAntes(item.valorAntes, item.valorDespues)"></span>
                 <span class="bitacora-col valor-despues" [innerHTML]="formatValorDespues(item.valorAntes, item.valorDespues)"></span>

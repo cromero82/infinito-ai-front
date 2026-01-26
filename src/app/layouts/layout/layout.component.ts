@@ -19,6 +19,7 @@ import { MatDrawerMode, MatSidenavModule } from '@angular/material/sidenav';
 import { SearchComponent } from '../components/toolbar/search/search.component';
 import { VexProgressBarComponent } from '@vex/components/vex-progress-bar/vex-progress-bar.component';
 import { VexConfig } from '@vex/config/vex-config.interface';
+import { FooterService } from '../services/footer.service';
 
 @Component({
   selector: 'vex-layout',
@@ -61,10 +62,12 @@ export class LayoutComponent {
   sidenavOpen$: Observable<boolean> = this.layoutService.sidenavOpen$;
   configPanelOpen$: Observable<boolean> = this.layoutService.configPanelOpen$;
   quickpanelOpen$: Observable<boolean> = this.layoutService.quickpanelOpen$;
+  footerItems$ = this.footerService.items$;
 
   constructor(
     private readonly layoutService: VexLayoutService,
-    private readonly configService: VexConfigService
+    private readonly configService: VexConfigService,
+    private readonly footerService: FooterService
   ) {}
 
   onSidenavClosed(): void {
