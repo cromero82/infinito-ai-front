@@ -9,7 +9,8 @@ import {
   Output,
   EventEmitter,
   ViewChild,
-  ElementRef
+  ElementRef,
+  ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -101,6 +102,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   productSearchCtrl = new FormControl('', { nonNullable: true });
   productSearchError: string | null = null;
   searchingProduct = false;
+  private lastSearchDisabled = false;
   private dialogAbierto = false;
   private destroy$ = new Subject<void>();
   @ViewChild('detalleList') detalleListRef?: ElementRef<HTMLDivElement>;
@@ -114,8 +116,6 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   estadosRecibos: EstadoReciboDto[] = [];
   estaEnEdicion = false;
   metodosPago: MetodoPagoDto[] = [];
-  minHeightPanelProductos: string = '420px'; // Valor por defecto
-  
   constructor(
     private reciboService: ReciboService,
     private reciboDetalleService: ReciboDetalleService,
@@ -125,13 +125,11 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     private ticketReciboService: TicketReciboService,
     private snackBar: MatSnackBar,
     private estadoRecibosService: EstadoRecibosService,
-    private ticketsService: TicketsService
+    private ticketsService: TicketsService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    // Obtener la configuración de longitud vertical del panel de productos
-    this.loadMinHeightConfiguration();
-    
     this.productSearchCtrl.valueChanges
       .pipe(
         debounceTime(400),
@@ -149,6 +147,19 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     this.focusSearchInputRequest.emit();
     this.cargarEstadosRecibos();
     this.cargarMetodosPago();
+    this.updateSearchDisabled();
+  }
+
+  private updateSearchDisabled(): void {
+    const disabled = !this.reciboId || this.searchingProduct || this.loading;
+    if (disabled !== this.lastSearchDisabled) {
+      this.lastSearchDisabled = disabled;
+      if (disabled) {
+        this.productSearchCtrl.disable({ emitEvent: false });
+      } else {
+        this.productSearchCtrl.enable({ emitEvent: false });
+      }
+    }
   }
 
   ngOnDestroy(): void {
@@ -236,13 +247,11 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Recargar la configuración en caso de que haya cambiado
-    this.loadMinHeightConfiguration();
-    
     if ('reciboId' in changes) {
       const change = changes['reciboId'];
       const value = change.currentValue as number | null;
       const previous = change.previousValue as number | null;
+      this.updateSearchDisabled();
       if (value === previous) {
         return;
       }
@@ -272,12 +281,14 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     if (!this.reciboId) {
       this.productSearchError = 'No hay un recibo seleccionado.';
       this.searchingProduct = false;
+      this.updateSearchDisabled();
       return;
     }
 
     if (!product.id) {
       this.productSearchError = 'El producto no tiene un identificador válido.';
       this.searchingProduct = false;
+      this.updateSearchDisabled();
       return;
     }
 
@@ -297,6 +308,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       if (!existingDetalle.id || unitPrice <= 0 || !existingDetalle.reciboId || !existingDetalle.productoId) {
         this.productSearchError = 'No se pudo actualizar el producto existente.';
         this.searchingProduct = false;
+        this.updateSearchDisabled();
         this.focusSearchInputRequest.emit();
         return;
       }
@@ -325,6 +337,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       this.selectedDetalleIndex = existingDetalleIndex;
       this.productSearchCtrl.setValue('');
       this.searchingProduct = false;
+      this.updateSearchDisabled();
       this.productSearchError = null;
       this.focusSearchInputRequest.emit();
       this.scrollDetalleListToBottom();
@@ -369,6 +382,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       next: (detalle) => {
         this.productSearchCtrl.setValue('');
         this.searchingProduct = false;
+        this.updateSearchDisabled();
         this.productSearchError = null;
         const detalleConProducto: ReciboDetalleDto = detalle.producto
           ? detalle
@@ -394,6 +408,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         console.error('Error agregando producto al recibo', err);
         this.productSearchError = 'No se pudo agregar el producto.';
         this.searchingProduct = false;
+        this.updateSearchDisabled();
         this.focusSearchInputRequest.emit();
       }
     });
@@ -401,6 +416,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
 
   private fetchRecibo(id: number): void {
     this.loading = true;
+    this.updateSearchDisabled();
     this.error = null;
     this.reciboService.getRecibo(id).subscribe({
       next: (resp) => {
@@ -410,6 +426,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         };
         this.actualizarEstadoEdicion();
         this.loading = false;
+        this.updateSearchDisabled();
         this.fetchDetalles(id);
       },
       error: (err: unknown) => {
@@ -418,6 +435,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         this.estaEnEdicion = false;
         this.error = 'No se pudo cargar el recibo.';
         this.loading = false;
+        this.updateSearchDisabled();
         this.detalles = [];
         this.detallesError = null;
         this.detallesLoading = false;
@@ -458,6 +476,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     this.searchingProduct = false;
     this.dialogAbierto = false;
     this.estaEnEdicion = false;
+    this.updateSearchDisabled();
     this.focusSearchInputRequest.emit();
   }
 
@@ -472,6 +491,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
 
     this.productSearchError = null;
     this.searchingProduct = true;
+    this.updateSearchDisabled();
     this.relationalProductService.getProducts(term, 0, 1).subscribe({
       next: (page: ProductPage) => {
         const total = page?.totalElements ?? page?.content?.length ?? 0;
@@ -482,6 +502,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         }
 
         this.searchingProduct = false;
+        this.updateSearchDisabled();
 
         if (total === 0) {
           if (!triggeredAutomatically) {
@@ -509,6 +530,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         dialogRef.afterClosed().subscribe((selected) => {
           this.dialogAbierto = false;
           this.searchingProduct = false;
+          this.updateSearchDisabled();
           if (selected) {
             this.addProductToRecibo(selected);
           } else {
@@ -519,6 +541,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       error: (err: unknown) => {
         console.error('Error searching product', err);
         this.searchingProduct = false;
+        this.updateSearchDisabled();
         if (!triggeredAutomatically) {
           this.productSearchError = 'Error al buscar el producto.';
         }
@@ -1859,37 +1882,5 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     return parsed;
   }
 
-  minHeightPanelProductosValue: number = 420; // Valor numérico por defecto
-
-  private loadMinHeightConfiguration(): void {
-    // Obtener la configuración de longitud vertical del panel de productos
-    const longitudConfig = localStorage.getItem('longitud-vertical-panel-productos');
-    if (longitudConfig && longitudConfig.trim() !== '') {
-      // Asegurarse de que el valor sea numérico y válido
-      const valorNumerico = Number(longitudConfig);
-      if (!isNaN(valorNumerico) && valorNumerico > 0) {
-        this.minHeightPanelProductosValue = valorNumerico;
-        this.minHeightPanelProductos = `${valorNumerico}px`;
-        console.log('Min-height configurado:', this.minHeightPanelProductos, 'valor numérico:', this.minHeightPanelProductosValue);
-      } else {
-        console.warn('Valor de configuración inválido:', longitudConfig);
-      }
-    } else {
-      console.log('Usando valor por defecto de min-height:', this.minHeightPanelProductos);
-    }
-  }
-
-  getMinHeightValue(): number {
-    return this.minHeightPanelProductosValue;
-  }
-
-  getMaxHeightListValue(): number {
-    // Calcular la altura de la lista restando:
-    // - Header: ~34px (padding 8px*2 + contenido)
-    // Esto asegura que la lista tenga una altura fija para que funcione el scroll
-    const headerHeight = 34; // Aproximadamente la altura del header (8px padding top + 8px padding bottom + ~18px contenido)
-    const calculatedHeight = this.minHeightPanelProductosValue - headerHeight;
-    return Math.max(200, calculatedHeight);
-  }
 }
 

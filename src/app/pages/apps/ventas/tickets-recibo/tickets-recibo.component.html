@@ -8,7 +8,7 @@
       <div class="bg-app-bar px-6 border-b sticky left-0 flex items-center">
         <div class="header-row">
           <h2 class="title my-0">Ventas</h2>
-          <div class="search-controls" *ngIf="reciboComponent as recibo">
+          <div class="search-controls" *ngIf="reciboForSearch as recibo">
             <div class="flex items-center search-wrapper">
               <mat-form-field appearance="outline" class="search-input my-auto">
                 <mat-label>Buscar producto</mat-label>
@@ -17,7 +17,6 @@
                   matInput
                   [formControl]="recibo.productSearchCtrl"
                   (keyup.enter)="triggerProductSearch()"
-                  [disabled]="!currentReciboId || recibo.searchingProduct || recibo.loading"
                   placeholder="Ej. código de barras o nombre" />
                 <button
                   mat-icon-button
@@ -32,7 +31,7 @@
           </div>
         </div>
       </div>
-      <div class="px-4">
+      <div class="px-4 content-area">
         <div class="tabs-container" *ngIf="tickets?.length; else noTickets">
           <div class="tabs-row">
             <nav
@@ -85,7 +84,7 @@
               [ticket]="activeTicket"
               [reciboId]="currentReciboId"
               [sessionId]="sessionId"
-              [searchInputElement]="productSearchInput?.nativeElement || null"
+              [searchInputElement]="searchInputEl"
               (focusSearchInputRequest)="focusProductSearch()"
               (metodoPagoActualizado)="recargarRecibo()"></vex-recibo>
           </div>

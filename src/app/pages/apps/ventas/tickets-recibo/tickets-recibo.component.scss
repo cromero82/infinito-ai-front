@@ -50,6 +50,7 @@ vex-page-layout-header .container {
 :host ::ng-deep .tickets-card .bg-app-bar {
   padding-top: 14px;
   padding-bottom: 14px;
+  flex-shrink: 0; /* Barra de búsqueda no se encoge */
 }
 
 .header-row {
@@ -81,11 +82,12 @@ vex-page-layout-header .container {
   }
 }
 
+:host ::ng-deep .tickets-card > .px-4.content-area,
 :host ::ng-deep .tickets-card > .px-4 {
   display: flex;
   flex-direction: column;
   flex: 1;
-  min-height: 0;
+  min-height: 0; /* Permite que la lista de productos haga scroll y el footer del recibo sea visible */
 }
 
 .tabs-container {
@@ -94,7 +96,7 @@ vex-page-layout-header .container {
   display: flex;
   flex-direction: column;
   flex: 1;
-  min-height: 0;
+  min-height: 0; /* Necesario para que la lista de productos haga scroll y reserve espacio para el footer */
 }
 
 
@@ -104,6 +106,7 @@ vex-page-layout-header .container {
   gap: 16px;
   width: 100%;
   justify-content: space-between;
+  flex-shrink: 0; /* Fila de tabs y botones no se encoge */
 }
 
 .ticket-tab-nav {
@@ -216,11 +219,11 @@ vex-page-layout-header .container {
   }
 
   ::ng-deep .detalle-container {
-    flex: 1 1 auto; /* Permitir que se encoja para que el footer sea visible */
-    min-height: 0;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Prevenir que el contenedor crezca */
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
   }
 
   ::ng-deep .detalle-wrapper {

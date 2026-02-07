@@ -1,12 +1,9 @@
 <div class="recibo-container">
   <ng-container *ngIf="reciboId !== null; else noReciboSeleccionado">
     <div *ngIf="loading" class="text-secondary">Cargando recibo...</div>
-    <!-- Contenedor de detalles: flex 1 para ocupar espacio disponible pero poder encogerse
-         cuando el espacio es limitado, asegurando que el footer (tipos de pago y total) sea visible -->
     <div
       *ngIf="!loading && recibo; else reciboNoDisponible"
-      class="detalle-container"
-      [style.max-height.px]="getMinHeightValue()">
+      class="detalle-container">
       <div class="detalle-wrapper">
         <div *ngIf="detallesLoading" class="text-secondary">Cargando detalles...</div>
         <div *ngIf="!detallesLoading && detallesError" class="text-warn">

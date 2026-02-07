@@ -61,15 +61,15 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  flex: 1 1 auto; /* Llenar el host para que margin-top: auto en el footer funcione */
+  flex: 1 1 auto;
+  overflow: hidden; /* Contener el scroll dentro de la lista de productos */
 }
 
 .detalle-container {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto; /* Ocupar espacio disponible pero poder encogerse */
-  min-height: 0; /* Crítico: permite que se encoja cuando el espacio es limitado */
-  /* max-height se establece dinámicamente desde el componente */
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .detalle-wrapper {

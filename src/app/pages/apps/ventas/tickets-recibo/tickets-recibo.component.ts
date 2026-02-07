@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, AfterViewChecked, ChangeDetectorRef } from '@angular/core';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonModule } from '@angular/material/button';
 import { NgIf, NgFor } from '@angular/common';
@@ -39,12 +39,18 @@ import { QuickReciboComponent, QuickReciboData } from '../quick-recibo/quick-rec
   templateUrl: './tickets-recibo.component.html',
   styleUrls: ['./tickets-recibo.component.scss']
 })
-export class TicketsReciboComponent implements OnInit, AfterViewInit {
+export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy {
   tickets: TicketDto[] = [];
   selectedIndex = 0;
   sessionId: number | null = null;
   loading = false;
   currentReciboId: number | null = null;
+  /** Recibo expuesto al template solo tras setTimeout para evitar NG0100. */
+  reciboForSearch: ReciboComponent | null = null;
+  private reciboForSearchScheduled = false;
+  /** Elemento del input de búsqueda, asignado en setTimeout para evitar NG0100. */
+  searchInputEl: HTMLInputElement | null = null;
+  private searchInputElScheduled = false;
   @ViewChild('productSearchInput') productSearchInput?: ElementRef<HTMLInputElement>;
   @ViewChild('reciboCmp') reciboComponent?: ReciboComponent;
 
@@ -52,7 +58,8 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit {
     private ticketsService: TicketsService,
     private ticketReciboService: TicketReciboService,
     private dialog: MatDialog,
-    private sesionesService: SesionesService
+    private sesionesService: SesionesService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -71,6 +78,32 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     this.focusProductSearch(false);
   }
+
+  ngAfterViewChecked(): void {
+    if (!this.tickets?.length || !this.reciboComponent) {
+      this.reciboForSearchScheduled = false;
+      this.searchInputElScheduled = false;
+      this.reciboForSearch = null;
+      this.searchInputEl = null;
+    }
+    const needsUpdate = this.tickets?.length && this.reciboComponent && this.reciboComponent !== this.reciboForSearch;
+    if (needsUpdate && !this.reciboForSearchScheduled) {
+      this.reciboForSearchScheduled = true;
+      setTimeout(() => {
+        this.reciboForSearchScheduled = false;
+        this.reciboForSearch = this.reciboComponent ?? null;
+        this.cdr.detectChanges();
+        const el = this.productSearchInput?.nativeElement;
+        if (el) {
+          this.searchInputEl = el;
+          this.searchInputElScheduled = true;
+          this.cdr.detectChanges();
+        }
+      }, 0);
+    }
+  }
+
+  ngOnDestroy(): void {}
 
   focusProductSearch(select: boolean = true): void {
     setTimeout(() => {
@@ -305,6 +338,7 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit {
       }
     });
   }
+
 }
 
 
