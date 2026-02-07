@@ -1,12 +1,11 @@
 <div class="recibo-container">
   <ng-container *ngIf="reciboId !== null; else noReciboSeleccionado">
     <div *ngIf="loading" class="text-secondary">Cargando recibo...</div>
-    <!-- Aplicar el min-height configurado al contenedor completo de detalles,
-         para que funcione tanto cuando hay productos como cuando no hay -->
+    <!-- Contenedor de detalles: flex 1 para ocupar espacio disponible pero poder encogerse
+         cuando el espacio es limitado, asegurando que el footer (tipos de pago y total) sea visible -->
     <div
       *ngIf="!loading && recibo; else reciboNoDisponible"
       class="detalle-container"
-      [style.min-height.px]="getMinHeightValue()"
       [style.max-height.px]="getMinHeightValue()">
       <div class="detalle-wrapper">
         <div *ngIf="detallesLoading" class="text-secondary">Cargando detalles...</div>
@@ -14,15 +13,15 @@
           {{ detallesError }}
         </div>
         <div *ngIf="!detallesLoading && !detallesError" class="detalle-content">
-          <div *ngIf="detalles.length > 0; else sinDetalles">
+          <div *ngIf="detalles.length > 0; else sinDetalles" class="detalle-list-wrapper">
             <div class="detalle-header">
               <span class="detalle-col producto">Producto</span>
               <span class="detalle-col unitario">Valor unitario</span>
               <span class="detalle-col cantidad">Cantidad</span>
               <span class="detalle-col subtotal">Subtotal</span>
             </div>
-            <!-- La lista ya no controla el min-height, sólo el contenedor padre -->
-            <div class="detalle-list" #detalleList [style.height.px]="getMaxHeightListValue()">
+            <!-- La lista usa flex para adaptarse al espacio disponible y permitir scroll -->
+            <div class="detalle-list" #detalleList>
               <div
                 class="detalle-row"
                 *ngFor="let det of detalles; let i = index"

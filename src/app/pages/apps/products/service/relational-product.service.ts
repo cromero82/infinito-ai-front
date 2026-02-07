@@ -14,21 +14,22 @@ export class RelationalProductService {
 
   /**
    * Gets products with pagination and optional search filter
-   * @param barcodeOrName Search filter for barcode or name
+   * GET /products/search?query=&page=0&size=10
+   * @param query Search filter for barcode or name
    * @param page Page number (0-indexed)
    * @param size Number of items per page
    */
-  getProducts(barcodeOrName: string = '', page: number = 0, size: number = 100): Observable<ProductPage> {
+  getProducts(query: string = '', page: number = 0, size: number = 10): Observable<ProductPage> {
     const headers = new HttpHeaders({
       'Accept': 'application/json'
     });
 
-    let params = new HttpParams()
-      .set('barcodeOrName', barcodeOrName)
+    const params = new HttpParams()
+      .set('query', query)
       .set('page', page.toString())
       .set('size', size.toString());
 
-    return this.http.get<ProductPage>(this.apiUrl, { params, headers });
+    return this.http.get<ProductPage>(`${this.apiUrl}/search`, { params, headers });
   }
 
   /**

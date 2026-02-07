@@ -13,9 +13,11 @@ export interface Producto {
   nombre: string;
   precio: number;
   precioCompra?: number;
-  foto: string;
+  foto?: string;
   company?: Company;
   activate?: number;
+  fechaUltimaActualizacionPrecio?: string | null;
+  fechaCreacion?: string | null;
 }
 
 export interface ProductPage {

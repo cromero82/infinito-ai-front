@@ -1,8 +1,7 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { VexPageLayoutComponent } from '@vex/components/vex-page-layout/vex-page-layout.component';
 import { VexPageLayoutHeaderDirective } from '@vex/components/vex-page-layout/vex-page-layout-header.directive';
 import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/vex-page-layout-content.directive';
-import { VexBreadcrumbsComponent } from '@vex/components/vex-breadcrumbs/vex-breadcrumbs.component';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { RelationalProductService } from '../service/relational-product.service';
@@ -23,6 +22,7 @@ import * as RecordRTC from 'recordrtc';
 import { MatDialog } from '@angular/material/dialog';
 import { ProductEditComponent } from '../product-edit/product-edit.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../core/components/confirm-dialog/confirm-dialog.component';
+import { ConfigurationService } from '../../../pages/auth/service/configuration.service';
 
 @Component({
   selector: 'vex-product-list',
@@ -31,7 +31,6 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../core/comp
     VexPageLayoutComponent,
     VexPageLayoutHeaderDirective,
     VexPageLayoutContentDirective,
-    VexBreadcrumbsComponent,
     MatButtonModule,
     MatTooltipModule,
     MatTableModule,
@@ -56,7 +55,9 @@ export class ProductListComponent implements OnInit, AfterViewInit {
   dataSource: any[] = [];
   totalElements = 0;
   loading = false;
-  pageSize = 10;
+  loadingMore = false;
+  totalPages = 0;
+  pageSize = 20;
   pageIndex = 0;
   searchCtrl = new UntypedFormControl('');
   private justClosedDialog = false; // Flag to prevent auto-edit after dialog closes
@@ -69,9 +70,22 @@ export class ProductListComponent implements OnInit, AfterViewInit {
   private recorder: any = null;
   private stream: MediaStream | null = null;
 
-  constructor(private relationalProductService: RelationalProductService, private http: HttpClient, private dialog: MatDialog) {}
+  constructor(
+    private relationalProductService: RelationalProductService,
+    private http: HttpClient,
+    private dialog: MatDialog,
+    private configurationService: ConfigurationService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  minHeightPanelProductosValue = 420;
 
   ngOnInit() {
+    this.configurationService.obtenerTodasConfiguraciones().subscribe({
+      next: () => this.loadMinHeightConfiguration(),
+      error: () => this.loadMinHeightConfiguration()
+    });
+    this.loadMinHeightConfiguration();
     this.fetchProducts();
     this.searchCtrl.valueChanges
       .pipe(
@@ -81,9 +95,29 @@ export class ProductListComponent implements OnInit, AfterViewInit {
       .subscribe((value) => {
         // Reset flag when user types in search (allows auto-edit)
         this.justClosedDialog = false;
-        this.pageIndex = 0;
-        this.fetchProducts(true);
+        this.fetchProducts(true, true);
       });
+  }
+
+  private loadMinHeightConfiguration(): void {
+    const longitudConfig = localStorage.getItem('longitud-vertical-panel-productos');
+    if (longitudConfig && longitudConfig.trim() !== '') {
+      const valorNumerico = Number(longitudConfig);
+      if (!Number.isNaN(valorNumerico) && valorNumerico > 0) {
+        this.minHeightPanelProductosValue = valorNumerico;
+      }
+    }
+    this.cdr.markForCheck();
+  }
+
+  getMinHeightValue(): number {
+    return this.minHeightPanelProductosValue;
+  }
+
+  getMaxHeightListValue(): number {
+    const headerHeight = 34;
+    const calculatedHeight = this.minHeightPanelProductosValue - headerHeight;
+    return Math.max(200, calculatedHeight);
   }
 
   ngAfterViewInit() {
@@ -180,36 +214,83 @@ export class ProductListComponent implements OnInit, AfterViewInit {
     return /^\d{8,}$/.test(value.trim());
   }
 
-  fetchProducts(shouldAutoEdit: boolean = false, page: number = this.pageIndex, size: number = this.pageSize) {
-    this.loading = true;
-    let q = this.searchCtrl.value || '';
+  /**
+   * Fetch products from API.
+   * @param reset - If true, load page 0 and replace products. If false, load next page and append.
+   * @param shouldAutoEdit - If true, auto-open edit when exactly 1 product found (used when user searches).
+   */
+  fetchProducts(reset: boolean = true, shouldAutoEdit: boolean = false) {
+    const q = (this.searchCtrl.value || '').trim();
+    if (reset) {
+      this.pageIndex = 0;
+      this.totalPages = 0;
+      this.dataSource = [];
+      this.loading = true;
+      this.loadingMore = false;
+    } else {
+      if (this.loading || this.loadingMore) return;
+      if (this.totalPages > 0 && this.pageIndex + 1 >= this.totalPages) return;
+      this.loadingMore = true;
+    }
+
+    const pageToLoad = reset ? 0 : this.pageIndex + 1;
+
     this.relationalProductService
-      .getProducts(q, page, size)
-      .pipe(finalize(() => (this.loading = false)))
-      .subscribe((result: ProductPage) => {
-        this.dataSource = result.content;
-        this.totalElements = result.totalElements;
-        
-        // Auto-open edit dialog only if:
-        // 1. shouldAutoEdit is true (user typed in search)
-        // 2. Exactly 1 product found
-        // 3. We didn't just close a dialog (prevents auto-edit after dialog close)
-        if (shouldAutoEdit && !this.justClosedDialog && result.totalElements === 1 && result.content.length > 0) {
-          this.editProduct(result.content[0]);
-        }
-        
-        // Auto-open create product dialog only if:
-        // 1. No products found
-        // 2. Search text is a barcode
-        // 3. We didn't just close a dialog (prevents auto-create after dialog close)
-        if (result.totalElements === 0 && !this.justClosedDialog) {
-          const searchQuery = q.trim();
-          // Only create product if the search query is a numeric barcode
-          if (searchQuery && this.isNumericBarcode(searchQuery)) {
-            this.createProduct(searchQuery);
+      .getProducts(q, pageToLoad, this.pageSize)
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.loadingMore = false;
+      }))
+      .subscribe({
+        next: (result: ProductPage) => {
+          const content = result.content ?? [];
+          this.totalPages = result.totalPages ?? 0;
+          this.totalElements = result.totalElements ?? 0;
+          this.pageIndex = pageToLoad;
+
+          if (reset) {
+            this.dataSource = content;
+          } else {
+            this.dataSource = this.dataSource.concat(content);
+          }
+
+          // Auto-open edit dialog only if:
+          if (reset && shouldAutoEdit && !this.justClosedDialog && result.totalElements === 1 && content.length > 0) {
+            this.editProduct(content[0]);
+          }
+
+          // Auto-open create product dialog only if:
+          if (reset && result.totalElements === 0 && !this.justClosedDialog) {
+            if (q && this.isNumericBarcode(q)) {
+              this.createProduct(q);
+            }
+          }
+        },
+        error: () => {
+          if (reset) {
+            this.dataSource = [];
           }
         }
       });
+  }
+
+  /**
+   * Called when user scrolls in the products list. Loads next page when near bottom.
+   */
+  onTableScroll(event: Event): void {
+    const element = event.target as HTMLElement;
+    if (!element) return;
+
+    const scrollTop = element.scrollTop;
+    const scrollHeight = element.scrollHeight;
+    const clientHeight = element.clientHeight;
+    const remaining = scrollHeight - (scrollTop + clientHeight);
+
+    if (remaining >= 80) return;
+    if (this.loading || this.loadingMore) return;
+    if (this.totalPages > 0 && this.pageIndex + 1 >= this.totalPages) return;
+
+    this.fetchProducts(false);
   }
 
   createProduct(barcode?: string) {

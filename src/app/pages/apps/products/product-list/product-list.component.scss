@@ -8,23 +8,93 @@ img.h-10.w-10.object-cover.rounded:hover {
   position: relative;
 }
 
+// Llenar altura del viewport (vex-layout-content tiene altura fija con scrollDisabled)
+:host {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+:host ::ng-deep vex-page-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+:host ::ng-deep vex-page-layout-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
 // Custom adjustments based on diff
 vex-page-layout-header {
   height: 68px !important;
-  padding: 0 24px 61px !important;
+  padding: 0 24px 32px !important;
 }
 
 vex-page-layout-header .container {
   padding: 0 24px 0 20px !important;
 }
 
-.bg-app-bar {
-  height: 57px !important;
+.products-card {
+  overflow: hidden;
+  margin-top: -90px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
-// Card margin adjustment
-.card {
-  margin-top: -113px !important;
+:host ::ng-deep .products-card .bg-app-bar {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+// Similar a .ticket-panel en tickets-recibo
+.products-panel {
+  margin-top: 16px;
+  margin-bottom: 0;
+  padding-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// Crece para llenar el espacio disponible (como ticket-panel + recibo en tickets-recibo)
+.products-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  /* min-height se establece dinámicamente desde el componente */
+}
+
+.loading-more {
+  padding: 12px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 14px;
+}
+
+// Similar a ::ng-deep .detalle-list en tickets-recibo
+.products-list {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 // Search input field height adjustments

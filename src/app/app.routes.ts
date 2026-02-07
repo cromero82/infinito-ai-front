@@ -113,7 +113,8 @@ export const appRoutes: VexRoutes = [
                 loadComponent: () =>
                   import('./pages/apps/products/product-list/product-list.component').then(
                     (m) => m.ProductListComponent
-                  )
+                  ),
+                data: { scrollDisabled: true }
               }
             ]
           },
@@ -125,7 +126,8 @@ export const appRoutes: VexRoutes = [
                 loadComponent: () =>
                   import('./pages/apps/ventas/tickets-recibo/tickets-recibo.component').then(
                     (m) => m.TicketsReciboComponent
-                  )
+                  ),
+                data: { scrollDisabled: true }
               },
               {
                 path: 'historial',

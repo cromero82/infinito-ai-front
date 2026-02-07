@@ -1,17 +1,12 @@
 <vex-page-layout>
-  <vex-page-layout-header class="pb-16 flex flex-col items-start justify-center">
-    <div
-      [class.container]="true"
-      class="w-full flex flex-col sm:flex-row justify-between">
-      <div>
-        <vex-breadcrumbs [crumbs]="['Aplicaciones', 'Productos', 'Lista']"></vex-breadcrumbs>
-      </div>
+  <vex-page-layout-header class="pb-4 flex flex-col items-start justify-center">
+    <div [class.container]="true" class="w-full flex flex-col sm:flex-row justify-between">
     </div>
-  </vex-page-layout-header> 
+  </vex-page-layout-header>
 
-  <vex-page-layout-content [class.container]="true" class="-mt-6">
-    <div class="card overflow-auto -mt-16">
-      <div class="bg-app-bar px-6 h-16 border-b sticky left-0 flex items-center">
+  <vex-page-layout-content [class.container]="true" class="-mt-6 pb-0">
+    <div class="card products-card">
+      <div class="bg-app-bar px-6 border-b sticky left-0 flex items-center">
         <h2 class="title my-0 ltr:pr-4 rtl:pl-4 ltr:mr-4 rtl:ml-4 ltr:border-r rtl:border-l hidden sm:block flex-none">
           Productos
         </h2>
@@ -34,9 +29,10 @@
           <span class="flex-1"></span>
         </button>
         </div>
-      
-    
       </div>
+      <div class="px-4 products-panel">
+        <div class="products-container" [style.min-height.px]="getMinHeightValue()">
+          <div class="products-list" (scroll)="onTableScroll($event)">
       <table class="w-full" mat-table [dataSource]="dataSource" matSort>
         <!-- Barcode Column -->
         <ng-container matColumnDef="id">
@@ -76,7 +72,10 @@
             [class.inactive-row]="!isProductActive(row)"
             [class.selected-row]="isRowSelected(row)"></tr>
       </table>
+            <div class="loading-more" *ngIf="loadingMore">Cargando más productos...</div>
+          </div>
+        </div>
+      </div>
     </div>
-
   </vex-page-layout-content>
 </vex-page-layout>

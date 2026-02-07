@@ -43,13 +43,12 @@
 }
 
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
-}
-
-:host {
-  display: block;
-  width: 100%;
+  overflow: hidden;
 }
 
 .recibo-container {
@@ -61,14 +60,16 @@
   max-width: 100%;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto; /* Llenar el host para que margin-top: auto en el footer funcione */
 }
 
 .detalle-container {
   display: flex;
   flex-direction: column;
-  flex: 0 1 auto;
-  /* min-height y max-height se establecen dinámicamente desde el componente */
+  flex: 1 1 auto; /* Ocupar espacio disponible pero poder encogerse */
+  min-height: 0; /* Crítico: permite que se encoja cuando el espacio es limitado */
+  /* max-height se establece dinámicamente desde el componente */
 }
 
 .detalle-wrapper {
@@ -85,8 +86,17 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   min-height: 0;
+}
+
+/* Contenedor flex para que detalle-list tenga altura limitada y pueda hacer scroll */
+.detalle-list-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .detalle-header {
@@ -109,8 +119,8 @@
 }
 
 .detalle-list {
-  flex: 0 0 auto;
-  /* height se establece dinámicamente desde el componente */
+  flex: 1 1 auto;
+  min-height: 0; /* Permite encogerse cuando el contenedor tiene espacio limitado */
   overflow-y: auto !important;
   overflow-x: hidden !important;
   margin: 0;
@@ -229,8 +239,9 @@
   display: flex;
   justify-content: flex-end;
   margin: 0;
-  margin-bottom: 4px;
-  padding: 0;
+  margin-top: auto; /* Pegar el footer al borde inferior del panel */
+  margin-bottom: 0;
+  padding: 4px 0 6px 0; /* Espacio arriba (entre lista y footer) y abajo (antes del borde) */
   flex-shrink: 0;
 }
 
