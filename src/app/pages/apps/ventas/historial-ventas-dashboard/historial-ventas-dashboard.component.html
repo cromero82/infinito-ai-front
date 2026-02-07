@@ -6,11 +6,11 @@
       mat-flat-button 
       color="primary" 
       type="button" 
-      (click)="abrirModalRegistrarVenta()" 
-      matTooltip="Registrar venta por método de pago"
+      (click)="abrirModalCorteVentas()" 
+      matTooltip="Corte de ventas"
       class="mr-2">
       <mat-icon svgIcon="mat:add"></mat-icon>
-      <span class="ml-1">Registrar Venta</span>
+      <span class="ml-1">Corte de Ventas</span>
     </button>
 
     <button mat-icon-button type="button" (click)="cargarVentasDelDia()" matTooltip="Cargar ventas del día">
@@ -72,21 +72,14 @@
       <div class="mt-2">
         <h3 class="title font-medium mb-2">Resumen</h3>
         
-        <!-- Promedio de ventas del rango -->
         <div class="pb-2 pt-2 px-4 flex flex-col border-b">
           <h2 class="resumen-total font-bold m-0 text-primary">{{ formatCurrency(promedioVentas) }}</h2>
-          <h3 class="title font-medium mt-1 mb-0 text-sm">Promedio de Ventas</h3>
+          <h3 class="title font-medium mt-1 mb-0 text-sm">Promedio</h3>
         </div>
 
-        <!-- Ventas del día actual -->
         <div class="pb-2 pt-2 px-4 flex flex-col">
-          <div *ngIf="cargandoVentasDiaActual" class="text-secondary text-sm">
-            Cargando...
-          </div>
-          <div *ngIf="!cargandoVentasDiaActual">
-            <h2 class="resumen-total font-bold m-0 text-green-600">{{ formatCurrency(ventasDiaActual) }}</h2>
-            <h3 class="title font-medium mt-1 mb-0 text-sm">Ventas del Día</h3>
-          </div>
+          <h2 class="resumen-total font-bold m-0 text-green-600">{{ formatCurrency(ventasDiaActual) }}</h2>
+          <h3 class="title font-medium mt-1 mb-0 text-sm">Total</h3>
         </div>
       </div>
     </div>
@@ -201,7 +194,7 @@
               </thead>
               <tbody>
                 <tr *ngFor="let venta of ventasPorFechaVisibles" class="border-b hover:bg-gray-50">
-                  <td class="py-2 px-4">{{ formatDate(venta.fecha) }}</td>
+                  <td class="py-2 px-4">{{ venta.fecha }}</td>
                   <td class="text-right py-2 px-4 font-medium">{{ formatCurrency(venta.total) }}</td>
                   <td class="py-2 px-4">
                     <div class="flex flex-col gap-1">

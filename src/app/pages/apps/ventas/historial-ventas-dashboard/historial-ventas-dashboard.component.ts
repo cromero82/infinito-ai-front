@@ -12,12 +12,11 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ApexOptions, VexChartComponent } from '@vex/components/vex-chart/vex-chart.component';
 import { defaultChartOptions } from '@vex/utils/default-chart-options';
-import { VentasTipoService, VentasTipoDto } from '../service/ventas-tipo.service';
 import { MetodoPagoService, MetodoPagoDto } from '../service/metodo-pago.service';
-import { HistorialReciboService } from '../service/historial-recibo.service';
+import { CorteVentaService, CorteVentaSearchItemDto } from '../service/corte-venta.service';
 import { Subject, forkJoin, Observable } from 'rxjs';
 import { takeUntil, switchMap } from 'rxjs/operators';
-import { VentaTipoMetodoPagoComponent } from '../venta-tipo-metodo-pago/venta-tipo-metodo-pago.component';
+import { CorteVentasComponent } from '../corte-ventas/corte-ventas.component';
 
 interface VentasPorFecha {
   fecha: string;
@@ -63,7 +62,6 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
   totalGeneral = 0;
   promedioVentas = 0;
   ventasDiaActual = 0;
-  cargandoVentasDiaActual = false;
   
   // Navegación por semanas (ventana deslizante)
   fechaInicioActual: Date | null = null;
@@ -165,33 +163,8 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
     tooltip: {
       x: {
         formatter: (val: number, opts?: any) => {
-          // Si es período mensual, mostrar el día de la semana
-          const periodo = this.periodoCtrl.value;
-          if (periodo === 'mensual') {
-            // Buscar la fecha original en las ventas para obtener el día de la semana
-            const fechaIndex = opts?.dataPointIndex ?? val;
-            if (fechaIndex !== undefined && this.ventasPorFechaVisibles[fechaIndex]) {
-              const fecha = this.ventasPorFechaVisibles[fechaIndex].fecha;
-              const date = new Date(fecha + 'T00:00:00');
-              const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-              const diaSemana = diasSemana[date.getDay()];
-              return `${diaSemana}`;
-            }
-            // Si no se encuentra por índice, intentar obtener desde las categorías
-            if (opts?.w?.globals?.categoryLabels && opts.w.globals.categoryLabels[val]) {
-              const categoria = opts.w.globals.categoryLabels[val];
-              if (categoria && categoria.includes('/')) {
-                const [dia, mes] = categoria.split('/');
-                const añoActual = new Date().getFullYear();
-                const date = new Date(añoActual, parseInt(mes) - 1, parseInt(dia));
-                const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-                const diaSemana = diasSemana[date.getDay()];
-                return `${diaSemana}`;
-              }
-            }
-          }
-          // Para otros períodos, devolver el valor original (será la categoría como string)
-          return opts?.w?.globals?.categoryLabels?.[val] ?? String(val);
+          const categoria = opts?.w?.globals?.categoryLabels?.[val];
+          return categoria ?? (val != null ? String(val) : '');
         }
       },
       y: {
@@ -205,9 +178,8 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   constructor(
-    private ventasTipoService: VentasTipoService,
+    private corteVentaService: CorteVentaService,
     private metodoPagoService: MetodoPagoService,
-    private historialReciboService: HistorialReciboService,
     private dialog: MatDialog
   ) {}
 
@@ -258,8 +230,8 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe({
-        next: (ventas) => {
-          this.procesarVentas(ventas);
+        next: (cortes) => {
+          this.procesarRespuestaSearch(cortes);
           this.loading = false;
         },
         error: (err) => {
@@ -270,7 +242,14 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  private obtenerVentasUltimos7Dias(): Observable<VentasTipoDto[]> {
+  private construirFechaHoraISO(fecha: Date, hora: string): string {
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hora}`;
+  }
+
+  private obtenerVentasUltimos7Dias(): Observable<CorteVentaSearchItemDto[]> {
     const hoy = new Date();
     let fechaInicio: Date;
     let fechaFin: Date;
@@ -278,36 +257,27 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
     const periodo = this.periodoCtrl.value;
     
     if (periodo === 'mensual') {
-      // Para mensual: desde el día 1 hasta el último día del mes
       fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
       fechaInicio.setHours(0, 0, 0, 0);
-      
       fechaFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
       fechaFin.setHours(23, 59, 59, 999);
     } else if (periodo === 'quincenal') {
-      // Para quincenal: dividir el mes en dos quincenas
-      // Primera quincena: días 1-15
-      // Segunda quincena: días 16-30/31
       const diaActual = hoy.getDate();
-      const ultimoDiaMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
+      const mesActual = hoy.getMonth();
+      const añoActual = hoy.getFullYear();
       
       if (diaActual <= 15) {
-        // Primera quincena: 1-15
-        fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-        fechaFin = new Date(hoy.getFullYear(), hoy.getMonth(), 15);
+        fechaInicio = new Date(añoActual, mesActual, 1);
+        fechaFin = new Date(añoActual, mesActual, 15);
       } else {
-        // Segunda quincena: 16-30/31
-        fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 16);
-        fechaFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+        fechaInicio = new Date(añoActual, mesActual, 16);
+        fechaFin = new Date(añoActual, mesActual + 1, 0);
       }
-      
       fechaInicio.setHours(0, 0, 0, 0);
       fechaFin.setHours(23, 59, 59, 999);
     } else {
-      // Para semanal: desde hoy hacia atrás 7 días
       fechaFin = new Date(hoy);
       fechaFin.setHours(23, 59, 59, 999);
-      
       fechaInicio = new Date(hoy);
       fechaInicio.setDate(fechaInicio.getDate() - (this.diasVisibles - 1));
       fechaInicio.setHours(0, 0, 0, 0);
@@ -316,13 +286,13 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
     this.fechaInicioActual = fechaInicio;
     this.fechaFinActual = fechaFin;
 
-    const fechaInicioStr = this.formatearFecha(fechaInicio);
-    const fechaFinStr = this.formatearFecha(fechaFin);
-
     this.loading = true;
     this.error = null;
 
-    return this.ventasTipoService.getVentasPorRangoFechas(fechaInicioStr, fechaFinStr);
+    return this.corteVentaService.search(
+      this.construirFechaHoraISO(fechaInicio, '00:00:00'),
+      this.construirFechaHoraISO(fechaFin, '23:59:59')
+    );
   }
 
   ngOnDestroy(): void {
@@ -388,8 +358,8 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
     this.obtenerVentasUltimos7Dias()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (ventas) => {
-          this.procesarVentas(ventas);
+        next: (cortes) => {
+          this.procesarRespuestaSearch(cortes);
           this.loading = false;
         },
         error: (err) => {
@@ -410,14 +380,13 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
     this.cargarVentasUltimos7Dias();
   }
 
-  abrirModalRegistrarVenta(): void {
-    this.dialog.open(VentaTipoMetodoPagoComponent, {
-      width: '700px',
+  abrirModalCorteVentas(): void {
+    this.dialog.open(CorteVentasComponent, {
+      width: '950px',
       disableClose: false,
-      maxWidth: '90vw'
+      maxWidth: '95vw'
     }).afterClosed().subscribe(result => {
       if (result?.success) {
-        // Recargar las ventas después de registrar
         this.cargarVentasDelDia();
       }
     });
@@ -427,14 +396,14 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    const fechaInicioStr = this.formatearFecha(fechaInicio);
-    const fechaFinStr = this.formatearFecha(fechaFin);
-
-    this.ventasTipoService.getVentasPorRangoFechas(fechaInicioStr, fechaFinStr)
+    this.corteVentaService.search(
+      this.construirFechaHoraISO(fechaInicio, '00:00:00'),
+      this.construirFechaHoraISO(fechaFin, '23:59:59')
+    )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (ventas) => {
-          this.procesarVentas(ventas);
+        next: (cortes) => {
+          this.procesarRespuestaSearch(cortes);
           this.loading = false;
         },
         error: (err) => {
@@ -453,17 +422,19 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const fechaInicioStr = this.formatearFecha(fechaInicio);
-    const fechaFinStr = this.formatearFecha(fechaFin);
-
+    this.fechaInicioActual = fechaInicio;
+    this.fechaFinActual = fechaFin;
     this.loading = true;
     this.error = null;
 
-    this.ventasTipoService.getVentasPorRangoFechas(fechaInicioStr, fechaFinStr)
+    this.corteVentaService.search(
+      this.construirFechaHoraISO(fechaInicio, '00:00:00'),
+      this.construirFechaHoraISO(fechaFin, '23:59:59')
+    )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (ventas) => {
-          this.procesarVentas(ventas);
+        next: (cortes) => {
+          this.procesarRespuestaSearch(cortes);
           this.loading = false;
         },
         error: (err) => {
@@ -474,88 +445,45 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  private procesarVentas(ventas: VentasTipoDto[]): void {
-    // Agrupar ventas por fecha
-    const ventasPorFechaMap = new Map<string, VentasPorFecha>();
-
-    ventas.forEach(venta => {
-      const fecha = venta.fecha;
-      
-      if (!ventasPorFechaMap.has(fecha)) {
-        ventasPorFechaMap.set(fecha, {
-          fecha,
-          total: 0,
-          detalles: []
-        });
-      }
-
-      const ventaPorFecha = ventasPorFechaMap.get(fecha)!;
-      // Buscar el método de pago (puede que aún no esté cargado)
-      const metodoPago = this.metodosPago.find(m => m.id === venta.metodoPagoId);
-      
-      ventaPorFecha.detalles.push({
-        metodoPagoId: venta.metodoPagoId,
-        // Usar el nombre del método de pago si está disponible, sino usar un placeholder temporal
-        metodoPagoNombre: metodoPago?.descripcion || `Método ${venta.metodoPagoId}`,
-        total: venta.total
+  private procesarRespuestaSearch(cortes: CorteVentaSearchItemDto[]): void {
+    this.ventasPorFecha = (cortes || []).map(item => {
+      const fechaLabel = this.formatearFechaParaLabel(item.fechaIni);
+      const detalles = (item.ventasTipo || []).map(vt => {
+        const metodoPago = this.metodosPago.find(m => m.id === vt.metodoPagoId);
+        return {
+          metodoPagoId: vt.metodoPagoId,
+          metodoPagoNombre: metodoPago?.descripcion || `Método ${vt.metodoPagoId}`,
+          total: Number(vt.total) || 0
+        };
       });
-
-      ventaPorFecha.total += venta.total;
+      return {
+        fecha: fechaLabel,
+        total: Number(item.total) || 0,
+        detalles
+      };
     });
 
-    // Convertir a array y ordenar por fecha
-    this.ventasPorFecha = Array.from(ventasPorFechaMap.values())
-      .sort((a, b) => a.fecha.localeCompare(b.fecha));
+    this.totalGeneral = this.ventasPorFecha.reduce((sum, v) => sum + (Number(v.total) || 0), 0);
 
-    // Calcular total general
-    this.totalGeneral = this.ventasPorFecha.reduce((sum, v) => sum + v.total, 0);
+    // Ventas del Día: sumatoria de todos los items .total
+    this.ventasDiaActual = this.totalGeneral;
 
-    // Calcular promedio de ventas del rango
-    this.calcularPromedioVentas();
+    // Promedio de ventas: total / número de ítems
+    const numItems = (cortes || []).length;
+    this.promedioVentas = numItems > 0 ? this.totalGeneral / numItems : 0;
 
-    // Asignar todas las ventas como visibles (ya vienen filtradas por el rango)
     this.ventasPorFechaVisibles = this.ventasPorFecha;
 
-    // Actualizar nombres de métodos de pago si ya están cargados
     if (this.metodosPago.length > 0) {
       this.actualizarNombresYColoresMetodosPago();
     }
 
-    // Preparar datos para el gráfico
     this.prepararDatosGrafico();
-
-    // Cargar ventas del día actual
-    this.cargarVentasDiaActual();
   }
 
-  private calcularPromedioVentas(): void {
-    if (this.ventasPorFecha.length === 0) {
-      this.promedioVentas = 0;
-      return;
-    }
-    // Calcular el promedio dividiendo el total general entre el número de días con ventas
-    this.promedioVentas = this.totalGeneral / this.ventasPorFecha.length;
-  }
-
-  private cargarVentasDiaActual(): void {
-    const hoy = new Date();
-    const fechaHoy = this.formatearFecha(hoy);
-    
-    this.cargandoVentasDiaActual = true;
-    
-    this.historialReciboService.getTotalByDate(fechaHoy)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (total) => {
-          this.ventasDiaActual = total || 0;
-          this.cargandoVentasDiaActual = false;
-        },
-        error: (err) => {
-          console.error('Error cargando ventas del día actual', err);
-          this.ventasDiaActual = 0;
-          this.cargandoVentasDiaActual = false;
-        }
-      });
+  private formatearFechaParaLabel(fechaIso: string): string {
+    const d = new Date(fechaIso);
+    return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
   navegarIzquierda(): void {
@@ -722,9 +650,8 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Obtener todas las fechas visibles y formatearlas (solo la fecha, sin el total)
-    const fechas = this.ventasPorFechaVisibles.map(v => v.fecha);
-    const fechasFormateadas = fechas.map(fecha => this.formatearFechaParaGrafico(fecha));
+    // Obtener categorías para el eje X (fecha ya formateada por formatearFechaParaLabel)
+    const fechasFormateadas = this.ventasPorFechaVisibles.map(v => v.fecha);
 
     // Crear una serie por cada método de pago con su color
     const seriesMap = new Map<number, { name: string; data: number[]; color: string }>();
@@ -740,7 +667,7 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
           
           seriesMap.set(detalle.metodoPagoId, {
             name: nombre,
-            data: new Array(fechas.length).fill(0),
+            data: new Array(fechasFormateadas.length).fill(0),
             color: color
           });
         }
@@ -752,7 +679,7 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
       ventaPorFecha.detalles.forEach(detalle => {
         const serie = seriesMap.get(detalle.metodoPagoId);
         if (serie) {
-          serie.data[fechaIndex] = detalle.total;
+          serie.data[fechaIndex] = Number(detalle.total) || 0;
         }
       });
     });
@@ -769,7 +696,6 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
     this.chartSeries = seriesArray.map(({ color, ...serie }) => serie);
 
     // Actualizar las opciones del gráfico con las fechas formateadas y colores
-    const periodo = this.periodoCtrl.value;
     this.chartOptions = {
       ...this.chartOptions,
       xaxis: {
@@ -781,32 +707,8 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
         ...this.chartOptions.tooltip,
         x: {
           formatter: (val: number, opts?: any) => {
-            // Si es período mensual, mostrar el día de la semana
-            if (periodo === 'mensual') {
-              // Buscar la fecha original en las ventas para obtener el día de la semana
-              const fechaIndex = opts?.dataPointIndex ?? val;
-              if (fechaIndex !== undefined && this.ventasPorFechaVisibles[fechaIndex]) {
-                const fecha = this.ventasPorFechaVisibles[fechaIndex].fecha;
-                const date = new Date(fecha + 'T00:00:00');
-                const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-                const diaSemana = diasSemana[date.getDay()];
-                return `${diaSemana}`;
-              }
-              // Si no se encuentra por índice, intentar obtener desde las categorías
-              if (opts?.w?.globals?.categoryLabels && opts.w.globals.categoryLabels[val]) {
-                const categoria = opts.w.globals.categoryLabels[val];
-                if (categoria && categoria.includes('/')) {
-                  const [dia, mes] = categoria.split('/');
-                  const añoActual = new Date().getFullYear();
-                  const date = new Date(añoActual, parseInt(mes) - 1, parseInt(dia));
-                  const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-                  const diaSemana = diasSemana[date.getDay()];
-                  return `${diaSemana}`;
-                }
-              }
-            }
-            // Para otros períodos, devolver el valor original (será la categoría como string)
-            return opts?.w?.globals?.categoryLabels?.[val] ?? String(val);
+            const categoria = opts?.w?.globals?.categoryLabels?.[val];
+            return categoria ?? (val != null ? String(val) : '');
           }
         }
       }
@@ -844,6 +746,9 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
   }
 
   formatCurrency(value: number): string {
+    if (value == null || !Number.isFinite(value)) {
+      return '$0';
+    }
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
@@ -934,7 +839,10 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  formatDateRange(fechaInicio: Date, fechaFin: Date): string {
+  formatDateRange(fechaInicio: Date | null, fechaFin: Date | null): string {
+    if (!fechaInicio || !fechaFin || !Number.isFinite(fechaInicio.getTime()) || !Number.isFinite(fechaFin.getTime())) {
+      return '—';
+    }
     const inicioStr = fechaInicio.toLocaleDateString('es-CO', {
       day: 'numeric',
       month: 'short'
