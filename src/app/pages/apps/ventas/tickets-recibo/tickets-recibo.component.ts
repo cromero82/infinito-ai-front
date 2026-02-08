@@ -15,7 +15,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { QuickReciboComponent, QuickReciboData } from '../quick-recibo/quick-recibo.component';
+
+const IMPRIMIR_RECIBO_KEY = 'imprimir-recibo';
 
 @Component({
   selector: 'vex-tickets-recibo',
@@ -32,6 +37,9 @@ import { QuickReciboComponent, QuickReciboData } from '../quick-recibo/quick-rec
     MatInputModule,
     ReactiveFormsModule,
     MatDialogModule,
+    MatMenuModule,
+    MatSlideToggleModule,
+    MatSnackBarModule,
     NgIf,
     NgFor,
     ReciboComponent
@@ -54,12 +62,16 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
   @ViewChild('productSearchInput') productSearchInput?: ElementRef<HTMLInputElement>;
   @ViewChild('reciboCmp') reciboComponent?: ReciboComponent;
 
+  /** Preferencia de usuario: imprimir recibo tras pago (persistida en localStorage). Por defecto false. */
+  imprimirReciboActivo = false;
+
   constructor(
     private ticketsService: TicketsService,
     private ticketReciboService: TicketReciboService,
     private dialog: MatDialog,
     private sesionesService: SesionesService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
@@ -72,7 +84,29 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
     }
 
     this.sessionId = parsed;
+    this.imprimirReciboActivo = this.getImprimirReciboFromStorage();
     this.loadTickets(parsed);
+  }
+
+  private getImprimirReciboFromStorage(): boolean {
+    const v = localStorage.getItem(IMPRIMIR_RECIBO_KEY);
+    return v === 'true';
+  }
+
+  toggleImprimirRecibo(event: { checked: boolean }): void {
+    this.imprimirReciboActivo = event.checked;
+    localStorage.setItem(IMPRIMIR_RECIBO_KEY, String(this.imprimirReciboActivo));
+  }
+
+  /** Descarga el recibo del ticket actual como archivo HTML (abrir y Ctrl+P para imprimir/PDF). */
+  descargarReciboActual(): void {
+    const ok = this.reciboComponent?.descargarReciboActual();
+    if (!ok) {
+      this.snackBar.open('No hay recibo con productos para descargar', undefined, {
+        duration: 3000,
+        horizontalPosition: 'right'
+      });
+    }
   }
 
   ngAfterViewInit(): void {
@@ -319,17 +353,19 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
     this.ticketReciboService.getByTicketId(ticketId, this.sessionId).subscribe({
       next: (relation) => {
         const nuevoReciboId = relation?.reciboId ?? null;
-        if (forceReload && nuevoReciboId && this.currentReciboId === nuevoReciboId) {
-          this.currentReciboId = null;
-          setTimeout(() => {
-            this.currentReciboId = nuevoReciboId;
-            this.focusProductSearch(false);
-          }, 0);
-        } else {
+        // Diferir actualización al siguiente ciclo para evitar NG0100 (ExpressionChangedAfterItHasBeenCheckedError):
+        // el cambio de currentReciboId actualiza el hijo y el FormControl del buscador en el mismo tick.
+        const aplicar = () => {
           this.currentReciboId = nuevoReciboId;
           if (this.currentReciboId) {
             this.focusProductSearch(false);
           }
+        };
+        if (forceReload && nuevoReciboId && this.currentReciboId === nuevoReciboId) {
+          this.currentReciboId = null;
+          setTimeout(aplicar, 0);
+        } else {
+          setTimeout(aplicar, 0);
         }
       },
       error: (err) => {

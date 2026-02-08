@@ -194,6 +194,31 @@ vex-page-layout-header .container {
   margin-left: 16px;
 }
 
+.opciones-recibo-btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+
+:host ::ng-deep .opciones-recibo-menu-item-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 200px;
+  cursor: default;
+}
+
+:host ::ng-deep .opciones-recibo-label {
+  flex: 1;
+}
+
+:host ::ng-deep .opciones-recibo-toggle {
+  margin-left: 8px;
+  .mdc-switch {
+    padding: 0;
+  }
+}
+
 .ticket-panel {
   margin-top: 16px;
   margin-bottom: 0;

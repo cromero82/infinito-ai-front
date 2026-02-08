@@ -116,6 +116,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   estadosRecibos: EstadoReciboDto[] = [];
   estaEnEdicion = false;
   metodosPago: MetodoPagoDto[] = [];
+
   constructor(
     private reciboService: ReciboService,
     private reciboDetalleService: ReciboDetalleService,
@@ -160,6 +161,14 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         this.productSearchCtrl.enable({ emitEvent: false });
       }
     }
+  }
+
+  /**
+   * Ejecuta updateSearchDisabled en el siguiente tick para evitar NG0100 en el padre
+   * (el padre enlaza mat-form-field a productSearchCtrl y vería el cambio en el mismo ciclo).
+   */
+  private scheduleUpdateSearchDisabled(): void {
+    setTimeout(() => this.updateSearchDisabled(), 0);
   }
 
   ngOnDestroy(): void {
@@ -251,7 +260,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       const change = changes['reciboId'];
       const value = change.currentValue as number | null;
       const previous = change.previousValue as number | null;
-      this.updateSearchDisabled();
+      this.scheduleUpdateSearchDisabled();
       if (value === previous) {
         return;
       }
@@ -416,7 +425,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
 
   private fetchRecibo(id: number): void {
     this.loading = true;
-    this.updateSearchDisabled();
+    this.scheduleUpdateSearchDisabled();
     this.error = null;
     this.reciboService.getRecibo(id).subscribe({
       next: (resp) => {
@@ -426,7 +435,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         };
         this.actualizarEstadoEdicion();
         this.loading = false;
-        this.updateSearchDisabled();
+        this.scheduleUpdateSearchDisabled();
         this.fetchDetalles(id);
       },
       error: (err: unknown) => {
@@ -435,7 +444,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         this.estaEnEdicion = false;
         this.error = 'No se pudo cargar el recibo.';
         this.loading = false;
-        this.updateSearchDisabled();
+        this.scheduleUpdateSearchDisabled();
         this.detalles = [];
         this.detallesError = null;
         this.detallesLoading = false;
@@ -1418,30 +1427,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       )
       .subscribe({
         next: (totalGuardado) => {
-          const totalFormateado = this.formatCurrency(totalGuardado);
-          const snackBarRef = this.snackBar.open(
-            `Recibo por valor de ${totalFormateado} guardado correctamente`,
-            undefined,
-            {
-              duration: 5000,
-              horizontalPosition: 'right',
-              panelClass: ['recibo-snackbar-success']
-            }
-          );
-          // Make the currency value bold
-          setTimeout(() => {
-            const snackBarElement = document.querySelector('.recibo-snackbar-success .mat-mdc-snack-bar-label');
-            if (snackBarElement) {
-              const text = snackBarElement.textContent || '';
-              const currencyRegex = /\$\s*[\d.,]+/;
-              const match = text.match(currencyRegex);
-              if (match) {
-                const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
-                snackBarElement.innerHTML = boldText;
-              }
-            }
-          }, 0);
-          this.metodoPagoActualizado.emit();
+          this.mostrarSnackbarPagoExitoso(totalGuardado);
         },
         error: (err: unknown) => {
           console.error('Error actualizando método de pago', err);
@@ -1581,30 +1567,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       )
       .subscribe({
         next: (totalGuardado) => {
-          const totalFormateado = this.formatCurrency(totalGuardado);
-          const snackBarRef = this.snackBar.open(
-            `Recibo por valor de ${totalFormateado} guardado correctamente`,
-            undefined,
-            {
-              duration: 5000,
-              horizontalPosition: 'right',
-              panelClass: ['recibo-snackbar-success']
-            }
-          );
-          // Make the currency value bold
-          setTimeout(() => {
-            const snackBarElement = document.querySelector('.recibo-snackbar-success .mat-mdc-snack-bar-label');
-            if (snackBarElement) {
-              const text = snackBarElement.textContent || '';
-              const currencyRegex = /\$\s*[\d.,]+/;
-              const match = text.match(currencyRegex);
-              if (match) {
-                const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
-                snackBarElement.innerHTML = boldText;
-              }
-            }
-          }, 0);
-          this.metodoPagoActualizado.emit();
+          this.mostrarSnackbarPagoExitoso(totalGuardado);
         },
         error: (err: unknown) => {
           console.error('Error actualizando método de pago', err);
@@ -1793,30 +1756,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       )
       .subscribe({
         next: (totalGuardado) => {
-          const totalFormateado = this.formatCurrency(totalGuardado);
-          const snackBarRef = this.snackBar.open(
-            `Recibo por valor de ${totalFormateado} guardado correctamente`,
-            undefined,
-            {
-              duration: 5000,
-              horizontalPosition: 'right',
-              panelClass: ['recibo-snackbar-success']
-            }
-          );
-          // Make the currency value bold
-          setTimeout(() => {
-            const snackBarElement = document.querySelector('.recibo-snackbar-success .mat-mdc-snack-bar-label');
-            if (snackBarElement) {
-              const text = snackBarElement.textContent || '';
-              const currencyRegex = /\$\s*[\d.,]+/;
-              const match = text.match(currencyRegex);
-              if (match) {
-                const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
-                snackBarElement.innerHTML = boldText;
-              }
-            }
-          }, 0);
-          this.metodoPagoActualizado.emit();
+          this.mostrarSnackbarPagoExitoso(totalGuardado);
         },
         error: (err: unknown) => {
           console.error('Error actualizando método de pago', err);
@@ -1880,6 +1820,147 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       return null;
     }
     return parsed;
+  }
+
+  /**
+   * Muestra el snackbar de pago exitoso. Si "imprimir recibo al pagar" está activo,
+   * imprime el recibo en la ventana actual (inyecta contenido oculto y llama a window.print).
+   */
+  private mostrarSnackbarPagoExitoso(totalGuardado: number): void {
+    const totalFormateado = this.formatCurrency(totalGuardado);
+    const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && this.recibo && this.detalles?.length;
+    if (quiereImprimir && this.recibo && this.detalles?.length) {
+      this.imprimirReciboEnVentanaPrincipal(this.recibo, this.detalles);
+    }
+    this.snackBar.open(
+      `Recibo por valor de ${totalFormateado} guardado correctamente`,
+      undefined,
+      {
+        duration: 5000,
+        horizontalPosition: 'right',
+        panelClass: ['recibo-snackbar-success']
+      }
+    );
+    setTimeout(() => {
+      const snackBarElement = document.querySelector('.recibo-snackbar-success .mat-mdc-snack-bar-label');
+      if (snackBarElement) {
+        const text = snackBarElement.textContent || '';
+        const currencyRegex = /\$\s*[\d.,]+/;
+        const match = text.match(currencyRegex);
+        if (match) {
+          const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+          snackBarElement.innerHTML = boldText;
+        }
+      }
+    }, 0);
+    setTimeout(() => this.metodoPagoActualizado.emit(), 0);
+  }
+
+  /**
+   * Inyecta el recibo en la ventana actual (oculto en pantalla, visible al imprimir) y llama a window.print().
+   * Se ejecuta automáticamente al completar el pago si "imprimir recibo al pagar" está activo.
+   */
+  private imprimirReciboEnVentanaPrincipal(recibo: ReciboDto, detalles: ReciboDetalleDto[]): void {
+    const idRoot = 'recibo-pos-print-root';
+    const idStyles = 'recibo-pos-print-styles';
+    const contenido = this.buildReciboHtmlFragment(detalles);
+
+    const styleEl = document.createElement('style');
+    styleEl.id = idStyles;
+    styleEl.textContent = `
+@media screen { #${idRoot} { display: none !important; } }
+@media print {
+  body * { visibility: hidden; }
+  #${idRoot}, #${idRoot} * { visibility: visible !important; }
+  #${idRoot} { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; display: block !important; font-family: 'Courier New', monospace !important; font-size: 12px !important; margin: 8px !important; max-width: 280px !important; }
+  #${idRoot} .pos-titulo { text-align: center; font-weight: bold; font-size: 14px; margin: 0 0 4px 0; }
+  #${idRoot} .pos-fecha, #${idRoot} .pos-leyenda { text-align: center; margin: 2px 0; }
+  #${idRoot} .pos-leyenda { font-size: 10px; }
+  #${idRoot} .pos-sep { border: none; border-top: 1px dashed #000; margin: 6px 0; }
+  #${idRoot} .pos-tabla { width: 100%; border-collapse: collapse; font-size: 11px; }
+  #${idRoot} .pos-tabla th { text-align: left; border-bottom: 1px solid #000; padding: 2px 4px; }
+  #${idRoot} .pos-tabla td { padding: 2px 4px; }
+  #${idRoot} .pos-total { font-weight: bold; text-align: right; margin-top: 4px; }
+}
+`;
+
+    const wrap = document.createElement('div');
+    wrap.id = idRoot;
+    wrap.innerHTML = contenido;
+    document.body.appendChild(styleEl);
+    document.body.appendChild(wrap);
+
+    const prevAfterPrint = window.onafterprint;
+    const limpiar = () => {
+      const s = document.getElementById(idStyles);
+      const r = document.getElementById(idRoot);
+      if (s?.parentNode) s.parentNode.removeChild(s);
+      if (r?.parentNode) r.parentNode.removeChild(r);
+      window.onafterprint = prevAfterPrint ?? null;
+    };
+    window.onafterprint = limpiar;
+
+    setTimeout(() => {
+      window.print();
+      setTimeout(limpiar, 3000);
+    }, 100);
+  }
+
+  /** Construye el fragmento HTML del recibo (solo el cuerpo, sin documento completo). */
+  private buildReciboHtmlFragment(detalles: ReciboDetalleDto[]): string {
+    const fechaHora = new Date();
+    const fechaHoraStr = fechaHora.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'medium' });
+    const total = detalles.reduce((sum, det) => sum + Number(det.subtotal ?? 0), 0);
+    const lineas: string[] = [];
+    lineas.push('<div class="pos-recibo">');
+    lineas.push('<p class="pos-titulo">Gestor infinito market</p>');
+    lineas.push(`<p class="pos-fecha">${this.escapeHtml(fechaHoraStr)}</p>`);
+    lineas.push('<p class="pos-leyenda">Recibo no apto como factura</p>');
+    lineas.push('<hr class="pos-sep"/>');
+    lineas.push('<table class="pos-tabla"><thead><tr><th>Producto</th><th>V.Unit</th><th>Cant</th><th>Subtotal</th></tr></thead><tbody>');
+    for (const det of detalles) {
+      const nombre = det.producto?.nombre ?? `Producto ${det.productoId}`;
+      const unitario = det.producto?.precio ?? (det.cantidad ? det.subtotal / det.cantidad : 0);
+      lineas.push('<tr>', `<td>${this.escapeHtml(nombre)}</td>`, `<td>${this.formatCurrency(unitario)}</td>`, `<td>${det.cantidad}</td>`, `<td>${this.formatCurrency(det.subtotal)}</td>`, '</tr>');
+    }
+    lineas.push('</tbody></table>', '<hr class="pos-sep"/>', `<p class="pos-total">TOTAL: ${this.formatCurrency(total)}</p>`, '</div>');
+    return lineas.join('');
+  }
+
+  /**
+   * Abre el recibo actual en nueva pestaña. Se llama desde el menú Opciones (Descargar recibo).
+   */
+  descargarReciboActual(): boolean {
+    if (!this.recibo || !this.detalles?.length) return false;
+    try {
+      this.abrirReciboEnNuevaPestana(this.recibo, this.detalles);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Genera el HTML del recibo y lo abre en nueva pestaña (para menú Descargar recibo).
+   */
+  private abrirReciboEnNuevaPestana(recibo: ReciboDto, detalles: ReciboDetalleDto[]): void {
+    const cuerpo = this.buildReciboHtmlFragment(detalles);
+    const htmlCompleto = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Recibo</title>
+<style>body{font-family:'Courier New',monospace;font-size:12px;margin:16px;max-width:280px}.pos-titulo{text-align:center;font-weight:bold;font-size:14px;margin:0 0 4px 0}.pos-fecha,.pos-leyenda{text-align:center;margin:2px 0}.pos-leyenda{font-size:10px}.pos-sep{border:none;border-top:1px dashed #000;margin:6px 0}.pos-tabla{width:100%;border-collapse:collapse;font-size:11px}.pos-tabla th{text-align:left;border-bottom:1px solid #000;padding:2px 4px}.pos-tabla td{padding:2px 4px}.pos-total{font-weight:bold;text-align:right;margin-top:4px}</style></head><body>${cuerpo}</body></html>`;
+    const dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(htmlCompleto);
+    const link = document.createElement('a');
+    link.href = dataUri;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
 }

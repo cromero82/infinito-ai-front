@@ -77,6 +77,31 @@
               <mat-icon class="ltr:mr-2 rtl:ml-2 ltr:-ml-1 rtl:-mr-1 icon-sm" svgIcon="mat:receipt"></mat-icon>
               <span>Recibo rápido</span>
             </button>
+            <button
+              mat-flat-button
+              class="opciones-recibo-btn ltr:ml-2 rtl:mr-2 flex-none"
+              type="button"
+              [matMenuTriggerFor]="opcionesReciboMenu"
+              [disabled]="sessionId === null || loading">
+              <mat-icon class="ltr:mr-2 rtl:ml-2 ltr:-ml-1 rtl:-mr-1 icon-sm" svgIcon="mat:more_vert"></mat-icon>
+              <span>Opciones</span>
+              <mat-icon class="ltr:ml-1 rtl:mr-1 icon-sm" svgIcon="mat:arrow_drop_down"></mat-icon>
+            </button>
+            <mat-menu #opcionesReciboMenu="matMenu" xPosition="after" yPosition="below" class="opciones-recibo-menu">
+              <button mat-menu-item (click)="descargarReciboActual()">
+                <mat-icon class="icon-sm" svgIcon="mat:download"></mat-icon>
+                <span>Descargar recibo (HTML)</span>
+              </button>
+              <button mat-menu-item class="opciones-recibo-menu-item-toggle" (click)="$event.stopPropagation()">
+                <span class="opciones-recibo-label">Imprimir recibo al pagar</span>
+                <mat-slide-toggle
+                  class="opciones-recibo-toggle"
+                  [checked]="imprimirReciboActivo"
+                  (change)="toggleImprimirRecibo($event)"
+                  (click)="$event.stopPropagation()">
+                </mat-slide-toggle>
+              </button>
+            </mat-menu>
           </div>
           <div class="ticket-panel" *ngIf="tickets[selectedIndex] as activeTicket; else noTicketSelected">
             <vex-recibo
