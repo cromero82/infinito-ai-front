@@ -9,6 +9,12 @@ export interface ClienteDto {
   documento?: string;
 }
 
+export interface CreateClienteRequest {
+  nombre: string;
+  telefono?: string;
+  documento?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -22,6 +28,13 @@ export class ClienteService {
       'Accept': 'application/json'
     });
     return this.http.get<ClienteDto[]>(this.apiUrl, { headers });
+  }
+
+  createCliente(cliente: CreateClienteRequest): Observable<ClienteDto> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+    return this.http.post<ClienteDto>(this.apiUrl, cliente, { headers });
   }
 }
 

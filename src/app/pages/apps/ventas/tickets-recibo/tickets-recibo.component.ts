@@ -18,6 +18,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { QuickReciboComponent, QuickReciboData } from '../quick-recibo/quick-recibo.component';
 
 const IMPRIMIR_RECIBO_KEY = 'imprimir-recibo';
@@ -40,6 +41,7 @@ const IMPRIMIR_RECIBO_KEY = 'imprimir-recibo';
     MatMenuModule,
     MatSlideToggleModule,
     MatSnackBarModule,
+    MatTooltipModule,
     NgIf,
     NgFor,
     ReciboComponent
@@ -98,16 +100,6 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
     localStorage.setItem(IMPRIMIR_RECIBO_KEY, String(this.imprimirReciboActivo));
   }
 
-  /** Descarga el recibo del ticket actual como archivo HTML (abrir y Ctrl+P para imprimir/PDF). */
-  descargarReciboActual(): void {
-    const ok = this.reciboComponent?.descargarReciboActual();
-    if (!ok) {
-      this.snackBar.open('No hay recibo con productos para descargar', undefined, {
-        duration: 3000,
-        horizontalPosition: 'right'
-      });
-    }
-  }
 
   ngAfterViewInit(): void {
     this.focusProductSearch(false);
@@ -142,13 +134,17 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
   focusProductSearch(select: boolean = true): void {
     setTimeout(() => {
       const input = this.productSearchInput?.nativeElement;
+      console.log('focusProductSearch llamado, input:', input);
       if (input) {
         input.focus();
+        console.log('Focus aplicado al input de búsqueda');
         if (select) {
           input.select();
         }
+      } else {
+        console.warn('No se encontró el input de búsqueda para hacer focus');
       }
-    }, 0);
+    }, 100);
   }
 
   triggerProductSearch(): void {

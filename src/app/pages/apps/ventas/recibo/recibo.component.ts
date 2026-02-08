@@ -86,6 +86,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
 
   recibo: ReciboDto | null = null;
   detalles: ReciboDetalleDto[] = [];
+  detallesParaImprimir: ReciboDetalleDto[] = []; // Guardar detalles antes del pago
   selectedDetalleIndex = -1;
   editingDetalleIndex = -1;
   editingUnitarioIndex = -1;
@@ -1331,35 +1332,57 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
 
     console.log('Ejecutando pago con método:', metodo);
 
-    const preProceso$: Observable<void> =
-      metodo.id === 1 && !omitirDialogoEfectivo
-        ? this.dialog
-            .open<PagoEfectivoCambioComponent, PagoEfectivoCambioData, PagoEfectivoCambioResultado>(
-              PagoEfectivoCambioComponent,
-              {
-                width: '640px',
-                data: {
-                  total: Number(this.recibo?.total ?? 0)
-                },
-                autoFocus: false,
-                disableClose: true
-              }
-            )
-            .afterClosed()
-            .pipe(
-              switchMap((resultado) => {
-                if (!resultado) {
-                  return EMPTY;
-                }
-                return of(void 0);
-              })
-            )
-        : of(void 0);
+    const totalARegistrar = Number(this.recibo!.total ?? 0);
+
+    if (metodo.id === 1 && !omitirDialogoEfectivo) {
+      const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && !!this.recibo && !!this.detalles?.length;
+      // Guardar detalles antes del pago para poder imprimirlos después
+      if (quiereImprimir && this.detalles?.length) {
+        this.detallesParaImprimir = [...this.detalles];
+        console.log('Detalles guardados para impresión:', this.detallesParaImprimir.length);
+      }
+      this.actualizandoMetodoPago = true;
+      const dialogRef = this.dialog.open<
+        PagoEfectivoCambioComponent,
+        PagoEfectivoCambioData,
+        PagoEfectivoCambioResultado
+      >(PagoEfectivoCambioComponent, {
+        width: '640px',
+        data: {
+          total: totalARegistrar,
+          ejecutarPago: () => this.ejecutarPagoApi$(metodo, totalARegistrar),
+          imprimirRecibo: quiereImprimir ? () => this.imprimirRecibo() : undefined,
+          mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg)
+        },
+        autoFocus: false,
+        disableClose: true
+      });
+      dialogRef
+        .afterClosed()
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => (this.actualizandoMetodoPago = false))
+        )
+        .subscribe((resultado) => {
+          if (resultado) {
+            setTimeout(() => this.metodoPagoActualizado.emit(), 0);
+            // Enfocar el input de búsqueda después de cerrar el modal
+            setTimeout(() => this.focusSearchInputRequest.emit(), 200);
+          }
+        });
+      return;
+    }
+
+    // Guardar detalles antes del pago para poder imprimirlos después (métodos no efectivo)
+    const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
+    if (debeImprimir && this.detalles?.length) {
+      this.detallesParaImprimir = [...this.detalles];
+      console.log('Detalles guardados para impresión (método no efectivo - ejecutarPago):', this.detallesParaImprimir.length);
+    }
+
+    const preProceso$: Observable<void> = of(void 0);
 
     this.actualizandoMetodoPago = true;
-
-    // Capture total before starting the update process
-    const totalARegistrar = Number(this.recibo!.total ?? 0);
 
     preProceso$
       .pipe(
@@ -1427,7 +1450,22 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       )
       .subscribe({
         next: (totalGuardado) => {
-          this.mostrarSnackbarPagoExitoso(totalGuardado);
+          // Si debe imprimir, hacerlo automáticamente sin mostrar snackbar
+          if (debeImprimir) {
+            console.log('Pago exitoso (método no efectivo - ejecutarPago), imprimiendo automáticamente...');
+            setTimeout(() => {
+              this.imprimirRecibo();
+            }, 300);
+          } else {
+            this.mostrarSnackbarPagoExitoso(totalGuardado);
+            // Enfocar el input de búsqueda después del pago cuando no se imprime
+            // Usamos un delay más largo para asegurar que el snackbar se haya mostrado completamente
+            console.log('Pago exitoso sin impresión, restaurando focus al input de búsqueda...');
+            setTimeout(() => {
+              console.log('Emitiendo evento focusSearchInputRequest...');
+              this.focusSearchInputRequest.emit();
+            }, 500);
+          }
         },
         error: (err: unknown) => {
           console.error('Error actualizando método de pago', err);
@@ -1473,31 +1511,53 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     // Usar valorReferencia (diferencia) para el diálogo de pago en efectivo
     const valorParaDialogo = valorReferencia !== null && valorReferencia > 0 ? valorReferencia : totalARegistrar;
 
-    const preProceso$: Observable<void> =
-      metodo.id === 1
-        ? this.dialog
-            .open<PagoEfectivoCambioComponent, PagoEfectivoCambioData, PagoEfectivoCambioResultado>(
-              PagoEfectivoCambioComponent,
-              {
-                width: '640px',
-                data: {
-                  // Usar la diferencia (valorReferencia) para el diálogo
-                  total: valorParaDialogo
-                },
-                autoFocus: false,
-                disableClose: true
-              }
-            )
-            .afterClosed()
-            .pipe(
-              switchMap((resultado) => {
-                if (!resultado) {
-                  return EMPTY;
-                }
-                return of(void 0);
-              })
-            )
-        : of(void 0);
+    if (metodo.id === 1) {
+      const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && !!this.recibo && !!this.detalles?.length;
+      // Guardar detalles antes del pago para poder imprimirlos después
+      if (quiereImprimir && this.detalles?.length) {
+        this.detallesParaImprimir = [...this.detalles];
+        console.log('Detalles guardados para impresión:', this.detallesParaImprimir.length);
+      }
+      this.actualizandoMetodoPago = true;
+      const dialogRef = this.dialog.open<
+        PagoEfectivoCambioComponent,
+        PagoEfectivoCambioData,
+        PagoEfectivoCambioResultado
+      >(PagoEfectivoCambioComponent, {
+        width: '640px',
+        data: {
+          total: valorParaDialogo,
+          ejecutarPago: () => this.ejecutarPagoApi$(metodo, totalARegistrar),
+          imprimirRecibo: quiereImprimir ? () => this.imprimirRecibo() : undefined,
+          mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg)
+        },
+        autoFocus: false,
+        disableClose: true
+      });
+      dialogRef
+        .afterClosed()
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => (this.actualizandoMetodoPago = false))
+        )
+        .subscribe((resultado) => {
+          if (resultado) {
+            setTimeout(() => this.metodoPagoActualizado.emit(), 0);
+            // Enfocar el input de búsqueda después de cerrar el modal
+            setTimeout(() => this.focusSearchInputRequest.emit(), 200);
+          }
+        });
+      return;
+    }
+
+    // Guardar detalles antes del pago para poder imprimirlos después (métodos no efectivo)
+    const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
+    if (debeImprimir && this.detalles?.length) {
+      this.detallesParaImprimir = [...this.detalles];
+      console.log('Detalles guardados para impresión (método no efectivo - onMetodoPagoSeleccionadoDesdeEdicion):', this.detallesParaImprimir.length);
+    }
+
+    const preProceso$: Observable<void> = of(void 0);
 
     this.actualizandoMetodoPago = true;
 
@@ -1567,7 +1627,22 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       )
       .subscribe({
         next: (totalGuardado) => {
-          this.mostrarSnackbarPagoExitoso(totalGuardado);
+          // Si debe imprimir, hacerlo automáticamente sin mostrar snackbar
+          if (debeImprimir) {
+            console.log('Pago exitoso (método no efectivo - onMetodoPagoSeleccionadoDesdeEdicion), imprimiendo automáticamente...');
+            setTimeout(() => {
+              this.imprimirRecibo();
+            }, 300);
+          } else {
+            this.mostrarSnackbarPagoExitoso(totalGuardado);
+            // Enfocar el input de búsqueda después del pago cuando no se imprime
+            // Usamos un delay más largo para asegurar que el snackbar se haya mostrado completamente
+            console.log('Pago exitoso sin impresión, restaurando focus al input de búsqueda...');
+            setTimeout(() => {
+              console.log('Emitiendo evento focusSearchInputRequest...');
+              this.focusSearchInputRequest.emit();
+            }, 500);
+          }
         },
         error: (err: unknown) => {
           console.error('Error actualizando método de pago', err);
@@ -1660,35 +1735,57 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    const preProceso$: Observable<void> =
-      metodo.id === 1
-        ? this.dialog
-            .open<PagoEfectivoCambioComponent, PagoEfectivoCambioData, PagoEfectivoCambioResultado>(
-              PagoEfectivoCambioComponent,
-              {
-                width: '640px',
-                data: {
-                  total: Number(this.recibo?.total ?? 0)
-                },
-                autoFocus: false,
-                disableClose: true
-              }
-            )
-            .afterClosed()
-            .pipe(
-              switchMap((resultado) => {
-                if (!resultado) {
-                  return EMPTY;
-                }
-                return of(void 0);
-              })
-            )
-        : of(void 0);
+    const totalARegistrar = Number(this.recibo!.total ?? 0);
+
+    if (metodo.id === 1) {
+      const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && !!this.recibo && !!this.detalles?.length;
+      // Guardar detalles antes del pago para poder imprimirlos después
+      if (quiereImprimir && this.detalles?.length) {
+        this.detallesParaImprimir = [...this.detalles];
+        console.log('Detalles guardados para impresión:', this.detallesParaImprimir.length);
+      }
+      this.actualizandoMetodoPago = true;
+      const dialogRef = this.dialog.open<
+        PagoEfectivoCambioComponent,
+        PagoEfectivoCambioData,
+        PagoEfectivoCambioResultado
+      >(PagoEfectivoCambioComponent, {
+        width: '640px',
+        data: {
+          total: totalARegistrar,
+          ejecutarPago: () => this.ejecutarPagoApi$(metodo, totalARegistrar),
+          imprimirRecibo: quiereImprimir ? () => this.imprimirRecibo() : undefined,
+          mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg)
+        },
+        autoFocus: false,
+        disableClose: true
+      });
+      dialogRef
+        .afterClosed()
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => (this.actualizandoMetodoPago = false))
+        )
+        .subscribe((resultado) => {
+          if (resultado) {
+            setTimeout(() => this.metodoPagoActualizado.emit(), 0);
+            // Enfocar el input de búsqueda después de cerrar el modal
+            setTimeout(() => this.focusSearchInputRequest.emit(), 200);
+          }
+        });
+      return;
+    }
+
+    // Guardar detalles antes del pago para poder imprimirlos después (métodos no efectivo)
+    const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
+    if (debeImprimir && this.detalles?.length) {
+      this.detallesParaImprimir = [...this.detalles];
+      console.log('Detalles guardados para impresión (método no efectivo - seleccionarMetodoPago):', this.detallesParaImprimir.length);
+    }
+
+    const preProceso$: Observable<void> = of(void 0);
 
     this.actualizandoMetodoPago = true;
-
-    // Capture total before starting the update process
-    const totalARegistrar = Number(this.recibo!.total ?? 0);
 
     preProceso$
       .pipe(
@@ -1756,7 +1853,22 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       )
       .subscribe({
         next: (totalGuardado) => {
-          this.mostrarSnackbarPagoExitoso(totalGuardado);
+          // Si debe imprimir, hacerlo automáticamente sin mostrar snackbar
+          if (debeImprimir) {
+            console.log('Pago exitoso (método no efectivo - seleccionarMetodoPago), imprimiendo automáticamente...');
+            setTimeout(() => {
+              this.imprimirRecibo();
+            }, 300);
+          } else {
+            this.mostrarSnackbarPagoExitoso(totalGuardado);
+            // Enfocar el input de búsqueda después del pago cuando no se imprime
+            // Usamos un delay más largo para asegurar que el snackbar se haya mostrado completamente
+            console.log('Pago exitoso sin impresión, restaurando focus al input de búsqueda...');
+            setTimeout(() => {
+              console.log('Emitiendo evento focusSearchInputRequest...');
+              this.focusSearchInputRequest.emit();
+            }, 500);
+          }
         },
         error: (err: unknown) => {
           console.error('Error actualizando método de pago', err);
@@ -1823,15 +1935,67 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   /**
-   * Muestra el snackbar de pago exitoso. Si "imprimir recibo al pagar" está activo,
-   * imprime el recibo en la ventana actual (inyecta contenido oculto y llama a window.print).
+   * Ejecuta la API de pago (actualizar recibo, recargar tickets). Usado por el modal de efectivo.
    */
-  private mostrarSnackbarPagoExitoso(totalGuardado: number): void {
+  private ejecutarPagoApi$(metodo: MetodoPagoDto, totalARegistrar: number): Observable<number> {
+    return this.obtenerTicketAsociado().pipe(
+      switchMap((ticketId) => {
+        const sesionId = this.getSessionId();
+        const payload: ActualizarReciboRequest = {
+          clienteId: this.recibo!.clienteId,
+          ticketId,
+          estadoId: ESTADOS_RECIBO.PAGADO,
+          metodoPagoId: metodo.id,
+          total: totalARegistrar.toFixed(2),
+          sesionId: sesionId ?? undefined
+        };
+        return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
+          switchMap(() => {
+            const sessionId = this.getSessionId();
+            if (!sessionId) throw new Error('No se encontró sessionId.');
+            return this.ticketReciboService.getByTicketId(ticketId, sessionId).pipe(
+              map((relacion) => {
+                if (!relacion?.reciboId) throw new Error('No se encontró relación recibo para este ticket.');
+                return { reciboId: relacion.reciboId, totalGuardado: totalARegistrar };
+              })
+            );
+          })
+        );
+      }),
+      switchMap(({ reciboId, totalGuardado }) =>
+        this.reciboService.getRecibo(reciboId).pipe(
+          tap((reciboActualizado) => {
+            this.recibo = {
+              ...this.recibo!,
+              ...reciboActualizado,
+              sesionId: this.sessionId ?? reciboActualizado.sesionId
+            };
+            this.fetchDetalles(reciboActualizado.id);
+          }),
+          switchMap(() => {
+            const sessionId = this.getSessionId();
+            if (sessionId) {
+              return this.ticketsService.getTicketsBySession(sessionId).pipe(
+                takeUntil(this.destroy$),
+                map(() => totalGuardado),
+                tap({
+                  error: (err) => console.error('Error recargando tickets después de actualizar recibo', err)
+                })
+              );
+            }
+            return of(totalGuardado);
+          })
+        )
+      )
+    );
+  }
+
+  /**
+   * Muestra solo el snackbar de pago exitoso (sin lógica de impresión). Usado cuando el modal de efectivo
+   * maneja la impresión internamente.
+   */
+  private mostrarSnackbarPagoExitosoSinImpresion(totalGuardado: number): void {
     const totalFormateado = this.formatCurrency(totalGuardado);
-    const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && this.recibo && this.detalles?.length;
-    if (quiereImprimir && this.recibo && this.detalles?.length) {
-      this.imprimirReciboEnVentanaPrincipal(this.recibo, this.detalles);
-    }
     this.snackBar.open(
       `Recibo por valor de ${totalFormateado} guardado correctamente`,
       undefined,
@@ -1854,13 +2018,65 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       }
     }, 0);
     setTimeout(() => this.metodoPagoActualizado.emit(), 0);
+    // Enfocar el input de búsqueda después del pago
+    setTimeout(() => this.focusSearchInputRequest.emit(), 300);
   }
 
   /**
-   * Inyecta el recibo en la ventana actual (oculto en pantalla, visible al imprimir) y llama a window.print().
-   * Se ejecuta automáticamente al completar el pago si "imprimir recibo al pagar" está activo.
+   * Muestra el snackbar de pago exitoso. Si "imprimir recibo al pagar" está activo,
+   * inyecta el recibo en el DOM y muestra el botón "Imprimir" en el snackbar. La impresión
+   * se dispara al hacer clic en "Imprimir" (gesto directo del usuario) para evitar bloqueos del navegador.
    */
-  private imprimirReciboEnVentanaPrincipal(recibo: ReciboDto, detalles: ReciboDetalleDto[]): void {
+  private mostrarSnackbarPagoExitoso(totalGuardado: number): void {
+    const totalFormateado = this.formatCurrency(totalGuardado);
+    const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && this.recibo && this.detalles?.length;
+    let limpiarRecibo: (() => void) | null = null;
+    if (quiereImprimir && this.recibo && this.detalles?.length) {
+      limpiarRecibo = this.prepararReciboParaImpresion(this.recibo, this.detalles);
+    }
+    const config = {
+      duration: 8000,
+      horizontalPosition: 'right' as const,
+      panelClass: ['recibo-snackbar-success']
+    };
+    const snackRef = this.snackBar.open(
+      `Recibo por valor de ${totalFormateado} guardado correctamente`,
+      quiereImprimir ? 'Imprimir' : undefined,
+      config
+    );
+    if (quiereImprimir && limpiarRecibo) {
+      snackRef.onAction().subscribe(() => {
+        window.print();
+        const prevAfterPrint = window.onafterprint;
+        const cleanup = () => {
+          limpiarRecibo?.();
+          window.onafterprint = prevAfterPrint ?? null;
+        };
+        window.onafterprint = cleanup;
+        setTimeout(cleanup, 4000);
+      });
+      snackRef.afterDismissed().subscribe(() => limpiarRecibo?.());
+    }
+    setTimeout(() => {
+      const snackBarElement = document.querySelector('.recibo-snackbar-success .mat-mdc-snack-bar-label');
+      if (snackBarElement) {
+        const text = snackBarElement.textContent || '';
+        const currencyRegex = /\$\s*[\d.,]+/;
+        const match = text.match(currencyRegex);
+        if (match) {
+          const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+          snackBarElement.innerHTML = boldText;
+        }
+      }
+    }, 0);
+    setTimeout(() => this.metodoPagoActualizado.emit(), 0);
+  }
+
+  /**
+   * Inyecta el recibo en la ventana actual (oculto en pantalla, visible al imprimir).
+   * Devuelve una función para limpiar el DOM. La impresión se dispara desde el clic en "Imprimir" del snackbar.
+   */
+  private prepararReciboParaImpresion(recibo: ReciboDto, detalles: ReciboDetalleDto[]): () => void {
     const idRoot = 'recibo-pos-print-root';
     const idStyles = 'recibo-pos-print-styles';
     const contenido = this.buildReciboHtmlFragment(detalles);
@@ -1890,20 +2106,12 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     document.body.appendChild(styleEl);
     document.body.appendChild(wrap);
 
-    const prevAfterPrint = window.onafterprint;
-    const limpiar = () => {
+    return () => {
       const s = document.getElementById(idStyles);
       const r = document.getElementById(idRoot);
       if (s?.parentNode) s.parentNode.removeChild(s);
       if (r?.parentNode) r.parentNode.removeChild(r);
-      window.onafterprint = prevAfterPrint ?? null;
     };
-    window.onafterprint = limpiar;
-
-    setTimeout(() => {
-      window.print();
-      setTimeout(limpiar, 3000);
-    }, 100);
   }
 
   /** Construye el fragmento HTML del recibo (solo el cuerpo, sin documento completo). */
@@ -1925,6 +2133,135 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     }
     lineas.push('</tbody></table>', '<hr class="pos-sep"/>', `<p class="pos-total">TOTAL: ${this.formatCurrency(total)}</p>`, '</div>');
     return lineas.join('');
+  }
+
+  /**
+   * Imprime el recibo actual usando window.open() como en el ejemplo funcional.
+   * Verifica localStorage antes de imprimir.
+   */
+  imprimirRecibo(): void {
+    console.log('=== IMPRIMIR RECIBO LLAMADO ===');
+    console.log('localStorage imprimir-recibo:', localStorage.getItem('imprimir-recibo'));
+    
+    // Verificar localStorage antes de imprimir
+    const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
+    
+    if (!debeImprimir) {
+      console.log('Impresión deshabilitada: imprimir-recibo no está en true');
+      return;
+    }
+
+    if (!this.recibo) {
+      console.log('No hay recibo para imprimir');
+      return;
+    }
+
+    // Usar detalles guardados antes del pago si están disponibles
+    if (this.detallesParaImprimir?.length > 0) {
+      console.log('Usando detalles guardados antes del pago:', this.detallesParaImprimir.length);
+      const detallesTemporales = [...this.detallesParaImprimir];
+      this.detallesParaImprimir = []; // Limpiar después de usar
+      this.ejecutarImpresionConDetalles(detallesTemporales);
+      return;
+    }
+
+    // Si no hay detalles pero hay recibo, recargar los detalles primero
+    if (!this.detalles?.length && this.recibo.id) {
+      console.log('Detalles vacíos, recargando detalles del recibo...', { reciboId: this.recibo.id });
+      this.reciboDetalleService.getDetallesByRecibo(this.recibo.id).subscribe({
+        next: (detalles) => {
+          console.log('Detalles cargados:', detalles?.length);
+          this.detalles = detalles || [];
+          if (this.detalles.length > 0) {
+            // Intentar imprimir de nuevo con los detalles cargados
+            setTimeout(() => this.ejecutarImpresion(), 100);
+          } else {
+            console.log('No hay detalles para imprimir después de recargar');
+          }
+        },
+        error: (err) => {
+          console.error('Error cargando detalles para imprimir', err);
+        }
+      });
+      return;
+    }
+
+    if (!this.detalles?.length) {
+      console.log('No hay detalles para imprimir', { detalles: this.detalles?.length });
+      return;
+    }
+
+    this.ejecutarImpresion();
+  }
+
+  private ejecutarImpresion(): void {
+    this.ejecutarImpresionConDetalles(this.detalles);
+  }
+
+  private ejecutarImpresionConDetalles(detalles: ReciboDetalleDto[]): void {
+    console.log('Generando HTML del recibo...', { detalles: detalles?.length });
+    // Generar el HTML del recibo
+    const cuerpo = this.buildReciboHtmlFragment(detalles);
+    const htmlCompleto = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Imprimir Recibo</title>
+<style>
+@page {
+  size: 80mm auto;
+  margin: 0;
+}
+html{padding:0;margin:0;font-family:'Courier New','Courier',monospace;width:80mm;font-size:12px}
+body{margin:0;padding:8px;width:80mm;background:white}
+p{margin-top:0.25rem;margin-bottom:0.25rem;white-space:pre-wrap}
+.pos-titulo{text-align:center;font-weight:bold;font-size:14px;margin:0 0 4px 0}
+.pos-fecha,.pos-leyenda{text-align:center;margin:2px 0}
+.pos-leyenda{font-size:10px}
+.pos-sep{border:none;border-top:1px dashed #000;margin:6px 0}
+.pos-tabla{width:100%;border-collapse:collapse;font-size:11px}
+.pos-tabla th{text-align:left;border-bottom:1px solid #000;padding:2px 4px}
+.pos-tabla td{padding:2px 4px}
+.pos-total{font-weight:bold;text-align:right;margin-top:4px;font-size:14px}
+</style>
+<script>
+window.onafterprint = function() {
+  setTimeout(function() {
+    window.close();
+  }, 100);
+};
+window.onload = function() {
+  setTimeout(function() {
+    window.print();
+  }, 250);
+};
+</script>
+</head><body>${cuerpo}</body></html>`;
+
+    console.log('Abriendo ventana de impresión...');
+    // Abrir ventana de impresión usando window.open() como en el ejemplo
+    const printerWindow = window.open('', '_blank');
+    
+    if (!printerWindow) {
+      console.error('No se pudo abrir la ventana de impresión - ventanas emergentes bloqueadas');
+      alert('Por favor, permite ventanas emergentes para imprimir');
+      return;
+    }
+
+    console.log('Escribiendo HTML en la ventana...');
+    // Escribir el HTML completo en la ventana
+    printerWindow.document.write(htmlCompleto);
+    
+    // Cerrar el documento para que se renderice
+    printerWindow.document.close();
+    
+    // Enfocar la ventana
+    printerWindow.focus();
+    
+    console.log('Ventana de impresión abierta, se imprimirá automáticamente');
+    // La impresión se ejecutará automáticamente cuando la ventana cargue
+    // gracias al window.onload en el script dentro del HTML
+    
+    // Enfocar el input de búsqueda después de que la ventana de impresión se cierre
+    // Usamos un delay más largo para asegurar que la ventana de impresión se haya cerrado completamente
+    // La ventana se cierra en window.onafterprint después de 100ms, así que esperamos un poco más
+    setTimeout(() => this.focusSearchInputRequest.emit(), 1500);
   }
 
   /**
