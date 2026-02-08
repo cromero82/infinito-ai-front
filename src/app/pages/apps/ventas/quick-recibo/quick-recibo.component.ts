@@ -64,6 +64,7 @@ export class QuickReciboComponent implements OnInit, AfterViewInit, OnDestroy {
   isSelectingFromAutocomplete = false;
   mostrarTodosClientes = false;
   error: string | null = null;
+  mostrarBotonCrearCliente = false;
   
   private readonly currencyFormatter = new Intl.NumberFormat('es-CO', {
     style: 'currency',
@@ -96,29 +97,49 @@ export class QuickReciboComponent implements OnInit, AfterViewInit, OnDestroy {
       map(([value]) => {
         // Si se está creando un cliente o se debe mostrar todos, mostrar todos los clientes
         if (this.mostrarTodosClientes || this.creatingCliente) {
+          this.mostrarBotonCrearCliente = false;
           return [...this.clientes];
         }
         
         // Extraer el string del valor (puede ser ClienteDto o string)
         let filterValue = '';
-        if (typeof value === 'string') {
+        const esString = typeof value === 'string';
+        
+        if (esString) {
           filterValue = value.toLowerCase().trim();
         } else if (value && typeof value === 'object' && 'nombre' in value) {
-          // Si es un objeto ClienteDto, usar el nombre para filtrar
-          filterValue = (value as ClienteDto).nombre.toLowerCase().trim();
+          // Si es un objeto ClienteDto, ocultar botón y mostrar todos los clientes
+          this.mostrarBotonCrearCliente = false;
+          this.cdr.detectChanges();
+          return [...this.clientes];
         }
         
         // Si no hay filtro, mostrar todos los clientes
         if (!filterValue) {
+          this.mostrarBotonCrearCliente = false;
+          this.cdr.detectChanges();
           return [...this.clientes];
         }
+        
         // Filtrar sobre una copia de la lista actual de clientes para asegurar reactividad
         const clientesCopy = [...this.clientes];
-        return clientesCopy.filter(cliente => 
+        const resultados = clientesCopy.filter(cliente => 
           cliente.nombre.toLowerCase().includes(filterValue) ||
           (cliente.documento && cliente.documento.toLowerCase().includes(filterValue)) ||
           (cliente.telefono && cliente.telefono.toLowerCase().includes(filterValue))
         );
+        
+        // Mostrar botón de crear si no hay resultados, hay texto escrito y es un string (no objeto seleccionado)
+        const debeMostrar = resultados.length === 0 && filterValue.length > 0 && esString;
+        this.mostrarBotonCrearCliente = debeMostrar;
+        console.log('=== DEBUG BOTON CREAR ===');
+        console.log('resultados.length:', resultados.length);
+        console.log('filterValue:', filterValue);
+        console.log('esString:', esString);
+        console.log('mostrarBotonCrearCliente:', this.mostrarBotonCrearCliente);
+        this.cdr.detectChanges();
+        
+        return resultados;
       })
     );
 
@@ -356,6 +377,7 @@ export class QuickReciboComponent implements OnInit, AfterViewInit, OnDestroy {
     
     this.isSelectingFromAutocomplete = true;
     this.selectedClienteId = cliente.id;
+    this.mostrarBotonCrearCliente = false; // Ocultar botón cuando se selecciona un cliente
     console.log('selectedClienteId establecido:', this.selectedClienteId);
     
     // Establecer el valor del control con el objeto completo (necesario con displayWith)
@@ -430,6 +452,17 @@ export class QuickReciboComponent implements OnInit, AfterViewInit, OnDestroy {
         // Si no existe, crear nuevo cliente
         this.createClienteFromInput(inputValue);
       }
+    } else {
+      // Cuando el usuario está escribiendo, resetear selectedClienteId si el valor es un string
+      const inputValue = (keyboardEvent.target as HTMLInputElement).value;
+      if (typeof inputValue === 'string' && inputValue.length > 0) {
+        // Si el usuario está escribiendo texto nuevo, resetear la selección
+        const currentValue = this.clienteCtrl.value;
+        if (typeof currentValue === 'object' && currentValue !== null) {
+          // Si había un cliente seleccionado y ahora está escribiendo, resetear
+          this.selectedClienteId = null;
+        }
+      }
     }
   }
 
@@ -445,6 +478,8 @@ export class QuickReciboComponent implements OnInit, AfterViewInit, OnDestroy {
     this.clienteCtrl.setValue('', { emitEvent: true });
     // Resetear la selección
     this.selectedClienteId = null;
+    // Ocultar botón de crear
+    this.mostrarBotonCrearCliente = false;
     // Cerrar el autocomplete si está abierto
     if (this.autocompleteTrigger) {
       this.autocompleteTrigger.closePanel();
@@ -455,6 +490,13 @@ export class QuickReciboComponent implements OnInit, AfterViewInit, OnDestroy {
         this.clienteInputRef.nativeElement.focus();
       }
     }, 100);
+  }
+
+  crearClienteDesdeBoton(): void {
+    const inputValue = this.clienteCtrl.value;
+    if (typeof inputValue === 'string' && inputValue.trim()) {
+      this.createClienteFromInput(inputValue.trim());
+    }
   }
 
   private createClienteFromInput(nombre: string): void {

@@ -48,7 +48,10 @@
           [class.selected]="selectedReciboId === recibo.id"
           (click)="selectRecibo(recibo)">
           <span class="recibo-total" [innerHTML]="formatCurrencyWithBold(recibo.total)"></span>
-          <span class="recibo-fecha">{{ formatDate(recibo.fechaCreacion) }}</span>
+          <div class="recibo-fecha-cliente-row">
+            <span class="recibo-fecha">{{ formatDate(recibo.fechaCreacion) }}</span>
+            <span class="recibo-cliente" *ngIf="getClienteNombre(recibo.clienteId)">{{ getClienteNombre(recibo.clienteId) }}</span>
+          </div>
         </div>
         <div class="loading-more" *ngIf="loadingMore">
           Cargando más...
@@ -129,8 +132,18 @@
           </div>
         </div>
         <div class="detalle-footer" *ngIf="detalles.length > 0">
-          <span class="detalle-col producto"></span>
-          <span class="detalle-col unitario"></span>
+          <div class="detalle-footer-left">
+            <div class="metodo-pago-container" *ngIf="getSelectedRecibo() && getMetodoPago(getSelectedRecibo()!.metodoPagoId)">
+              <span class="metodo-pago-label">Pago con:</span>
+              <img 
+                [src]="'assets/img/icons/payments/' + getMetodoPago(getSelectedRecibo()!.metodoPagoId)!.file"
+                [alt]="getMetodoPago(getSelectedRecibo()!.metodoPagoId)!.descripcion"
+                class="metodo-pago-icon" />
+              <span class="monto-recibido-label" *ngIf="isMetodoPagoEfectivo(getSelectedRecibo()!.metodoPagoId) && getMontoRecibido(getSelectedRecibo()!) !== null">
+                {{ formatCurrency(getMontoRecibido(getSelectedRecibo()!)!) }}
+              </span>
+            </div>
+          </div>
           <span class="detalle-col cantidad">TOTAL</span>
           <span class="detalle-col subtotal total-value total-value--highlight">
             {{ formatCurrency(getTotalDetalles()) }}

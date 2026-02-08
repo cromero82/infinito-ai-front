@@ -141,9 +141,22 @@
   }
 }
 
+.recibo-fecha-cliente-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
 .recibo-fecha {
   font-size: 12px;
   color: #666666;
+}
+
+.recibo-cliente {
+  font-size: 12px;
+  color: #333333;
+  font-weight: 500;
 }
 
 .loading,
@@ -250,12 +263,48 @@
 
 .detalle-footer {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 16px;
   padding: 16px;
   border-top: 2px solid rgba(0, 0, 0, 0.12);
   margin-top: 8px;
   align-items: center;
+
+  .detalle-footer-left {
+    grid-column: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .metodo-pago-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(76, 175, 80, 0.1);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    border-radius: 4px;
+    padding: 6px 10px;
+  }
+
+  .metodo-pago-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #2e7d32;
+  }
+
+  .metodo-pago-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+  }
+
+  .monto-recibido-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #2e7d32;
+    margin-left: 4px;
+  }
 
   .total-value {
     text-align: right;

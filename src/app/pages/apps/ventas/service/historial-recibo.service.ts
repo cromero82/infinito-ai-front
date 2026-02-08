@@ -19,6 +19,7 @@ export interface HistorialReciboDto {
   metodoPagoId: number;
   sesionId: number;
   total: number;
+  montoRecibido?: number;
 }
 
 export interface HistorialReciboPage {

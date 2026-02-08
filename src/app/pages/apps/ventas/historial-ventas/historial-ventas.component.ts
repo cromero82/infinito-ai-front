@@ -12,6 +12,8 @@ import { HistorialReciboService, HistorialReciboDto, HistorialReciboPage } from 
 import { HistorialReciboDetalleService, HistorialReciboDetalleDto } from '../service/historial-recibo-detalle.service';
 import { EstadoRecibosService, EstadoReciboDto } from '../service/estado-recibos.service';
 import { SesionesService } from '../service/sesiones.service';
+import { ClienteService, ClienteDto } from '../service/cliente.service';
+import { MetodoPagoService, MetodoPagoDto } from '../service/metodo-pago.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -62,11 +64,21 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   anulandoRecibo = false;
   volviendoAEditar = false;
 
+  // Clientes state
+  clientes: ClienteDto[] = [];
+  clientesLoading = false;
+
+  // Métodos de pago state
+  metodosPago: MetodoPagoDto[] = [];
+  metodosPagoLoading = false;
+
   constructor(
     private historialReciboService: HistorialReciboService,
     private historialReciboDetalleService: HistorialReciboDetalleService,
     private estadoRecibosService: EstadoRecibosService,
     private sesionesService: SesionesService,
+    private clienteService: ClienteService,
+    private metodoPagoService: MetodoPagoService,
     private snackBar: MatSnackBar,
     private router: Router,
     private activatedRoute: ActivatedRoute,
@@ -103,7 +115,41 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
       }
     });
 
+    this.loadClientes();
+    this.loadMetodosPago();
     this.loadEstadosRecibos();
+  }
+
+  loadClientes(): void {
+    this.clientesLoading = true;
+    this.clienteService.getClientes().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (clientes) => {
+        this.clientes = clientes;
+        this.clientesLoading = false;
+      },
+      error: (err) => {
+        console.error('Error loading clientes', err);
+        this.clientesLoading = false;
+      }
+    });
+  }
+
+  loadMetodosPago(): void {
+    this.metodosPagoLoading = true;
+    this.metodoPagoService.obtenerMetodosPago().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (metodosPago) => {
+        this.metodosPago = metodosPago;
+        this.metodosPagoLoading = false;
+      },
+      error: (err) => {
+        console.error('Error loading metodos pago', err);
+        this.metodosPagoLoading = false;
+      }
+    });
   }
 
   loadEstadosRecibos(): void {
@@ -503,6 +549,35 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
         this.volviendoAEditar = false;
       }
     });
+  }
+
+  getClienteNombre(clienteId: number): string | null {
+    const cliente = this.clientes.find(c => c.id === clienteId);
+    if (!cliente) {
+      return null;
+    }
+    // Retornar null si es "ANONIMO" para no mostrarlo
+    if (cliente.nombre === 'ANONIMO') {
+      return null;
+    }
+    return cliente.nombre;
+  }
+
+  getMetodoPagoNombre(metodoPagoId: number): string | null {
+    const metodoPago = this.metodosPago.find(m => m.id === metodoPagoId);
+    return metodoPago ? metodoPago.descripcion : null;
+  }
+
+  getMetodoPago(metodoPagoId: number): MetodoPagoDto | null {
+    return this.metodosPago.find(m => m.id === metodoPagoId) || null;
+  }
+
+  isMetodoPagoEfectivo(metodoPagoId: number): boolean {
+    return metodoPagoId === 1;
+  }
+
+  getMontoRecibido(recibo: HistorialReciboDto): number | null {
+    return recibo.montoRecibido ?? null;
   }
 }
 

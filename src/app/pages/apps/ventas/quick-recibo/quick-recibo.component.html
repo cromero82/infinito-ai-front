@@ -14,6 +14,17 @@
         [disabled]="loadingClientes || loading || creatingCliente"
         placeholder="Escriba para buscar o presione Enter para crear nuevo cliente" />
       <button
+        *ngIf="mostrarBotonCrearCliente && !loadingClientes && !creatingCliente"
+        mat-button
+        matSuffix
+        type="button"
+        (click)="crearClienteDesdeBoton()"
+        class="btn-crear-cliente"
+        aria-label="Crear nuevo cliente">
+        <mat-icon class="icon-sm" svgIcon="mat:add"></mat-icon>
+        <span class="btn-crear-text">Enter o click aquí para crear</span>
+      </button>
+      <button
         *ngIf="clienteCtrl.value && !loadingClientes && !creatingCliente"
         mat-icon-button
         matSuffix
