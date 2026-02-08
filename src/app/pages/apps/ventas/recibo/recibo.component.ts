@@ -803,13 +803,17 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         
         // Update recibo total on backend
         if (this.recibo && this.recibo.id && this.recibo.ticketId && this.recibo.clienteId) {
+          // Calcular montoRecibido: si es efectivo, igual al total; si no, igual al total
+          const montoRecibidoFinal = (this.recibo.metodoPagoId === 1) ? finalTotal : finalTotal;
+          
           this.reciboService.actualizarRecibo(this.recibo.id, {
             clienteId: this.recibo.clienteId,
             ticketId: this.recibo.ticketId,
             estadoId: this.recibo.estadoId ?? ESTADOS_RECIBO.PENDIENTE_PAGO,
             metodoPagoId: this.recibo.metodoPagoId ?? 0,
             total: String(finalTotal.toFixed(2)),
-            sesionId: this.recibo.sesionId
+            sesionId: this.recibo.sesionId,
+            montoRecibido: montoRecibidoFinal
           }).subscribe({
             next: (updatedRecibo) => {
               this.recibo = updatedRecibo;
@@ -970,13 +974,17 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         // Update recibo total on backend
         const finalTotal = this.recalculateTotal();
         if (this.recibo && this.recibo.id && this.recibo.ticketId && this.recibo.clienteId) {
+          // Calcular montoRecibido: si es efectivo, igual al total; si no, igual al total
+          const montoRecibidoFinal = (this.recibo.metodoPagoId === 1) ? finalTotal : finalTotal;
+          
           this.reciboService.actualizarRecibo(this.recibo.id, {
             clienteId: this.recibo.clienteId,
             ticketId: this.recibo.ticketId,
             estadoId: this.recibo.estadoId ?? ESTADOS_RECIBO.PENDIENTE_PAGO,
             metodoPagoId: this.recibo.metodoPagoId ?? 0,
             total: String(finalTotal.toFixed(2)),
-            sesionId: this.recibo.sesionId
+            sesionId: this.recibo.sesionId,
+            montoRecibido: montoRecibidoFinal
           }).subscribe({
             next: (updatedRecibo) => {
               this.recibo = updatedRecibo;
@@ -1350,7 +1358,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         width: '640px',
         data: {
           total: totalARegistrar,
-          ejecutarPago: () => this.ejecutarPagoApi$(metodo, totalARegistrar),
+          ejecutarPago: (montoRecibido: number) => this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
           imprimirRecibo: quiereImprimir ? () => this.imprimirRecibo() : undefined,
           mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg)
         },
@@ -1390,13 +1398,17 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         switchMap(() => this.obtenerTicketAsociado()),
         switchMap((ticketId) => {
           const sesionId = this.getSessionId();
+          // Calcular montoRecibido: si es efectivo, igual al total (se pasará desde el modal); si no, igual al total
+          const montoRecibidoFinal = metodo.id === 1 ? totalARegistrar : totalARegistrar;
+          
           const payload: ActualizarReciboRequest = {
             clienteId: this.recibo!.clienteId,
             ticketId,
             estadoId: ESTADOS_RECIBO.PAGADO,
             metodoPagoId: metodo.id,
             total: totalARegistrar.toFixed(2),
-            sesionId: sesionId ?? undefined
+            sesionId: sesionId ?? undefined,
+            montoRecibido: montoRecibidoFinal
           };
 
           return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
@@ -1527,7 +1539,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         width: '640px',
         data: {
           total: valorParaDialogo,
-          ejecutarPago: () => this.ejecutarPagoApi$(metodo, totalARegistrar),
+          ejecutarPago: (montoRecibido: number) => this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
           imprimirRecibo: quiereImprimir ? () => this.imprimirRecibo() : undefined,
           mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg)
         },
@@ -1567,13 +1579,17 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         switchMap(() => this.obtenerTicketAsociado()),
         switchMap((ticketId) => {
           const sesionId = this.getSessionId();
+          // Calcular montoRecibido: si es efectivo, igual al total (se pasará desde el modal); si no, igual al total
+          const montoRecibidoFinal = metodo.id === 1 ? totalARegistrar : totalARegistrar;
+          
           const payload: ActualizarReciboRequest = {
             clienteId: this.recibo!.clienteId,
             ticketId,
             estadoId: ESTADOS_RECIBO.PAGADO,
             metodoPagoId: metodo.id,
             total: totalARegistrar.toFixed(2),
-            sesionId: sesionId ?? undefined
+            sesionId: sesionId ?? undefined,
+            montoRecibido: montoRecibidoFinal
           };
 
           return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
@@ -1753,7 +1769,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         width: '640px',
         data: {
           total: totalARegistrar,
-          ejecutarPago: () => this.ejecutarPagoApi$(metodo, totalARegistrar),
+          ejecutarPago: (montoRecibido: number) => this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
           imprimirRecibo: quiereImprimir ? () => this.imprimirRecibo() : undefined,
           mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg)
         },
@@ -1793,13 +1809,17 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         switchMap(() => this.obtenerTicketAsociado()),
         switchMap((ticketId) => {
           const sesionId = this.getSessionId();
+          // Calcular montoRecibido: si es efectivo, igual al total (se pasará desde el modal); si no, igual al total
+          const montoRecibidoFinal = metodo.id === 1 ? totalARegistrar : totalARegistrar;
+          
           const payload: ActualizarReciboRequest = {
             clienteId: this.recibo!.clienteId,
             ticketId,
             estadoId: ESTADOS_RECIBO.PAGADO,
             metodoPagoId: metodo.id,
             total: totalARegistrar.toFixed(2),
-            sesionId: sesionId ?? undefined
+            sesionId: sesionId ?? undefined,
+            montoRecibido: montoRecibidoFinal
           };
 
           return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
@@ -1937,17 +1957,23 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   /**
    * Ejecuta la API de pago (actualizar recibo, recargar tickets). Usado por el modal de efectivo.
    */
-  private ejecutarPagoApi$(metodo: MetodoPagoDto, totalARegistrar: number): Observable<number> {
+  private ejecutarPagoApi$(metodo: MetodoPagoDto, totalARegistrar: number, montoRecibido?: number): Observable<number> {
     return this.obtenerTicketAsociado().pipe(
       switchMap((ticketId) => {
         const sesionId = this.getSessionId();
+        // Calcular montoRecibido: si es efectivo y se proporciona, usarlo; si no, igual al total
+        const montoRecibidoFinal = metodo.id === 1 && montoRecibido !== undefined 
+          ? montoRecibido 
+          : totalARegistrar;
+        
         const payload: ActualizarReciboRequest = {
           clienteId: this.recibo!.clienteId,
           ticketId,
           estadoId: ESTADOS_RECIBO.PAGADO,
           metodoPagoId: metodo.id,
           total: totalARegistrar.toFixed(2),
-          sesionId: sesionId ?? undefined
+          sesionId: sesionId ?? undefined,
+          montoRecibido: montoRecibidoFinal
         };
         return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
           switchMap(() => {

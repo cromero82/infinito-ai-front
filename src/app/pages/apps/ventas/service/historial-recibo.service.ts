@@ -8,6 +8,7 @@ export interface QuickReciboRequest {
   metodoPagoId: number;
   sesionId: number;
   total: number;
+  montoRecibido: number;
 }
 
 export interface HistorialReciboDto {
@@ -105,6 +106,7 @@ export class HistorialReciboService {
       estadoId: number;
       metodoPagoId: number;
       total: number;
+      montoRecibido: number;
     }
   ): Observable<HistorialReciboDto> {
     const headers = new HttpHeaders({

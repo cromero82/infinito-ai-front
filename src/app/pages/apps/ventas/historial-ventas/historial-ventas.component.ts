@@ -379,7 +379,8 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
       clienteId: recibo.clienteId,
       estadoId: estadoAnulado.id,
       metodoPagoId: recibo.metodoPagoId,
-      total: recibo.total
+      total: recibo.total,
+      montoRecibido: recibo.total // Al anular, montoRecibido es igual al total
     };
 
     this.historialReciboService.updateHistorialRecibo(recibo.id, recibo.sesionId, updatePayload).pipe(

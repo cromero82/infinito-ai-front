@@ -28,6 +28,7 @@ export interface ActualizarReciboRequest {
   metodoPagoId: number;
   total: string;
   sesionId?: number;
+  montoRecibido: number;
 }
 
 @Injectable({

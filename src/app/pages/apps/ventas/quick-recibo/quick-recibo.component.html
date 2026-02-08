@@ -4,12 +4,34 @@
   <div class="form-fields">
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Cliente</mat-label>
-      <mat-select [formControl]="clienteCtrl" [disabled]="loadingClientes || loading">
-        <mat-option *ngFor="let cliente of clientes" [value]="cliente.id">
-          {{ cliente.nombre }}
+      <input
+        #clienteInput
+        matInput
+        [formControl]="clienteCtrl"
+        [matAutocomplete]="auto"
+        (keydown.enter)="onClienteInputKeydown($event)"
+        (blur)="onClienteInputBlur()"
+        [disabled]="loadingClientes || loading || creatingCliente"
+        placeholder="Escriba para buscar o presione Enter para crear nuevo cliente" />
+      <button
+        *ngIf="clienteCtrl.value && !loadingClientes && !creatingCliente"
+        mat-icon-button
+        matSuffix
+        type="button"
+        (click)="limpiarCliente()"
+        aria-label="Limpiar cliente">
+        <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+      </button>
+      <mat-progress-spinner *ngIf="loadingClientes || creatingCliente" matSuffix diameter="20" mode="indeterminate"></mat-progress-spinner>
+      <mat-autocomplete
+        #auto="matAutocomplete"
+        [displayWith]="displayCliente"
+        (optionSelected)="onClienteSelected($event.option.value)">
+        <mat-option *ngFor="let cliente of filteredClientes$ | async" [value]="cliente">
+          <span>{{ cliente.nombre }}</span>
+          <span *ngIf="cliente.documento" class="cliente-documento"> - {{ cliente.documento }}</span>
         </mat-option>
-      </mat-select>
-      <mat-progress-spinner *ngIf="loadingClientes" matSuffix diameter="20" mode="indeterminate"></mat-progress-spinner>
+      </mat-autocomplete>
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">
@@ -20,11 +42,52 @@
         [formControl]="totalCtrl"
         (keydown.enter)="onTotalKeydown($event)"
         (input)="onTotalInput($event)"
+        (focus)="onTotalFocus()"
         (blur)="onTotalBlur()"
         placeholder="Ej. 100000"
         type="text"
         [disabled]="loading" />
+      <mat-hint *ngIf="totalTieneFocus && getTotalFormateado()" class="total-formateado-hint">
+        {{ getTotalFormateado() }}
+      </mat-hint>
     </mat-form-field>
+
+    <!-- Campos de efectivo: solo se muestran cuando se selecciona método de pago efectivo (id: 1) -->
+    <div *ngIf="selectedMetodoPagoId === 1" class="efectivo-fields">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Cliente paga con</mat-label>
+        <input
+          #pagaConInput
+          matInput
+          [formControl]="pagaConCtrl"
+          (input)="onPagaConInput($event)"
+          (blur)="onPagaConBlur()"
+          placeholder="Ej. 100000"
+          type="text"
+          [disabled]="loading" />
+        <button
+          *ngIf="pagaConCtrl.value && !loading"
+          mat-icon-button
+          matSuffix
+          type="button"
+          (click)="limpiarPagaCon()"
+          aria-label="Limpiar paga con">
+          <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+        </button>
+        <mat-hint *ngIf="pagoInsuficiente" class="error-hint">
+          Pago insuficiente. Falta {{ getFaltaFormateado() }}
+        </mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width campo-cambio" *ngIf="cambio > 0">
+        <mat-label>Cambio</mat-label>
+        <input
+          matInput
+          [value]="getCambioFormateado()"
+          readonly
+          [disabled]="true" />
+      </mat-form-field>
+    </div>
   </div>
 
   <div class="error-message" *ngIf="error">

@@ -13,7 +13,7 @@ import { finalize } from 'rxjs/operators';
 export interface PagoEfectivoCambioData {
   total: number;
   /** Si se proporciona, el modal ejecuta el pago al confirmar y muestra estado éxito/error. */
-  ejecutarPago?: () => Observable<number>;
+  ejecutarPago?: (montoRecibido: number) => Observable<number>;
   /** Se llama tras éxito si "imprimir recibo al pagar" está activo. Usado en el botón Imprimir recibo. */
   imprimirRecibo?: () => void;
   /** Se llama al cerrar tras éxito (para snackbar). */
@@ -160,13 +160,13 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
       const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
       
       this.data
-        .ejecutarPago!()
+        .ejecutarPago!(pagaCon)
         .pipe(finalize(() => this.cdr.markForCheck()))
         .subscribe({
           next: (tg) => {
             this.totalGuardado = tg;
             
-            // Si debe imprimir, hacerlo directamente sin mostrar ninguna ventana de confirmación
+            // Si debe imprimir, hacerlo directamente
             if (debeImprimir && this.data.imprimirRecibo) {
               console.log('Pago exitoso, imprimiendo automáticamente...');
               try {
@@ -174,16 +174,15 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
               } catch (e) {
                 console.error('Error al imprimir recibo', e);
               }
-              // Cerrar modal directamente sin mostrar snackbar ni ventana de éxito
-              this.dialogRef.close({
-                pagaCon: this.pagaConResultado,
-                cambio: this.cambioResultado
-              });
-            } else {
-              // Si no debe imprimir, mostrar estado de éxito como antes
-              this.estado = 'exito';
-              this.cdr.markForCheck();
             }
+            
+            // Cerrar modal directamente sin mostrar ventana de confirmación
+            // Solo mostrar snackbar si está configurado
+            this.data.mostrarSnackbarExito?.(tg);
+            this.dialogRef.close({
+              pagaCon: this.pagaConResultado,
+              cambio: this.cambioResultado
+            });
           },
           error: (err) => {
             this.errorMsg = err?.message ?? 'Error al registrar el pago.';
