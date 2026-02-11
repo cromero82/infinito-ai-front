@@ -21,7 +21,9 @@ import { TicketsService } from '../../../../../pages/apps/ventas/service/tickets
 import { TicketReciboService } from '../../../../../pages/apps/ventas/service/ticket-recibo.service';
 import { ReciboDetalleService } from '../../../../../pages/apps/ventas/service/recibo-detalle.service';
 import { BitacoraUsuarioService } from '../../../../../pages/apps/usuario/gestion-usuarios/service/bitacora-usuario.service';
+import { CopiasSeguridadService } from '../../../../../pages/apps/copias-seguridad/service/copias-seguridad.service';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../../core/components/confirm-dialog/confirm-dialog.component';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { forkJoin, of } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
 
@@ -48,7 +50,8 @@ export interface OnlineStatus {
     RouterLink,
     NgClass,
     NgIf,
-    MatDialogModule
+    MatDialogModule,
+    MatSnackBarModule
   ]
 })
 export class ToolbarUserDropdownComponent implements OnInit {
@@ -67,7 +70,9 @@ export class ToolbarUserDropdownComponent implements OnInit {
     private ticketReciboService: TicketReciboService,
     private reciboDetalleService: ReciboDetalleService,
     private bitacoraUsuarioService: BitacoraUsuarioService,
-    private dialog: MatDialog
+    private copiasSeguridadService: CopiasSeguridadService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit() {
@@ -113,7 +118,96 @@ export class ToolbarUserDropdownComponent implements OnInit {
         colorClass: 'text-green-600',
         route: '/apps/cargue-productos'
       });
+      
+      this.items.push({
+        id: '4',
+        icon: 'mat:backup',
+        label: 'Copias de seguridad',
+        description: 'Gestionar respaldos de la base de datos',
+        colorClass: 'text-purple-600',
+        submenu: [
+          {
+            id: '4-1',
+            icon: 'mat:download',
+            label: 'Generar y descargar backup',
+            description: 'Crear y descargar respaldo',
+            colorClass: 'text-purple-600',
+            action: () => this.generarBackup()
+          },
+          {
+            id: '4-2',
+            icon: 'mat:email',
+            label: 'Enviar al correo',
+            description: 'Enviar copia de seguridad por correo',
+            colorClass: 'text-purple-600',
+            action: () => this.exportarACorreo()
+          }
+        ]
+      });
     }
+  }
+
+  generarBackup(): void {
+    this.close();
+    this.copiasSeguridadService.generarBackup().subscribe({
+      next: (blob: Blob) => {
+        // Crear un enlace temporal para descargar el archivo
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        
+        // Generar nombre de archivo con fecha y hora
+        const fecha = new Date();
+        const fechaStr = fecha.toISOString().split('T')[0];
+        const horaStr = fecha.toTimeString().split(' ')[0].replace(/:/g, '-');
+        link.download = `backup-${fechaStr}_${horaStr}.xlsx`;
+        
+        // Disparar la descarga
+        document.body.appendChild(link);
+        link.click();
+        
+        // Limpiar
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        this.snackBar.open('Copia de seguridad descargada correctamente', 'Cerrar', {
+          duration: 3000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
+      },
+      error: (error) => {
+        console.error('Error al generar copia de seguridad:', error);
+        this.snackBar.open('Error al generar la copia de seguridad', 'Cerrar', {
+          duration: 3000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top',
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+
+  exportarACorreo(): void {
+    this.close();
+    this.copiasSeguridadService.exportarACorreo().subscribe({
+      next: () => {
+        this.snackBar.open('Copia de seguridad enviada al correo correctamente', 'Cerrar', {
+          duration: 3000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
+      },
+      error: (error) => {
+        console.error('Error al enviar copia de seguridad al correo:', error);
+        this.snackBar.open('Error al enviar la copia de seguridad al correo', 'Cerrar', {
+          duration: 3000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top',
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
   }
 
 

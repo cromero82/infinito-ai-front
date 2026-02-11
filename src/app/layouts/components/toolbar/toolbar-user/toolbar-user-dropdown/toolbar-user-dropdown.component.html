@@ -20,25 +20,79 @@
   </div>
 
   <div class="dropdown-content">
-    <a
-      (click)="close()"
-      *ngFor="let item of items; trackBy: trackById"
-      [routerLink]="item.route"
-      class="notification flex items-center"
-      matRipple>
-      <mat-icon
-        [ngClass]="item.colorClass"
-        [svgIcon]="item.icon"
-        class="notification-icon flex-none"></mat-icon>
-      <div class="flex-auto">
-        <div class="notification-label">{{ item.label }}</div>
-        <div class="notification-description">{{ item.description }}</div>
+    <ng-container *ngFor="let item of items; trackBy: trackById">
+      <!-- Item con ruta -->
+      <a
+        *ngIf="item.route && !item.submenu"
+        (click)="close()"
+        [routerLink]="item.route"
+        class="notification flex items-center"
+        matRipple>
+        <mat-icon
+          [ngClass]="item.colorClass"
+          [svgIcon]="item.icon"
+          class="notification-icon flex-none"></mat-icon>
+        <div class="flex-auto">
+          <div class="notification-label">{{ item.label }}</div>
+          <div class="notification-description">{{ item.description }}</div>
+        </div>
+        <mat-icon
+          class="notification-chevron flex-none"
+          svgIcon="mat:chevron_right"></mat-icon>
+      </a>
+      
+      <!-- Item con acción directa -->
+      <div
+        *ngIf="!item.route && !item.submenu && item.action"
+        (click)="item.action(); close()"
+        class="notification flex items-center pointer"
+        matRipple>
+        <mat-icon
+          [ngClass]="item.colorClass"
+          [svgIcon]="item.icon"
+          class="notification-icon flex-none"></mat-icon>
+        <div class="flex-auto">
+          <div class="notification-label">{{ item.label }}</div>
+          <div class="notification-description">{{ item.description }}</div>
+        </div>
       </div>
-      <mat-icon
-        class="notification-chevron flex-none"
-        svgIcon="mat:chevron_right"></mat-icon>
-    </a>
+      
+      <!-- Item con submenú -->
+      <div
+        *ngIf="item.submenu"
+        [matMenuTriggerFor]="item.id === '4' ? copiasSeguridadMenu : null"
+        class="notification flex items-center pointer"
+        matRipple>
+        <mat-icon
+          [ngClass]="item.colorClass"
+          [svgIcon]="item.icon"
+          class="notification-icon flex-none"></mat-icon>
+        <div class="flex-auto">
+          <div class="notification-label">{{ item.label }}</div>
+          <div class="notification-description">{{ item.description }}</div>
+        </div>
+        <mat-icon
+          class="notification-chevron flex-none"
+          svgIcon="mat:chevron_right"></mat-icon>
+      </div>
+    </ng-container>
   </div>
+  
+  <!-- Submenú de Copias de Seguridad -->
+  <mat-menu #copiasSeguridadMenu="matMenu" xPosition="after" yPosition="below">
+    <button
+      (click)="generarBackup()"
+      mat-menu-item>
+      <mat-icon svgIcon="mat:download"></mat-icon>
+      <span>Generar y descargar backup</span>
+    </button>
+    <button
+      (click)="exportarACorreo()"
+      mat-menu-item>
+      <mat-icon svgIcon="mat:email"></mat-icon>
+      <span>Enviar al correo</span>
+    </button>
+  </mat-menu>
 
   <div class="dropdown-footer flex items-center justify-end">
     <button (click)="logout()" color="primary" mat-button type="button"

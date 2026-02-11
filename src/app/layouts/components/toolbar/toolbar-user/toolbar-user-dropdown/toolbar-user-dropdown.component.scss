@@ -69,6 +69,10 @@
   &.read {
     @apply opacity-50;
   }
+
+  &.pointer {
+    cursor: pointer;
+  }
 }
 
 .notification-icon {

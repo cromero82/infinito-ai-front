@@ -4,5 +4,7 @@ export interface MenuItem {
   label: string;
   description: string;
   colorClass: string;
-  route: string;
+  route?: string;
+  action?: () => void;
+  submenu?: MenuItem[];
 }
