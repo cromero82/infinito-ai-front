@@ -2,5 +2,6 @@
 export const environment = {
   production: false,
   builderApiKey: '06e0922284dc424bb6ca15d07296678f',
-  apiUrlRelationalDb: 'http://localhost:8088'
+  apiUrlRelationalDb: 'http://localhost:8088',
+  localStorageKeyEstadosRecibos: 'estados_recibos'
 };
