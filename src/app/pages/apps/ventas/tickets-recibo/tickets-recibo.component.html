@@ -37,8 +37,15 @@
             <nav
               mat-tab-nav-bar
               class="ticket-tab-nav border-0 flex-auto"
-              [tabPanel]="tabPanel">
-              <div class="tab-item" *ngFor="let t of tickets; let i = index">
+              [tabPanel]="tabPanel"
+              cdkDropList
+              cdkDropListOrientation="horizontal"
+              [cdkDropListDisabled]="loading"
+              (cdkDropListDropped)="onTicketDrop($event)">
+              <div
+                class="tab-item"
+                *ngFor="let t of tickets; let i = index"
+                cdkDrag>
                 <a
                   mat-tab-link
                   [active]="selectedIndex === i"
@@ -54,6 +61,8 @@
                   (click)="deleteTicket(t, i, $event)">
                   <mat-icon svgIcon="mat:close"></mat-icon>
                 </button>
+                <!-- Placeholder visible mientras se arrastra -->
+                <div class="tab-drag-placeholder" *cdkDragPlaceholder></div>
               </div>
             </nav>
             <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>

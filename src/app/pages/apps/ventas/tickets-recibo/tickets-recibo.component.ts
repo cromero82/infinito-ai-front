@@ -8,8 +8,9 @@ import { VexPageLayoutComponent } from '@vex/components/vex-page-layout/vex-page
 import { VexPageLayoutHeaderDirective } from '@vex/components/vex-page-layout/vex-page-layout-header.directive';
 import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/vex-page-layout-content.directive';
 import { VexBreadcrumbsComponent } from '@vex/components/vex-breadcrumbs/vex-breadcrumbs.component';
-import { TicketsService, TicketDto } from '../service/tickets.service';
+import { TicketsService, TicketDto, TicketOrdenDto } from '../service/tickets.service';
 import { TicketReciboService } from '../service/ticket-recibo.service';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { SesionesService, SesionDto } from '../service/sesiones.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -22,6 +23,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { QuickReciboComponent, QuickReciboData } from '../quick-recibo/quick-recibo.component';
 
 const IMPRIMIR_RECIBO_KEY = 'imprimir-recibo';
+const LAST_TICKET_ID_KEY = 'last-ticket-id';
 
 @Component({
   selector: 'vex-tickets-recibo',
@@ -44,6 +46,7 @@ const IMPRIMIR_RECIBO_KEY = 'imprimir-recibo';
     MatTooltipModule,
     NgIf,
     NgFor,
+    DragDropModule,
     ReciboComponent
   ],
   templateUrl: './tickets-recibo.component.html',
@@ -67,6 +70,9 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
   /** Preferencia de usuario: imprimir recibo tras pago (persistida en localStorage). Por defecto false. */
   imprimirReciboActivo = false;
 
+  /** Último ticketId sobre el cual el usuario hizo clic (persistido en localStorage para evitar llamadas HTTP redundantes). */
+  private lastFetchedTicketId: number | null = null;
+
   constructor(
     private ticketsService: TicketsService,
     private ticketReciboService: TicketReciboService,
@@ -87,6 +93,7 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
 
     this.sessionId = parsed;
     this.imprimirReciboActivo = this.getImprimirReciboFromStorage();
+    this.lastFetchedTicketId = this.getLastTicketIdFromStorage();
     this.loadTickets(parsed);
   }
 
@@ -98,6 +105,17 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
   toggleImprimirRecibo(event: { checked: boolean }): void {
     this.imprimirReciboActivo = event.checked;
     localStorage.setItem(IMPRIMIR_RECIBO_KEY, String(this.imprimirReciboActivo));
+  }
+
+  private getLastTicketIdFromStorage(): number | null {
+    const v = localStorage.getItem(LAST_TICKET_ID_KEY);
+    const n = v ? Number(v) : NaN;
+    return Number.isNaN(n) ? null : n;
+  }
+
+  private saveLastTicketId(ticketId: number): void {
+    this.lastFetchedTicketId = ticketId;
+    localStorage.setItem(LAST_TICKET_ID_KEY, String(ticketId));
   }
 
 
@@ -216,7 +234,54 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
     }
     this.selectedIndex = index;
     const ticket = this.tickets[index];
+
+    // Si el usuario hizo clic en el mismo ticket que ya estaba cargado, no hacer llamada HTTP
+    if (this.lastFetchedTicketId === ticket.id && this.currentReciboId !== null) {
+      return;
+    }
+
+    this.saveLastTicketId(ticket.id);
     this.fetchReciboForTicket(ticket.id);
+  }
+
+  onTicketDrop(event: CdkDragDrop<TicketDto[]>): void {
+    if (event.previousIndex === event.currentIndex) {
+      return;
+    }
+
+    // Preservar el ticket actualmente seleccionado
+    const selectedTicket = this.tickets[this.selectedIndex];
+
+    // Reordenar el array local
+    moveItemInArray(this.tickets, event.previousIndex, event.currentIndex);
+
+    // Actualizar selectedIndex para seguir al ticket que estaba seleccionado
+    if (selectedTicket) {
+      this.selectedIndex = this.tickets.findIndex(t => t.id === selectedTicket.id);
+    }
+
+    // Recalcular el campo orden (1-based) según la nueva posición
+    this.tickets.forEach((t, i) => {
+      t.orden = i + 1;
+    });
+
+    // Persistir el nuevo orden en el backend
+    if (this.sessionId !== null) {
+      const payload: TicketOrdenDto[] = this.tickets.map(t => ({
+        id: t.id,
+        sessionId: t.sessionId,
+        nombre: t.nombre,
+        orden: t.orden
+      }));
+      this.ticketsService.updateTicketsOrder(payload).subscribe({
+        next: () => {
+          // Orden actualizado exitosamente
+        },
+        error: (err) => {
+          console.error('Error updating tickets order', err);
+        }
+      });
+    }
   }
 
   deleteTicket(ticket: TicketDto, index: number, event: MouseEvent): void {
@@ -348,6 +413,7 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
     }
     this.ticketReciboService.getByTicketId(ticketId, this.sessionId).subscribe({
       next: (relation) => {
+        this.saveLastTicketId(ticketId);
         const nuevoReciboId = relation?.reciboId ?? null;
         // Diferir actualización al siguiente ciclo para evitar NG0100 (ExpressionChangedAfterItHasBeenCheckedError):
         // el cambio de currentReciboId actualiza el hijo y el FormControl del buscador en el mismo tick.

@@ -7,8 +7,16 @@ export interface TicketDto {
   id: number;
   sessionId: number;
   nombre: string;
+  orden: number;
   fechaCreacion: string;
   reciboId?: number | null;
+}
+
+export interface TicketOrdenDto {
+  id: number;
+  sessionId: number;
+  nombre: string;
+  orden: number;
 }
 
 @Injectable({
@@ -36,6 +44,14 @@ export class TicketsService {
   deleteTicket(ticketId: number): Observable<void> {
     const headers = new HttpHeaders({ 'Accept': 'application/json' });
     return this.http.delete<void>(`${this.apiUrl}/${ticketId}`, { headers });
+  }
+
+  updateTicketsOrder(tickets: TicketOrdenDto[]): Observable<TicketDto[]> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    });
+    return this.http.put<TicketDto[]>(this.apiUrl, tickets, { headers });
   }
 }
 
