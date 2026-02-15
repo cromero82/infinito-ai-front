@@ -18,6 +18,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FooterService } from '../../../../layouts/services/footer.service';
+import { FechaUtilService } from '../service/fecha-util.service';
 
 @Component({
   selector: 'vex-historial-ventas',
@@ -82,7 +83,8 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    private footerService: FooterService
+    private footerService: FooterService,
+    private fechaUtilService: FechaUtilService
   ) {}
 
   ngOnInit(): void {
@@ -318,38 +320,7 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   }
 
   formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-    const timeStr = date.toLocaleTimeString('es-CO', { 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      hour12: true 
-    }).toLowerCase();
-
-    if (dateOnly.getTime() === today.getTime()) {
-      return timeStr;
-    } else if (dateOnly.getTime() === yesterday.getTime()) {
-      return `Ayer, ${timeStr}`;
-    } else {
-      // Check if it's within the last 7 days (show day name)
-      const daysDiff = Math.floor((today.getTime() - dateOnly.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysDiff <= 7) {
-        const daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-        const dayName = daysOfWeek[date.getDay()];
-        return `${dayName}, ${timeStr}`;
-      } else {
-        // Show date format: "14-Nov, 3:17 pm"
-        const day = date.getDate();
-        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        const monthName = months[date.getMonth()];
-        return `${day}-${monthName}, ${timeStr}`;
-      }
-    }
+    return this.fechaUtilService.formatDate(dateString);
   }
 
   selectRecibo(recibo: HistorialReciboDto): void {

@@ -11,8 +11,9 @@
         </div>
         <div *ngIf="!detallesLoading && !detallesError" class="detalle-content">
           <div *ngIf="detalles.length > 0; else sinDetalles" class="detalle-list-wrapper">
-            <div class="detalle-header">
+            <div class="detalle-header" [class.has-atendido]="mostrarColumnaAtendido">
               <span class="detalle-col producto">Producto</span>
+              <span class="detalle-col atendido" *ngIf="mostrarColumnaAtendido">Atendido</span>
               <span class="detalle-col unitario">Valor unitario</span>
               <span class="detalle-col cantidad">Cantidad</span>
               <span class="detalle-col subtotal">Subtotal</span>
@@ -23,6 +24,7 @@
                 class="detalle-row"
                 *ngFor="let det of detalles; let i = index"
                 [class.selected-detalle]="selectedDetalleIndex === i"
+                [class.has-atendido]="mostrarColumnaAtendido"
                 (click)="selectDetalle(i)"
                 (dblclick)="onDetalleDoubleClick(i, $event)">
                 <span class="detalle-col producto" (dblclick)="onProductoDoubleClick(i, $event)">
@@ -38,6 +40,11 @@
                     (input)="$event.stopPropagation()" />
                   <span *ngIf="editingProductoIndex !== i">
                     {{ det.producto ? det.producto.nombre : ('Producto ' + det.productoId) }}
+                  </span>
+                </span>
+                <span class="detalle-col atendido" *ngIf="mostrarColumnaAtendido">
+                  <span *ngIf="det.nombreUsuarioAtendio" class="atendido-text">
+                    {{ formatAtendidoPor(det) }}
                   </span>
                 </span>
                 <span class="detalle-col unitario" (dblclick)="onUnitarioDoubleClick(i, $event)">
@@ -94,7 +101,7 @@
         a las {{ formatFechaCreacion(ticket.fechaCreacion) }}
       </span>
     </div>
-    <div class="detalle-footer">
+    <div class="detalle-footer" [class.has-atendido]="mostrarColumnaAtendido">
         <span class="detalle-col producto total-label">
           <vex-metodos-pago
             [recibo]="recibo"
@@ -103,6 +110,7 @@
             (metodoPagoSeleccionado)="onMetodoPagoSeleccionado($event)">
           </vex-metodos-pago>
         </span>
+        <span class="detalle-col atendido" *ngIf="mostrarColumnaAtendido"></span>
         <span class="detalle-col unitario"></span>
       <span class="detalle-col cantidad">TOTAL</span>
       <span class="detalle-col subtotal total-value total-value--highlight">

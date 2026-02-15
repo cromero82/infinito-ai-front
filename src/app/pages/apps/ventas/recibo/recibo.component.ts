@@ -35,6 +35,7 @@ import { MetodoPagoService, MetodoPagoDto } from '../service/metodo-pago.service
 import { ReciboService, ReciboDto, ActualizarReciboRequest } from '../service/recibo.service';
 import { TicketReciboService, TicketReciboDto } from '../service/ticket-recibo.service';
 import { EstadoRecibosService, EstadoReciboDto } from '../service/estado-recibos.service';
+import { FechaUtilService } from '../service/fecha-util.service';
 import { TicketsService } from '../service/tickets.service';
 import {
   ProductListSelectComponent,
@@ -121,6 +122,9 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   /** True cuando el ticket pertenece a una sesión distinta de la actual (otra sesión). */
   ticketDeOtraSesion = false;
 
+  /** True cuando se debe mostrar la columna "Atendido" en la lista de detalles. */
+  mostrarColumnaAtendido = false;
+
   constructor(
     private reciboService: ReciboService,
     private reciboDetalleService: ReciboDetalleService,
@@ -131,7 +135,8 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private estadoRecibosService: EstadoRecibosService,
     private ticketsService: TicketsService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private fechaUtilService: FechaUtilService
   ) {}
 
   ngOnInit(): void {
@@ -295,6 +300,50 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     this.ticketDeOtraSesion = userNombre.trim().toLowerCase() !== atendidoPorNombre.trim().toLowerCase();
+  }
+
+  /**
+   * Determina si la columna "Atendido" debe mostrarse.
+   * Condiciones: el cliente del recibo NO es "ANONIMO" y al menos 1 detalle
+   * tiene nombreUsuarioAtendio (crudo del API) distinto al user-nombre del localStorage.
+   */
+  private actualizarMostrarColumnaAtendido(): void {
+    const clienteNombre = this.recibo?.cliente?.nombre?.trim().toUpperCase() ?? '';
+    if (!clienteNombre || clienteNombre === 'ANONIMO') {
+      this.mostrarColumnaAtendido = false;
+      return;
+    }
+
+    const userNombre = localStorage.getItem('user-nombre')?.trim().toLowerCase() ?? '';
+    if (!userNombre) {
+      this.mostrarColumnaAtendido = false;
+      return;
+    }
+
+    this.mostrarColumnaAtendido = this.detalles.some(det =>
+      det.nombreUsuarioAtendio != null &&
+      det.nombreUsuarioAtendio.trim().length > 0 &&
+      det.nombreUsuarioAtendio.trim().toLowerCase() !== userNombre
+    );
+  }
+
+  /** Formatea la información de "Atendido" para una fila: NombreCorto (fecha). */
+  formatAtendidoPor(det: ReciboDetalleDto): string {
+    if (!det.nombreUsuarioAtendio) {
+      return '';
+    }
+    const nombre = this.abreviarNombre(det.nombreUsuarioAtendio);
+    const fecha = this.fechaUtilService.formatDate(det.fechaCreacion);
+    return fecha ? `${nombre} ${fecha}` : nombre;
+  }
+
+  /** Abrevia un nombre completo: "Jhon Doe" → "Jhon D." */
+  private abreviarNombre(nombre: string): string {
+    const palabras = nombre.trim().split(/\s+/);
+    if (palabras.length <= 1) {
+      return nombre.trim();
+    }
+    return `${palabras[0]} ${palabras[1].charAt(0).toUpperCase()}.`;
   }
 
   searchAndAddProduct(): void {
@@ -486,6 +535,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         this.detallesLoading = false;
         this.recalculateTotal();
         this.selectedDetalleIndex = this.detalles.length ? 0 : -1;
+        this.actualizarMostrarColumnaAtendido();
       },
       error: (err: unknown) => {
         console.error('Error loading recibo detalles', err);

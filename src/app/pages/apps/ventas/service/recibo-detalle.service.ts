@@ -9,6 +9,8 @@ export interface ReciboDetalleDto {
   productoId: number;
   cantidad: number;
   subtotal: number;
+  fechaCreacion?: string;
+  nombreUsuarioAtendio?: string | null;
   producto?: {
     id: number;
     barcode: string;
