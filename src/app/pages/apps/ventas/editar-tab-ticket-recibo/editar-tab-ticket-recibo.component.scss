@@ -1,0 +1,30 @@
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 460px;
+  padding: 24px;
+}
+
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.error-message {
+  color: #d32f2f;
+  font-size: 14px;
+  padding: 8px;
+  background-color: rgba(244, 67, 54, 0.1);
+  border-radius: 4px;
+}
+
+::ng-deep .mat-mdc-dialog-actions {
+  padding: 16px 24px;
+  gap: 8px;
+}
+
+.inline-spinner {
+  display: inline-block;
+}

@@ -21,6 +21,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { QuickReciboComponent, QuickReciboData } from '../quick-recibo/quick-recibo.component';
+import { EditarTabTicketReciboComponent, EditarTabTicketReciboData } from '../editar-tab-ticket-recibo/editar-tab-ticket-recibo.component';
 
 const IMPRIMIR_RECIBO_KEY = 'imprimir-recibo';
 const LAST_TICKET_ID_KEY = 'last-ticket-id';
@@ -165,6 +166,14 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
     }, 100);
   }
 
+  getTicketLabel(ticket: TicketDto): string {
+    if (ticket.cliente?.nombre) {
+      const palabras = ticket.cliente.nombre.trim().split(/\s+/);
+      return palabras.slice(0, 2).join(' ');
+    }
+    return ticket.nombre;
+  }
+
   triggerProductSearch(): void {
     this.reciboComponent?.searchAndAddProduct();
     this.focusProductSearch(false);
@@ -186,11 +195,33 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
     }
   }
 
+  /**
+   * Calcula el siguiente número disponible para un ticket nuevo.
+   * Revisa todos los tickets existentes que tengan el formato "Ticket #",
+   * obtiene el número más alto y le suma 1.
+   * Ejemplo: si existen "DON IVAN", "PIPO", "Ticket 4" → devuelve 5.
+   */
+  private getNextTicketNumber(): number {
+    let maxNumber = 0;
+    const ticketPattern = /^Ticket\s*(\d+)$/i;
+    for (const t of this.tickets) {
+      const match = t.nombre?.match(ticketPattern);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNumber) {
+          maxNumber = num;
+        }
+      }
+    }
+    // Si no se encontró ningún ticket con formato "Ticket #", usar la cantidad de tickets
+    return maxNumber > 0 ? maxNumber + 1 : (this.tickets?.length || 0) + 1;
+  }
+
   newTicket(): void {
     if (this.sessionId === null) {
       return;
     }
-    const nextNumber = (this.tickets?.length || 0) + 1;
+    const nextNumber = this.getNextTicketNumber();
     const nombre = `Ticket ${nextNumber}`;
     this.loading = true;
     this.ticketsService.createTicket(this.sessionId, nombre).subscribe({
@@ -224,6 +255,29 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
       if (result) {
         // Optionally reload tickets or show success message
         // this.loadTickets(this.sessionId!);
+      }
+    });
+  }
+
+  editTicket(ticket: TicketDto, event: MouseEvent): void {
+    event.stopPropagation();
+    if (this.loading) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open<EditarTabTicketReciboComponent, EditarTabTicketReciboData, boolean>(
+      EditarTabTicketReciboComponent,
+      {
+        width: '560px',
+        data: { ticket },
+        autoFocus: false
+      }
+    );
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result && this.sessionId !== null) {
+        // Recargar tickets para reflejar el cambio de cliente
+        this.loadTickets(this.sessionId);
       }
     });
   }

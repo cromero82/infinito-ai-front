@@ -50,8 +50,9 @@
                   mat-tab-link
                   [active]="selectedIndex === i"
                   (click)="selectTicket(i)"
+                  (dblclick)="editTicket(t, $event)"
                   class="tab-link">
-                  {{ t.nombre }}
+                  {{ getTicketLabel(t) }}
                 </a>
                 <button
                   mat-icon-button

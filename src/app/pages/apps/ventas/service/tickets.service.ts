@@ -3,12 +3,27 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 
+export interface TicketClienteDto {
+  id: number;
+  nombre: string;
+  telefono: string;
+  documento: string;
+}
+
+export interface TicketAtendidoPorDto {
+  id: string;
+  nombre: string;
+}
+
 export interface TicketDto {
   id: number;
   sessionId: number;
   nombre: string;
   orden: number;
   fechaCreacion: string;
+  cliente: TicketClienteDto | null;
+  atendidoPor: TicketAtendidoPorDto | null;
+  perteneceUsuarioActual: boolean;
   reciboId?: number | null;
 }
 
@@ -52,6 +67,15 @@ export class TicketsService {
       'Accept': 'application/json'
     });
     return this.http.put<TicketDto[]>(this.apiUrl, tickets, { headers });
+  }
+
+  actualizaCliente(ticketId: number, clienteId: number): Observable<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    });
+    const payload = { ticketId, clienteId };
+    return this.http.put<any>(`${this.apiUrl}/actualizaCliente`, payload, { headers });
   }
 }
 

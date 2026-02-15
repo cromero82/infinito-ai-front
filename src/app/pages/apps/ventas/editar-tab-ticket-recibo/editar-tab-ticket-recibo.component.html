@@ -1,0 +1,28 @@
+<h2 mat-dialog-title>Editar Ticket — {{ data.ticket.nombre }}</h2>
+
+<div mat-dialog-content class="dialog-content">
+  <div class="form-fields">
+    <vex-cliente-selector
+      [initialClienteId]="data.ticket.cliente?.id ?? null"
+      [disabled]="loading"
+      [autoFocus]="true"
+      (clienteSelected)="onClienteSelectedFromSelector($event)">
+    </vex-cliente-selector>
+  </div>
+
+  <div class="error-message" *ngIf="error">
+    {{ error }}
+  </div>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()" [disabled]="loading">Cancelar</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="guardar()"
+    [disabled]="!canGuardar()">
+    <mat-progress-spinner *ngIf="loading" diameter="18" mode="indeterminate" class="inline-spinner"></mat-progress-spinner>
+    <span *ngIf="!loading">Guardar</span>
+  </button>
+</div>
