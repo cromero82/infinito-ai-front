@@ -118,6 +118,9 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   estaEnEdicion = false;
   metodosPago: MetodoPagoDto[] = [];
 
+  /** True cuando el ticket pertenece a una sesión distinta de la actual (otra sesión). */
+  ticketDeOtraSesion = false;
+
   constructor(
     private reciboService: ReciboService,
     private reciboDetalleService: ReciboDetalleService,
@@ -257,6 +260,11 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    // Recalcular ticketDeOtraSesion cuando cambia ticket o sessionId
+    if ('ticket' in changes || 'sessionId' in changes) {
+      this.actualizarTicketDeOtraSesion();
+    }
+
     if ('reciboId' in changes) {
       const change = changes['reciboId'];
       const value = change.currentValue as number | null;
@@ -271,6 +279,22 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         this.fetchRecibo(value);
       }
     }
+  }
+
+  /**
+   * Compara user-nombre del localStorage con ticket.atendidoPor.nombre.
+   * Si son diferentes, el ticket fue atendido inicialmente por otro usuario.
+   */
+  private actualizarTicketDeOtraSesion(): void {
+    const userNombre = localStorage.getItem('user-nombre');
+    const atendidoPorNombre = this.ticket?.atendidoPor?.nombre ?? null;
+
+    if (!userNombre || !atendidoPorNombre) {
+      this.ticketDeOtraSesion = false;
+      return;
+    }
+
+    this.ticketDeOtraSesion = userNombre.trim().toLowerCase() !== atendidoPorNombre.trim().toLowerCase();
   }
 
   searchAndAddProduct(): void {
@@ -1740,6 +1764,26 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     const numericValue = Number(value ?? 0);
     const formatted = this.currencyFormatter.format(numericValue);
     return formatted.replace('COP', '$').trim();
+  }
+
+  /** Formatea una fecha ISO (e.g. "2026-02-11T21:00:48") a formato legible con hora. */
+  formatFechaCreacion(fechaIso: string | null | undefined): string {
+    if (!fechaIso) {
+      return '';
+    }
+    try {
+      const date = new Date(fechaIso);
+      return date.toLocaleString('es-CO', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return fechaIso;
+    }
   }
 
   seleccionarMetodoPago(metodo: MetodoPagoDto): void {

@@ -86,6 +86,14 @@
   </ng-container>
 
   <div class="detalle-footer-wrapper" *ngIf="!loading && recibo">
+    <!-- Info de atención original (cuando el ticket pertenece a otra sesión) -->
+    <div class="atendido-por-info" *ngIf="ticketDeOtraSesion && ticket?.atendidoPor">
+      <span class="atendido-por-label">
+        Inicialmente atendido por
+        <strong>{{ ticket.atendidoPor.nombre }}</strong>
+        a las {{ formatFechaCreacion(ticket.fechaCreacion) }}
+      </span>
+    </div>
     <div class="detalle-footer">
         <span class="detalle-col producto total-label">
           <vex-metodos-pago

@@ -22,6 +22,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { QuickReciboComponent, QuickReciboData } from '../quick-recibo/quick-recibo.component';
 import { EditarTabTicketReciboComponent, EditarTabTicketReciboData } from '../editar-tab-ticket-recibo/editar-tab-ticket-recibo.component';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../core/components/confirm-dialog/confirm-dialog.component';
 
 const IMPRIMIR_RECIBO_KEY = 'imprimir-recibo';
 const LAST_TICKET_ID_KEY = 'last-ticket-id';
@@ -346,6 +347,33 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
     if (this.sessionId === null) {
       return;
     }
+
+    // Si el ticket tiene un cliente personalizado (distinto de ADMINISTRADOR / id=1),
+    // mostrar diálogo de confirmación antes de eliminar.
+    const tieneClientePersonalizado = ticket.cliente && ticket.cliente.id !== 1;
+
+    if (tieneClientePersonalizado) {
+      const dialogData: ConfirmDialogData = {
+        mensaje: `Esta cuenta fue personalizada para el cliente: <b>${this.getTicketLabel(ticket)}</b>, ¿está seguro que desea eliminar este ticket?`,
+        titulo: 'Confirmar eliminación'
+      };
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        data: dialogData,
+        width: '400px',
+        disableClose: true
+      });
+      dialogRef.afterClosed().subscribe((confirmado: boolean) => {
+        if (confirmado) {
+          this.executeDeleteTicket(ticket, index);
+        }
+      });
+    } else {
+      this.executeDeleteTicket(ticket, index);
+    }
+  }
+
+  /** Ejecuta la eliminación real del ticket (lógica extraída de deleteTicket). */
+  private executeDeleteTicket(ticket: TicketDto, index: number): void {
     this.loading = true;
     this.ticketsService.deleteTicket(ticket.id).subscribe({
       next: () => {
