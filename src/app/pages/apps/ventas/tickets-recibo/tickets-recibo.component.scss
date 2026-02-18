@@ -233,6 +233,86 @@ vex-page-layout-header .container {
   cursor: grabbing;
 }
 
+// ─── Botón toggle de tickets con cliente ─────────────────────────────
+// Estado por defecto = tickets con cliente VISIBLES → aspecto neutro / gris suave.
+// Estado .activo     = tickets con cliente OCULTOS  → aspecto destacado (contiene elementos).
+.toggle-clientes-btn {
+  flex-shrink: 0;
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.38);
+  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease;
+  margin-right: 6px;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.08);
+    color: rgba(0, 0, 0, 0.54);
+    transform: scale(1.06);
+  }
+
+  // Activo = hay tickets ocultos (contenidos) → resaltar
+  &.activo {
+    background: rgba(255, 152, 0, 0.12);
+    color: #ef6c00;
+    box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.28);
+
+    &:hover {
+      background: rgba(255, 152, 0, 0.20);
+      color: #e65100;
+    }
+
+    .toggle-clientes-badge {
+      background: rgba(239, 108, 0, 0.82);
+    }
+  }
+
+  .toggle-clientes-badge {
+    position: absolute;
+    top: -2px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    background: rgba(100, 116, 139, 0.55);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    transition: background 0.25s ease;
+  }
+}
+
+// ─── Collapse/Expand horizontal para tabs de tickets con cliente ─────
+:host ::ng-deep .ticket-tab-nav .tab-item.ticket-con-cliente {
+  transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s ease,
+              margin-right 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 220px;
+  overflow: hidden;
+
+  &.tab-collapsed {
+    max-width: 0 !important;
+    opacity: 0;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    pointer-events: none;
+  }
+}
+
 .new-ticket-btn {
   white-space: nowrap;
   display: inline-flex;

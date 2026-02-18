@@ -237,7 +237,7 @@ export class ToolbarUserDropdownComponent implements OnInit {
         if (tieneRecibosEnProceso) {
           // Mostrar modal de advertencia
           const dialogData: ConfirmDialogData = {
-            mensaje: 'Existen recibos en proceso, si cierra la sesión esto se perderán, ¿está seguro de querer continuar?',
+            mensaje: 'Existen recibos en proceso, si cierra la sesión se perderán los que no han sido asignados a un cliente identificado, ¿está seguro de querer continuar?',
             titulo: 'Advertencia'
           };
 

@@ -72,6 +72,9 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
   /** Preferencia de usuario: imprimir recibo tras pago (persistida en localStorage). Por defecto false. */
   imprimirReciboActivo = false;
 
+  /** True cuando los tickets con cliente personalizado (no ANONIMO) están visibles en la barra de tabs. */
+  ticketsConClienteVisibles = true;
+
   /** Último ticketId sobre el cual el usuario hizo clic (persistido en localStorage para evitar llamadas HTTP redundantes). */
   private lastFetchedTicketId: number | null = null;
 
@@ -173,6 +176,51 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
       return palabras.slice(0, 2).join(' ');
     }
     return ticket.nombre;
+  }
+
+  /** True si al menos un ticket tiene un cliente con nombre (no ANONIMO). */
+  get tieneTicketsConCliente(): boolean {
+    return this.tickets.some(t => !!t.cliente?.nombre);
+  }
+
+  /** Cantidad de tickets que tienen un cliente con nombre. */
+  get cantidadTicketsConCliente(): number {
+    return this.tickets.filter(t => !!t.cliente?.nombre).length;
+  }
+
+  /** Determina si un ticket tiene un cliente personalizado (no ANONIMO). */
+  isTicketConCliente(ticket: TicketDto): boolean {
+    return !!ticket.cliente?.nombre;
+  }
+
+  /** Alterna la visibilidad de los tabs de tickets con cliente personalizado. */
+  toggleTicketsConCliente(): void {
+    this.ticketsConClienteVisibles = !this.ticketsConClienteVisibles;
+
+    if (!this.ticketsConClienteVisibles) {
+      const selectedTicket = this.tickets[this.selectedIndex];
+      if (selectedTicket && this.isTicketConCliente(selectedTicket)) {
+        const firstNonClientIndex = this.tickets.findIndex(t => !this.isTicketConCliente(t));
+        if (firstNonClientIndex >= 0) {
+          this.selectTicket(firstNonClientIndex);
+        }
+      }
+    }
+  }
+
+  /**
+   * Si los tickets con cliente están ocultos y ya no queda ningún ticket
+   * anónimo (sin cliente), des-agrupa automáticamente para que todos
+   * los tabs sean visibles.
+   */
+  private desagruparSiSoloQuedanClientes(): void {
+    if (this.ticketsConClienteVisibles) {
+      return; // ya están visibles, nada que hacer
+    }
+    const quedaAlgunAnonimo = this.tickets.some(t => !this.isTicketConCliente(t));
+    if (!quedaAlgunAnonimo && this.tickets.length > 0) {
+      this.ticketsConClienteVisibles = true;
+    }
   }
 
   triggerProductSearch(): void {
@@ -380,6 +428,7 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
         const updated = [...this.tickets];
         updated.splice(index, 1);
         this.tickets = updated;
+        this.desagruparSiSoloQuedanClientes();
         if (this.tickets.length === 0) {
           // No tickets left, create a new one
           if (this.sessionId === null) {

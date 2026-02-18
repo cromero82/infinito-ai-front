@@ -34,6 +34,20 @@
       <div class="px-4 content-area">
         <div class="tabs-container" *ngIf="tickets?.length; else noTickets">
           <div class="tabs-row">
+            <button
+              *ngIf="tieneTicketsConCliente"
+              mat-icon-button
+              type="button"
+              class="toggle-clientes-btn"
+              [class.activo]="!ticketsConClienteVisibles"
+              [matTooltip]="ticketsConClienteVisibles
+                ? 'Ocultar cuentas de clientes (' + cantidadTicketsConCliente + ')'
+                : 'Mostrar cuentas de clientes (' + cantidadTicketsConCliente + ')'"
+              matTooltipPosition="above"
+              (click)="toggleTicketsConCliente()">
+              <mat-icon [svgIcon]="ticketsConClienteVisibles ? 'mat:people' : 'mat:people_outline'"></mat-icon>
+              <span class="toggle-clientes-badge">{{ cantidadTicketsConCliente }}</span>
+            </button>
             <nav
               mat-tab-nav-bar
               class="ticket-tab-nav border-0 flex-auto"
@@ -45,6 +59,8 @@
               <div
                 class="tab-item"
                 *ngFor="let t of tickets; let i = index"
+                [class.ticket-con-cliente]="isTicketConCliente(t)"
+                [class.tab-collapsed]="!ticketsConClienteVisibles && isTicketConCliente(t)"
                 cdkDrag>
                 <a
                   mat-tab-link
