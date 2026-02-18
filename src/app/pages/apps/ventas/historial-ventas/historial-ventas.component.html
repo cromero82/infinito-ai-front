@@ -87,6 +87,16 @@
             (click)="anularFactura()">
             {{ anulandoRecibo ? 'Anulando...' : 'Anular factura' }}
           </button>
+          <button
+            mat-flat-button
+            color="basic"
+            type="button"
+            class="imprimir-button"
+            [disabled]="imprimiendoRecibo || !detalles || detalles.length === 0"
+            (click)="imprimirReciboSeleccionado()">
+            <mat-icon class="ltr:mr-2 rtl:ml-2 icon-sm" svgIcon="mat:print"></mat-icon>
+            {{ imprimiendoRecibo ? 'Imprimiendo...' : 'Imprimir recibo' }}
+          </button>
         </div>
       </div>
       

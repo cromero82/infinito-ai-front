@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon';
 import { HistorialReciboService, HistorialReciboDto, HistorialReciboPage } from '../service/historial-recibo.service';
 import { HistorialReciboDetalleService, HistorialReciboDetalleDto } from '../service/historial-recibo-detalle.service';
 import { EstadoRecibosService, EstadoReciboDto } from '../service/estado-recibos.service';
@@ -32,7 +33,8 @@ import { FechaUtilService } from '../service/fecha-util.service';
     MatInputModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatIconModule
   ],
   templateUrl: './historial-ventas.component.html',
   styleUrls: ['./historial-ventas.component.scss']
@@ -64,6 +66,7 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   estadosRecibos: EstadoReciboDto[] = [];
   anulandoRecibo = false;
   volviendoAEditar = false;
+  imprimiendoRecibo = false;
 
   // Clientes state
   clientes: ClienteDto[] = [];
@@ -549,6 +552,125 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
 
   getMontoRecibido(recibo: HistorialReciboDto): number | null {
     return recibo.montoRecibido ?? null;
+  }
+
+  imprimirReciboSeleccionado(): void {
+    const recibo = this.getSelectedRecibo();
+    if (!recibo) {
+      console.error('No hay recibo seleccionado para imprimir');
+      return;
+    }
+
+    if (!this.detalles || this.detalles.length === 0) {
+      console.error('No hay detalles para imprimir');
+      return;
+    }
+
+    this.imprimiendoRecibo = true;
+
+    try {
+      // Generar el HTML del recibo usando la misma lógica que el componente recibo
+      const cuerpo = this.buildReciboHtmlFragment(this.detalles);
+      const htmlCompleto = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Imprimir Recibo</title>
+<style>
+@page {
+  size: 80mm auto;
+  margin: 0;
+}
+html{padding:0;margin:0;font-family:'Courier New','Courier',monospace;width:80mm;font-size:12px}
+body{margin:0;padding:8px;width:80mm;background:white}
+p{margin-top:0.25rem;margin-bottom:0.25rem;white-space:pre-wrap}
+.pos-titulo{text-align:center;font-weight:bold;font-size:14px;margin:0 0 4px 0}
+.pos-fecha,.pos-leyenda{text-align:center;margin:2px 0}
+.pos-leyenda{font-size:10px}
+.pos-sep{border:none;border-top:1px dashed #000;margin:6px 0}
+.pos-tabla{width:100%;border-collapse:collapse;font-size:11px}
+.pos-tabla th{text-align:left;border-bottom:1px solid #000;padding:2px 4px}
+.pos-tabla td{padding:2px 4px}
+.pos-total{font-weight:bold;text-align:right;margin-top:4px;font-size:14px}
+</style>
+<script>
+window.onafterprint = function() {
+  setTimeout(function() {
+    window.close();
+  }, 100);
+};
+window.onload = function() {
+  setTimeout(function() {
+    window.print();
+  }, 250);
+};
+</script>
+</head><body>${cuerpo}</body></html>`;
+
+      console.log('Abriendo ventana de impresión...');
+      const printerWindow = window.open('', '_blank');
+      
+      if (!printerWindow) {
+        console.error('No se pudo abrir la ventana de impresión - ventanas emergentes bloqueadas');
+        this.snackBar.open('Por favor, permite ventanas emergentes para imprimir', 'Cerrar', {
+          duration: 5000,
+          horizontalPosition: 'right'
+        });
+        this.imprimiendoRecibo = false;
+        return;
+      }
+
+      console.log('Escribiendo HTML en la ventana...');
+      printerWindow.document.write(htmlCompleto);
+      printerWindow.document.close();
+      printerWindow.focus();
+      
+      console.log('Ventana de impresión abierta, se imprimirá automáticamente');
+      
+      // Resetear el estado de impresión después de un tiempo
+      setTimeout(() => {
+        this.imprimiendoRecibo = false;
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error al imprimir recibo:', error);
+      this.snackBar.open('Error al imprimir el recibo', 'Cerrar', {
+        duration: 5000,
+        horizontalPosition: 'right'
+      });
+      this.imprimiendoRecibo = false;
+    }
+  }
+
+  private buildReciboHtmlFragment(detalles: HistorialReciboDetalleDto[]): string {
+    const recibo = this.getSelectedRecibo();
+    const fechaHora = recibo?.fechaCreacion ? new Date(recibo.fechaCreacion) : new Date();
+    const fechaHoraStr = fechaHora.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'medium' });
+    const total = detalles.reduce((sum, det) => sum + Number(det.subtotal ?? 0), 0);
+    const lineas: string[] = [];
+    
+    lineas.push('<div class="pos-recibo">');
+    lineas.push('<p class="pos-titulo">Gestor infinito market</p>');
+    lineas.push(`<p class="pos-fecha">${this.escapeHtml(fechaHoraStr)}</p>`);
+    lineas.push('<p class="pos-leyenda">Recibo no apto como factura</p>');
+    lineas.push('<hr class="pos-sep"/>');
+    lineas.push('<table class="pos-tabla"><thead><tr><th>Producto</th><th>V.Unit</th><th>Cant</th><th>Subtotal</th></tr></thead><tbody>');
+    
+    for (const det of detalles) {
+      const nombre = det.producto?.nombre ?? `Producto ${det.productoId}`;
+      const unitario = det.producto?.precio ?? (det.cantidad ? det.subtotal / det.cantidad : 0);
+      lineas.push('<tr>', 
+        `<td>${this.escapeHtml(nombre)}</td>`, 
+        `<td>${this.formatCurrency(unitario)}</td>`, 
+        `<td>${det.cantidad}</td>`, 
+        `<td>${this.formatCurrency(det.subtotal)}</td>`, 
+        '</tr>');
+    }
+    
+    lineas.push('</tbody></table>', '<hr class="pos-sep"/>', `<p class="pos-total">TOTAL: ${this.formatCurrency(total)}</p>`, '</div>');
+    return lineas.join('');
+  }
+
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 }
 
