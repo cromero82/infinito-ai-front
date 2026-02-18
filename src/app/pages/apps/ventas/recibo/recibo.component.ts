@@ -92,6 +92,8 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   editingDetalleIndex = -1;
   editingUnitarioIndex = -1;
   editingProductoIndex = -1;
+  private startingEdit = false;
+  private lastClickTime = 0;
   editingCantidadCtrl = new FormControl<string>('', { nonNullable: true });
   editingUnitarioCtrl = new FormControl<string>('', { nonNullable: true });
   editingProductoCtrl = new FormControl<string>('', { nonNullable: true });
@@ -649,14 +651,57 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     return sum;
   }
 
+  onDetalleRowMouseDown(index: number, event: MouseEvent): void {
+    const currentTime = Date.now();
+    const timeDiff = currentTime - this.lastClickTime;
+    
+    // Si es un doble clic (menos de 300ms entre clics), prevenir el click
+    if (timeDiff < 300) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    this.lastClickTime = currentTime;
+  }
+
+  onDetalleRowClick(index: number, event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    
+    // Verificar si el clic fue en un área editable
+    if (target.classList.contains('detalle-col') && 
+        (target.classList.contains('producto') || target.classList.contains('unitario') || target.classList.contains('cantidad'))) {
+      // No hacer nada si el clic fue en áreas editables
+      return;
+    }
+    
+    // Verificar si el clic fue en un input de edición
+    if (target.classList.contains('producto-input') || 
+        target.classList.contains('valor-unitario-input') || 
+        target.classList.contains('cantidad-input')) {
+      // No hacer nada si el clic fue en inputs de edición
+      return;
+    }
+    
+    // Para cualquier otro caso, proceder con selectDetalle
+    this.selectDetalle(index);
+  }
+
   selectDetalle(index: number): void {
+    // No hacer nada si se está iniciando una edición
+    if (this.startingEdit) {
+      return;
+    }
+    
     if (index < 0 || index >= this.detalles.length) {
       this.selectedDetalleIndex = -1;
     } else {
       this.selectedDetalleIndex = index;
       this.scrollToSelectedDetalle();
     }
-    this.focusSearchInputRequest.emit();
+    // Solo emitir focusSearchInputRequest si no estamos en modo de edición
+    if (this.editingProductoIndex === -1 && this.editingUnitarioIndex === -1 && this.editingDetalleIndex === -1) {
+      this.focusSearchInputRequest.emit();
+    }
   }
 
   private navigateDetalleUp(): void {
@@ -743,6 +788,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     }
     
     // Default: edit cantidad
+    this.startingEdit = true;
     this.editingDetalleIndex = index;
     this.editingCantidadCtrl.setValue(String(detalle.cantidad ?? 1));
     // Focus the input after a short delay to ensure it's rendered
@@ -752,6 +798,10 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         input.focus();
         input.select();
       }
+      // Restablecer startingEdit después de un corto tiempo
+      setTimeout(() => {
+        this.startingEdit = false;
+      }, 50);
     }, 0);
   }
 
@@ -765,6 +815,9 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
     
+    // Establecer que se está iniciando una edición para evitar selectDetalle
+    this.startingEdit = true;
+    
     const currentPrecio = detalle.producto.precio ?? (detalle.cantidad > 0 ? detalle.subtotal / detalle.cantidad : 0);
     this.editingUnitarioIndex = index;
     this.editingUnitarioCtrl.setValue(String(currentPrecio));
@@ -776,6 +829,10 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         input.focus();
         input.select();
       }
+      // Restablecer startingEdit después de un corto tiempo
+      setTimeout(() => {
+        this.startingEdit = false;
+      }, 50);
     }, 0);
   }
 
@@ -786,7 +843,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       keyboardEvent.stopPropagation();
       // Use setTimeout to ensure the form control value is updated
       setTimeout(() => {
-        this.saveCantidadEdit(index);
+        this.saveCantidadEdit(index, true);
       }, 0);
     } else if (keyboardEvent.key === 'Escape') {
       keyboardEvent.preventDefault();
@@ -804,7 +861,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     }, 150);
   }
 
-  saveCantidadEdit(index: number): void {
+  saveCantidadEdit(index: number, focusSearch: boolean = false): void {
     if (this.editingDetalleIndex !== index || index < 0 || index >= this.detalles.length) {
       this.cancelCantidadEdit();
       return;
@@ -859,7 +916,9 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     updatedList[index] = optimisticDetalle;
     this.detalles = updatedList;
     const newTotal = this.recalculateTotal();
-    this.focusSearchInputRequest.emit();
+    if (focusSearch) {
+      this.focusSearchInputRequest.emit();
+    }
 
     this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
       next: (updatedDetalle) => {
@@ -923,7 +982,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       keyboardEvent.preventDefault();
       keyboardEvent.stopPropagation();
       setTimeout(() => {
-        this.saveUnitarioEdit(index);
+        this.saveUnitarioEdit(index, true);
       }, 0);
     } else if (keyboardEvent.key === 'Escape') {
       keyboardEvent.preventDefault();
@@ -940,7 +999,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     }, 150);
   }
 
-  saveUnitarioEdit(index: number): void {
+  saveUnitarioEdit(index: number, focusSearch: boolean = false): void {
     if (this.editingUnitarioIndex !== index || index < 0 || index >= this.detalles.length) {
       this.cancelUnitarioEdit();
       return;
@@ -1071,7 +1130,9 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
             }
           });
         }
-        this.focusSearchInputRequest.emit();
+        if (focusSearch) {
+          this.focusSearchInputRequest.emit();
+        }
       },
       error: (err: unknown) => {
         console.error('Error updating product price', err);
@@ -1095,6 +1156,9 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
     
+    // Establecer que se está iniciando una edición para evitar selectDetalle
+    this.startingEdit = true;
+    
     this.editingProductoIndex = index;
     this.editingProductoCtrl.setValue(detalle.producto.nombre);
     
@@ -1105,6 +1169,37 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         input.focus();
         input.select();
       }
+      // Restablecer startingEdit después de un corto tiempo
+      setTimeout(() => {
+        this.startingEdit = false;
+      }, 50);
+    }, 0);
+  }
+
+  onCantidadDoubleClick(index: number, event: MouseEvent): void {
+    event.stopPropagation();
+    if (index < 0 || index >= this.detalles.length) {
+      return;
+    }
+    const detalle = this.detalles[index];
+    
+    // Establecer que se está iniciando una edición para evitar selectDetalle
+    this.startingEdit = true;
+    
+    this.editingDetalleIndex = index;
+    this.editingCantidadCtrl.setValue(String(detalle.cantidad ?? 1));
+    
+    // Focus the input after a short delay to ensure it's rendered
+    setTimeout(() => {
+      const input = document.querySelector(`.cantidad-input-${index}`) as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+      // Restablecer startingEdit después de un corto tiempo
+      setTimeout(() => {
+        this.startingEdit = false;
+      }, 50);
     }, 0);
   }
 
@@ -1114,7 +1209,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       keyboardEvent.preventDefault();
       keyboardEvent.stopPropagation();
       setTimeout(() => {
-        this.saveProductoEdit(index);
+        this.saveProductoEdit(index, true);
       }, 0);
     } else if (keyboardEvent.key === 'Escape') {
       keyboardEvent.preventDefault();
@@ -1131,7 +1226,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     }, 150);
   }
 
-  saveProductoEdit(index: number): void {
+  saveProductoEdit(index: number, focusSearch: boolean = false): void {
     if (this.editingProductoIndex !== index || index < 0 || index >= this.detalles.length) {
       this.cancelProductoEdit();
       return;
@@ -1184,7 +1279,9 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
           return det;
         });
         this.detalles = updatedList;
-        this.focusSearchInputRequest.emit();
+        if (focusSearch) {
+          this.focusSearchInputRequest.emit();
+        }
       },
       error: (err: unknown) => {
         console.error('Error updating product name', err);
