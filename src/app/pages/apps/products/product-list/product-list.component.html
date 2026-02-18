@@ -63,6 +63,23 @@
               [matTooltip]="isProductActive(product) ? 'Desactivar producto' : 'Activar producto'">
               <mat-icon svgIcon="mat:{{ isProductActive(product) ? 'block' : 'check_circle' }}"></mat-icon>
             </button>
+            
+            <!-- Botones de búsqueda en Google -->
+            <vex-google-search-button
+              searchType="name"
+              [productName]="product.nombre"
+              size="small"
+              color="accent"
+              (searchClicked)="onGoogleSearchClicked($event)">
+            </vex-google-search-button>
+            
+            <vex-google-search-button
+              searchType="barcode"
+              [barcode]="product.barcode"
+              size="small"
+              color="accent"
+              (searchClicked)="onGoogleSearchClicked($event)">
+            </vex-google-search-button>
           </td>
         </ng-container>
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

@@ -196,31 +196,27 @@
                       </div>
                       <div class="conflicto-item-actions">
                         <!-- Botón Buscar por código de barras: mostrar para todos los tipos excepto IGUAL_NOMBRE_Y_CODIGO_BARRAS -->
-                        <button
+                        <vex-google-search-button
                           *ngIf="!esTipoIgualNombreYCodigoBarras(conflictoParsed)"
-                          mat-icon-button
-                          color="accent"
-                          size="small"
-                          type="button"
-                          (click)="buscarCodigoBarrasEnGoogle(conflictoParsed.conflicto.id, j)"
+                          searchType="barcode"
+                          [barcode]="getBarcodeForSearch(conflictoParsed.conflicto.id, j)"
                           [disabled]="!tieneCodigoBarras(conflictoParsed.conflicto.id, j)"
-                          matTooltip="Buscar código de barras en Google"
-                          class="buscar-button buscar-barcode-button">
-                          <mat-icon svgIcon="mat:search" class="icon-search"></mat-icon>
-                          <mat-icon svgIcon="mat:qr_code" class="icon-barcode"></mat-icon>
-                        </button>
-                        <!-- Botón Buscar por nombre: mostrar para todos los tipos excepto IGUAL_NOMBRE_Y_CODIGO_BARRAS -->
-                        <button
-                          *ngIf="!esTipoIgualNombreYCodigoBarras(conflictoParsed)"
-                          mat-icon-button
-                          color="accent"
                           size="small"
-                          type="button"
-                          (click)="buscarNombreEnGoogle(conflictoParsed.conflicto.id, j)"
-                          matTooltip="Buscar nombre del producto en Google"
-                          class="buscar-button buscar-nombre-button">
-                          <mat-icon svgIcon="mat:search"></mat-icon>
-                        </button>
+                          color="accent"
+                          class="buscar-button buscar-barcode-button"
+                          (searchClicked)="onGoogleSearchClicked($event)">
+                        </vex-google-search-button>
+                        
+                        <!-- Botón Buscar por nombre: mostrar para todos los tipos excepto IGUAL_NOMBRE_Y_CODIGO_BARRAS -->
+                        <vex-google-search-button
+                          *ngIf="!esTipoIgualNombreYCodigoBarras(conflictoParsed)"
+                          searchType="name"
+                          [productName]="getProductNameForSearch(conflictoParsed.conflicto.id, j)"
+                          size="small"
+                          color="accent"
+                          class="buscar-button buscar-nombre-button"
+                          (searchClicked)="onGoogleSearchClicked($event)">
+                        </vex-google-search-button>
                         <!-- Para NO_TIENE_PRECIO: mostrar Editar si existe, Registrar si no existe -->
                         <ng-container *ngIf="esTipoNoTienePrecio(conflictoParsed)">
                           <!-- Botón Editar: mostrar solo si el producto existe -->

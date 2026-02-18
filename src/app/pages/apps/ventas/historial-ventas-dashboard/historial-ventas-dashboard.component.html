@@ -1,6 +1,6 @@
 <div class="card">
   <div class="border-b py-2 px-6 flex items-center">
-    <h2 class="m-0 title flex-auto">Historial de Ventas</h2>
+    <h2 class="m-0 title flex-auto"> Cortes de ventas</h2>
 
     <button 
       mat-flat-button 
@@ -13,10 +13,7 @@
       <span class="ml-1">Corte de Ventas</span>
     </button>
 
-    <button mat-icon-button type="button" (click)="cargarVentasDelDia()" matTooltip="Cargar ventas del día">
-      <mat-icon class="text-secondary" svgIcon="mat:refresh"></mat-icon>
-    </button>
-  </div>
+      </div>
 
   <div class="pt-3 pb-4 px-4 split-pane-container">
     <!-- Sección izquierda: Filtros -->
@@ -58,14 +55,7 @@
             Aplicar Filtro
           </button>
 
-          <button 
-            mat-button 
-            type="button"
-            [disabled]="loading"
-            (click)="cargarVentasDelDia()">
-            Ver Ventas del Día
-          </button>
-        </div>
+                  </div>
       </div>
 
       <!-- Resumen -->

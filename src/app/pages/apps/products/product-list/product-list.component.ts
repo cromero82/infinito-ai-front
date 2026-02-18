@@ -23,6 +23,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ProductEditComponent } from '../product-edit/product-edit.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../core/components/confirm-dialog/confirm-dialog.component';
 import { ConfigurationService } from '../../../pages/auth/service/configuration.service';
+import { GoogleSearchButtonComponent } from '../../../../@vex/components/google-search-button';
 
 @Component({
   selector: 'vex-product-list',
@@ -43,7 +44,8 @@ import { ConfigurationService } from '../../../pages/auth/service/configuration.
     FormsModule,
     NgFor,
     NgIf,
-    DecimalPipe
+    DecimalPipe,
+    GoogleSearchButtonComponent
   ],
   templateUrl: './product-list.component.html',
   styleUrl: './product-list.component.scss'
@@ -410,6 +412,14 @@ export class ProductListComponent implements OnInit, AfterViewInit {
           alert('Error al ' + (shouldActivate ? 'activar' : 'desactivar') + ' el producto: ' + (err?.error?.message || err.message || err));
         }
       });
+  }
+
+  /**
+   * Handle Google search button click events
+   */
+  onGoogleSearchClicked(event: { type: 'name' | 'barcode'; query: string }): void {
+    // Este método se puede usar para tracking o logging si es necesario
+    console.log(`Búsqueda en Google desde product-list: ${event.type} - ${event.query}`);
   }
 
 }

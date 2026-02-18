@@ -40,7 +40,7 @@ export class NavigationLoaderService {
       },
       {
         type: 'link',
-        label: 'Dashboard Ventas',
+        label: 'Dashboard Cortes',
         route: '/apps/ventas/dashboard',
         icon: 'mat:dashboard'
       },

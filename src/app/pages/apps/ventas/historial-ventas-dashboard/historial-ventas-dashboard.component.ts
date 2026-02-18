@@ -370,16 +370,7 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  cargarVentasDelDia(): void {
-    this.loading = true;
-    this.error = null;
-    this.fechaInicioCtrl.setValue(null);
-    this.fechaFinCtrl.setValue(null);
-
-    // Cargar últimos 7 días en lugar de solo el día actual
-    this.cargarVentasUltimos7Dias();
-  }
-
+  
   abrirModalCorteVentas(): void {
     this.dialog.open(CorteVentasComponent, {
       width: '950px',
@@ -387,7 +378,7 @@ export class HistorialVentasDashboardComponent implements OnInit, OnDestroy {
       maxWidth: '95vw'
     }).afterClosed().subscribe(result => {
       if (result?.success) {
-        this.cargarVentasDelDia();
+        this.cargarVentasUltimos7Dias();
       }
     });
   }

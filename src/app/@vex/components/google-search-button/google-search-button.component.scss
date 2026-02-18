@@ -1,0 +1,73 @@
+.google-search-button {
+  position: relative;
+  
+  .icon-search {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 16px;
+    opacity: 0.7;
+    z-index: 1;
+  }
+  
+  .icon-barcode {
+    position: relative;
+    z-index: 2;
+    font-size: 18px;
+  }
+  
+  // Estilos específicos para el botón de código de barras
+  &:hover .icon-search {
+    opacity: 0.9;
+  }
+  
+  // Estilos para diferentes tamaños
+  &[mat-icon-button] {
+    width: 40px;
+    height: 40px;
+    
+    .icon-search {
+      font-size: 14px;
+    }
+    
+    .icon-barcode {
+      font-size: 16px;
+    }
+  }
+  
+  &[mat-button] {
+    padding: 0 16px;
+    min-width: 120px;
+    
+    .icon-search {
+      font-size: 18px;
+    }
+    
+    .icon-barcode {
+      font-size: 20px;
+    }
+  }
+  
+  &[mat-flat-button] {
+    padding: 0 20px;
+    min-width: 140px;
+    
+    .icon-search {
+      font-size: 20px;
+    }
+    
+    .icon-barcode {
+      font-size: 22px;
+    }
+  }
+}
+
+// Clases adicionales para compatibilidad con el estilo existente
+.buscar-barcode-button {
+  @extend .google-search-button;
+}
+
+.buscar-nombre-button {
+  @extend .google-search-button;
+}

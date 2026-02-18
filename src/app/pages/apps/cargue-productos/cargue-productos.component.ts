@@ -24,6 +24,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { GoogleSearchButtonComponent } from '../../../@vex/components/google-search-button';
 
 @Component({
   selector: 'vex-cargue-productos',
@@ -39,7 +40,8 @@ import { MatInputModule } from '@angular/material/input';
     MatSnackBarModule,
     MatProgressSpinnerModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    GoogleSearchButtonComponent
   ],
   templateUrl: './cargue-productos.component.html',
   styleUrls: ['./cargue-productos.component.scss']
@@ -674,6 +676,49 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
     return this.verificandoProducto[key] || false;
   }
 
+  // Métodos auxiliares para el componente GoogleSearchButton
+  getProductNameForSearch(conflictoId: number, itemIndex: number): string {
+    const conflictoParsed = this.conflictosParsed.find(cp => cp.conflicto.id === conflictoId);
+    if (!conflictoParsed || !conflictoParsed.items[itemIndex]) {
+      return '';
+    }
+
+    // Obtener el nombre del producto
+    if (conflictoParsed.nombreExtraido) {
+      return conflictoParsed.nombreExtraido;
+    } else if (conflictoParsed.conflicto.nombreProducto) {
+      const nombre = conflictoParsed.conflicto.nombreProducto;
+      // Si viene con formato "NOMBRE; Precio: $XXX", extraer solo el nombre
+      if (nombre.includes(';')) {
+        return nombre.split(';')[0].trim();
+      }
+      return nombre;
+    } else {
+      const item = conflictoParsed.items[itemIndex];
+      return item.nombre || '';
+    }
+  }
+
+  getBarcodeForSearch(conflictoId: number, itemIndex: number): string {
+    const conflictoParsed = this.conflictosParsed.find(cp => cp.conflicto.id === conflictoId);
+    if (!conflictoParsed || !conflictoParsed.items[itemIndex]) {
+      return '';
+    }
+
+    const item = conflictoParsed.items[itemIndex];
+    if (itemIndex === 0) {
+      // Para NO_TIENE_PRECIO puede venir como "codigo", para otros tipos como "codigoBarras"
+      return item.codigoBarras || item['codigo'] || '';
+    } else {
+      return item['codigoBarras2nd'] || '';
+    }
+  }
+
+  onGoogleSearchClicked(event: { type: 'name' | 'barcode'; query: string }): void {
+    // Este método se puede usar para tracking o logging si es necesario
+    console.log(`Búsqueda en Google: ${event.type} - ${event.query}`);
+  }
+
   editarProducto(conflictoId: number, itemIndex: number): void {
     const conflictoParsed = this.conflictosParsed.find(cp => cp.conflicto.id === conflictoId);
     if (!conflictoParsed || !conflictoParsed.items[itemIndex]) {
@@ -774,84 +819,6 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
         }
       }
     });
-  }
-
-  buscarCodigoBarrasEnGoogle(conflictoId: number, itemIndex: number): void {
-    const conflictoParsed = this.conflictosParsed.find(cp => cp.conflicto.id === conflictoId);
-    if (!conflictoParsed || !conflictoParsed.items[itemIndex]) {
-      return;
-    }
-
-    const item = conflictoParsed.items[itemIndex];
-    let codigoBarras = '';
-
-    if (itemIndex === 0) {
-      // Para NO_TIENE_PRECIO puede venir como "codigo", para otros tipos como "codigoBarras"
-      codigoBarras = item.codigoBarras || item['codigo'] || '';
-    } else {
-      codigoBarras = item['codigoBarras2nd'] || '';
-    }
-
-    if (!codigoBarras || codigoBarras.trim().length === 0) {
-      this.snackBar.open('No hay código de barras para buscar', 'Cerrar', {
-        duration: 3000,
-        horizontalPosition: 'right'
-      });
-      return;
-    }
-
-    // Validar que sea un código de barras válido (solo números, típicamente 8, 12 o 13 dígitos)
-    const codigoLimpio = codigoBarras.trim();
-    const esCodigoValido = /^\d{8,13}$/.test(codigoLimpio);
-
-    if (!esCodigoValido) {
-      this.snackBar.open('El código de barras no tiene un formato válido', 'Cerrar', {
-        duration: 3000,
-        horizontalPosition: 'right',
-        panelClass: ['error-snackbar']
-      });
-      return;
-    }
-
-    // Abrir Google con la búsqueda del código de barras
-    const url = `https://www.google.com/search?q=${encodeURIComponent(codigoBarras)}`;
-    window.open(url, '_blank');
-  }
-
-  buscarNombreEnGoogle(conflictoId: number, itemIndex: number): void {
-    const conflictoParsed = this.conflictosParsed.find(cp => cp.conflicto.id === conflictoId);
-    if (!conflictoParsed || !conflictoParsed.items[itemIndex]) {
-      return;
-    }
-
-    const item = conflictoParsed.items[itemIndex];
-    let nombre = '';
-
-    // Obtener el nombre del producto
-    if (conflictoParsed.nombreExtraido) {
-      nombre = conflictoParsed.nombreExtraido;
-    } else if (conflictoParsed.conflicto.nombreProducto) {
-      nombre = conflictoParsed.conflicto.nombreProducto;
-      // Si viene con formato "NOMBRE; Precio: $XXX", extraer solo el nombre
-      if (nombre.includes(';')) {
-        nombre = nombre.split(';')[0].trim();
-      }
-    } else if (item.nombre) {
-      nombre = item.nombre;
-    }
-
-    if (!nombre || nombre.trim().length === 0) {
-      this.snackBar.open('No hay nombre de producto para buscar', 'Cerrar', {
-        duration: 3000,
-        horizontalPosition: 'right'
-      });
-      return;
-    }
-
-    // Abrir Google con la búsqueda del nombre + "PRECIO  medellin"
-    const busqueda = `${nombre} PRECIO medellin`;
-    const url = `https://www.google.com/search?q=${encodeURIComponent(busqueda)}`;
-    window.open(url, '_blank');
   }
 
   abrirModalRegistrarCargue(): void {
