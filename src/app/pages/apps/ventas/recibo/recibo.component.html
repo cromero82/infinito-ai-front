@@ -103,20 +103,23 @@
       </span>
     </div>
     <div class="detalle-footer" [class.has-atendido]="mostrarColumnaAtendido">
-        <span class="detalle-col producto total-label">
+        <div class="metodos-pago-container">
           <vex-metodos-pago
             [recibo]="recibo"
             [detalles]="detalles"
             [disabled]="actualizandoMetodoPago || estaEnEdicion"
             (metodoPagoSeleccionado)="onMetodoPagoSeleccionado($event)">
           </vex-metodos-pago>
-        </span>
-        <span class="detalle-col atendido" *ngIf="mostrarColumnaAtendido"></span>
-        <span class="detalle-col unitario"></span>
-      <span class="detalle-col cantidad">TOTAL</span>
-      <span class="detalle-col subtotal total-value total-value--highlight">
-        {{ formatCurrency(recibo ? recibo.total : 0) }}
-      </span>
+        </div>
+        <div *ngIf="mostrarColumnaAtendido"></div>
+        <div></div>
+        <div></div>
+        <div class="total-externo">
+          <span class="total-label">TOTAL</span>
+          <span class="total-value total-value--highlight">
+            {{ formatCurrency(recibo ? recibo.total : 0) }}
+          </span>
+        </div>
     </div>
   </div>
 

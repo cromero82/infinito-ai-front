@@ -101,7 +101,7 @@
 
 .detalle-header {
   display: grid;
-  grid-template-columns: 1fr 100px 70px 100px;
+  grid-template-columns: 0.6fr 130px 95px 140px;
   gap: 8px;
   padding: 8px 8px;
   font-size: 14px;
@@ -110,7 +110,7 @@
   flex-shrink: 0; /* No permitir que el header se encoja */
 
   &.has-atendido {
-    grid-template-columns: 0.84fr 220px 105px 74px 105px;
+    grid-template-columns: 0.5fr 210px 125px 95px 140px;
   }
 
   .detalle-col {
@@ -157,7 +157,7 @@
 
   .detalle-row {
     display: grid;
-    grid-template-columns: 1fr 100px 70px 100px;
+    grid-template-columns: 0.6fr 130px 95px 140px;
     gap: 8px;
     padding: 8px 8px;
     font-size: 14px;
@@ -165,23 +165,23 @@
     cursor: pointer;
 
     &.has-atendido {
-      grid-template-columns: 0.84fr 220px 105px 74px 105px;
+      grid-template-columns: 0.5fr 210px 125px 95px 140px;
     }
 
     &:nth-child(even) {
-      background-color: rgba(0, 0, 0, 0.005);
+      background-color: rgba(0, 0, 0, 0.02);
     }
 
     &:hover {
-      background-color: rgba(0, 0, 0, 0.01);
+      background-color: rgba(0, 0, 0, 0.04);
     }
 
     &.selected-detalle {
-      background-color: rgba(63, 81, 181, 0.15);
-      border-left: 3px solid #3f51b5;
+      background-color: rgba(63, 81, 181, 0.18);
+      border-left: 4px solid #3f51b5;
 
       &:hover {
-        background-color: rgba(63, 81, 181, 0.2);
+        background-color: rgba(63, 81, 181, 0.25);
       }
     }
 
@@ -295,7 +295,7 @@
 
 .detalle-footer {
   display: grid;
-  grid-template-columns: 1fr 100px 70px 100px;
+  grid-template-columns: 0.6fr 130px 95px 150px;
   gap: 8px;
   padding: 4px 8px 4px 8px;
   margin: 0;
@@ -303,20 +303,44 @@
   font-size: 15px;
   font-weight: 600;
   width: 100%;
-  max-width: 600px;
   align-items: center;
 
   &.has-atendido {
-    grid-template-columns: 0.84fr 220px 105px 74px 105px;
-    max-width: 850px;
+    grid-template-columns: 0.5fr 210px 125px 95px 150px;
   }
 
-  .total-label {
+  .metodos-pago-container {
+    grid-column: 1;
+    text-align: left;
+    display: flex;
+    align-items: center;
+  }
+
+  .total-externo {
+    grid-column: 4;
     text-align: right;
-    padding-right: 8px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    gap: 32px;
+  }
+
+  &.has-atendido .total-externo {
+    grid-column: 5;
+  }
+
+  .total-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .total-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.7);
   }
 
   .total-value {

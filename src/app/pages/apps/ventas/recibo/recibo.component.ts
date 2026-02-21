@@ -720,14 +720,13 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
+    // Si estamos en el primer elemento, no hacer nada (no permitir wraparound)
     if (this.selectedDetalleIndex <= 0) {
-      // Si estamos en el primer elemento o no hay selección, ir al último
-      this.selectedDetalleIndex = this.detalles.length - 1;
-    } else {
-      // Ir al elemento anterior
-      this.selectedDetalleIndex--;
+      return;
     }
 
+    // Ir al elemento anterior
+    this.selectedDetalleIndex--;
     this.scrollToSelectedDetalle();
   }
 
@@ -736,14 +735,13 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    if (this.selectedDetalleIndex < 0 || this.selectedDetalleIndex >= this.detalles.length - 1) {
-      // Si estamos en el último elemento o no hay selección, ir al primero
-      this.selectedDetalleIndex = 0;
-    } else {
-      // Ir al elemento siguiente
-      this.selectedDetalleIndex++;
+    // Si estamos en el último elemento, no hacer nada (no permitir wraparound)
+    if (this.selectedDetalleIndex >= this.detalles.length - 1) {
+      return;
     }
 
+    // Ir al elemento siguiente
+    this.selectedDetalleIndex++;
     this.scrollToSelectedDetalle();
   }
 
@@ -766,16 +764,60 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         const listTop = listEl.scrollTop;
         const listHeight = listEl.clientHeight;
 
-        // Si el elemento está fuera de la vista superior
+        console.log('Scroll debug:', {
+          selectedIndex: this.selectedDetalleIndex,
+          rowTop,
+          rowHeight,
+          listTop,
+          listHeight,
+          rowBottom: rowTop + rowHeight,
+          listBottom: listTop + listHeight
+        });
+
+        // Lógica de scroll natural: solo hacer scroll cuando sea realmente necesario
+        const rowBottom = rowTop + rowHeight;
+        const listBottom = listTop + listHeight;
+        const middlePoint = listTop + (listHeight / 2);
+
+        console.log('Natural scroll analysis:', {
+          rowTop,
+          rowBottom,
+          listTop,
+          listBottom,
+          middlePoint,
+          isAbove: rowTop < listTop,
+          isBelowMiddle: rowBottom > middlePoint,
+          isFullyVisible: rowTop >= listTop && rowBottom <= listBottom
+        });
+
+        let needsScroll = false;
+        let targetScrollTop = listTop;
+
+        // Si el elemento está por encima de la vista visible, hacer scroll hacia arriba
         if (rowTop < listTop) {
-          listEl.scrollTop = rowTop;
+          needsScroll = true;
+          targetScrollTop = Math.max(0, rowTop - 20); // Pequeño margen arriba
+          console.log('Element is above viewport, scrolling up');
         }
-        // Si el elemento está fuera de la vista inferior
-        else if (rowTop + rowHeight > listTop + listHeight) {
-          listEl.scrollTop = rowTop + rowHeight - listHeight;
+        // Si el elemento está por debajo de la mitad de la pantalla, hacer scroll hacia abajo
+        else if (rowBottom > middlePoint) {
+          needsScroll = true;
+          targetScrollTop = rowBottom - listHeight + 20; // Dejar espacio abajo
+          console.log('Element is below middle point, scrolling down');
         }
+        else {
+          console.log('Element is in good position, no scroll needed');
+          return; // No hacer scroll si el elemento está bien posicionado
+        }
+
+        // Asegurar que el scroll no sea negativo ni exceda el máximo
+        const maxScroll = listEl.scrollHeight - listEl.clientHeight;
+        const clampedScrollTop = Math.max(0, Math.min(targetScrollTop, maxScroll));
+
+        console.log('Natural scroll to:', clampedScrollTop);
+        listEl.scrollTop = clampedScrollTop;
       }
-    }, 0);
+    }, 200); // Aumentado a 200ms para asegurar que el DOM esté completamente listo
   }
 
   onDetalleDoubleClick(index: number, event: MouseEvent): void {
