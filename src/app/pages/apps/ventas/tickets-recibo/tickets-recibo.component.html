@@ -17,6 +17,7 @@
                   matInput
                   [formControl]="recibo.productSearchCtrl"
                   (keyup.enter)="triggerProductSearch()"
+                  (keydown)="onSearchInputKeydown($event)"
                   placeholder="Ej. código de barras o nombre" />
                 <button
                   mat-icon-button
@@ -44,7 +45,7 @@
                 ? 'Ocultar cuentas de clientes (' + cantidadTicketsConCliente + ')'
                 : 'Mostrar cuentas de clientes (' + cantidadTicketsConCliente + ')'"
               matTooltipPosition="above"
-              (click)="toggleTicketsConCliente()">
+              (click)="toggleTicketsConCliente(); focusProductSearch(false)">
               <mat-icon [svgIcon]="ticketsConClienteVisibles ? 'mat:people' : 'mat:people_outline'"></mat-icon>
               <span class="toggle-clientes-badge">{{ cantidadTicketsConCliente }}</span>
             </button>
@@ -65,7 +66,7 @@
                 <a
                   mat-tab-link
                   [active]="selectedIndex === i"
-                  (click)="selectTicket(i)"
+                  (click)="selectTicket(i); focusProductSearch(false)"
                   (dblclick)="editTicket(t, $event)"
                   class="tab-link">
                   {{ getTicketLabel(t) }}
@@ -128,14 +129,16 @@
             </mat-menu>
           </div>
           <div class="ticket-panel" *ngIf="tickets[selectedIndex] as activeTicket; else noTicketSelected">
-            <vex-recibo
-              #reciboCmp
-              [ticket]="activeTicket"
-              [reciboId]="currentReciboId"
-              [sessionId]="sessionId"
-              [searchInputElement]="searchInputEl"
-              (focusSearchInputRequest)="focusProductSearch()"
-              (metodoPagoActualizado)="recargarRecibo()"></vex-recibo>
+            <div class="detalle-wrapper">
+              <vex-recibo
+                #reciboCmp
+                [ticket]="activeTicket"
+                [reciboId]="currentReciboId"
+                [sessionId]="sessionId"
+                [searchInputElement]="productSearchInput?.nativeElement || null"
+                (focusSearchInputRequest)="focusProductSearch()"
+                (metodoPagoActualizado)="recargarRecibo()"></vex-recibo>
+            </div>
           </div>
           <ng-template #noTicketSelected>
             <div class="ticket-panel-empty"></div>

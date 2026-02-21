@@ -94,6 +94,8 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   editingProductoIndex = -1;
   private startingEdit = false;
   private lastClickTime = 0;
+  private isDoubleClickActive = false; // Nueva bandera para bloquear durante doble click
+  private blockFocusRequest = false; // Bandera global para bloquear focusSearchInputRequest
   editingCantidadCtrl = new FormControl<string>('', { nonNullable: true });
   editingUnitarioCtrl = new FormControl<string>('', { nonNullable: true });
   editingProductoCtrl = new FormControl<string>('', { nonNullable: true });
@@ -667,22 +669,26 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
   onDetalleRowClick(index: number, event: MouseEvent): void {
     const target = event.target as HTMLElement;
     
-    // Verificar si el clic fue en un área editable
-    if (target.classList.contains('detalle-col') && 
-        (target.classList.contains('producto') || target.classList.contains('unitario') || target.classList.contains('cantidad'))) {
-      // No hacer nada si el clic fue en áreas editables
-      return;
-    }
-    
-    // Verificar si el clic fue en un input de edición
+    // Verificar si el clic fue en un input de edición activo
     if (target.classList.contains('producto-input') || 
         target.classList.contains('valor-unitario-input') || 
         target.classList.contains('cantidad-input')) {
-      // No hacer nada si el clic fue en inputs de edición
+      // No hacer nada si el clic fue en inputs de edición activos
       return;
     }
     
-    // Para cualquier otro caso, proceder con selectDetalle
+    // Prevenir selección si estamos en modo de edición, iniciando edición o doble click activo
+    if (this.startingEdit || 
+        this.editingProductoIndex !== -1 || 
+        this.editingUnitarioIndex !== -1 || 
+        this.editingDetalleIndex !== -1 ||
+        this.estaEnEdicion ||
+        this.isDoubleClickActive) {
+      return;
+    }
+    
+    // Permitir selección en todas las demás áreas, incluyendo columnas editables
+    // cuando no estamos en modo de edición
     this.selectDetalle(index);
   }
 
@@ -698,10 +704,15 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       this.selectedDetalleIndex = index;
       this.scrollToSelectedDetalle();
     }
+    
+    // TEMPORALMENTE COMENTADO para aislar el problema de doble click
     // Solo emitir focusSearchInputRequest si no estamos en modo de edición
-    if (this.editingProductoIndex === -1 && this.editingUnitarioIndex === -1 && this.editingDetalleIndex === -1) {
-      this.focusSearchInputRequest.emit();
-    }
+    // if (this.editingProductoIndex === -1 && 
+    //     this.editingUnitarioIndex === -1 && 
+    //     this.editingDetalleIndex === -1 &&
+    //     !this.estaEnEdicion) {
+    //   this.focusSearchInputRequest.emit();
+    // }
   }
 
   private navigateDetalleUp(): void {
@@ -815,23 +826,26 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
     
-    // Establecer que se está iniciando una edición para evitar selectDetalle
+    // Activar bandera de doble click
+    this.isDoubleClickActive = true;
     this.startingEdit = true;
     
     const currentPrecio = detalle.producto.precio ?? (detalle.cantidad > 0 ? detalle.subtotal / detalle.cantidad : 0);
     this.editingUnitarioIndex = index;
     this.editingUnitarioCtrl.setValue(String(currentPrecio));
     
-    // Focus the input after a short delay to ensure it's rendered
     setTimeout(() => {
       const input = document.querySelector(`.valor-unitario-input-${index}`) as HTMLInputElement;
       if (input) {
         input.focus();
         input.select();
       }
-      // Restablecer startingEdit después de un corto tiempo
       setTimeout(() => {
         this.startingEdit = false;
+        // Desactivar bandera después de un tiempo
+        setTimeout(() => {
+          this.isDoubleClickActive = false;
+        }, 200);
       }, 50);
     }, 0);
   }
@@ -1156,7 +1170,9 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
     
-    // Establecer que se está iniciando una edición para evitar selectDetalle
+    // Activar bandera de doble click y bloqueo de focus
+    this.isDoubleClickActive = true;
+    this.blockFocusRequest = true;
     this.startingEdit = true;
     
     this.editingProductoIndex = index;
@@ -1169,9 +1185,13 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         input.focus();
         input.select();
       }
-      // Restablecer startingEdit después de un corto tiempo
       setTimeout(() => {
         this.startingEdit = false;
+        // Desactivar bandera después de un tiempo
+        setTimeout(() => {
+          this.isDoubleClickActive = false;
+          this.blockFocusRequest = false;
+        }, 300);
       }, 50);
     }, 0);
   }
@@ -1183,22 +1203,25 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     }
     const detalle = this.detalles[index];
     
-    // Establecer que se está iniciando una edición para evitar selectDetalle
+    // Activar bandera de doble click
+    this.isDoubleClickActive = true;
     this.startingEdit = true;
     
     this.editingDetalleIndex = index;
     this.editingCantidadCtrl.setValue(String(detalle.cantidad ?? 1));
     
-    // Focus the input after a short delay to ensure it's rendered
     setTimeout(() => {
       const input = document.querySelector(`.cantidad-input-${index}`) as HTMLInputElement;
       if (input) {
         input.focus();
         input.select();
       }
-      // Restablecer startingEdit después de un corto tiempo
       setTimeout(() => {
         this.startingEdit = false;
+        // Desactivar bandera después de un tiempo
+        setTimeout(() => {
+          this.isDoubleClickActive = false;
+        }, 200);
       }, 50);
     }, 0);
   }

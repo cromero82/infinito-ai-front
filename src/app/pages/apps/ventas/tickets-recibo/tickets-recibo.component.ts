@@ -135,24 +135,31 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
       this.reciboForSearch = null;
       this.searchInputEl = null;
     }
+    
     const needsUpdate = this.tickets?.length && this.reciboComponent && this.reciboComponent !== this.reciboForSearch;
     if (needsUpdate && !this.reciboForSearchScheduled) {
       this.reciboForSearchScheduled = true;
       setTimeout(() => {
-        this.reciboForSearchScheduled = false;
-        this.reciboForSearch = this.reciboComponent ?? null;
-        this.cdr.detectChanges();
         const el = this.productSearchInput?.nativeElement;
         if (el) {
           this.searchInputEl = el;
           this.searchInputElScheduled = true;
           this.cdr.detectChanges();
         }
+        this.reciboForSearch = this.reciboComponent || null;
+        this.reciboForSearchScheduled = false;
+        
+        // Forzar foco después de cargar tickets
+        setTimeout(() => {
+          this.focusProductSearch(false);
+        }, 100);
       }, 0);
     }
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void {
+    // Limpiar variables
+  }
 
   focusProductSearch(select: boolean = true): void {
     setTimeout(() => {
@@ -267,6 +274,10 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
   }
 
   newTicket(): void {
+    // Verificar si el input de búsqueda ya tiene el foco antes de crear el ticket
+    const searchInput = this.productSearchInput?.nativeElement;
+    const hadFocus = searchInput && document.activeElement === searchInput;
+    
     if (this.sessionId === null) {
       return;
     }
@@ -279,6 +290,11 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
         this.selectedIndex = this.tickets.length - 1;
         this.fetchReciboForTicket(ticket.id);
         this.loading = false;
+        
+        // Siempre enfocar el input de búsqueda al crear un nuevo ticket
+        setTimeout(() => {
+          this.focusProductSearch(false);
+        }, 100);
       },
       error: (err) => {
         this.loading = false;
@@ -288,6 +304,10 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
   }
 
   openQuickRecibo(): void {
+    // Verificar si el input de búsqueda ya tiene el foco antes de abrir el diálogo
+    const searchInput = this.productSearchInput?.nativeElement;
+    const hadFocus = searchInput && document.activeElement === searchInput;
+    
     if (this.sessionId === null) {
       return;
     }
@@ -305,11 +325,22 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
         // Optionally reload tickets or show success message
         // this.loadTickets(this.sessionId!);
       }
+      
+      // Restaurar el foco si lo tenía antes
+      if (hadFocus) {
+        setTimeout(() => {
+          this.focusProductSearch(false);
+        }, 100);
+      }
     });
   }
 
   editTicket(ticket: TicketDto, event: MouseEvent): void {
     event.stopPropagation();
+    // Verificar si el input de búsqueda ya tiene el foco antes de editar el ticket
+    const searchInput = this.productSearchInput?.nativeElement;
+    const hadFocus = searchInput && document.activeElement === searchInput;
+    
     if (this.loading) {
       return;
     }
@@ -328,7 +359,23 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
         // Recargar tickets para reflejar el cambio de cliente
         this.loadTickets(this.sessionId);
       }
+      
+      // Restaurar el foco si lo tenía antes
+      if (hadFocus) {
+        setTimeout(() => {
+          this.focusProductSearch(false);
+        }, 100);
+      }
     });
+  }
+
+  onSearchInputKeydown(event: KeyboardEvent): void {
+    // Prevenir que los símbolos + y - se escriban en el input de búsqueda
+    // pero permitir que el evento continúe hacia el componente recibo
+    if (event.key === '+' || event.key === '-' || event.key === 'NumpadAdd' || event.key === 'NumpadSubtract') {
+      event.preventDefault();
+      // No detener la propagación para que handleKeyboardShortcuts del recibo lo maneje
+    }
   }
 
   selectTicket(index: number): void {
@@ -422,12 +469,22 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
 
   /** Ejecuta la eliminación real del ticket (lógica extraída de deleteTicket). */
   private executeDeleteTicket(ticket: TicketDto, index: number): void {
+    // Verificar si el input de búsqueda ya tiene el foco antes de eliminar el ticket
+    const searchInput = this.productSearchInput?.nativeElement;
+    const hadFocus = searchInput && document.activeElement === searchInput;
+    
     this.loading = true;
     this.ticketsService.deleteTicket(ticket.id).subscribe({
       next: () => {
         const updated = [...this.tickets];
         updated.splice(index, 1);
         this.tickets = updated;
+        
+        // Ajustar selectedIndex si es necesario
+        if (this.selectedIndex >= updated.length) {
+          this.selectedIndex = Math.max(0, updated.length - 1);
+        }
+        
         this.desagruparSiSoloQuedanClientes();
         if (this.tickets.length === 0) {
           // No tickets left, create a new one
@@ -444,25 +501,60 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
               this.selectedIndex = 0;
               this.fetchReciboForTicket(newTicket.id);
               this.loading = false;
+              
+              // Restaurar el foco si lo tenía antes
+              if (hadFocus) {
+                setTimeout(() => {
+                  this.focusProductSearch(false);
+                }, 100);
+              }
             },
             error: (err) => {
               console.error('Error creating ticket after deletion', err);
               this.selectedIndex = -1;
               this.currentReciboId = null;
               this.loading = false;
+              
+              // Restaurar el foco si lo tenía antes
+              if (hadFocus) {
+                setTimeout(() => {
+                  this.focusProductSearch(false);
+                }, 100);
+              }
             }
           });
         } else if (this.selectedIndex >= this.tickets.length) {
           this.selectedIndex = this.tickets.length - 1;
           this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
           this.loading = false;
+          
+          // Restaurar el foco si lo tenía antes
+          if (hadFocus) {
+            setTimeout(() => {
+              this.focusProductSearch(false);
+            }, 100);
+          }
         } else if (this.selectedIndex === index) {
           this.selectedIndex = Math.max(0, index - 1);
           this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
           this.loading = false;
+          
+          // Restaurar el foco si lo tenía antes
+          if (hadFocus) {
+            setTimeout(() => {
+              this.focusProductSearch(false);
+            }, 100);
+          }
         } else {
           this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
           this.loading = false;
+          
+          // Restaurar el foco si lo tenía antes
+          if (hadFocus) {
+            setTimeout(() => {
+              this.focusProductSearch(false);
+            }, 100);
+          }
         }
       },
       error: (err) => {
@@ -550,9 +642,8 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
         // el cambio de currentReciboId actualiza el hijo y el FormControl del buscador en el mismo tick.
         const aplicar = () => {
           this.currentReciboId = nuevoReciboId;
-          if (this.currentReciboId) {
-            this.focusProductSearch(false);
-          }
+          // No enfocar automáticamente el input de búsqueda aquí
+          // Los métodos que llaman a fetchReciboForTicket se encargarán de restaurar el foco si es necesario
         };
         if (forceReload && nuevoReciboId && this.currentReciboId === nuevoReciboId) {
           this.currentReciboId = null;
