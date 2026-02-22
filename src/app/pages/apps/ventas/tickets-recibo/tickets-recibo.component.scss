@@ -441,3 +441,19 @@ vex-page-layout-header .container {
     padding: 4px 8px 0 !important;
   }
 }
+
+// ─── Estilos para mensajes de error ─────────────────────────────────────
+::ng-deep .error-snackbar {
+  background: #f44336 !important;
+  color: white !important;
+  font-weight: 500 !important;
+  
+  .mat-mdc-button {
+    color: white !important;
+    font-weight: 700 !important;
+  }
+  
+  .mat-mdc-snack-bar-label {
+    color: white !important;
+  }
+}

@@ -59,7 +59,7 @@
               (cdkDropListDropped)="onTicketDrop($event)">
               <div
                 class="tab-item"
-                *ngFor="let t of tickets; let i = index"
+                *ngFor="let t of tickets; let i = index; trackBy: trackByTicketId"
                 [class.ticket-con-cliente]="isTicketConCliente(t)"
                 [class.tab-collapsed]="!ticketsConClienteVisibles && isTicketConCliente(t)"
                 cdkDrag>

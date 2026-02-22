@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, AfterViewChecked, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, AfterViewChecked, ChangeDetectorRef, ChangeDetectionStrategy, ApplicationRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonModule } from '@angular/material/button';
 import { NgIf, NgFor } from '@angular/common';
@@ -23,6 +24,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { QuickReciboComponent, QuickReciboData } from '../quick-recibo/quick-recibo.component';
 import { EditarTabTicketReciboComponent, EditarTabTicketReciboData } from '../editar-tab-ticket-recibo/editar-tab-ticket-recibo.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../core/components/confirm-dialog/confirm-dialog.component';
+import { ReciboDetalleService } from '../service/recibo-detalle.service';
 
 const IMPRIMIR_RECIBO_KEY = 'imprimir-recibo';
 const LAST_TICKET_ID_KEY = 'last-ticket-id';
@@ -30,6 +32,7 @@ const LAST_TICKET_ID_KEY = 'last-ticket-id';
 @Component({
   selector: 'vex-tickets-recibo',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Default,
   imports: [
     VexPageLayoutComponent,
     VexPageLayoutHeaderDirective,
@@ -84,7 +87,10 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
     private dialog: MatDialog,
     private sesionesService: SesionesService,
     private cdr: ChangeDetectorRef,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private reciboDetalleService: ReciboDetalleService,
+    private appRef: ApplicationRef,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -185,6 +191,11 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
     return ticket.nombre;
   }
 
+  /** TrackBy function para ngFor de tickets */
+  trackByTicketId(index: number, ticket: TicketDto): number {
+    return ticket.id;
+  }
+
   /** True si al menos un ticket tiene un cliente con nombre (no ANONIMO). */
   get tieneTicketsConCliente(): boolean {
     return this.tickets.some(t => !!t.cliente?.nombre);
@@ -198,6 +209,33 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
   /** Determina si un ticket tiene un cliente personalizado (no ANONIMO). */
   isTicketConCliente(ticket: TicketDto): boolean {
     return !!ticket.cliente?.nombre;
+  }
+
+  /**
+   * Verifica si un ticket tiene detalles de productos asignados.
+   * Obtiene el recibo asociado al ticket y verifica si tiene detalles.
+   */
+  private async ticketTieneDetalles(ticket: TicketDto): Promise<boolean> {
+    if (this.sessionId === null) {
+      return false;
+    }
+
+    try {
+      // Obtener la relación ticket-recibo
+      const ticketRecibo = await this.ticketReciboService.getByTicketId(ticket.id, this.sessionId).toPromise();
+      
+      if (!ticketRecibo?.reciboId) {
+        return false;
+      }
+
+      // Obtener los detalles del recibo
+      const detalles = await this.reciboDetalleService.getDetallesByRecibo(ticketRecibo.reciboId).toPromise();
+      
+      return !!(detalles && detalles.length > 0);
+    } catch (error) {
+      console.error('Error verificando detalles del ticket:', error);
+      return false;
+    }
   }
 
   /** Alterna la visibilidad de los tabs de tickets con cliente personalizado. */
@@ -299,6 +337,26 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
       error: (err) => {
         this.loading = false;
         console.error('Error creating ticket', err);
+        
+        // Mostrar mensaje de error al usuario
+        let errorMessage = 'Error al crear el ticket. Por favor, intente nuevamente.';
+        
+        if (err.status === 500) {
+          errorMessage = 'Error interno del servidor. Contacte al administrador del sistema.';
+        } else if (err.status === 404) {
+          errorMessage = 'No se encontró la sesión de trabajo.';
+        } else if (err.status === 403) {
+          errorMessage = 'No tiene permisos para crear tickets.';
+        } else if (err.status === 0) {
+          errorMessage = 'Error de conexión con el servidor. Verifique su conexión a internet.';
+        }
+        
+        this.snackBar.open(errorMessage, 'Cerrar', {
+          duration: 5000,
+          horizontalPosition: 'center',
+          verticalPosition: 'top',
+          panelClass: ['error-snackbar']
+        });
       }
     });
   }
@@ -429,6 +487,29 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
         },
         error: (err) => {
           console.error('Error updating tickets order', err);
+          
+          // Mostrar mensaje de error al usuario
+          let errorMessage = 'Error al actualizar el orden de los tickets. Por favor, intente nuevamente.';
+          
+          if (err.status === 500) {
+            errorMessage = 'Error interno del servidor. Contacte al administrador del sistema.';
+          } else if (err.status === 404) {
+            errorMessage = 'No se encontró la sesión de trabajo.';
+          } else if (err.status === 403) {
+            errorMessage = 'No tiene permisos para modificar el orden de los tickets.';
+          } else if (err.status === 0) {
+            errorMessage = 'Error de conexión con el servidor. Verifique su conexión a internet.';
+          }
+          
+          this.snackBar.open(errorMessage, 'Cerrar', {
+            duration: 5000,
+            horizontalPosition: 'center',
+            verticalPosition: 'top',
+            panelClass: ['error-snackbar']
+          });
+          
+          // Revertir el orden local si falla el backend
+          // Esto requeriría tener una copia del orden anterior, por ahora solo mostramos el error
         }
       });
     }
@@ -460,15 +541,55 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
       dialogRef.afterClosed().subscribe((confirmado: boolean) => {
         if (confirmado) {
           this.executeDeleteTicket(ticket, index);
+        } else {
+          // Forzar actualización incluso si se cancela para asegurar estado consistente
+          setTimeout(() => {
+            this.cdr.detectChanges();
+          }, 100);
         }
       });
     } else {
-      this.executeDeleteTicket(ticket, index);
+      // Para tickets no identificados, verificar si tienen detalles asignados
+      this.ticketTieneDetalles(ticket).then(tieneDetalles => {
+        // Forzar detección de cambios después de la operación asíncrona
+        this.cdr.detectChanges();
+        
+        if (tieneDetalles) {
+          const dialogData: ConfirmDialogData = {
+            mensaje: `Esta cuenta tiene productos asignados, ¿está seguro que desea eliminar este ticket?`,
+            titulo: 'Confirmar eliminación'
+          };
+          const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+            data: dialogData,
+            width: '400px',
+            disableClose: true
+          });
+          dialogRef.afterClosed().subscribe((confirmado: boolean) => {
+            if (confirmado) {
+              this.executeDeleteTicket(ticket, index);
+            } else {
+              // Forzar actualización incluso si se cancela para asegurar estado consistente
+              setTimeout(() => {
+                this.cdr.detectChanges();
+              }, 100);
+            }
+          });
+        } else {
+          // Si no tiene cliente personalizado ni detalles, eliminar directamente
+          this.executeDeleteTicket(ticket, index);
+        }
+      }).catch(error => {
+        console.error('Error verificando detalles del ticket:', error);
+        // En caso de error, eliminar directamente para no bloquear la operación
+        this.executeDeleteTicket(ticket, index);
+      });
     }
   }
 
   /** Ejecuta la eliminación real del ticket (lógica extraída de deleteTicket). */
   private executeDeleteTicket(ticket: TicketDto, index: number): void {
+    console.log('🗑️ Iniciando eliminación del ticket:', ticket.id, 'índice:', index);
+    
     // Verificar si el input de búsqueda ya tiene el foco antes de eliminar el ticket
     const searchInput = this.productSearchInput?.nativeElement;
     const hadFocus = searchInput && document.activeElement === searchInput;
@@ -476,111 +597,82 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
     this.loading = true;
     this.ticketsService.deleteTicket(ticket.id).subscribe({
       next: () => {
-        const updated = [...this.tickets];
-        updated.splice(index, 1);
-        this.tickets = updated;
+        console.log('✅ Ticket eliminado exitosamente en el backend');
         
-        // Ajustar selectedIndex si es necesario
-        if (this.selectedIndex >= updated.length) {
-          this.selectedIndex = Math.max(0, updated.length - 1);
-        }
+        // Forzar recarga completa de la página para asegurar actualización
+        console.log('🔄 Forzando recarga completa de la página...');
         
-        this.desagruparSiSoloQuedanClientes();
-        if (this.tickets.length === 0) {
-          // No tickets left, create a new one
-          if (this.sessionId === null) {
-            this.selectedIndex = -1;
-            this.currentReciboId = null;
-            this.loading = false;
-            return;
-          }
-          const nombre = 'Ticket 1';
-          this.ticketsService.createTicket(this.sessionId, nombre).subscribe({
-            next: (newTicket) => {
-              this.tickets = [newTicket];
-              this.selectedIndex = 0;
-              this.fetchReciboForTicket(newTicket.id);
-              this.loading = false;
-              
-              // Restaurar el foco si lo tenía antes
-              if (hadFocus) {
-                setTimeout(() => {
-                  this.focusProductSearch(false);
-                }, 100);
-              }
-            },
-            error: (err) => {
-              console.error('Error creating ticket after deletion', err);
-              this.selectedIndex = -1;
-              this.currentReciboId = null;
-              this.loading = false;
-              
-              // Restaurar el foco si lo tenía antes
-              if (hadFocus) {
-                setTimeout(() => {
-                  this.focusProductSearch(false);
-                }, 100);
-              }
+        // Guardar el estado actual antes de recargar
+        const currentUrl = this.router.url;
+        
+        // Navegar a una ruta temporal y luego volver para forzar recarga
+        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+          this.router.navigate([currentUrl]).then(() => {
+            console.log('✅ Página recargada exitosamente');
+            
+            // Restaurar el foco si lo tenía antes
+            if (hadFocus) {
+              setTimeout(() => {
+                this.focusProductSearch(false);
+              }, 500);
             }
           });
-        } else if (this.selectedIndex >= this.tickets.length) {
-          this.selectedIndex = this.tickets.length - 1;
-          this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
-          this.loading = false;
-          
-          // Restaurar el foco si lo tenía antes
-          if (hadFocus) {
-            setTimeout(() => {
-              this.focusProductSearch(false);
-            }, 100);
-          }
-        } else if (this.selectedIndex === index) {
-          this.selectedIndex = Math.max(0, index - 1);
-          this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
-          this.loading = false;
-          
-          // Restaurar el foco si lo tenía antes
-          if (hadFocus) {
-            setTimeout(() => {
-              this.focusProductSearch(false);
-            }, 100);
-          }
-        } else {
-          this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
-          this.loading = false;
-          
-          // Restaurar el foco si lo tenía antes
-          if (hadFocus) {
-            setTimeout(() => {
-              this.focusProductSearch(false);
-            }, 100);
-          }
-        }
+        });
       },
       error: (err) => {
-        console.error('Error deleting ticket', err);
+        console.error('❌ Error eliminando ticket:', err);
         this.loading = false;
+        
+        // Mostrar mensaje de error al usuario
+        let errorMessage = 'Error al eliminar el ticket. Por favor, intente nuevamente.';
+        
+        if (err.status === 500) {
+          errorMessage = 'Error interno del servidor. Contacte al administrador del sistema.';
+        } else if (err.status === 404) {
+          errorMessage = 'El ticket que intenta eliminar no existe.';
+        } else if (err.status === 403) {
+          errorMessage = 'No tiene permisos para eliminar este ticket.';
+        } else if (err.status === 0) {
+          errorMessage = 'Error de conexión con el servidor. Verifique su conexión a internet.';
+        }
+        
+        this.snackBar.open(errorMessage, 'Cerrar', {
+          duration: 5000,
+          horizontalPosition: 'center',
+          verticalPosition: 'top',
+          panelClass: ['error-snackbar']
+        });
       }
     });
   }
 
   private loadTickets(sessionId: number): void {
+    console.log('📥 Cargando tickets para sesión:', sessionId);
     this.loading = true;
     this.ticketsService.getTicketsBySession(sessionId).subscribe({
       next: (resp) => {
         const tickets = resp || [];
+        console.log('📋 Tickets recibidos del backend:', tickets.length, tickets);
+        
         if (tickets.length === 0) {
+          console.log('📭 No hay tickets, creando ticket inicial...');
           // No tickets found, create a new one
           const nombre = 'Ticket 1';
           this.ticketsService.createTicket(sessionId, nombre).subscribe({
             next: (newTicket) => {
+              console.log('➕ Nuevo ticket creado:', newTicket);
               this.tickets = [newTicket];
               this.selectedIndex = 0;
               this.fetchReciboForTicket(newTicket.id);
               this.loading = false;
+              
+              // Forzar actualización completa de la aplicación
+              this.cdr.detectChanges();
+              this.appRef.tick();
+              console.log('🔄 Interfaz actualizada después de crear ticket inicial (tick completo)');
             },
             error: (err) => {
-              console.error('Error creating initial ticket', err);
+              console.error('❌ Error creando ticket inicial:', err);
               this.tickets = [];
               this.selectedIndex = -1;
               this.currentReciboId = null;
@@ -588,12 +680,14 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
             }
           });
         } else {
+          console.log('📝 Asignando tickets al componente:', tickets);
           this.tickets = tickets;
 
           // Consultar la sesión para obtener ultimoTicketId y seleccionar ese ticket
           this.sesionesService.getSesionById(sessionId).subscribe({
             next: (sesion: SesionDto) => {
               const ultimoId = sesion?.ultimoTicketId ?? null;
+              console.log('🎯 Último ticket ID desde sesión:', ultimoId);
 
               if (ultimoId) {
                 const index = this.tickets.findIndex((t) => t.id === ultimoId);
@@ -601,26 +695,58 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
               } else {
                 this.selectedIndex = 0;
               }
+              
+              console.log('📍 SelectedIndex establecido en:', this.selectedIndex);
 
               this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
               this.loading = false;
+              
+              // Forzar actualización completa de la aplicación
+              this.cdr.detectChanges();
+              this.appRef.tick();
+              console.log('🔄 Interfaz actualizada después de cargar tickets (tick completo)');
             },
             error: (err) => {
-              console.error('Error loading session info', err);
+              console.error('❌ Error cargando info de sesión:', err);
               // Fallback al comportamiento anterior
               this.selectedIndex = 0;
               this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
               this.loading = false;
+              
+              // Forzar actualización completa de la aplicación
+              this.cdr.detectChanges();
+              this.appRef.tick();
+              console.log('🔄 Interfaz actualizada (fallback con tick completo)');
             }
           });
         }
       },
       error: (err) => {
-        console.error('Error loading tickets', err);
+        console.error('❌ Error cargando tickets:', err);
         this.tickets = [];
         this.selectedIndex = -1;
         this.currentReciboId = null;
         this.loading = false;
+        
+        // Mostrar mensaje de error al usuario
+        let errorMessage = 'Error al cargar los tickets. Por favor, recargue la página.';
+        
+        if (err.status === 500) {
+          errorMessage = 'Error interno del servidor. Contacte al administrador del sistema.';
+        } else if (err.status === 404) {
+          errorMessage = 'No se encontró la sesión de trabajo.';
+        } else if (err.status === 403) {
+          errorMessage = 'No tiene permisos para acceder a los tickets.';
+        } else if (err.status === 0) {
+          errorMessage = 'Error de conexión con el servidor. Verifique su conexión a internet.';
+        }
+        
+        this.snackBar.open(errorMessage, 'Cerrar', {
+          duration: 5000,
+          horizontalPosition: 'center',
+          verticalPosition: 'top',
+          panelClass: ['error-snackbar']
+        });
       }
     });
   }
@@ -655,6 +781,26 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
       error: (err) => {
         console.error('Error loading ticket recibo relation', err);
         this.currentReciboId = null;
+        
+        // Mostrar mensaje de error al usuario
+        let errorMessage = 'Error al cargar el recibo del ticket. Por favor, intente nuevamente.';
+        
+        if (err.status === 500) {
+          errorMessage = 'Error interno del servidor. Contacte al administrador del sistema.';
+        } else if (err.status === 404) {
+          errorMessage = 'No se encontró el recibo asociado al ticket.';
+        } else if (err.status === 403) {
+          errorMessage = 'No tiene permisos para acceder al recibo.';
+        } else if (err.status === 0) {
+          errorMessage = 'Error de conexión con el servidor. Verifique su conexión a internet.';
+        }
+        
+        this.snackBar.open(errorMessage, 'Cerrar', {
+          duration: 5000,
+          horizontalPosition: 'center',
+          verticalPosition: 'top',
+          panelClass: ['error-snackbar']
+        });
       }
     });
   }
