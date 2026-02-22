@@ -216,25 +216,33 @@
 
 .detalle-content {
   margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 240px); /* Reducido para aprovechar más espacio */
 }
 
 .detalle-container {
   display: flex;
   flex-direction: column;
   width: 100%;
+  height: 100%;
 }
 
 .detalle-wrapper {
   display: flex;
   flex-direction: column;
   width: 100%;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  max-height: calc(100vh - 300px); /* Aumentado para más espacio */
 }
 
 .detalle-header {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 16px;
-  padding: 12px 16px;
+  padding: 8px 16px; /* Reducido de 12px a 8px */
   background-color: rgba(0, 0, 0, 0.02);
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
   font-weight: 600;
@@ -244,21 +252,23 @@
 .detalle-list {
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 300px);
-  overflow-y: auto;
 }
 
 .detalle-row {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 16px;
-  padding: 12px 16px;
+  padding: 6px 16px; /* Reducido de 12px a 6px */
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   transition: background-color 0.2s ease;
   cursor: default;
 
-  &:hover {
+  &:nth-child(even) {
     background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
   }
 }
 
@@ -288,10 +298,14 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 16px;
-  padding: 16px;
+  padding: 12px 16px; /* Reducido padding */
   border-top: 2px solid rgba(0, 0, 0, 0.12);
   margin-top: 8px;
   align-items: center;
+  flex-shrink: 0;
+  min-height: 60px; /* Reducido altura mínima */
+  position: relative;
+  background: white;
 
   .detalle-footer-left {
     grid-column: 1;
