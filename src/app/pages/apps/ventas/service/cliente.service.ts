@@ -36,5 +36,19 @@ export class ClienteService {
     });
     return this.http.post<ClienteDto>(this.apiUrl, cliente, { headers });
   }
+
+  updateCliente(id: number, cliente: CreateClienteRequest): Observable<ClienteDto> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+    return this.http.put<ClienteDto>(`${this.apiUrl}/${id}`, cliente, { headers });
+  }
+
+  getClienteById(id: number): Observable<ClienteDto> {
+    const headers = new HttpHeaders({
+      'Accept': 'application/json'
+    });
+    return this.http.get<ClienteDto>(`${this.apiUrl}/${id}`, { headers });
+  }
 }
 

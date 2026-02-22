@@ -36,9 +36,6 @@
           <div class="notification-label">{{ item.label }}</div>
           <div class="notification-description">{{ item.description }}</div>
         </div>
-        <mat-icon
-          class="notification-chevron flex-none"
-          svgIcon="mat:chevron_right"></mat-icon>
       </a>
       
       <!-- Item con acción directa -->
@@ -60,7 +57,7 @@
       <!-- Item con submenú -->
       <div
         *ngIf="item.submenu"
-        [matMenuTriggerFor]="item.id === '4' ? copiasSeguridadMenu : null"
+        [matMenuTriggerFor]="item.id === '6' ? copiasSeguridadMenu : null"
         class="notification flex items-center pointer"
         matRipple>
         <mat-icon

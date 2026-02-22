@@ -1,0 +1,155 @@
+// Llenar altura del viewport (vex-layout-content tiene altura fija con scrollDisabled)
+:host {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+:host ::ng-deep vex-page-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+:host ::ng-deep vex-page-layout-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+// Custom adjustments based on diff
+vex-page-layout-header {
+  height: 68px !important;
+  padding: 0 24px 32px !important;
+}
+
+vex-page-layout-header .container {
+  padding: 0 24px 0 20px !important;
+}
+
+.clientes-card {
+  @apply shadow-lg rounded-lg overflow-hidden;
+  margin-top: -90px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+:host ::ng-deep .clientes-card .bg-app-bar {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+// Similar a .ticket-panel en tickets-recibo
+.clientes-panel {
+  margin-top: 16px;
+  margin-bottom: 0;
+  padding-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// Crece para llenar el espacio disponible (como ticket-panel + recibo en tickets-recibo)
+.clientes-container {
+  @apply bg-white;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.clientes-list {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.loading {
+  @apply text-center py-8 text-gray-500;
+}
+
+.no-data {
+  @apply text-center py-8 text-gray-500;
+}
+
+// Search input field height adjustments
+.search-input {
+  @apply w-80;
+}
+
+.search-input .mat-mdc-form-field-flex {
+  height: 38px !important;
+}
+
+.search-input .mat-mdc-form-field-flex > .mat-mdc-form-field-infix {
+  height: 30px !important;
+}
+
+// Clientes heading font size
+.bg-app-bar h2 {
+  font-size: 25px !important;
+}
+
+// Table font size - increase font size for better readability
+table.mat-mdc-table {
+  font-size: 16px !important;
+  
+  // Table header cells
+  th.mat-mdc-header-cell {
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    padding: 2px 12px !important;
+    line-height: 1.2 !important;
+    height: 36px !important;
+  }
+  
+  // Table data cells
+  td.mat-mdc-cell {
+    font-size: 16px !important;
+    padding: 2px 12px !important;
+    line-height: 1.2 !important;
+    height: 36px !important;
+  }
+  
+  // Table rows - reduced height for more compact display
+  tr.mat-mdc-row {
+    height: 36px !important;
+    cursor: pointer;
+    
+    // Zebra striping - even rows (almost white, very subtle)
+    &:nth-child(even) {
+      background-color: rgba(0, 0, 0, 0.005) !important;
+    }
+    
+    // Zebra striping - odd rows (default background)
+    &:nth-child(odd) {
+      background-color: transparent !important;
+    }
+    
+    // Hover effect (almost white, very subtle)
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.01) !important;
+    }
+  }
+  
+  // Header row - reduced height for more compact display (almost white, very subtle)
+  tr.mat-mdc-header-row {
+    height: 36px !important;
+    background-color: rgba(0, 0, 0, 0.008) !important;
+  }
+}

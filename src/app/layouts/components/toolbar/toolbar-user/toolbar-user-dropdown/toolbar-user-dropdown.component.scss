@@ -9,7 +9,7 @@
 }
 
 .dropdown-header {
-  @apply bg-primary-600 text-on-primary-600 py-4 pr-4 pl-3 shadow;
+  @apply bg-primary-600 text-on-primary-600 py-2 pr-4 pl-3 shadow;
 }
 
 .dropdown-heading-icon {
@@ -35,7 +35,7 @@
 }
 
 .dropdown-footer {
-  @apply border-t bg-app-bar px-2 py-3;
+  @apply border-t bg-app-bar px-2 py-2;
 }
 
 .dropdown-footer-select {
@@ -56,7 +56,7 @@
 }
 
 .notification {
-  @apply text-default relative select-none transition-all duration-400 ease-out-swift py-4 px-6 no-underline;
+  @apply text-default relative select-none transition-all duration-400 ease-out-swift py-2 px-6 no-underline;
 
   &:hover {
     @apply bg-hover;

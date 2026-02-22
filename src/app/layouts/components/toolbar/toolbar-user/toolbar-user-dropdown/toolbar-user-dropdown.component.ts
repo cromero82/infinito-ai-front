@@ -103,7 +103,7 @@ export class ToolbarUserDropdownComponent implements OnInit {
     if (this.authService.isAdmin()) {
       this.items.push({
         id: '2',
-        icon: 'mat:people',
+        icon: 'mat:security',
         label: 'Actividad de Usuarios',
         description: 'Monitoreo y gestión de usuarios',
         colorClass: 'text-blue-600',
@@ -120,14 +120,23 @@ export class ToolbarUserDropdownComponent implements OnInit {
       });
       
       this.items.push({
-        id: '4',
+        id: '5',
+        icon: 'mat:people',
+        label: 'Gestión de clientes',
+        description: 'Administrar clientes del sistema',
+        colorClass: 'text-orange-600',
+        route: '/apps/clientes/list'
+      });
+      
+      this.items.push({
+        id: '6',
         icon: 'mat:backup',
         label: 'Copias de seguridad',
         description: 'Gestionar respaldos de la base de datos',
         colorClass: 'text-purple-600',
         submenu: [
           {
-            id: '4-1',
+            id: '6-1',
             icon: 'mat:download',
             label: 'Generar y descargar backup',
             description: 'Crear y descargar respaldo',
@@ -135,7 +144,7 @@ export class ToolbarUserDropdownComponent implements OnInit {
             action: () => this.generarBackup()
           },
           {
-            id: '4-2',
+            id: '6-2',
             icon: 'mat:email',
             label: 'Enviar al correo',
             description: 'Enviar copia de seguridad por correo',

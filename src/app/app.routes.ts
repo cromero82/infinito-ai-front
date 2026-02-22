@@ -188,6 +188,19 @@ export const appRoutes: VexRoutes = [
             )
           },
           {
+            path: 'clientes',
+            children: [
+              {
+                path: 'list',
+                loadComponent: () =>
+                  import('./pages/apps/clientes/cliente-list/cliente-list.component').then(
+                    (m) => m.ClienteListComponent
+                  ),
+                data: { scrollDisabled: true }
+              }
+            ]
+          },
+          {
             path: 'tipos',
             loadChildren: () => import('./pages/apps/tipos/tipos.routes')
           },
