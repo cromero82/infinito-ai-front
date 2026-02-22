@@ -28,6 +28,7 @@ import { ReciboDetalleService } from '../service/recibo-detalle.service';
 
 const IMPRIMIR_RECIBO_KEY = 'imprimir-recibo';
 const LAST_TICKET_ID_KEY = 'last-ticket-id';
+const FORCED_SELECTION_TICKET_ID_KEY = 'forced-selection-ticket-id';
 
 @Component({
   selector: 'vex-tickets-recibo',
@@ -81,6 +82,9 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
   /** Último ticketId sobre el cual el usuario hizo clic (persistido en localStorage para evitar llamadas HTTP redundantes). */
   private lastFetchedTicketId: number | null = null;
 
+  /** ID del ticket que debe seleccionarse forzosamente después de recargar */
+  private forcedSelectionTicketId: number | null = null;
+
   constructor(
     private ticketsService: TicketsService,
     private ticketReciboService: TicketReciboService,
@@ -105,6 +109,14 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
     this.sessionId = parsed;
     this.imprimirReciboActivo = this.getImprimirReciboFromStorage();
     this.lastFetchedTicketId = this.getLastTicketIdFromStorage();
+    
+    // Recuperar selección forzada del sessionStorage
+    const forcedSelection = sessionStorage.getItem(FORCED_SELECTION_TICKET_ID_KEY);
+    if (forcedSelection) {
+      this.forcedSelectionTicketId = Number(forcedSelection);
+      console.log('🔄 Recuperada selección forzada del sessionStorage:', this.forcedSelectionTicketId);
+    }
+    
     this.loadTickets(parsed);
   }
 
@@ -125,8 +137,15 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
   }
 
   private saveLastTicketId(ticketId: number): void {
+    console.log('💾 saveLastTicketId llamado:', {
+      ticketId,
+      lastFetchedTicketId: this.lastFetchedTicketId,
+      forcedSelectionTicketId: this.forcedSelectionTicketId
+    });
+    
     this.lastFetchedTicketId = ticketId;
     localStorage.setItem(LAST_TICKET_ID_KEY, String(ticketId));
+    console.log('💾 saveLastTicketId: guardado en localStorage:', ticketId);
   }
 
 
@@ -437,7 +456,17 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
   }
 
   selectTicket(index: number): void {
+    console.log('🎯 selectTicket llamado:', {
+      index,
+      totalTickets: this.tickets.length,
+      selectedTicket: this.tickets[index],
+      currentSelectedIndex: this.selectedIndex,
+      lastFetchedTicketId: this.lastFetchedTicketId,
+      forcedSelectionTicketId: this.forcedSelectionTicketId
+    });
+    
     if (index < 0 || index >= this.tickets.length) {
+      console.log('❌ selectTicket: índice inválido, retornando');
       return;
     }
     this.selectedIndex = index;
@@ -445,9 +474,11 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
 
     // Si el usuario hizo clic en el mismo ticket que ya estaba cargado, no hacer llamada HTTP
     if (this.lastFetchedTicketId === ticket.id && this.currentReciboId !== null) {
+      console.log('🔄 selectTicket: mismo ticket ya cargado, omitiendo llamada HTTP');
       return;
     }
 
+    console.log('📋 selectTicket: seleccionando ticket:', ticket);
     this.saveLastTicketId(ticket.id);
     this.fetchReciboForTicket(ticket.id);
   }
@@ -590,6 +621,20 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
   private executeDeleteTicket(ticket: TicketDto, index: number): void {
     console.log('🗑️ Iniciando eliminación del ticket:', ticket.id, 'índice:', index);
     
+    // Verificar si es un ticket no identificado y si quedan otros tickets no identificados
+    const esTicketNoIdentificado = !this.isTicketConCliente(ticket);
+    const ticketsNoIdentificados = this.tickets.filter(t => !this.isTicketConCliente(t));
+    const hayTicketsNoIdentificadosRestantes = esTicketNoIdentificado && ticketsNoIdentificados.length > 1;
+    const esUltimoTicketNoIdentificado = esTicketNoIdentificado && ticketsNoIdentificados.length === 1;
+    
+    console.log('📊 Análisis de tickets:', {
+      esTicketNoIdentificado,
+      totalTicketsNoIdentificados: ticketsNoIdentificados.length,
+      hayTicketsNoIdentificadosRestantes,
+      esUltimoTicketNoIdentificado,
+      ticketsConCliente: this.tickets.filter(t => this.isTicketConCliente(t)).length
+    });
+    
     // Verificar si el input de búsqueda ya tiene el foco antes de eliminar el ticket
     const searchInput = this.productSearchInput?.nativeElement;
     const hadFocus = searchInput && document.activeElement === searchInput;
@@ -599,25 +644,123 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
       next: () => {
         console.log('✅ Ticket eliminado exitosamente en el backend');
         
-        // Forzar recarga completa de la página para asegurar actualización
-        console.log('🔄 Forzando recarga completa de la página...');
-        
-        // Guardar el estado actual antes de recargar
-        const currentUrl = this.router.url;
-        
-        // Navegar a una ruta temporal y luego volver para forzar recarga
-        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-          this.router.navigate([currentUrl]).then(() => {
-            console.log('✅ Página recargada exitosamente');
+        // Verificar si necesitamos crear un nuevo ticket o seleccionar uno existente
+        if (esUltimoTicketNoIdentificado) {
+          console.log('🔄 Se eliminó el último ticket no identificado, creando uno nuevo...');
+          
+          if (this.sessionId !== null) {
+            const nextNumber = this.getNextTicketNumber();
+            const nombre = `Ticket ${nextNumber}`;
             
-            // Restaurar el foco si lo tenía antes
-            if (hadFocus) {
-              setTimeout(() => {
-                this.focusProductSearch(false);
-              }, 500);
-            }
+            this.ticketsService.createTicket(this.sessionId, nombre).subscribe({
+              next: (newTicket) => {
+                console.log('➕ Nuevo ticket no identificado creado:', newTicket);
+                console.log('📋 Detalles del nuevo ticket:', {
+                  id: newTicket.id,
+                  nombre: newTicket.nombre,
+                  cliente: newTicket.cliente,
+                  esNoIdentificado: !newTicket.cliente?.nombre
+                });
+                
+                // Establecer selección forzada para el nuevo ticket
+                this.forcedSelectionTicketId = newTicket.id;
+                sessionStorage.setItem(FORCED_SELECTION_TICKET_ID_KEY, String(newTicket.id));
+                console.log('🎯🎯 ESTABLECIENDO SELECCIÓN FORZADA para ticket ID:', newTicket.id);
+                console.log('💾 Guardado en sessionStorage:', FORCED_SELECTION_TICKET_ID_KEY, '=', newTicket.id);
+                console.log('🔄 A punto de recargar la página...');
+                
+                // Forzar recarga completa para mostrar el nuevo ticket
+                const currentUrl = this.router.url;
+                this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+                  this.router.navigate([currentUrl]).then(() => {
+                    console.log('✅ Página recargada, loadTickets debería respetar la selección forzada');
+                    
+                    // Restaurar el foco del input de búsqueda
+                    if (hadFocus) {
+                      setTimeout(() => {
+                        this.focusProductSearch(false);
+                      }, 200);
+                    }
+                  });
+                });
+              },
+              error: (err) => {
+                console.error('❌ Error creando nuevo ticket no identificado:', err);
+                this.loading = false;
+                
+                // Mostrar mensaje de error al usuario
+                let errorMessage = 'Error al crear un nuevo ticket. Por favor, recargue la página.';
+                
+                if (err.status === 500) {
+                  errorMessage = 'Error interno del servidor. Contacte al administrador del sistema.';
+                } else if (err.status === 404) {
+                  errorMessage = 'No se encontró la sesión de trabajo.';
+                } else if (err.status === 403) {
+                  errorMessage = 'No tiene permisos para crear tickets.';
+                } else if (err.status === 0) {
+                  errorMessage = 'Error de conexión con el servidor. Verifique su conexión a internet.';
+                }
+                
+                this.snackBar.open(errorMessage, 'Cerrar', {
+                  duration: 5000,
+                  horizontalPosition: 'center',
+                  verticalPosition: 'top',
+                  panelClass: ['error-snackbar']
+                });
+              }
+            });
+          } else {
+            console.log('❌ SessionId es null, no se puede crear nuevo ticket');
+            this.loading = false;
+          }
+        } else if (hayTicketsNoIdentificadosRestantes) {
+          console.log('🔄 Se eliminó un ticket no identificado pero quedan otros, seleccionando el siguiente...');
+          
+          // Encontrar el siguiente ticket no identificado (excluyendo el que se va a eliminar)
+          const ticketsNoIdentificadosRestantes = ticketsNoIdentificados.filter(t => t.id !== ticket.id);
+          if (ticketsNoIdentificadosRestantes.length > 0) {
+            const siguienteTicketNoIdentificado = ticketsNoIdentificadosRestantes[0]; // Tomar el primero disponible
+            
+            // Establecer selección forzada para el ticket existente
+            this.forcedSelectionTicketId = siguienteTicketNoIdentificado.id;
+            sessionStorage.setItem(FORCED_SELECTION_TICKET_ID_KEY, String(siguienteTicketNoIdentificado.id));
+            console.log('🎯🎯 ESTABLECIENDO SELECCIÓN FORZADA para ticket existente ID:', siguienteTicketNoIdentificado.id);
+            console.log('💾 Guardado en sessionStorage:', FORCED_SELECTION_TICKET_ID_KEY, '=', siguienteTicketNoIdentificado.id);
+            console.log('🔄 A punto de recargar la página...');
+            
+            // Forzar recarga completa para seleccionar el ticket existente
+            const currentUrl = this.router.url;
+            this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+              this.router.navigate([currentUrl]).then(() => {
+                console.log('✅ Página recargada, loadTickets debería respetar la selección forzada del ticket existente');
+                
+                // Restaurar el foco del input de búsqueda
+                if (hadFocus) {
+                  setTimeout(() => {
+                    this.focusProductSearch(false);
+                  }, 200);
+                }
+              });
+            });
+          }
+        } else {
+          // Caso normal: solo recargar la página
+          console.log('🔄 Recarga normal de la página...');
+          
+          const currentUrl = this.router.url;
+          this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+            this.router.navigate([currentUrl]).then(() => {
+              console.log('✅ Página recargada exitosamente');
+              
+              // Restaurar el foco si lo tenía antes
+              if (hadFocus) {
+                setTimeout(() => {
+                  this.focusProductSearch(false);
+                }, 500);
+              }
+            });
           });
-        });
+        }
       },
       error: (err) => {
         console.error('❌ Error eliminando ticket:', err);
@@ -686,17 +829,39 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
           // Consultar la sesión para obtener ultimoTicketId y seleccionar ese ticket
           this.sesionesService.getSesionById(sessionId).subscribe({
             next: (sesion: SesionDto) => {
-              const ultimoId = sesion?.ultimoTicketId ?? null;
-              console.log('🎯 Último ticket ID desde sesión:', ultimoId);
-
-              if (ultimoId) {
-                const index = this.tickets.findIndex((t) => t.id === ultimoId);
-                this.selectedIndex = index >= 0 ? index : 0;
+              let targetIndex = 0;
+              
+              // MÁXIMA PRIORIDAD: Usar selección forzada si existe
+              if (this.forcedSelectionTicketId) {
+                const forcedIndex = this.tickets.findIndex((t) => t.id === this.forcedSelectionTicketId);
+                if (forcedIndex >= 0) {
+                  targetIndex = forcedIndex;
+                  console.log('🎯🎯 USANDO SELECCIÓN FORZADA - ticket ID:', this.forcedSelectionTicketId, 'índice:', targetIndex);
+                  console.log('📋 Ticket seleccionado:', this.tickets[targetIndex]);
+                } else {
+                  console.log('⚠️ Ticket forzado no encontrado, usando selección normal');
+                }
+                // Limpiar la selección forzada después de usarla
+                this.forcedSelectionTicketId = null;
+                sessionStorage.removeItem(FORCED_SELECTION_TICKET_ID_KEY);
+                console.log('🧹 Selección forzada utilizada y limpiada del sessionStorage');
               } else {
-                this.selectedIndex = 0;
+                // Comportamiento normal: usar ultimoTicketId de la sesión
+                const ultimoId = sesion?.ultimoTicketId ?? null;
+                console.log('🎯 Último ticket ID desde sesión:', ultimoId);
+
+                if (ultimoId) {
+                  const index = this.tickets.findIndex((t) => t.id === ultimoId);
+                  targetIndex = index >= 0 ? index : 0;
+                } else {
+                  targetIndex = 0;
+                }
+                console.log('📍 Selección normal - índice:', targetIndex);
               }
               
-              console.log('📍 SelectedIndex establecido en:', this.selectedIndex);
+              this.selectedIndex = targetIndex;
+              console.log('📍📍 SelectedIndex FINAL establecido en:', this.selectedIndex);
+              console.log('📋📋 Ticket seleccionado:', this.tickets[this.selectedIndex]);
 
               this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
               this.loading = false;
@@ -752,26 +917,41 @@ export class TicketsReciboComponent implements OnInit, AfterViewInit, AfterViewC
   }
 
   private fetchReciboForTicket(ticketId: number, forceReload: boolean = false): void {
+    console.log('🔍 fetchReciboForTicket llamado:', {
+      ticketId,
+      forceReload,
+      currentReciboId: this.currentReciboId,
+      sessionId: this.sessionId,
+      forcedSelectionTicketId: this.forcedSelectionTicketId
+    });
+    
     if (!ticketId) {
+      console.log('❌ fetchReciboForTicket: ticketId es nulo, retornando');
       this.currentReciboId = null;
       return;
     }
     if (this.sessionId === null) {
+      console.log('❌ fetchReciboForTicket: sessionId es nulo, retornando');
       this.currentReciboId = null;
       return;
     }
     this.ticketReciboService.getByTicketId(ticketId, this.sessionId).subscribe({
       next: (relation) => {
+        console.log('✅ fetchReciboForTicket: relación obtenida:', relation);
         this.saveLastTicketId(ticketId);
         const nuevoReciboId = relation?.reciboId ?? null;
+        console.log('📋 fetchReciboForTicket: nuevoReciboId:', nuevoReciboId);
+        
         // Diferir actualización al siguiente ciclo para evitar NG0100 (ExpressionChangedAfterItHasBeenCheckedError):
         // el cambio de currentReciboId actualiza el hijo y el FormControl del buscador en el mismo tick.
         const aplicar = () => {
+          console.log('🔄 fetchReciboForTicket: aplicando cambios, currentReciboId:', nuevoReciboId);
           this.currentReciboId = nuevoReciboId;
           // No enfocar automáticamente el input de búsqueda aquí
           // Los métodos que llaman a fetchReciboForTicket se encargarán de restaurar el foco si es necesario
         };
         if (forceReload && nuevoReciboId && this.currentReciboId === nuevoReciboId) {
+          console.log('🔄 fetchReciboForTicket: forzando reload');
           this.currentReciboId = null;
           setTimeout(aplicar, 0);
         } else {
