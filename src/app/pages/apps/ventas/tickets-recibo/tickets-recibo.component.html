@@ -29,6 +29,9 @@
                 </button>
               </mat-form-field>
             </div>
+            <div *ngIf="recibo.productSearchError" class="search-error-message">
+              {{ recibo.productSearchError }}
+            </div>
           </div>
         </div>
       </div>

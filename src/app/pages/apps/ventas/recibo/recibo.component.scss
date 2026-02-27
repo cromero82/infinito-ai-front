@@ -114,16 +114,21 @@
   }
 
   .detalle-col {
-    text-align: right;
+      text-align: right;
 
-    &.producto {
-      text-align: left;
-    }
+      &.producto {
+        text-align: left;
+        font-family:  'Roboto', sans-serif;
+        font-weight: 400;
+        letter-spacing: 0.3px;
+        font-stretch: expanded;
+        text-transform: capitalize;
+      }
 
-    &.atendido {
-      text-align: left;
+      &.atendido {
+        text-align: left;
+      }
     }
-  }
 }
 
 .detalle-list {
@@ -197,6 +202,14 @@
         text-overflow: ellipsis;
         display: block;
       }
+    }
+
+    .detalle-col.producto {
+      text-align: left;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-weight: 400;
+      letter-spacing: 0.3px;
+      font-stretch: expanded;
     }
 
     .detalle-col.unitario,

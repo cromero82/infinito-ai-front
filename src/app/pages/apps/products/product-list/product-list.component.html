@@ -42,12 +42,46 @@
         <!-- Name Column -->
         <ng-container matColumnDef="nombre">
           <th *matHeaderCellDef mat-header-cell mat-sort-header>Producto</th>
-          <td *matCellDef="let product" mat-cell>{{ product.nombre }}</td>
+          <td *matCellDef="let product; let i = index" mat-cell 
+              (dblclick)="onProductNameDoubleClick(i, $event); $event.stopPropagation()">
+            <input
+              *ngIf="editingProductNameIndex === i"
+              class="product-name-input product-name-input-{{ i }}"
+              type="text"
+              [formControl]="editingProductNameCtrl"
+              (keydown.enter)="onProductNameInputKeydown($event, i)"
+              (keydown.escape)="cancelProductNameEdit()"
+              (blur)="onProductNameInputBlur(i)"
+              (click)="$event.stopPropagation()"
+              (input)="$event.stopPropagation()"
+              style="width: 100%; border: 1px solid #ccc; padding: 2px 4px; border-radius: 4px;" />
+            <span *ngIf="editingProductNameIndex !== i">
+              {{ product.nombre }}
+            </span>
+          </td>
         </ng-container>
         <!-- Price Column -->
         <ng-container matColumnDef="price">
           <th *matHeaderCellDef mat-header-cell mat-sort-header>Precio</th>
-          <td *matCellDef="let product" mat-cell>${{ product.precio | number:'1.2-2' }}</td>
+          <td *matCellDef="let product; let i = index" mat-cell 
+              (dblclick)="onProductPriceDoubleClick(i, $event); $event.stopPropagation()">
+            <input
+              *ngIf="editingProductPriceIndex === i"
+              class="product-price-input product-price-input-{{ i }}"
+              type="number"
+              min="0"
+              step="0.01"
+              [formControl]="editingProductPriceCtrl"
+              (keydown.enter)="onProductPriceInputKeydown($event, i)"
+              (keydown.escape)="cancelProductPriceEdit()"
+              (blur)="onProductPriceInputBlur(i)"
+              (click)="$event.stopPropagation()"
+              (input)="$event.stopPropagation()"
+              style="width: 100%; border: 1px solid #ccc; padding: 2px 4px; border-radius: 4px;" />
+            <span *ngIf="editingProductPriceIndex !== i">
+              ${{ product.precio | number:'1.2-2' }}
+            </span>
+          </td>
         </ng-container>
         <!-- Edit Column -->
         <ng-container matColumnDef="edit">
@@ -84,8 +118,9 @@
         </ng-container>
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row 
-            *matRowDef="let row; columns: displayedColumns"
+            *matRowDef="let row; columns: displayedColumns; let i = index"
             (click)="onRowClick(row)"
+            (mousedown)="onRowMouseDown(i, $event)"
             [class.inactive-row]="!isProductActive(row)"
             [class.selected-row]="isRowSelected(row)"></tr>
       </table>

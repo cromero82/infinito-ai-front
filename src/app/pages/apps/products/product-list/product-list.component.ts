@@ -24,6 +24,7 @@ import { ProductEditComponent } from '../product-edit/product-edit.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../core/components/confirm-dialog/confirm-dialog.component';
 import { ConfigurationService } from '../../../pages/auth/service/configuration.service';
 import { GoogleSearchButtonComponent } from '../../../../@vex/components/google-search-button';
+import { FormControl } from '@angular/forms';
 
 @Component({
   selector: 'vex-product-list',
@@ -64,6 +65,15 @@ export class ProductListComponent implements OnInit, AfterViewInit {
   searchCtrl = new UntypedFormControl('');
   private justClosedDialog = false; // Flag to prevent auto-edit after dialog closes
   selectedProductId: number | null = null; // Track selected product ID
+  
+  // Variables para edición inline
+  editingProductNameIndex = -1;
+  editingProductPriceIndex = -1;
+  private startingEdit = false;
+  private lastClickTime = 0;
+  private isDoubleClickActive = false;
+  editingProductNameCtrl = new FormControl<string>('', { nonNullable: true });
+  editingProductPriceCtrl = new FormControl<string>('', { nonNullable: true });
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
@@ -163,6 +173,22 @@ export class ProductListComponent implements OnInit, AfterViewInit {
    * Handle row click to select/deselect product
    */
   onRowClick(product: Producto) {
+    // Verificar si el clic fue en un input de edición activo
+    const target = event?.target as HTMLElement;
+    if (target && (target.classList.contains('product-name-input') || 
+                   target.classList.contains('product-price-input'))) {
+      // No hacer nada si el clic fue en inputs de edición activos
+      return;
+    }
+    
+    // Prevenir selección si estamos en modo de edición o iniciando edición
+    if (this.startingEdit || 
+        this.editingProductNameIndex !== -1 || 
+        this.editingProductPriceIndex !== -1 ||
+        this.isDoubleClickActive) {
+      return;
+    }
+    
     if (this.selectedProductId === product.id) {
       // Deselect if clicking the same row
       this.selectedProductId = null;
@@ -170,6 +196,22 @@ export class ProductListComponent implements OnInit, AfterViewInit {
       // Select new row
       this.selectedProductId = product.id || null;
     }
+  }
+
+  /**
+   * Handle mouse down on row to prevent click events during double click
+   */
+  onRowMouseDown(index: number, event: MouseEvent): void {
+    const currentTime = Date.now();
+    const timeDiff = currentTime - this.lastClickTime;
+    
+    // Si es un doble clic (menos de 300ms entre clics), prevenir el click
+    if (timeDiff < 300) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    this.lastClickTime = currentTime;
   }
 
   /**
@@ -420,6 +462,281 @@ export class ProductListComponent implements OnInit, AfterViewInit {
   onGoogleSearchClicked(event: { type: 'name' | 'barcode'; query: string }): void {
     // Este método se puede usar para tracking o logging si es necesario
     console.log(`Búsqueda en Google desde product-list: ${event.type} - ${event.query}`);
+  }
+
+  /**
+   * Save product name edit
+   */
+  saveProductNameEdit(index: number, focusSearch: boolean = false): void {
+    if (this.editingProductNameIndex !== index || index < 0 || index >= this.dataSource.length) {
+      this.cancelProductNameEdit();
+      return;
+    }
+
+    const product = this.dataSource[index];
+    if (!product.id) {
+      this.cancelProductNameEdit();
+      return;
+    }
+
+    const inputElement = document.querySelector(`.product-name-input-${index}`) as HTMLInputElement;
+    const newNombre = (inputElement?.value?.trim() || this.editingProductNameCtrl.value?.trim() || '').trim();
+
+    if (!newNombre || newNombre.length === 0) {
+      this.cancelProductNameEdit();
+      return;
+    }
+
+    if (newNombre === product.nombre) {
+      this.cancelProductNameEdit();
+      return;
+    }
+
+    // Clear editing state immediately
+    this.editingProductNameIndex = -1;
+    this.editingProductNameCtrl.setValue('');
+
+    // Update product via RelationalProductService
+    const productUpdate: Producto = {
+      ...product,
+      nombre: newNombre,
+      foto: product.foto ?? ''
+    };
+
+    this.relationalProductService.updateProduct(product.id, productUpdate).subscribe({
+      next: (updatedProduct) => {
+        // Update the product in the dataSource
+        const updatedList = [...this.dataSource];
+        updatedList[index] = {
+          ...product,
+          ...updatedProduct,
+          nombre: updatedProduct.nombre
+        };
+        this.dataSource = updatedList;
+        
+        if (focusSearch) {
+          this.focusSearchInput();
+        }
+      },
+      error: (err: unknown) => {
+        console.error('Error updating product name', err);
+        // Revert the change on error
+        const revertedList = [...this.dataSource];
+        revertedList[index] = product;
+        this.dataSource = revertedList;
+      }
+    });
+  }
+
+  /**
+   * Cancel product name edit
+   */
+  cancelProductNameEdit(): void {
+    this.editingProductNameIndex = -1;
+    this.editingProductNameCtrl.setValue('');
+  }
+
+  /**
+   * Save product price edit
+   */
+  saveProductPriceEdit(index: number, focusSearch: boolean = false): void {
+    if (this.editingProductPriceIndex !== index || index < 0 || index >= this.dataSource.length) {
+      this.cancelProductPriceEdit();
+      return;
+    }
+
+    const product = this.dataSource[index];
+    if (!product.id) {
+      this.cancelProductPriceEdit();
+      return;
+    }
+
+    const inputElement = document.querySelector(`.product-price-input-${index}`) as HTMLInputElement;
+    const newPrecioStr = inputElement?.value?.trim() || this.editingProductPriceCtrl.value?.trim() || '';
+    const newPrecio = Number(newPrecioStr);
+
+    if (isNaN(newPrecio) || newPrecio < 0) {
+      this.cancelProductPriceEdit();
+      return;
+    }
+
+    if (newPrecio === product.precio) {
+      this.cancelProductPriceEdit();
+      return;
+    }
+
+    // Clear editing state immediately
+    this.editingProductPriceIndex = -1;
+    this.editingProductPriceCtrl.setValue('');
+
+    // Update product via RelationalProductService
+    const productUpdate: Producto = {
+      ...product,
+      precio: newPrecio,
+      foto: product.foto ?? ''
+    };
+
+    this.relationalProductService.updateProduct(product.id, productUpdate).subscribe({
+      next: (updatedProduct) => {
+        // Update the product in the dataSource
+        const updatedList = [...this.dataSource];
+        updatedList[index] = {
+          ...product,
+          ...updatedProduct,
+          precio: updatedProduct.precio
+        };
+        this.dataSource = updatedList;
+        
+        if (focusSearch) {
+          this.focusSearchInput();
+        }
+      },
+      error: (err: unknown) => {
+        console.error('Error updating product price', err);
+        // Revert the change on error
+        const revertedList = [...this.dataSource];
+        revertedList[index] = product;
+        this.dataSource = revertedList;
+      }
+    });
+  }
+
+  /**
+   * Cancel product price edit
+   */
+  cancelProductPriceEdit(): void {
+    this.editingProductPriceIndex = -1;
+    this.editingProductPriceCtrl.setValue('');
+  }
+
+  /**
+   * Handle double click on product name
+   */
+  onProductNameDoubleClick(index: number, event: MouseEvent): void {
+    event.stopPropagation();
+    if (index < 0 || index >= this.dataSource.length) {
+      return;
+    }
+    const product = this.dataSource[index];
+    if (!product.id || !product.nombre) {
+      return;
+    }
+    
+    // Activar bandera de doble click
+    this.isDoubleClickActive = true;
+    this.startingEdit = true;
+    
+    this.editingProductNameIndex = index;
+    this.editingProductNameCtrl.setValue(product.nombre);
+    
+    setTimeout(() => {
+      const input = document.querySelector(`.product-name-input-${index}`) as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+      setTimeout(() => {
+        this.startingEdit = false;
+        // Desactivar bandera después de un tiempo
+        setTimeout(() => {
+          this.isDoubleClickActive = false;
+        }, 200);
+      }, 50);
+    }, 0);
+  }
+
+  /**
+   * Handle double click on product price
+   */
+  onProductPriceDoubleClick(index: number, event: MouseEvent): void {
+    event.stopPropagation();
+    if (index < 0 || index >= this.dataSource.length) {
+      return;
+    }
+    const product = this.dataSource[index];
+    if (!product.id) {
+      return;
+    }
+    
+    // Activar bandera de doble click
+    this.isDoubleClickActive = true;
+    this.startingEdit = true;
+    
+    this.editingProductPriceIndex = index;
+    this.editingProductPriceCtrl.setValue(String(product.precio || 0));
+    
+    setTimeout(() => {
+      const input = document.querySelector(`.product-price-input-${index}`) as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+      setTimeout(() => {
+        this.startingEdit = false;
+        // Desactivar bandera después de un tiempo
+        setTimeout(() => {
+          this.isDoubleClickActive = false;
+        }, 200);
+      }, 50);
+    }, 0);
+  }
+
+  /**
+   * Handle keydown events for product name input
+   */
+  onProductNameInputKeydown(event: Event, index: number): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (keyboardEvent.key === 'Enter' || keyboardEvent.key === 'NumpadEnter') {
+      keyboardEvent.preventDefault();
+      keyboardEvent.stopPropagation();
+      setTimeout(() => {
+        this.saveProductNameEdit(index, true);
+      }, 0);
+    } else if (keyboardEvent.key === 'Escape') {
+      keyboardEvent.preventDefault();
+      keyboardEvent.stopPropagation();
+      this.cancelProductNameEdit();
+    }
+  }
+
+  /**
+   * Handle keydown events for product price input
+   */
+  onProductPriceInputKeydown(event: Event, index: number): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (keyboardEvent.key === 'Enter' || keyboardEvent.key === 'NumpadEnter') {
+      keyboardEvent.preventDefault();
+      keyboardEvent.stopPropagation();
+      setTimeout(() => {
+        this.saveProductPriceEdit(index, true);
+      }, 0);
+    } else if (keyboardEvent.key === 'Escape') {
+      keyboardEvent.preventDefault();
+      keyboardEvent.stopPropagation();
+      this.cancelProductPriceEdit();
+    }
+  }
+
+  /**
+   * Handle blur events for product name input
+   */
+  onProductNameInputBlur(index: number): void {
+    setTimeout(() => {
+      if (this.editingProductNameIndex === index) {
+        this.saveProductNameEdit(index);
+      }
+    }, 150);
+  }
+
+  /**
+   * Handle blur events for product price input
+   */
+  onProductPriceInputBlur(index: number): void {
+    setTimeout(() => {
+      if (this.editingProductPriceIndex === index) {
+        this.saveProductPriceEdit(index);
+      }
+    }, 150);
   }
 
 }

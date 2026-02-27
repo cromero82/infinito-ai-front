@@ -80,6 +80,17 @@ vex-page-layout-header .container {
       min-width: 240px;
     }
   }
+
+  .search-error-message {
+    color: #d32f2f;
+    font-size: 12px;
+    margin-top: 4px;
+    padding: 4px 8px;
+    background-color: rgba(211, 47, 47, 0.08);
+    border-radius: 4px;
+    border-left: 3px solid #d32f2f;
+    animation: fadeIn 0.3s ease-in;
+  }
 }
 
 :host ::ng-deep .tickets-card > .px-4.content-area,

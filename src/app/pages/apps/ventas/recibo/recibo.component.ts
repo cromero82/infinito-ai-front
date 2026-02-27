@@ -580,7 +580,7 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
     this.productSearchError = null;
     this.searchingProduct = true;
     this.updateSearchDisabled();
-    this.relationalProductService.getProducts(term, 0, 1).subscribe({
+    this.relationalProductService.getProducts(term, 0, 1, true).subscribe({
       next: (page: ProductPage) => {
         const total = page?.totalElements ?? page?.content?.length ?? 0;
         const products = page?.content ?? [];
@@ -593,8 +593,15 @@ export class ReciboComponent implements OnChanges, OnInit, OnDestroy {
         this.updateSearchDisabled();
 
         if (total === 0) {
+          console.log('No se encontraron productos para:', term);
           if (!triggeredAutomatically) {
-            this.productSearchError = 'Producto no encontrado.';
+            console.log('Mostrando alerta de producto no encontrado');
+            this.snackBar.open(`No se encontro ningun registro por codigo de barras o nombre ${term}`, 'Cerrar', {
+              duration: 5000,
+              panelClass: ['alert-danger', 'snackbar-error'],
+              horizontalPosition: 'center',
+              verticalPosition: 'top'
+            });
           }
           this.focusSearchInputRequest.emit();
           return;

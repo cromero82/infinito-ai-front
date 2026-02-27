@@ -14,12 +14,13 @@ export class RelationalProductService {
 
   /**
    * Gets products with pagination and optional search filter
-   * GET /products/search?query=&page=0&size=10
+   * GET /products/search?query=&page=0&size=10&unicamenteActivos=false
    * @param query Search filter for barcode or name
    * @param page Page number (0-indexed)
    * @param size Number of items per page
+   * @param unicamenteActivos If true, filters only active products. If false (default), includes all
    */
-  getProducts(query: string = '', page: number = 0, size: number = 10): Observable<ProductPage> {
+  getProducts(query: string = '', page: number = 0, size: number = 10, unicamenteActivos: boolean = false): Observable<ProductPage> {
     const headers = new HttpHeaders({
       'Accept': 'application/json'
     });
@@ -27,7 +28,8 @@ export class RelationalProductService {
     const params = new HttpParams()
       .set('query', query)
       .set('page', page.toString())
-      .set('size', size.toString());
+      .set('size', size.toString())
+      .set('unicamenteActivos', unicamenteActivos.toString());
 
     return this.http.get<ProductPage>(`${this.apiUrl}/search`, { params, headers });
   }
