@@ -1,4 +1,4 @@
-app: esto es una version inicial de un sistema POS, existen funcionalidades para gestionar productos, registrar clientes, y el eje central es vender productos asociados a clientes, otras funcionalidades: consultar dichas ventas, registrar cortes de ventas, gestion de usuarios (autenticacion), trazabilidad de eventos en el sistema, copias de seguridad.
+app: esto es una version inicial de un sistema POS, existen funcionalidades para gestionar productos, registrar clientes, y el eje central es vender productos asociados a clientes, otras funcionalidades: consultar dichas ventas, registrar cortes de ventas, gestion de usuarios (autenticacion), trazabilidad de eventos en el sistema, copias de seguridad.hola estas ahi
 
 contexto: 
 a) Reiniciar sesion. Iniciar sesion, o finalizar e iniciar sesion nuevamente (ir a la seccion o componente (toolbar-user-dropdown) button (click)="logout()", e iniciar sesion en el componente (login.component) la app redirecciona por defecto: http://localhost:4200/apps/ventas

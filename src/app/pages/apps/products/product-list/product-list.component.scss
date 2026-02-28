@@ -182,3 +182,8 @@ table.mat-mdc-table {
     }
   }
 }
+
+// Override max-width for our custom filters menu to prevent horizontal scrolling
+::ng-deep .filters-custom-menu {
+  max-width: 500px !important;
+}

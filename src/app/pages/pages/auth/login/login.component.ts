@@ -19,8 +19,9 @@ import { AuthService } from '../service/auth.service';
 import { SesionesService } from '../../../apps/ventas/service/sesiones.service';
 import { ConfigurationService } from '../service/configuration.service';
 import { BitacoraUsuarioService } from '../../../apps/usuario/gestion-usuarios/service/bitacora-usuario.service';
+import { UsuarioPerfilService } from '../service/usuario-perfil.service';
 import { finalize, switchMap, map, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 
 @Component({
   selector: 'vex-login',
@@ -62,7 +63,8 @@ export class LoginComponent {
     private authService: AuthService,
     private sesionesService: SesionesService,
     private configurationService: ConfigurationService,
-    private bitacoraUsuarioService: BitacoraUsuarioService
+    private bitacoraUsuarioService: BitacoraUsuarioService,
+    private usuarioPerfilService: UsuarioPerfilService
   ) {}
 
   onPasswordFocus(event: any): void {
@@ -108,14 +110,29 @@ export class LoginComponent {
         // Guardar el session-id en localStorage
         localStorage.setItem('session-id', sesion.id.toString());
         
-        // Obtener configuraciones de la app (si falla, continuar de todas formas)
-        return this.configurationService.obtenerTodasConfiguraciones().pipe(
-          map(() => sesion), // Devolver la sesión después de obtener configuraciones
+        // Llamar a configuraciones generales y perfil personal simultáneamente.
+        const config$ = this.configurationService.obtenerTodasConfiguraciones().pipe(
           catchError((error) => {
-            // Si falla la obtención de configuraciones, continuar de todas formas
             console.warn('No se pudieron obtener las configuraciones:', error);
-            return of(sesion); // Devolver la sesión para continuar el flujo
+            return of(null);
           })
+        );
+
+        const perfil$ = this.usuarioPerfilService.getMyProfile().pipe(
+          map(result => {
+            if (result && result.length > 0 && result[0].personalizacion) {
+              localStorage.setItem('configuraciones-personales', JSON.stringify(result[0].personalizacion));
+            }
+            return result;
+          }),
+          catchError((error) => {
+            console.warn('No se pudo obtener el perfil de usuario:', error);
+            return of(null);
+          })
+        );
+
+        return forkJoin([config$, perfil$]).pipe(
+          map(() => sesion)
         );
       }),
       // Después de obtener configuraciones, registrar el evento de inicio de sesión en bitácora

@@ -10,7 +10,7 @@ import { environment } from '../../../../../environments/environment';
 export class RelationalProductService {
   private apiUrl = `${environment.apiUrlRelationalDb}/products`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /**
    * Gets products with pagination and optional search filter
@@ -109,5 +109,19 @@ export class RelationalProductService {
     });
 
     return this.http.patch<Producto>(`${this.apiUrl}/${productId}/deactivate`, {}, { headers });
+  }
+
+  /**
+   * Gets products using advanced filters and sorting
+   * POST /products/busquedaPorFiltros
+   * @param payload Request body containing filters, pagination, and sorting details
+   */
+  busquedaPorFiltros(payload: any): Observable<ProductPage> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    });
+
+    return this.http.post<ProductPage>(`${this.apiUrl}/busquedaPorFiltros`, payload, { headers });
   }
 }
