@@ -8,6 +8,12 @@ img.h-10.w-10.object-cover.rounded:hover {
   position: relative;
 }
 
+// Contenedor más ancho: ocupa más espacio en pantalla (ver flechas rojas en diseño)
+:host ::ng-deep vex-page-layout-content.products-page-wider.container {
+  max-width: 95vw !important;
+  width: 100%;
+}
+
 // Llenar altura del viewport (vex-layout-content tiene altura fija con scrollDisabled)
 :host {
   height: 100%;
@@ -86,12 +92,14 @@ vex-page-layout-header .container {
 }
 
 // Similar a ::ng-deep .detalle-list en tickets-recibo
+// scrollbar-gutter: stable evita que el ancho cambie al aparecer/desaparecer el scrollbar (evita recorte de iconos)
 .products-list {
   flex: 1 1 auto !important;
   min-height: 0 !important;
   max-height: 100% !important;
   overflow-y: auto !important;
-  overflow-x: hidden !important;
+  overflow-x: auto !important;
+  scrollbar-gutter: stable !important; // Reserva espacio para scrollbar (evita recorte al cargar más filas)
   margin-bottom: 0 !important;
   padding-bottom: 0 !important;
   -webkit-overflow-scrolling: touch !important;
@@ -111,30 +119,35 @@ vex-page-layout-header .container {
   font-size: 25px !important;
 }
 
-// Table font size - increase font size for better readability
+// Table font size
+// min-width: max-content permite que la tabla crezca con el contenido; scroll horizontal muestra todo
 table.mat-mdc-table {
-  font-size: 16px !important;
+  font-size: 15px !important;
+  width: 100% !important;
+  min-width: max-content !important;
   
   // Table header cells
   th.mat-mdc-header-cell {
-    font-size: 17px !important;
+    font-size: 16px !important;
     font-weight: 600 !important;
     padding: 2px 12px !important;
     line-height: 1.2 !important;
     height: 36px !important;
   }
   
-  // Table data cells
+  // Table data cells - min-height permite que filas crezcan cuando producto tiene 2 líneas
   td.mat-mdc-cell {
-    font-size: 16px !important;
+    font-size: 15px !important;
     padding: 2px 12px !important;
     line-height: 1.2 !important;
-    height: 36px !important;
+    min-height: 36px !important;
+    height: auto !important;
   }
   
-  // Table rows - reduced height for more compact display
+  // Table rows - min-height permite filas más altas cuando producto hace wrap
   tr.mat-mdc-row {
-    height: 36px !important;
+    min-height: 36px !important;
+    height: auto !important;
     cursor: pointer;
     
     // Zebra striping - even rows (almost white, very subtle)
@@ -163,10 +176,19 @@ table.mat-mdc-table {
     }
   }
   
-  // Header row - reduced height for more compact display (almost white, very subtle)
+  // Header row - sticky como Excel: siempre visible al hacer scroll vertical
+  // Nota: sticky debe aplicarse a cada th, no al tr (limitación CSS)
   tr.mat-mdc-header-row {
     height: 36px !important;
-    background-color: rgba(0, 0, 0, 0.008) !important;
+    background-color: white !important;
+
+    th.mat-mdc-header-cell {
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 2 !important;
+      background-color: white !important;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06) !important;
+    }
   }
   
   // Inactive row style - gray text for disabled products
@@ -183,7 +205,255 @@ table.mat-mdc-table {
   }
 }
 
-// Override max-width for our custom filters menu to prevent horizontal scrolling
+// Columna Edit (iconos de acción) - última columna, sticky a la derecha al hacer scroll horizontal
+$edit-col-width: 150px;
+
+.edit-col-header.edit-col-sticky {
+  position: sticky !important;
+  top: 0 !important;
+  right: 0 !important;
+  z-index: 3 !important;
+  background: white !important;
+  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.04);
+  width: $edit-col-width !important;
+  min-width: $edit-col-width !important;
+  max-width: $edit-col-width !important;
+}
+
+:host ::ng-deep .products-list table td.edit-col-cell {
+  position: sticky !important;
+  right: 0 !important;
+  z-index: 2 !important;
+  background: white !important;
+  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.04);
+  width: $edit-col-width !important;
+  min-width: $edit-col-width !important;
+  max-width: $edit-col-width !important;
+  overflow: visible !important;
+  padding: 0 2px !important;
+}
+
+.edit-col-icons {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0 !important;
+  flex-wrap: nowrap !important;
+  min-width: 100% !important;
+
+  > * {
+    flex-shrink: 0 !important;
+  }
+}
+
+// Reducir padding de botones de acción para acortar espacio entre ellos
+:host ::ng-deep .products-list .edit-col-icons button.mat-mdc-icon-button,
+:host ::ng-deep .products-list .edit-col-icons .mat-mdc-icon-button,
+:host ::ng-deep .products-list .edit-col-icons vex-google-search-button button {
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+  min-width: 32px !important;
+  width: 32px !important;
+}
+
+:host ::ng-deep .products-list table tr.inactive-row td.edit-col-cell {
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+
+:host ::ng-deep .products-list table tr:hover td.edit-col-cell {
+  background: rgba(0, 0, 0, 0.01) !important;
+}
+
+// Columna Código barras: más ancho, font 1px menor
+.col-barcode {
+  width: 135px !important;
+  min-width: 135px !important;
+  max-width: 135px !important;
+  font-size: 14px !important;
+}
+
+// Wrapper para código de barras con icono copiar al hover
+.barcode-cell-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  width: 100%;
+  position: relative;
+
+  .barcode-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .barcode-copy-btn {
+    position: absolute !important;
+    right: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    flex-shrink: 0;
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    padding: 0 !important;
+
+    .mat-icon {
+      font-size: 14px !important;
+      width: 14px !important;
+      height: 14px !important;
+    }
+  }
+
+  // Reservar espacio para el botón cuando está visible (evita truncar el código)
+  &:has(.barcode-copy-btn) .barcode-text {
+    padding-right: 28px !important;
+  }
+}
+
+// Columna Producto: más ancho, permite 2 líneas, font 1px menor, tooltip en hover
+.col-producto {
+  max-width: 210px !important;
+  min-width: 140px !important;
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  line-height: 1.2 !important;
+  vertical-align: middle !important;
+  font-size: 14px !important;
+
+  span {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
+    overflow: hidden;
+    word-wrap: break-word;
+  }
+}
+
+// Botones: menos espacio entre ellos
+.header-btns {
+  .add-product-btn,
+  .column-visibility-btn {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    min-width: 0 !important;
+  }
+}
+
+.add-product-btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+
+.column-visibility-btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+
+// Celdas de fecha relativa: fecha arriba, descripción abajo, centrado
+.fecha-relativa-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 2px;
+
+  span:first-child {
+    font-size: inherit;
+  }
+
+  span:last-child {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+// Fecha creación: ancho para nombre completo
+.col-fecha {
+  width: 110px !important;
+  min-width: 110px !important;
+  max-width: 110px !important;
+}
+
+// Actualización precio y Última venta: más ancho para nombres completos
+.col-fecha-wide {
+  width: 140px !important;
+  min-width: 140px !important;
+  max-width: 140px !important;
+}
+
+.icon-placeholder {
+  display: inline-block;
+  width: 24px;
+  min-width: 24px;
+}
+
+.column-visibility-item {
+  text-align: left !important;
+  justify-content: flex-start !important;
+}
+
+// Override max-width and compact styling for filters menu
 ::ng-deep .filters-custom-menu {
-  max-width: 500px !important;
+  max-width: 520px !important;
+  .mat-mdc-menu-content {
+    padding: 12px !important;
+  }
+  // Anchos fijos para Condición (evita extrapolación)
+  .filters-field-condicion {
+    flex: 0 0 auto;
+    width: 120px;
+    min-width: 120px;
+  }
+  .filters-field-condicion-adv {
+    flex: 0 0 auto;
+    width: 165px;
+    min-width: 165px;
+  }
+  // Form fields más compactos - centrar label y contenido verticalmente
+  .filters-field-dense {
+    min-width: 0;
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+    .mat-mdc-text-field-wrapper {
+      padding-top: 0;
+    }
+    .mat-mdc-form-field-flex {
+      min-width: 0;
+      align-items: center !important;
+    }
+    .mat-mdc-form-field-infix {
+      display: flex !important;
+      align-items: center !important;
+      padding-top: 6px !important;
+      padding-bottom: 6px !important;
+      min-height: 40px !important;
+      min-width: 0;
+    }
+    // Centrar contenido del input
+    .mat-mdc-input-element {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+    // Centrar select: trigger, valor y placeholder
+    .mat-mdc-select {
+      display: flex;
+      align-items: center;
+      min-height: 28px;
+    }
+    .mat-mdc-select .mat-mdc-select-trigger {
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+    .mat-mdc-select-value,
+    .mat-mdc-select-placeholder,
+    .mat-mdc-select-min-line {
+      display: flex !important;
+      align-items: center !important;
+    }
+  }
 }

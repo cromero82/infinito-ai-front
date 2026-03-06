@@ -4,7 +4,7 @@
     </div>
   </vex-page-layout-header>
 
-  <vex-page-layout-content [class.container]="true" class="-mt-6 pb-0">
+  <vex-page-layout-content [class.container]="true" class="products-page-wider -mt-6 pb-0">
     <div class="card products-card">
       <div class="bg-app-bar px-6 py-2 border-b sticky left-0 flex flex-wrap items-center gap-4">
         <h2 class="title my-0 ltr:pr-4 rtl:pl-4 ltr:border-r rtl:border-l hidden sm:block flex-none">
@@ -21,22 +21,62 @@
         </mat-form-field>
 
 
-        <div class="ml-auto flex items-center gap-2">
+        <div class="ml-auto flex items-center gap-1 flex-wrap header-btns">
+          <button
+            mat-flat-button
+            color="primary"
+            class="add-product-btn flex-none"
+            type="button"
+            (click)="createProduct(searchCtrl.value)">
+            <mat-icon class="ltr:mr-1.5 rtl:ml-1.5 icon-sm" svgIcon="mat:add"></mat-icon>
+            <span>Agregar producto</span>
+          </button>
           <button mat-icon-button type="button" [matMenuTriggerFor]="filtersMenu" #filtersMenuTrigger="matMenuTrigger" matTooltip="Filtros" color="primary">
             <mat-icon svgIcon="mat:filter_list"></mat-icon>
           </button>
-
-          <button (click)="createProduct(searchCtrl.value)" class="flex-none" color="primary" mat-mini-fab
-            matTooltip="Agregar producto" type="button">
-            <mat-icon svgIcon="mat:add" class="icon-sm"></mat-icon>
+          <button
+            #columnVisibilityMenuTrigger
+            mat-stroked-button
+            class="column-visibility-btn flex-none"
+            type="button"
+            [matMenuTriggerFor]="columnVisibilityMenu"
+            (menuOpened)="onColumnVisibilityMenuOpened()"
+            [disabled]="savingColumnConfig"
+            matTooltip="Columnas visibles">
+            <mat-icon class="icon-sm" svgIcon="mat:view_column"></mat-icon>
+            <mat-icon class="ltr:ml-0.5 rtl:mr-0.5 icon-sm" svgIcon="mat:arrow_drop_down"></mat-icon>
           </button>
+        <mat-menu #columnVisibilityMenu="matMenu" xPosition="before" yPosition="below" class="column-visibility-menu">
+          <div class="flex flex-col gap-0 min-w-[220px] p-2" (click)="$event.stopPropagation()">
+            <div class="flex items-center gap-2 pb-2 border-b border-primary/30 mb-2">
+              <mat-icon svgIcon="mat:view_column" class="icon-sm text-primary"></mat-icon>
+              <h3 class="m-0 font-medium text-sm">Columnas visibles</h3>
+            </div>
+            <button
+              *ngFor="let col of allTableColumns"
+              mat-button
+              class="column-visibility-item w-full justify-start"
+              (click)="toggleColumnVisibility(col.key)">
+              <mat-icon *ngIf="isColumnSelected(col.key)" class="icon-sm mr-2 text-primary" svgIcon="mat:check"></mat-icon>
+              <span *ngIf="!isColumnSelected(col.key)" class="icon-placeholder mr-2"></span>
+              {{ col.label }}
+            </button>
+            <button mat-flat-button color="primary" class="w-full mt-2" (click)="applyColumnVisibility()" [disabled]="savingColumnConfig">
+              <mat-icon svgIcon="mat:check" class="icon-sm mr-1"></mat-icon>
+              Aplicar
+            </button>
+          </div>
+        </mat-menu>
         </div>
 
         <!-- Filters Menu Definition -->
-        <mat-menu #filtersMenu="matMenu" class="p-4 filters-custom-menu" xPosition="before" (menuOpened)="restorePresetFilterState()">
-          <div class="flex flex-col gap-2 min-w-[400px] p-2" (click)="$event.stopPropagation()">
-            <h3 class="m-0 font-medium pb-2 border-b">Filtro Fecha de actualizacion producto</h3>
-            <mat-form-field appearance="outline" class="w-full mb-[-1.25em]">
+        <mat-menu #filtersMenu="matMenu" class="filters-custom-menu" panelClass="filters-custom-menu" xPosition="before" (menuOpened)="restorePresetFilterState()">
+          <div class="flex flex-col gap-2 min-w-[460px] p-1" (click)="$event.stopPropagation()">
+            <div class="flex items-center gap-2 pb-1.5 border-b border-primary/30">
+              <mat-icon svgIcon="mat:update" class="icon-sm text-primary"></mat-icon>
+              <h3 class="m-0 font-medium text-sm">Filtro fecha de actualización precio</h3>
+            </div>
+            <mat-form-field appearance="outline" class="w-full filters-field-dense">
               <mat-label>Actualizado</mat-label>
               <mat-select [formControl]="presetFilterCtrl">
                 <mat-option value="nunca">Nunca han sido actualizados</mat-option>
@@ -47,8 +87,8 @@
               </mat-select>
             </mat-form-field>
 
-            <div class="flex gap-2 mt-3 w-full" *ngIf="presetFilterCtrl.value === 'personalizado'">
-              <mat-form-field appearance="outline" class="w-1/3 mb-[-1.25em]">
+            <div class="flex gap-4 mt-0 w-full min-w-0" *ngIf="presetFilterCtrl.value === 'personalizado'">
+              <mat-form-field appearance="outline" class="filters-field-condicion filters-field-dense">
                 <mat-label>Condición</mat-label>
                 <mat-select [formControl]="presetCustomDateCondCtrl">
                   <mat-option value="=">=</mat-option>
@@ -56,39 +96,47 @@
                   <mat-option value="<=">&lt;=</mat-option>
                 </mat-select>
               </mat-form-field>
-              <mat-form-field appearance="outline" class="w-2/3 mb-[-1.25em]">
+              <mat-form-field appearance="outline" class="flex-1 min-w-0 filters-field-dense">
                 <mat-label>Fecha personalizada</mat-label>
                 <input matInput [matDatepicker]="picker" [formControl]="presetCustomDateCtrl">
                 <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                 <mat-datepicker #picker></mat-datepicker>
               </mat-form-field>
             </div>
-            <div class="flex gap-2 mt-4 flex-wrap">
-              <button mat-button class="flex-1 min-w-[100px]" (click)="applyPresetFilter()">Aplicar</button>
-              <button mat-button class="flex-1 min-w-[100px]" (click)="applyPresetFilterAndClose()">Aplicar y cerrar</button>
-              <button mat-button class="flex-1 min-w-[100px]" color="warn" (click)="clearPresetFilter()" *ngIf="hasActiveDateFilter()">Limpiar</button>
+            <div class="flex gap-1.5 mt-2 flex-wrap">
+              <button mat-button class="flex-1 min-w-[90px]" (click)="applyPresetFilter()">
+                <mat-icon svgIcon="mat:check" class="icon-sm mr-1"></mat-icon>
+                Aplicar
+              </button>
+              <button mat-button class="flex-1 min-w-[90px]" (click)="applyPresetFilterAndClose()">
+                <mat-icon svgIcon="mat:check_circle" class="icon-sm mr-1"></mat-icon>
+                Aplicar y cerrar
+              </button>
+              <button mat-button class="flex-1 min-w-[90px]" color="warn" (click)="clearPresetFilter()" *ngIf="hasActiveDateFilter()">
+                <mat-icon svgIcon="mat:delete_sweep" class="icon-sm mr-1"></mat-icon>
+                Limpiar
+              </button>
             </div>
 
-            <div class="my-2 border-b"></div>
+            <div class="my-1.5 border-b border-primary/20"></div>
 
-            <h3 class="m-0 font-medium pb-2">Condición de filtro</h3>
-            <mat-form-field appearance="outline" class="w-full mb-[-1.25em]">
+            <div class="flex items-center gap-2 pb-1.5 border-b border-primary/30">
+              <mat-icon svgIcon="mat:tune" class="icon-sm text-primary"></mat-icon>
+              <h3 class="m-0 font-medium text-sm">Filtro campos personalizados</h3>
+            </div>
+            <mat-form-field appearance="outline" class="w-full filters-field-dense">
               <mat-label>Campo</mat-label>
               <mat-select [formControl]="advFilterFieldCtrl">
-                <mat-option value="id">ID (registro)</mat-option>
-                <mat-option value="barcode">Código de barras</mat-option>
-                <mat-option value="nombre">Nombre</mat-option>
                 <mat-option value="precio">Precio</mat-option>
                 <mat-option value="precioCompra">Precio compra</mat-option>
-                <mat-option value="fechaUltimaActualizacionPrecio">Fecha última actualización precio</mat-option>
-                <mat-option value="fechaCreacion">Fecha creación</mat-option>
-                <mat-option value="activate">Activo (1/0)</mat-option>
                 <mat-option value="totalVentas">Total ventas</mat-option>
+                <mat-option value="porcentaje_ganancia">Porcentaje ganancia</mat-option>
+                <mat-option value="fecha_ultima_venta">Fecha última vez vendido</mat-option>
               </mat-select>
             </mat-form-field>
 
-            <div class="flex gap-2 w-full mt-3">
-              <mat-form-field appearance="outline" class="w-1/2 mb-[-1.25em]">
+            <div class="flex gap-4 w-full min-w-0 mt-0">
+              <mat-form-field appearance="outline" class="filters-field-condicion-adv filters-field-dense">
                 <mat-label>Condición</mat-label>
                 <mat-select [formControl]="advFilterCondCtrl">
                   <mat-option value="=">Igual (=)</mat-option>
@@ -97,14 +145,26 @@
                 </mat-select>
               </mat-form-field>
 
-              <mat-form-field appearance="outline" class="w-1/2 mb-[-1.25em]">
+              <mat-form-field appearance="outline" class="flex-1 min-w-0 filters-field-dense">
                 <mat-label>Valor</mat-label>
                 <input matInput [formControl]="advFilterValueCtrl">
               </mat-form-field>
             </div>
 
-            <div class="flex gap-2 mt-4">
-              <button mat-button class="flex-1" (click)="applyAdvancedFilter()">Aplicar (sin cerrar)</button>
+            <div class="flex gap-1.5 mt-2 flex-wrap">
+              <button mat-button class="flex-1 min-w-[90px]" (click)="applyAdvancedFilter()">
+                <mat-icon svgIcon="mat:check" class="icon-sm mr-1"></mat-icon>
+                Aplicar
+              </button>
+              <button mat-button class="flex-1 min-w-[90px]" (click)="applyAdvancedFilterAndClose()">
+                <mat-icon svgIcon="mat:check_circle" class="icon-sm mr-1"></mat-icon>
+                Aplicar y cerrar
+              </button>
+              <button mat-button class="flex-1 min-w-[90px]" color="warn" (click)="clearAdvancedFilter()"
+                *ngIf="advFilterFieldCtrl.value || advFilterCondCtrl.value || advFilterValueCtrl.value">
+                <mat-icon svgIcon="mat:delete_sweep" class="icon-sm mr-1"></mat-icon>
+                Limpiar
+              </button>
             </div>
           </div>
         </mat-menu>
@@ -113,17 +173,20 @@
       <!-- Active Filters Bar -->
       <div class="w-full px-6 py-3 bg-app-bar flex items-center gap-2 border-b flex-wrap"
         *ngIf="activeFilters.length > 0">
-        <span class="text-sm font-medium text-secondary">Otros filtros:</span>
+        <span class="text-sm font-medium text-secondary">Filtros:</span>
         <mat-chip-set>
           <mat-chip *ngFor="let filter of activeFilters" [removable]="true" (removed)="removeFilter(filter)"
             color="primary" selected>
             {{ filter.label || (filter.campo + ' ' + filter.condicion + ' ' + filter.valor) }}
-            <button matChipRemove>
-              <mat-icon>cancel</mat-icon>
+            <button matChipRemove aria-label="Quitar filtro">
+              <mat-icon svgIcon="mat:close" class="icon-sm"></mat-icon>
             </button>
           </mat-chip>
         </mat-chip-set>
-        <button mat-button color="warn" class="ml-2" (click)="clearAllFilters()">Limpiar todos</button>
+        <button mat-button color="warn" class="ml-2" (click)="clearAllFilters()">
+          <mat-icon svgIcon="mat:delete_sweep" class="icon-sm mr-1"></mat-icon>
+          Limpiar todos
+        </button>
       </div>
       <div class="px-4 products-panel">
         <div class="products-container" [style.min-height.px]="getMinHeightValue()">
@@ -131,13 +194,27 @@
             <table class="w-full" mat-table [dataSource]="dataSource" matSort (matSortChange)="sortData($event)">
               <!-- Barcode Column -->
               <ng-container matColumnDef="id">
-                <th *matHeaderCellDef mat-header-cell mat-sort-header>Código barras</th>
-                <td *matCellDef="let product" mat-cell>{{ product.barcode }}</td>
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-barcode">Código barras</th>
+                <td *matCellDef="let product; let i = index" mat-cell class="col-barcode">
+                  <div class="barcode-cell-wrapper"
+                    (mouseenter)="onBarcodeCellHover(i)"
+                    (mouseleave)="onBarcodeCellLeave()">
+                    <span class="barcode-text">{{ product.barcode }}</span>
+                    <button *ngIf="showBarcodeCopyIcon(i)"
+                      mat-icon-button
+                      type="button"
+                      class="barcode-copy-btn"
+                      (click)="copyBarcodeToClipboard(product.barcode, i); $event.stopPropagation()"
+                      matTooltip="Copiar código">
+                      <mat-icon svgIcon="mat:content_copy" class="icon-sm"></mat-icon>
+                    </button>
+                  </div>
+                </td>
               </ng-container>
               <!-- Name Column -->
               <ng-container matColumnDef="nombre">
-                <th *matHeaderCellDef mat-header-cell mat-sort-header>Producto</th>
-                <td *matCellDef="let product; let i = index" mat-cell
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-producto">Producto</th>
+                <td *matCellDef="let product; let i = index" mat-cell class="col-producto"
                   (dblclick)="onProductNameDoubleClick(i, $event); $event.stopPropagation()">
                   <input *ngIf="editingProductNameIndex === i" class="product-name-input product-name-input-{{ i }}"
                     type="text" [formControl]="editingProductNameCtrl"
@@ -145,7 +222,7 @@
                     (blur)="onProductNameInputBlur(i)" (click)="$event.stopPropagation()"
                     (input)="$event.stopPropagation()"
                     style="width: 100%; border: 1px solid #ccc; padding: 2px 4px; border-radius: 4px;" />
-                  <span *ngIf="editingProductNameIndex !== i">
+                  <span *ngIf="editingProductNameIndex !== i" [matTooltip]="product.nombre">
                     {{ product.nombre }}
                   </span>
                 </td>
@@ -176,42 +253,77 @@
               </ng-container>
               <!-- Fecha Actualizacion Column -->
               <ng-container matColumnDef="fechaUltimaActualizacionPrecio">
-                <th *matHeaderCellDef mat-header-cell mat-sort-header>Fecha act. precio</th>
-                <td *matCellDef="let product" mat-cell>{{ product.fechaUltimaActualizacionPrecio | date:'dd/MM/yyyy' }}
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-fecha-wide">Actualización precio</th>
+                <td *matCellDef="let product" mat-cell class="col-fecha-wide">
+                  <ng-container *ngIf="getFechaRelativa(product.fechaUltimaActualizacionPrecio) as f; else fechaEmpty">
+                    <span *ngIf="!f.hasTwoLines">{{ f.line1 }}</span>
+                    <div *ngIf="f.hasTwoLines" class="fecha-relativa-cell">
+                      <span>{{ f.line1 }}</span>
+                      <span>{{ f.line2 }}</span>
+                    </div>
+                  </ng-container>
+                  <ng-template #fechaEmpty>-</ng-template>
                 </td>
               </ng-container>
 
               <!-- Fecha Creacion Column (personalizable) -->
               <ng-container matColumnDef="fechaCreacion">
-                <th *matHeaderCellDef mat-header-cell mat-sort-header>Fecha creación</th>
-                <td *matCellDef="let product" mat-cell>{{ product.fechaCreacion | date:'dd/MM/yyyy' }}</td>
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-fecha">Fecha creacion</th>
+                <td *matCellDef="let product" mat-cell class="col-fecha">
+                  <ng-container *ngIf="getFechaRelativa(product.fechaCreacion) as f; else fechaEmpty">
+                    <span *ngIf="!f.hasTwoLines">{{ f.line1 }}</span>
+                    <div *ngIf="f.hasTwoLines" class="fecha-relativa-cell">
+                      <span>{{ f.line1 }}</span>
+                      <span>{{ f.line2 }}</span>
+                    </div>
+                  </ng-container>
+                  <ng-template #fechaEmpty>-</ng-template>
+                </td>
               </ng-container>
               <!-- Total Ventas Column -->
               <ng-container matColumnDef="totalVentas">
                 <th *matHeaderCellDef mat-header-cell mat-sort-header>Total ventas</th>
                 <td *matCellDef="let product" mat-cell>{{ product.totalVentas || 0 }}</td>
               </ng-container>
+              <!-- Porcentaje ganancia Column -->
+              <ng-container matColumnDef="porcentajeGanancia">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header>% Ganancia</th>
+                <td *matCellDef="let product" mat-cell>{{ (product.porcentaje_ganancia ?? product.porcentajeGanancia) != null ? ((product.porcentaje_ganancia ?? product.porcentajeGanancia) + '%') : '-' }}</td>
+              </ng-container>
+              <!-- Fecha última venta Column -->
+              <ng-container matColumnDef="fechaUltimaVenta">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-fecha-wide">Última venta</th>
+                <td *matCellDef="let product" mat-cell class="col-fecha-wide">
+                  <ng-container *ngIf="getFechaRelativa(product.fecha_ultima_venta ?? product.fechaUltimaVenta) as f; else fechaEmpty">
+                    <span *ngIf="!f.hasTwoLines">{{ f.line1 }}</span>
+                    <div *ngIf="f.hasTwoLines" class="fecha-relativa-cell">
+                      <span>{{ f.line1 }}</span>
+                      <span>{{ f.line2 }}</span>
+                    </div>
+                  </ng-container>
+                  <ng-template #fechaEmpty>-</ng-template>
+                </td>
+              </ng-container>
               <!-- Edit Column -->
               <ng-container matColumnDef="edit">
-                <th *matHeaderCellDef mat-header-cell></th>
-                <td *matCellDef="let product" mat-cell class="flex items-center gap-2">
-                  <button mat-icon-button color="accent" (click)="editProduct(product); $event.stopPropagation()">
-                    <mat-icon svgIcon="mat:edit"></mat-icon>
-                  </button>
-                  <button mat-icon-button [color]="isProductActive(product) ? 'warn' : 'primary'"
-                    (click)="toggleProductActivation(product); $event.stopPropagation()"
-                    [matTooltip]="isProductActive(product) ? 'Desactivar producto' : 'Activar producto'">
-                    <mat-icon svgIcon="mat:{{ isProductActive(product) ? 'block' : 'check_circle' }}"></mat-icon>
-                  </button>
-
-                  <!-- Botones de búsqueda en Google -->
-                  <vex-google-search-button searchType="name" [productName]="product.nombre" size="small" color="accent"
-                    (searchClicked)="onGoogleSearchClicked($event)">
-                  </vex-google-search-button>
-
-                  <vex-google-search-button searchType="barcode" [barcode]="product.barcode" size="small" color="accent"
-                    (searchClicked)="onGoogleSearchClicked($event)">
-                  </vex-google-search-button>
+                <th *matHeaderCellDef mat-header-cell class="edit-col-header edit-col-sticky"></th>
+                <td *matCellDef="let product" mat-cell class="edit-col-cell">
+                  <div class="edit-col-icons">
+                    <button mat-icon-button color="accent" (click)="editProduct(product); $event.stopPropagation()">
+                      <mat-icon svgIcon="mat:edit"></mat-icon>
+                    </button>
+                    <button mat-icon-button [color]="isProductActive(product) ? 'warn' : 'primary'"
+                      (click)="toggleProductActivation(product); $event.stopPropagation()"
+                      [matTooltip]="isProductActive(product) ? 'Desactivar producto' : 'Activar producto'">
+                      <mat-icon svgIcon="mat:{{ isProductActive(product) ? 'block' : 'check_circle' }}"></mat-icon>
+                    </button>
+                    <vex-google-search-button searchType="name" [productName]="product.nombre" size="small" color="accent"
+                      (searchClicked)="onGoogleSearchClicked($event)">
+                    </vex-google-search-button>
+                    <vex-google-search-button searchType="barcode" [barcode]="product.barcode" size="small" color="accent"
+                      (searchClicked)="onGoogleSearchClicked($event)">
+                    </vex-google-search-button>
+                  </div>
                 </td>
               </ng-container>
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

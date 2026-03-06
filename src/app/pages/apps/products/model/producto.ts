@@ -18,6 +18,8 @@ export interface Producto {
   activate?: number;
   fechaUltimaActualizacionPrecio?: string | null;
   fechaCreacion?: string | null;
+  fecha_ultima_venta?: string | null;
+  porcentaje_ganancia?: number | null;
 }
 
 export interface ProductPage {

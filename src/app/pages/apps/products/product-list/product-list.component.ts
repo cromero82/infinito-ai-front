@@ -24,6 +24,8 @@ import { MatMenuTrigger } from '@angular/material/menu';
 import { ProductEditComponent } from '../product-edit/product-edit.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../core/components/confirm-dialog/confirm-dialog.component';
 import { ConfigurationService } from '../../../pages/auth/service/configuration.service';
+import { UsuarioPerfilService } from '../../../pages/auth/service/usuario-perfil.service';
+import { FechaUtilService, FechaRelativaTableResult } from '../../ventas/service/fecha-util.service';
 import { GoogleSearchButtonComponent } from '../../../../@vex/components/google-search-button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatMenuModule } from '@angular/material/menu';
@@ -75,6 +77,23 @@ export class ProductListComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = [
     'id', 'nombre', 'precio', 'fechaUltimaActualizacionPrecio', 'totalVentas', 'edit'
   ];
+
+  /** Columnas configurables en el orden de la tabla (clave para verTabla en API) */
+  readonly allTableColumns: { key: string; label: string }[] = [
+    { key: 'barcode', label: 'Código barras' },
+    { key: 'nombre', label: 'Producto' },
+    { key: 'precio', label: 'Precio' },
+    { key: 'precioCompra', label: 'Precio compra' },
+    { key: 'fechaUltimaActualizacionPrecio', label: 'Actualización precio' },
+    { key: 'fechaCreacion', label: 'Fecha creacion' },
+    { key: 'totalVentas', label: 'Total ventas' },
+    { key: 'porcentaje_ganancia', label: '% Ganancia' },
+    { key: 'fecha_ultima_venta', label: 'Última venta' }
+  ];
+
+  /** Estado temporal de columnas visibles en el menú (antes de aplicar) */
+  columnVisibilitySelection: Record<string, boolean> = {};
+  savingColumnConfig = false;
   dataSource: any[] = [];
   totalElements = 0;
   loading = false;
@@ -85,6 +104,10 @@ export class ProductListComponent implements OnInit, AfterViewInit {
   searchCtrl = new UntypedFormControl('');
   private justClosedDialog = false; // Flag to prevent auto-edit after dialog closes
   selectedProductId: number | null = null; // Track selected product ID
+
+  // Variables para icono copiar en código de barras
+  hoveredBarcodeRowIndex: number | null = null;
+  copiedBarcodeRowIndex: number | null = null;
 
   // Variables para edición inline
   editingProductNameIndex = -1;
@@ -112,6 +135,7 @@ export class ProductListComponent implements OnInit, AfterViewInit {
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
   // Reference to the trigger button so we can close the menu programmatically
   @ViewChild('filtersMenuTrigger') filtersMenuTrigger!: MatMenuTrigger;
+  @ViewChild('columnVisibilityMenuTrigger') columnVisibilityMenuTrigger!: MatMenuTrigger;
 
 
   recording = false;
@@ -123,6 +147,8 @@ export class ProductListComponent implements OnInit, AfterViewInit {
     private http: HttpClient,
     private dialog: MatDialog,
     private configurationService: ConfigurationService,
+    private usuarioPerfilService: UsuarioPerfilService,
+    private fechaUtilService: FechaUtilService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -164,6 +190,36 @@ export class ProductListComponent implements OnInit, AfterViewInit {
     this.cdr.markForCheck();
   }
 
+  /** Mapeo de columna template -> clave API para verTabla */
+  private readonly columnDefToApiKey: Record<string, string> = {
+    'id': 'barcode',
+    'nombre': 'nombre',
+    'precio': 'precio',
+    'precioCompra': 'precioCompra',
+    'fechaUltimaActualizacionPrecio': 'fechaUltimaActualizacionPrecio',
+    'fechaCreacion': 'fechaCreacion',
+    'totalVentas': 'totalVentas',
+    'porcentajeGanancia': 'porcentaje_ganancia',
+    'fechaUltimaVenta': 'fecha_ultima_venta'
+  };
+
+  /** Mapeo columna sort -> campo API para ordenamiento (busquedaPorFiltros) */
+  private readonly sortFieldToApiField: Record<string, string> = {
+    'id': 'barcode',
+    'porcentajeGanancia': 'porcentaje_ganancia'
+  };
+
+  /** Columnas de fecha: el backend debe ordenar por valor de fecha, no por string */
+  private readonly dateSortColumns = new Set(['fechaUltimaActualizacionPrecio', 'fechaCreacion', 'fechaUltimaVenta']);
+
+  /** Mapeo de clave API -> columna template (para menú de visibilidad) */
+  private getColumnDefFromKey(key: string): string {
+    if (key === 'barcode') return 'id';
+    if (key === 'fecha_ultima_venta') return 'fechaUltimaVenta';
+    if (key === 'porcentaje_ganancia') return 'porcentajeGanancia';
+    return key;
+  }
+
   /**
    * Load personal columns configuration from localStorage key `configuraciones-personales`.
    * Expected structure: { productos: { verTabla: "col1,col2,..." } }
@@ -187,6 +243,8 @@ export class ProductListComponent implements OnInit, AfterViewInit {
         'fechaUltimaActualizacionPrecio',
         'fechaCreacion',
         'totalVentas',
+        'porcentajeGanancia',
+        'fechaUltimaVenta',
         'edit'
       ]);
 
@@ -199,7 +257,9 @@ export class ProductListComponent implements OnInit, AfterViewInit {
         'fechaUltimaActualizacionPrecio': 'fechaUltimaActualizacionPrecio',
         'fechaCreacion': 'fechaCreacion',
         'totalVentas': 'totalVentas',
-        'precioCompra': 'precioCompra'
+        'precioCompra': 'precioCompra',
+        'porcentaje_ganancia': 'porcentajeGanancia',
+        'fecha_ultima_venta': 'fechaUltimaVenta'
       };
 
       const mapped: string[] = [];
@@ -382,19 +442,19 @@ export class ProductListComponent implements OnInit, AfterViewInit {
     const today = new Date();
 
     if (preset === 'nunca') {
-      condition = { campo: 'fechaUltimaActualizacionPrecio', condicion: '=', valor: 'null', label: 'C. Precio: Nunca' };
+      condition = { campo: 'fechaUltimaActualizacionPrecio', condicion: '=', valor: 'null', label: 'Fecha act. precio Nunca' };
     } else if (preset === 'mas_2_meses') {
       const d = new Date(today);
       d.setMonth(d.getMonth() - 2);
-      condition = { campo: 'fechaUltimaActualizacionPrecio', condicion: '<=', valor: this.formatDate(d), label: '> 2 meses sin act.' };
+      condition = { campo: 'fechaUltimaActualizacionPrecio', condicion: '<=', valor: this.formatDate(d), label: 'Fecha act. precio > 2 meses sin act.' };
     } else if (preset === 'mas_4_meses') {
       const d = new Date(today);
       d.setMonth(d.getMonth() - 4);
-      condition = { campo: 'fechaUltimaActualizacionPrecio', condicion: '<=', valor: this.formatDate(d), label: '> 4 meses sin act.' };
+      condition = { campo: 'fechaUltimaActualizacionPrecio', condicion: '<=', valor: this.formatDate(d), label: 'Fecha act. precio > 4 meses sin act.' };
     } else if (preset === 'menos_2_meses') {
       const d = new Date(today);
       d.setMonth(d.getMonth() - 2);
-      condition = { campo: 'fechaUltimaActualizacionPrecio', condicion: '>', valor: this.formatDate(d), label: '< 2 meses act.' };
+      condition = { campo: 'fechaUltimaActualizacionPrecio', condicion: '>', valor: this.formatDate(d), label: 'Fecha act. precio < 2 meses' };
     } else if (preset === ' personal date no effect text needed here if this is ignored...') {
       // Unreachable empty line placeholder
     } else if (preset === 'personalizado') {
@@ -405,7 +465,7 @@ export class ProductListComponent implements OnInit, AfterViewInit {
           campo: 'fechaUltimaActualizacionPrecio',
           condicion: customCond,
           valor: this.formatDate(customDate),
-          label: `Act. ${customCond} ${this.formatDate(customDate)}`
+          label: `Fecha act. precio ${customCond} ${this.formatDate(customDate)}`
         };
       }
     }
@@ -434,6 +494,19 @@ export class ProductListComponent implements OnInit, AfterViewInit {
     }
   }
 
+  applyAdvancedFilterAndClose(): void {
+    this.applyAdvancedFilter();
+    setTimeout(() => {
+      this.filtersMenuTrigger?.closeMenu();
+    }, 100);
+  }
+
+  clearAdvancedFilter(): void {
+    this.advFilterFieldCtrl.setValue('', { emitEvent: false });
+    this.advFilterCondCtrl.setValue('', { emitEvent: false });
+    this.advFilterValueCtrl.setValue('', { emitEvent: false });
+  }
+
   /**
    * Detect if there's an active date filter (fechaUltimaActualizacionPrecio)
    * and return its preset value
@@ -449,20 +522,27 @@ export class ProductListComponent implements OnInit, AfterViewInit {
 
     switch (dateFilter.label) {
       case '> 2 meses sin act.':
+      case 'Fecha act. > 2 meses sin act.':
+      case 'Fecha act. precio > 2 meses sin act.':
         return 'mas_2_meses';
       case '> 4 meses sin act.':
+      case 'Fecha act. > 4 meses sin act.':
+      case 'Fecha act. precio > 4 meses sin act.':
         return 'mas_4_meses';
       case '< 2 meses act.':
+      case 'Fecha act. < 2 meses':
+      case 'Fecha act. precio < 2 meses':
         return 'menos_2_meses';
     }
 
-    // Custom filter (label starts with "Act.")
-    if (dateFilter.label?.startsWith('Act.')) {
+    // Custom filter (label starts with "Fecha act. precio", "Fecha act." or "Act.")
+    if (dateFilter.label?.startsWith('Fecha act. precio ') || dateFilter.label?.startsWith('Fecha act. ') || dateFilter.label?.startsWith('Act.')) {
       // parse condition and date from the label to repopulate the controls
-      const parts = dateFilter.label.split(' ');
-      if (parts.length >= 3) {
-        const cond = parts[1];
-        const dateStr = parts[2];
+      const labelWithoutPrefix = dateFilter.label.replace(/^(Fecha act\. precio |Fecha act\. |Act\. )/, '');
+      const parts = labelWithoutPrefix.split(' ');
+      if (parts.length >= 2) {
+        const cond = parts[0];
+        const dateStr = parts[1];
         this.presetCustomDateCondCtrl.setValue(cond, { emitEvent: false });
         const parsed = new Date(dateStr);
         if (!isNaN(parsed.getTime())) {
@@ -584,14 +664,19 @@ export class ProductListComponent implements OnInit, AfterViewInit {
     let operation;
 
     if (hasFilters || hasCustomSorting) {
+      // Mapear campo de ordenamiento al nombre que espera la API (fechas: orden por valor, no por descripción)
+      const campoOrdenamientoApi = this.sortFieldToApiField[sortActiveField] ?? sortActiveField;
+      const isDateSort = this.dateSortColumns.has(sortActiveField);
+
       // Use new busquedaPorFiltros endpoint
       const payload: any = {
         filtros: this.activeFilters.map(f => ({ campo: f.campo, condicion: f.condicion, valor: f.valor })),
-        query: q, // Send the text query just in case the backend uses it
+        query: q,
         page: pageToLoad,
         size: this.pageSize,
-        campoOrdenamiento: sortActiveField,
-        orden: sortDirection
+        campoOrdenamiento: campoOrdenamientoApi,
+        orden: sortDirection,
+        ...(isDateSort && { tipoOrdenamiento: 'date' })  // Hint para backend: ordenar por valor de fecha
       };
       operation = this.relationalProductService.busquedaPorFiltros(payload);
     } else {
@@ -616,6 +701,14 @@ export class ProductListComponent implements OnInit, AfterViewInit {
             this.dataSource = this.dataSource.concat(content);
           }
 
+          // Reconcile displayed columns with actual data and user requested columns
+          this.updateDisplayedColumnsFromData(content);
+
+          // Tras cargar más filas: forzar recálculo de layout para que los iconos no se recorten
+          if (!reset) {
+            setTimeout(() => this.cdr.markForCheck(), 0);
+          }
+
           // Auto-open edit dialog only if:
           if (reset && shouldAutoEdit && !this.justClosedDialog && result.totalElements === 1 && content.length > 0) {
             this.editProduct(content[0]);
@@ -634,6 +727,49 @@ export class ProductListComponent implements OnInit, AfterViewInit {
           }
         }
       });
+  }
+
+  /**
+   * After loading data, ensure columns requested by the user exist in the displayedColumns
+   * if the product objects contain those fields. This helps when the template supports
+   * the column but initial parsing did not include them for any reason.
+   */
+  private updateDisplayedColumnsFromData(content: any[]): void {
+    if (!content || content.length === 0) return;
+    const first = content[0];
+
+    try {
+      const raw = localStorage.getItem('configuraciones-personales');
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const verTabla = parsed?.productos?.verTabla;
+      if (!verTabla || typeof verTabla !== 'string') return;
+
+      const requested = verTabla.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+      const availableDefs = new Set<string>(['id','nombre','precio','precioCompra','fechaUltimaActualizacionPrecio','fechaCreacion','totalVentas','porcentajeGanancia','fechaUltimaVenta','edit']);
+
+      for (const req of requested) {
+        // map logical to template name
+        const mapping: Record<string,string> = { 'barcode':'id','precioCompra':'precioCompra','fechaCreacion':'fechaCreacion','porcentaje_ganancia':'porcentajeGanancia','fecha_ultima_venta':'fechaUltimaVenta' };
+        const col = mapping[req] || req;
+        if (!availableDefs.has(col)) continue;
+        if (this.displayedColumns.includes(col)) continue;
+        // check if data actually contains the property
+        if (col in first || (col === 'fechaCreacion' && ('fechaCreacion' in first))) {
+          // insert before edit column if present
+          const editIdx = this.displayedColumns.indexOf('edit');
+          if (editIdx >= 0) {
+            this.displayedColumns.splice(editIdx, 0, col);
+          } else {
+            this.displayedColumns.push(col);
+          }
+        }
+      }
+
+      this.cdr.markForCheck();
+    } catch (e) {
+      // ignore
+    }
   }
 
   /**
@@ -705,6 +841,59 @@ export class ProductListComponent implements OnInit, AfterViewInit {
         }
       }, 100);
     }
+  }
+
+  /**
+   * Formatea una fecha para mostrar en tabla (relativa a hoy: Hoy, Ayer, día semana, o fecha + descripción)
+   */
+  getFechaRelativa(dateValue: Date | string | null | undefined): FechaRelativaTableResult | null {
+    return this.fechaUtilService.formatDateRelativeTable(dateValue);
+  }
+
+  /**
+   * Muestra el icono copiar al pasar el mouse sobre un código de barras
+   */
+  onBarcodeCellHover(rowIndex: number): void {
+    this.hoveredBarcodeRowIndex = rowIndex;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Oculta el icono y resetea estado al salir del código de barras
+   */
+  onBarcodeCellLeave(): void {
+    this.hoveredBarcodeRowIndex = null;
+    this.copiedBarcodeRowIndex = null;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Indica si debe mostrarse el icono copiar (hover y no acaba de copiar)
+   */
+  showBarcodeCopyIcon(rowIndex: number): boolean {
+    return this.hoveredBarcodeRowIndex === rowIndex && this.copiedBarcodeRowIndex !== rowIndex;
+  }
+
+  /**
+   * Copia el código de barras al portapapeles y oculta el icono
+   */
+  copyBarcodeToClipboard(barcode: string, rowIndex: number): void {
+    const text = barcode ?? '';
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      this.copiedBarcodeRowIndex = rowIndex;
+      this.cdr.markForCheck();
+    }).catch(() => {
+      // Fallback para navegadores antiguos
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      this.copiedBarcodeRowIndex = rowIndex;
+      this.cdr.markForCheck();
+    });
   }
 
   /**
@@ -1055,6 +1244,88 @@ export class ProductListComponent implements OnInit, AfterViewInit {
         this.saveProductPriceEdit(index);
       }
     }, 150);
+  }
+
+  /**
+   * Al abrir el menú de columnas, restaura el estado de selección desde displayedColumns
+   */
+  onColumnVisibilityMenuOpened(): void {
+    for (const col of this.allTableColumns) {
+      const def = this.getColumnDefFromKey(col.key);
+      this.columnVisibilitySelection[col.key] = this.displayedColumns.includes(def);
+    }
+    this.cdr.markForCheck();
+  }
+
+  /** Indica si una columna está seleccionada en el menú */
+  isColumnSelected(key: string): boolean {
+    return !!this.columnVisibilitySelection[key];
+  }
+
+  /** Alterna la visibilidad de una columna en el menú */
+  toggleColumnVisibility(key: string): void {
+    this.columnVisibilitySelection[key] = !this.columnVisibilitySelection[key];
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Aplica la configuración de columnas: actualiza tabla, localStorage y API
+   */
+  applyColumnVisibility(): void {
+    let selectedKeys = this.allTableColumns
+      .filter(c => this.columnVisibilitySelection[c.key])
+      .map(c => c.key);
+    // Mínimo: al menos barcode y nombre visibles
+    const minCols = ['barcode', 'nombre'];
+    const finalKeys = [...new Set([...minCols, ...selectedKeys])];
+    const orderedKeys = this.allTableColumns
+      .filter(c => finalKeys.includes(c.key))
+      .map(c => c.key);
+    const verTablaStr = orderedKeys.join(',');
+
+    // Construir displayedColumns en el orden de la tabla (id, nombre, precio, ...)
+    const newDisplayed: string[] = [];
+    for (const col of this.allTableColumns) {
+      if (!orderedKeys.includes(col.key)) continue;
+      newDisplayed.push(this.getColumnDefFromKey(col.key));
+    }
+    newDisplayed.push('edit');
+
+    this.displayedColumns = newDisplayed;
+    this.cdr.markForCheck();
+
+    // Cerrar menú inmediatamente tras aplicar
+    this.columnVisibilityMenuTrigger?.closeMenu();
+
+    // Actualizar localStorage y preparar payload para API
+    let personalizacion: Record<string, unknown>;
+    try {
+      const raw = localStorage.getItem('configuraciones-personales');
+      const current = raw ? JSON.parse(raw) : {};
+      personalizacion = {
+        ...current,
+        productos: { ...(current.productos || {}), verTabla: verTablaStr }
+      };
+      localStorage.setItem('configuraciones-personales', JSON.stringify(personalizacion));
+    } catch (e) {
+      console.warn('Error al actualizar localStorage:', e);
+      personalizacion = { productos: { verTabla: verTablaStr } };
+    }
+
+    // Llamar API
+    this.savingColumnConfig = true;
+    this.usuarioPerfilService.updatePersonalizacion(personalizacion).pipe(
+      finalize(() => {
+        this.savingColumnConfig = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: () => {},
+      error: (err) => {
+        console.error('Error al guardar configuración de columnas:', err);
+        alert('No se pudo guardar la configuración en el servidor. Los cambios se aplicaron localmente.');
+      }
+    });
   }
 
 }
