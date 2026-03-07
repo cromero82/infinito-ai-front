@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
-import { AuthService } from './auth.service';
 
 export interface ConfigurationItem {
   id: number;
@@ -17,23 +16,10 @@ export interface ConfigurationItem {
 export class ConfigurationService {
   private apiUrl = 'http://localhost:8088/configuracion-app';
 
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService
-  ) {}
+  constructor(private http: HttpClient) {}
 
   obtenerTodasConfiguraciones(): Observable<ConfigurationItem[]> {
-    const token = this.authService.getToken();
-    
-    if (!token) {
-      return throwError(() => new Error('No hay token de autenticación'));
-    }
-
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`
-    });
-
-    return this.http.get<ConfigurationItem[]>(`${this.apiUrl}/obtenerTodos`, { headers }).pipe(
+    return this.http.get<ConfigurationItem[]>(`${this.apiUrl}/obtenerTodos`).pipe(
       map(configuraciones => {
         for (const config of configuraciones) {
           if (config.key === 'longitud-vertical-panel-productos' && config.value) {
@@ -44,6 +30,9 @@ export class ConfigurationService {
               const parsed = JSON.parse(config.value) as { porcentaje_minimo?: number; porc_maximo?: number };
               if (parsed.porcentaje_minimo != null) {
                 localStorage.setItem('alerta-precios-porcentaje-minimo', String(parsed.porcentaje_minimo));
+              }
+              if (parsed.porc_maximo != null) {
+                localStorage.setItem('alerta-precios-porcentaje-maximo', String(parsed.porc_maximo));
               }
             } catch (e) {
               console.warn('Error al parsear alerta-precios:', e);
@@ -69,6 +58,24 @@ export class ConfigurationService {
     if (val == null) return 5;
     const n = parseFloat(val);
     return Number.isNaN(n) ? 5 : n;
+  }
+
+  /** Obtiene el porcentaje máximo de ganancia desde localStorage (alerta-precios). Por defecto 80. */
+  obtenerPorcentajeMaximoGanancia(): number {
+    const val = localStorage.getItem('alerta-precios-porcentaje-maximo');
+    if (val == null) return 80;
+    const n = parseFloat(val);
+    return Number.isNaN(n) ? 80 : n;
+  }
+
+  /** Actualiza una configuración por su key. */
+  actualizarPorKey(key: string, value: string): Observable<ConfigurationItem> {
+    return this.http.put<ConfigurationItem>(`${this.apiUrl}/key/${key}`, { value }).pipe(
+      catchError(error => {
+        console.error('Error al actualizar configuración:', error);
+        return throwError(() => error);
+      })
+    );
   }
 }
 

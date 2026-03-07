@@ -32,6 +32,10 @@ export class UsuarioComponent implements OnInit {
     {
       label: 'Actividad',
       route: './actividad'
+    },
+    {
+      label: 'Preferencias',
+      route: './preferencias'
     }
   ];
 

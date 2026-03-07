@@ -166,6 +166,13 @@ export const appRoutes: VexRoutes = [
                   import('./pages/apps/usuario/mi-usuario-actividades/mi-usuario-actividades.component').then(
                     (m) => m.MiUsuarioActividadesComponent
                   )
+              },
+              {
+                path: 'preferencias',
+                loadComponent: () =>
+                  import('./pages/apps/usuario/mi-perfil-preferencias/mi-perfil-preferencias.component').then(
+                    (m) => m.MiPerfilPreferenciasComponent
+                  )
               }
             ]
           },

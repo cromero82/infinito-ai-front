@@ -17,7 +17,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { AuthService } from '../../../../../pages/pages/auth/service/auth.service';
 import { SesionesService } from '../../../../../pages/apps/ventas/service/sesiones.service';
-import { TicketsService } from '../../../../../pages/apps/ventas/service/tickets.service';
+import { TicketsService, TicketDto } from '../../../../../pages/apps/ventas/service/tickets.service';
 import { TicketReciboService } from '../../../../../pages/apps/ventas/service/ticket-recibo.service';
 import { ReciboDetalleService } from '../../../../../pages/apps/ventas/service/recibo-detalle.service';
 import { BitacoraUsuarioService } from '../../../../../pages/apps/usuario/gestion-usuarios/service/bitacora-usuario.service';
@@ -275,6 +275,12 @@ export class ToolbarUserDropdownComponent implements OnInit {
     });
   }
 
+  /** True si el ticket tiene un cliente identificado (no anónimo). */
+  private tieneClienteIdentificado(ticket: TicketDto): boolean {
+    const nombre = ticket.cliente?.nombre;
+    return !!(nombre && nombre !== 'ANONIMO');
+  }
+
   private verificarRecibosEnProceso(sessionId: number) {
     // Obtener todos los tickets de la sesión
     return this.ticketsService.getTicketsBySession(sessionId).pipe(
@@ -283,8 +289,14 @@ export class ToolbarUserDropdownComponent implements OnInit {
           return of(false);
         }
 
-        // Para cada ticket, verificar si tiene recibo con detalles
-        const verificaciones = tickets.map(ticket =>
+        // Omitir tickets con clientes identificados; solo verificar anónimos
+        const ticketsAVerificar = tickets.filter(t => !this.tieneClienteIdentificado(t));
+        if (ticketsAVerificar.length === 0) {
+          return of(false);
+        }
+
+        // Para cada ticket (solo anónimos), verificar si tiene recibo con detalles
+        const verificaciones = ticketsAVerificar.map(ticket =>
           this.ticketReciboService.getByTicketId(ticket.id, sessionId).pipe(
             switchMap(ticketRecibo => {
               if (!ticketRecibo || !ticketRecibo.reciboId) {

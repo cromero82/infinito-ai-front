@@ -1,0 +1,67 @@
+<div class="mt-6 flex flex-col md:flex-row md:items-start">
+  <div class="flex-auto">
+    <div class="card">
+      <div class="px-6 py-4 border-b">
+        <h2 class="title m-0">Preferencias</h2>
+      </div>
+
+      <div class="px-6 py-4">
+        <p class="body-1 text-secondary mb-6">
+          Configura tus preferencias de usuario para personalizar tu experiencia.
+        </p>
+
+        <div class="space-y-6">
+
+          <!-- Configuraciones del sistema - Componente Precios -->
+          <div
+            @scaleIn
+            class="py-4 px-4 rounded-lg border border-default">
+            <h3 class="subtitle-1 m-0 mb-2 flex items-center">
+              <mat-icon class="icon-sm mr-2" svgIcon="mat:settings"></mat-icon>
+              Configuraciones del sistema
+            </h3>
+            <h4 class="subtitle-2 m-0 mb-4 mt-4 text-secondary">Componente Precios</h4>
+            <p class="body-2 text-hint mb-4">
+              Al registrar precios, el sistema alertará si la diferencia de precios entre compra y venta
+              es inferior al porcentaje mínimo configurado. Se activarán alarmas cuando el margen de ganancia
+              esté por debajo del mínimo o por encima del máximo definido.
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Porcentaje mínimo de ganancia (%)</mat-label>
+                <mat-icon matPrefix svgIcon="mat:trending_up"></mat-icon>
+                <input
+                  matInput
+                  type="number"
+                  min="0"
+                  max="100"
+                  [(ngModel)]="porcentajeMinimoGanancia"
+                  placeholder="Ej: 10">
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Porcentaje máximo de ganancia (%)</mat-label>
+                <mat-icon matPrefix svgIcon="mat:trending_up"></mat-icon>
+                <input
+                  matInput
+                  type="number"
+                  min="0"
+                  max="100"
+                  [(ngModel)]="porcentajeMaximoGanancia"
+                  placeholder="Ej: 80">
+              </mat-form-field>
+            </div>
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="guardarAlertaPrecios()"
+              [disabled]="guardando"
+              type="button">
+              <mat-icon *ngIf="guardando" svgIcon="mat:hourglass_empty" class="mr-2"></mat-icon>
+              Guardar configuración de precios
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
