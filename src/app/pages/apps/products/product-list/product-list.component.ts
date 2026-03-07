@@ -121,13 +121,27 @@ export class ProductListComponent implements OnInit, AfterViewInit {
   // Variables para filtros y ordenamiento
   activeFilters: FilterCondition[] = [];
 
-  presetFilterCtrl = new FormControl<string>('');
-  presetCustomDateCondCtrl = new FormControl<string>('=', { nonNullable: true });
-  presetCustomDateCtrl = new FormControl<Date | null>(null);
+  // Controles unificados de filtros (todos los campos uno debajo del otro)
+  filterPrecioCondCtrl = new FormControl<string>('=', { nonNullable: true });
+  filterPrecioValorCtrl = new FormControl<string>('');
 
-  advFilterFieldCtrl = new FormControl<string>('');
-  advFilterCondCtrl = new FormControl<string>('');
-  advFilterValueCtrl = new FormControl<string>('');
+  filterGananciaCondCtrl = new FormControl<string>('=', { nonNullable: true });
+  filterGananciaValorCtrl = new FormControl<string>('');
+
+  filterFechaActPrecioPresetCtrl = new FormControl<string>('');
+  filterFechaActPrecioCustomCondCtrl = new FormControl<string>('=', { nonNullable: true });
+  filterFechaActPrecioCustomDateCtrl = new FormControl<Date | null>(null);
+
+  filterTotalVentasCondCtrl = new FormControl<string>('=', { nonNullable: true });
+  filterTotalVentasValorCtrl = new FormControl<string>('');
+
+  filterFechaUltimaVentaPresetCtrl = new FormControl<string>('');
+  filterFechaUltimaVentaCustomCondCtrl = new FormControl<string>('=', { nonNullable: true });
+  filterFechaUltimaVentaCustomDateCtrl = new FormControl<Date | null>(null);
+
+  filterFechaCreacionPresetCtrl = new FormControl<string>('');
+  filterFechaCreacionCustomCondCtrl = new FormControl<string>('=', { nonNullable: true });
+  filterFechaCreacionCustomDateCtrl = new FormControl<Date | null>(null);
 
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -205,8 +219,13 @@ export class ProductListComponent implements OnInit, AfterViewInit {
 
   /** Mapeo columna sort -> campo API para ordenamiento (busquedaPorFiltros) */
   private readonly sortFieldToApiField: Record<string, string> = {
-    'id': 'barcode',
-    'porcentajeGanancia': 'porcentaje_ganancia'
+    'id': 'barcode'
+  };
+
+  /** Mapeo campo filtro interno -> campo API para busquedaPorFiltros */
+  private readonly filterCampoToApiField: Record<string, string> = {
+    'porcentaje_ganancia': 'porcentajeGanancia',
+    'fecha_ultima_venta': 'fechaUltimaVenta'
   };
 
   /** Columnas de fecha: el backend debe ordenar por valor de fecha, no por string */
@@ -434,181 +453,321 @@ export class ProductListComponent implements OnInit, AfterViewInit {
     return `${day}/${month}/${year}`;
   }
 
-  applyPresetFilter(): void {
-    const preset = this.presetFilterCtrl.value;
-    if (!preset) return;
+  /** Valida que un valor sea un porcentaje válido entre -100 y 100 */
+  isValidPercent(value: string | number | null | undefined): boolean {
+    if (value === '' || value === null || value === undefined) return true;
+    const n = typeof value === 'number' ? value : parseFloat(String(value));
+    if (isNaN(n)) return false;
+    return n >= -100 && n <= 100;
+  }
 
-    let condition: FilterCondition | null = null;
+  /** Indica si hay algún valor en los controles del menú de filtros */
+  hasAnyFilterValue(): boolean {
+    return !!(
+      this.filterPrecioValorCtrl.value ||
+      this.filterGananciaValorCtrl.value ||
+      this.filterFechaActPrecioPresetCtrl.value ||
+      this.filterTotalVentasValorCtrl.value ||
+      this.filterFechaUltimaVentaPresetCtrl.value ||
+      this.filterFechaCreacionPresetCtrl.value
+    );
+  }
+
+  /**
+   * Recopila todos los filtros desde los controles y los aplica a activeFilters.
+   * Reemplaza los filtros existentes por los nuevos.
+   */
+  private collectFiltersFromControls(): FilterCondition[] {
+    const filters: FilterCondition[] = [];
     const today = new Date();
 
-    if (preset === 'nunca') {
-      condition = { campo: 'fechaUltimaActualizacionPrecio', condicion: '=', valor: 'null', label: 'Fecha act. precio Nunca' };
-    } else if (preset === 'mas_2_meses') {
-      const d = new Date(today);
-      d.setMonth(d.getMonth() - 2);
-      condition = { campo: 'fechaUltimaActualizacionPrecio', condicion: '<=', valor: this.formatDate(d), label: 'Fecha act. precio > 2 meses sin act.' };
-    } else if (preset === 'mas_4_meses') {
-      const d = new Date(today);
-      d.setMonth(d.getMonth() - 4);
-      condition = { campo: 'fechaUltimaActualizacionPrecio', condicion: '<=', valor: this.formatDate(d), label: 'Fecha act. precio > 4 meses sin act.' };
-    } else if (preset === 'menos_2_meses') {
-      const d = new Date(today);
-      d.setMonth(d.getMonth() - 2);
-      condition = { campo: 'fechaUltimaActualizacionPrecio', condicion: '>', valor: this.formatDate(d), label: 'Fecha act. precio < 2 meses' };
-    } else if (preset === ' personal date no effect text needed here if this is ignored...') {
-      // Unreachable empty line placeholder
-    } else if (preset === 'personalizado') {
-      const customDate = this.presetCustomDateCtrl.value;
-      const customCond = this.presetCustomDateCondCtrl.value;
-      if (customDate && customCond) {
-        condition = {
-          campo: 'fechaUltimaActualizacionPrecio',
-          condicion: customCond,
-          valor: this.formatDate(customDate),
-          label: `Fecha act. precio ${customCond} ${this.formatDate(customDate)}`
-        };
+    // Precio
+    const precioVal = this.filterPrecioValorCtrl.value;
+    const precioStr = typeof precioVal === 'number' ? String(precioVal) : (precioVal ?? '').toString().trim();
+    if (precioStr) {
+      const n = parseFloat(precioStr.replace(',', '.'));
+      if (!isNaN(n) && n >= 0) {
+        filters.push({
+          campo: 'precio',
+          condicion: this.filterPrecioCondCtrl.value,
+          valor: String(n),
+          label: `Precio ${this.filterPrecioCondCtrl.value} ${n}`
+        });
       }
     }
 
-    if (condition) {
-      this.activeFilters = this.activeFilters.filter(f => f.campo !== 'fechaUltimaActualizacionPrecio');
-      this.activeFilters.push(condition);
-      // DO NOT CLEAR presetFilterCtrl here - keep it selected for "edit mode" appearance
-      // this.presetFilterCtrl.setValue('', { emitEvent: false });
-      this.fetchProducts(true);
-    }
-  }
-
-  applyAdvancedFilter(): void {
-    const campo = this.advFilterFieldCtrl.value;
-    const cond = this.advFilterCondCtrl.value;
-    const valor = this.advFilterValueCtrl.value;
-
-    if (campo && cond && valor) {
-      const label = `${campo} ${cond} ${valor}`;
-      this.activeFilters.push({ campo, condicion: cond, valor, label });
-      this.advFilterFieldCtrl.setValue('', { emitEvent: false });
-      this.advFilterCondCtrl.setValue('', { emitEvent: false });
-      this.advFilterValueCtrl.setValue('', { emitEvent: false });
-      this.fetchProducts(true);
-    }
-  }
-
-  applyAdvancedFilterAndClose(): void {
-    this.applyAdvancedFilter();
-    setTimeout(() => {
-      this.filtersMenuTrigger?.closeMenu();
-    }, 100);
-  }
-
-  clearAdvancedFilter(): void {
-    this.advFilterFieldCtrl.setValue('', { emitEvent: false });
-    this.advFilterCondCtrl.setValue('', { emitEvent: false });
-    this.advFilterValueCtrl.setValue('', { emitEvent: false });
-  }
-
-  /**
-   * Detect if there's an active date filter (fechaUltimaActualizacionPrecio)
-   * and return its preset value
-   */
-  private getActivePresetFilterValue(): string | null {
-    const dateFilter = this.activeFilters.find(f => f.campo === 'fechaUltimaActualizacionPrecio');
-    if (!dateFilter) return null;
-
-    // Map known labels back to preset values so the select can reflect the choice.
-    if (dateFilter.valor === 'null') {
-      return 'nunca';
+    // % Ganancia (permite negativos, validación -100 a 100)
+    const gananciaVal = this.filterGananciaValorCtrl.value;
+    const gananciaStr = typeof gananciaVal === 'number' ? String(gananciaVal) : (gananciaVal ?? '').toString().trim();
+    if (gananciaStr && this.isValidPercent(gananciaStr)) {
+      const n = parseFloat(gananciaStr.replace(',', '.'));
+      if (!isNaN(n)) {
+        filters.push({
+          campo: 'porcentaje_ganancia',
+          condicion: this.filterGananciaCondCtrl.value,
+          valor: String(n),
+          label: `% Ganancia ${this.filterGananciaCondCtrl.value} ${n}%`
+        });
+      }
     }
 
-    switch (dateFilter.label) {
-      case '> 2 meses sin act.':
-      case 'Fecha act. > 2 meses sin act.':
-      case 'Fecha act. precio > 2 meses sin act.':
-        return 'mas_2_meses';
-      case '> 4 meses sin act.':
-      case 'Fecha act. > 4 meses sin act.':
-      case 'Fecha act. precio > 4 meses sin act.':
-        return 'mas_4_meses';
-      case '< 2 meses act.':
-      case 'Fecha act. < 2 meses':
-      case 'Fecha act. precio < 2 meses':
-        return 'menos_2_meses';
-    }
-
-    // Custom filter (label starts with "Fecha act. precio", "Fecha act." or "Act.")
-    if (dateFilter.label?.startsWith('Fecha act. precio ') || dateFilter.label?.startsWith('Fecha act. ') || dateFilter.label?.startsWith('Act.')) {
-      // parse condition and date from the label to repopulate the controls
-      const labelWithoutPrefix = dateFilter.label.replace(/^(Fecha act\. precio |Fecha act\. |Act\. )/, '');
-      const parts = labelWithoutPrefix.split(' ');
-      if (parts.length >= 2) {
-        const cond = parts[0];
-        const dateStr = parts[1];
-        this.presetCustomDateCondCtrl.setValue(cond, { emitEvent: false });
-        const parsed = new Date(dateStr);
-        if (!isNaN(parsed.getTime())) {
-          this.presetCustomDateCtrl.setValue(parsed, { emitEvent: false });
+    // Fecha actualización precio
+    const presetActPrecio = this.filterFechaActPrecioPresetCtrl.value;
+    if (presetActPrecio) {
+      if (presetActPrecio === 'nunca') {
+        filters.push({ campo: 'fechaUltimaActualizacionPrecio', condicion: '=', valor: 'null', label: 'Fecha act. precio Nunca' });
+      } else if (presetActPrecio === 'mas_2_meses') {
+        const d = new Date(today);
+        d.setMonth(d.getMonth() - 2);
+        filters.push({ campo: 'fechaUltimaActualizacionPrecio', condicion: '<=', valor: this.formatDate(d), label: 'Fecha act. precio > 2 meses sin act.' });
+      } else if (presetActPrecio === 'mas_4_meses') {
+        const d = new Date(today);
+        d.setMonth(d.getMonth() - 4);
+        filters.push({ campo: 'fechaUltimaActualizacionPrecio', condicion: '<=', valor: this.formatDate(d), label: 'Fecha act. precio > 4 meses sin act.' });
+      } else if (presetActPrecio === 'menos_2_meses') {
+        const d = new Date(today);
+        d.setMonth(d.getMonth() - 2);
+        filters.push({ campo: 'fechaUltimaActualizacionPrecio', condicion: '>', valor: this.formatDate(d), label: 'Fecha act. precio < 2 meses' });
+      } else if (presetActPrecio === 'personalizado') {
+        const customDate = this.filterFechaActPrecioCustomDateCtrl.value;
+        const customCond = this.filterFechaActPrecioCustomCondCtrl.value;
+        if (customDate && customCond) {
+          filters.push({
+            campo: 'fechaUltimaActualizacionPrecio',
+            condicion: customCond,
+            valor: this.formatDate(customDate),
+            label: `Fecha act. precio ${customCond} ${this.formatDate(customDate)}`
+          });
         }
       }
-      return 'personalizado';
     }
 
-    // fallback
-    return null;
+    // Total ventas
+    const totalVentasVal = this.filterTotalVentasValorCtrl.value;
+    const totalVentasStr = typeof totalVentasVal === 'number' ? String(totalVentasVal) : (totalVentasVal ?? '').toString().trim();
+    if (totalVentasStr) {
+      const n = parseFloat(totalVentasStr.replace(',', '.'));
+      if (!isNaN(n) && n >= 0) {
+        filters.push({
+          campo: 'totalVentas',
+          condicion: this.filterTotalVentasCondCtrl.value,
+          valor: String(Math.floor(n)),
+          label: `Total ventas ${this.filterTotalVentasCondCtrl.value} ${Math.floor(n)}`
+        });
+      }
+    }
+
+    // Última venta
+    const presetUltimaVenta = this.filterFechaUltimaVentaPresetCtrl.value;
+    if (presetUltimaVenta) {
+      if (presetUltimaVenta === 'nunca') {
+        filters.push({ campo: 'fecha_ultima_venta', condicion: '=', valor: 'null', label: 'Última venta Nunca' });
+      } else if (presetUltimaVenta === 'mas_2_meses') {
+        const d = new Date(today);
+        d.setMonth(d.getMonth() - 2);
+        filters.push({ campo: 'fecha_ultima_venta', condicion: '<=', valor: this.formatDate(d), label: 'Última venta > 2 meses' });
+      } else if (presetUltimaVenta === 'mas_4_meses') {
+        const d = new Date(today);
+        d.setMonth(d.getMonth() - 4);
+        filters.push({ campo: 'fecha_ultima_venta', condicion: '<=', valor: this.formatDate(d), label: 'Última venta > 4 meses' });
+      } else if (presetUltimaVenta === 'menos_2_meses') {
+        const d = new Date(today);
+        d.setMonth(d.getMonth() - 2);
+        filters.push({ campo: 'fecha_ultima_venta', condicion: '>', valor: this.formatDate(d), label: 'Última venta < 2 meses' });
+      } else if (presetUltimaVenta === 'personalizado') {
+        const customDate = this.filterFechaUltimaVentaCustomDateCtrl.value;
+        const customCond = this.filterFechaUltimaVentaCustomCondCtrl.value;
+        if (customDate && customCond) {
+          filters.push({
+            campo: 'fecha_ultima_venta',
+            condicion: customCond,
+            valor: this.formatDate(customDate),
+            label: `Última venta ${customCond} ${this.formatDate(customDate)}`
+          });
+        }
+      }
+    }
+
+    // Fecha de creación
+    const presetCreacion = this.filterFechaCreacionPresetCtrl.value;
+    if (presetCreacion) {
+      if (presetCreacion === 'mas_2_meses') {
+        const d = new Date(today);
+        d.setMonth(d.getMonth() - 2);
+        filters.push({ campo: 'fechaCreacion', condicion: '<=', valor: this.formatDate(d), label: 'Fecha creación > 2 meses' });
+      } else if (presetCreacion === 'mas_4_meses') {
+        const d = new Date(today);
+        d.setMonth(d.getMonth() - 4);
+        filters.push({ campo: 'fechaCreacion', condicion: '<=', valor: this.formatDate(d), label: 'Fecha creación > 4 meses' });
+      } else if (presetCreacion === 'menos_2_meses') {
+        const d = new Date(today);
+        d.setMonth(d.getMonth() - 2);
+        filters.push({ campo: 'fechaCreacion', condicion: '>', valor: this.formatDate(d), label: 'Fecha creación < 2 meses' });
+      } else if (presetCreacion === 'personalizado') {
+        const customDate = this.filterFechaCreacionCustomDateCtrl.value;
+        const customCond = this.filterFechaCreacionCustomCondCtrl.value;
+        if (customDate && customCond) {
+          filters.push({
+            campo: 'fechaCreacion',
+            condicion: customCond,
+            valor: this.formatDate(customDate),
+            label: `Fecha creación ${customCond} ${this.formatDate(customDate)}`
+          });
+        }
+      }
+    }
+
+    return filters;
   }
 
   /**
-   * Check if there's an active date filter
+   * Handler del botón Aplicar: evita que el mat-menu cierre antes de ejecutar la lógica.
+   * Usa setTimeout para asegurar que el procesamiento ocurra tras el ciclo de eventos.
    */
-  hasActiveDateFilter(): boolean {
-    return this.activeFilters.some(f => f.campo === 'fechaUltimaActualizacionPrecio');
+  onApplyFiltersClick(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    setTimeout(() => this.applyAllFiltersAndClose(), 0);
+  }
+
+  /** Aplica todos los filtros desde los controles, actualiza activeFilters, hace fetch y cierra el menú */
+  applyAllFiltersAndClose(): void {
+    const filters = this.collectFiltersFromControls();
+    // No aplicar % Ganancia si el valor no es válido
+    const gVal = this.filterGananciaValorCtrl.value;
+    const gStr = typeof gVal === 'number' ? String(gVal) : (gVal ?? '').toString().trim();
+    if (gStr && !this.isValidPercent(gStr)) {
+      return; // El hint ya indica el error
+    }
+    this.activeFilters = filters;
+    this.fetchProducts(true);
+    setTimeout(() => this.filtersMenuTrigger?.closeMenu(), 100);
+  }
+
+  /** Limpia todos los controles del menú de filtros y activeFilters */
+  clearAllFiltersInMenu(): void {
+    this.filterPrecioCondCtrl.setValue('=', { emitEvent: false });
+    this.filterPrecioValorCtrl.setValue('', { emitEvent: false });
+    this.filterGananciaCondCtrl.setValue('=', { emitEvent: false });
+    this.filterGananciaValorCtrl.setValue('', { emitEvent: false });
+    this.filterFechaActPrecioPresetCtrl.setValue('', { emitEvent: false });
+    this.filterFechaActPrecioCustomCondCtrl.setValue('=', { emitEvent: false });
+    this.filterFechaActPrecioCustomDateCtrl.setValue(null, { emitEvent: false });
+    this.filterTotalVentasCondCtrl.setValue('=', { emitEvent: false });
+    this.filterTotalVentasValorCtrl.setValue('', { emitEvent: false });
+    this.filterFechaUltimaVentaPresetCtrl.setValue('', { emitEvent: false });
+    this.filterFechaUltimaVentaCustomCondCtrl.setValue('=', { emitEvent: false });
+    this.filterFechaUltimaVentaCustomDateCtrl.setValue(null, { emitEvent: false });
+    this.filterFechaCreacionPresetCtrl.setValue('', { emitEvent: false });
+    this.filterFechaCreacionCustomCondCtrl.setValue('=', { emitEvent: false });
+    this.filterFechaCreacionCustomDateCtrl.setValue(null, { emitEvent: false });
+    this.activeFilters = [];
+    this.fetchProducts(true);
+    setTimeout(() => this.filtersMenuTrigger?.closeMenu(), 100);
   }
 
   /**
-   * Restore the preset filter control state based on active filters
-   * This is called when the menu opens
+   * Restaura el estado de todos los controles del menú desde activeFilters.
+   * Se llama al abrir el menú.
    */
-  restorePresetFilterState(): void {
-    const activePresetValue = this.getActivePresetFilterValue();
-    if (activePresetValue !== null) {
-      this.presetFilterCtrl.setValue(activePresetValue, { emitEvent: false });
-      // for custom filter we also want to populate the date/condition controls
-      if (activePresetValue === 'personalizado') {
-        // getActivePresetFilterValue already set these controls correctly
+  restoreAllFiltersState(): void {
+    for (const f of this.activeFilters) {
+      if (f.campo === 'precio') {
+        this.filterPrecioCondCtrl.setValue(f.condicion, { emitEvent: false });
+        this.filterPrecioValorCtrl.setValue(String(f.valor ?? ''), { emitEvent: false });
+      } else if (f.campo === 'porcentaje_ganancia') {
+        this.filterGananciaCondCtrl.setValue(f.condicion, { emitEvent: false });
+        this.filterGananciaValorCtrl.setValue(String(f.valor ?? ''), { emitEvent: false });
+      } else if (f.campo === 'fechaUltimaActualizacionPrecio') {
+        if (f.valor === 'null') {
+          this.filterFechaActPrecioPresetCtrl.setValue('nunca', { emitEvent: false });
+        } else {
+          const preset = this.inferDatePresetFromFilter(f, 'mas_2_meses', 'mas_4_meses', 'menos_2_meses');
+          if (preset) {
+            this.filterFechaActPrecioPresetCtrl.setValue(preset, { emitEvent: false });
+          } else {
+            this.filterFechaActPrecioPresetCtrl.setValue('personalizado', { emitEvent: false });
+            this.filterFechaActPrecioCustomCondCtrl.setValue(f.condicion, { emitEvent: false });
+            const parsed = this.parseDateFromValor(f.valor);
+            if (parsed) this.filterFechaActPrecioCustomDateCtrl.setValue(parsed, { emitEvent: false });
+          }
+        }
+      } else if (f.campo === 'totalVentas') {
+        this.filterTotalVentasCondCtrl.setValue(f.condicion, { emitEvent: false });
+        this.filterTotalVentasValorCtrl.setValue(String(f.valor ?? ''), { emitEvent: false });
+      } else if (f.campo === 'fecha_ultima_venta') {
+        if (f.valor === 'null') {
+          this.filterFechaUltimaVentaPresetCtrl.setValue('nunca', { emitEvent: false });
+        } else {
+          const preset = this.inferDatePresetFromFilter(f, 'mas_2_meses', 'mas_4_meses', 'menos_2_meses');
+          if (preset) {
+            this.filterFechaUltimaVentaPresetCtrl.setValue(preset, { emitEvent: false });
+          } else {
+            this.filterFechaUltimaVentaPresetCtrl.setValue('personalizado', { emitEvent: false });
+            this.filterFechaUltimaVentaCustomCondCtrl.setValue(f.condicion, { emitEvent: false });
+            const parsed = this.parseDateFromValor(f.valor);
+            if (parsed) this.filterFechaUltimaVentaCustomDateCtrl.setValue(parsed, { emitEvent: false });
+          }
+        }
+      } else if (f.campo === 'fechaCreacion') {
+        const preset = this.inferDatePresetFromFilter(f, 'mas_2_meses', 'mas_4_meses', 'menos_2_meses');
+        if (preset) {
+          this.filterFechaCreacionPresetCtrl.setValue(preset, { emitEvent: false });
+        } else {
+          this.filterFechaCreacionPresetCtrl.setValue('personalizado', { emitEvent: false });
+          this.filterFechaCreacionCustomCondCtrl.setValue(f.condicion, { emitEvent: false });
+          const parsed = this.parseDateFromValor(f.valor);
+          if (parsed) this.filterFechaCreacionCustomDateCtrl.setValue(parsed, { emitEvent: false });
+        }
       }
     }
   }
 
-  /**
-   * Clear the date filter (fechaUltimaActualizacionPrecio)
-   */
-  clearPresetFilter(): void {
-    this.activeFilters = this.activeFilters.filter(f => f.campo !== 'fechaUltimaActualizacionPrecio');
-    this.presetFilterCtrl.setValue('', { emitEvent: false });
-    this.presetCustomDateCtrl.setValue(null, { emitEvent: false });
-    this.presetCustomDateCondCtrl.setValue('=', { emitEvent: false });
-    this.fetchProducts(true);
+  private parseDateFromValor(valor: any): Date | null {
+    if (!valor) return null;
+    const str = String(valor);
+    const parts = str.split('/');
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      const d = new Date(year, month, day);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    const d = new Date(str);
+    return isNaN(d.getTime()) ? null : d;
   }
 
-  /**
-   * Apply preset filter and close the menu
-   */
-  applyPresetFilterAndClose(): void {
-    this.applyPresetFilter();
-    // Close the menu (needs to be called after a slight delay to allow the filter to apply)
-    setTimeout(() => {
-      this.filtersMenuTrigger?.closeMenu();
-    }, 100);
+  private inferDatePresetFromFilter(f: FilterCondition, key2: string, key4: string, keyMenos: string): string | null {
+    const label = (f.label || '').toLowerCase();
+    if (label.includes('> 2') || label.includes('>2')) return key2;
+    if (label.includes('> 4') || label.includes('>4')) return key4;
+    if (label.includes('< 2') || label.includes('<2')) return keyMenos;
+    return null;
   }
 
   removeFilter(filter: FilterCondition): void {
     const index = this.activeFilters.indexOf(filter);
     if (index >= 0) {
       this.activeFilters.splice(index, 1);
-      // if the removed filter was the date preset, clear the controls
-      if (filter.campo === 'fechaUltimaActualizacionPrecio') {
-        this.presetFilterCtrl.setValue('', { emitEvent: false });
-        this.presetCustomDateCtrl.setValue(null, { emitEvent: false });
-        this.presetCustomDateCondCtrl.setValue('=', { emitEvent: false });
+      if (filter.campo === 'precio') {
+        this.filterPrecioValorCtrl.setValue('', { emitEvent: false });
+      } else if (filter.campo === 'porcentaje_ganancia') {
+        this.filterGananciaValorCtrl.setValue('', { emitEvent: false });
+      } else if (filter.campo === 'fechaUltimaActualizacionPrecio') {
+        this.filterFechaActPrecioPresetCtrl.setValue('', { emitEvent: false });
+        this.filterFechaActPrecioCustomDateCtrl.setValue(null, { emitEvent: false });
+        this.filterFechaActPrecioCustomCondCtrl.setValue('=', { emitEvent: false });
+      } else if (filter.campo === 'totalVentas') {
+        this.filterTotalVentasValorCtrl.setValue('', { emitEvent: false });
+      } else if (filter.campo === 'fecha_ultima_venta') {
+        this.filterFechaUltimaVentaPresetCtrl.setValue('', { emitEvent: false });
+        this.filterFechaUltimaVentaCustomDateCtrl.setValue(null, { emitEvent: false });
+        this.filterFechaUltimaVentaCustomCondCtrl.setValue('=', { emitEvent: false });
+      } else if (filter.campo === 'fechaCreacion') {
+        this.filterFechaCreacionPresetCtrl.setValue('', { emitEvent: false });
+        this.filterFechaCreacionCustomDateCtrl.setValue(null, { emitEvent: false });
+        this.filterFechaCreacionCustomCondCtrl.setValue('=', { emitEvent: false });
       }
       this.fetchProducts(true);
     }
@@ -616,6 +775,21 @@ export class ProductListComponent implements OnInit, AfterViewInit {
 
   clearAllFilters(): void {
     this.activeFilters = [];
+    this.filterPrecioCondCtrl.setValue('=', { emitEvent: false });
+    this.filterPrecioValorCtrl.setValue('', { emitEvent: false });
+    this.filterGananciaCondCtrl.setValue('=', { emitEvent: false });
+    this.filterGananciaValorCtrl.setValue('', { emitEvent: false });
+    this.filterFechaActPrecioPresetCtrl.setValue('', { emitEvent: false });
+    this.filterFechaActPrecioCustomCondCtrl.setValue('=', { emitEvent: false });
+    this.filterFechaActPrecioCustomDateCtrl.setValue(null, { emitEvent: false });
+    this.filterTotalVentasCondCtrl.setValue('=', { emitEvent: false });
+    this.filterTotalVentasValorCtrl.setValue('', { emitEvent: false });
+    this.filterFechaUltimaVentaPresetCtrl.setValue('', { emitEvent: false });
+    this.filterFechaUltimaVentaCustomCondCtrl.setValue('=', { emitEvent: false });
+    this.filterFechaUltimaVentaCustomDateCtrl.setValue(null, { emitEvent: false });
+    this.filterFechaCreacionPresetCtrl.setValue('', { emitEvent: false });
+    this.filterFechaCreacionCustomCondCtrl.setValue('=', { emitEvent: false });
+    this.filterFechaCreacionCustomDateCtrl.setValue(null, { emitEvent: false });
     if (this.sort) {
       this.sort.active = '';
       this.sort.direction = '';
@@ -653,6 +827,7 @@ export class ProductListComponent implements OnInit, AfterViewInit {
 
     // Check if filters or custom sorting are active
     const hasFilters = this.activeFilters.length > 0;
+    const hasSearchQuery = q.length > 0;
 
     // Extract sorting rules from matSort
     const sortActiveField = this.sort?.active || 'nombre';
@@ -661,24 +836,35 @@ export class ProductListComponent implements OnInit, AfterViewInit {
     // Default check logic: sort is manually overridden if not 'nombre' ascending
     const hasCustomSorting = sortActiveField !== 'nombre' || sortDirection !== 'asc';
 
+    // Usar busquedaPorFiltros cuando hay búsqueda, filtros del menú o ordenamiento personalizado
+    const useBusquedaPorFiltros = hasSearchQuery || hasFilters || hasCustomSorting;
+
     let operation;
 
-    if (hasFilters || hasCustomSorting) {
+    if (useBusquedaPorFiltros) {
       // Mapear campo de ordenamiento al nombre que espera la API (fechas: orden por valor, no por descripción)
       const campoOrdenamientoApi = this.sortFieldToApiField[sortActiveField] ?? sortActiveField;
       const isDateSort = this.dateSortColumns.has(sortActiveField);
 
-      // Use new busquedaPorFiltros endpoint
+      // Construir filtros: activate no se muestra en la UI. query va como parámetro aparte.
+      const filtros: { campo: string; condicion: string; valor: string }[] = [
+        { campo: 'activate', condicion: '=', valor: '1' },
+        ...this.activeFilters.map(f => ({
+          campo: this.filterCampoToApiField[f.campo] ?? f.campo,
+          condicion: f.condicion,
+          valor: f.valor
+        }))
+      ];
+
       const payload: any = {
-        filtros: this.activeFilters.map(f => ({ campo: f.campo, condicion: f.condicion, valor: f.valor })),
-        query: q,
+        filtros,
         page: pageToLoad,
         size: this.pageSize,
         campoOrdenamiento: campoOrdenamientoApi,
         orden: sortDirection,
         ...(isDateSort && { tipoOrdenamiento: 'date' })  // Hint para backend: ordenar por valor de fecha
       };
-      operation = this.relationalProductService.busquedaPorFiltros(payload);
+      operation = this.relationalProductService.busquedaPorFiltros(payload, q);
     } else {
       operation = this.relationalProductService.getProducts(q, pageToLoad, this.pageSize);
     }

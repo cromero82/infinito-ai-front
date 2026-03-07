@@ -113,15 +113,21 @@ export class RelationalProductService {
 
   /**
    * Gets products using advanced filters and sorting
-   * POST /products/busquedaPorFiltros
+   * POST /products/busquedaPorFiltros?query=...
    * @param payload Request body containing filters, pagination, and sorting details
+   * @param query Search query (sent as URL query param, optional)
    */
-  busquedaPorFiltros(payload: any): Observable<ProductPage> {
+  busquedaPorFiltros(payload: any, query?: string): Observable<ProductPage> {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       'Accept': 'application/json'
     });
 
-    return this.http.post<ProductPage>(`${this.apiUrl}/busquedaPorFiltros`, payload, { headers });
+    let params = new HttpParams();
+    if (query != null && query !== '') {
+      params = params.set('query', query);
+    }
+
+    return this.http.post<ProductPage>(`${this.apiUrl}/busquedaPorFiltros`, payload, { headers, params });
   }
 }

@@ -263,6 +263,20 @@ $edit-col-width: 150px;
   background: rgba(0, 0, 0, 0.01) !important;
 }
 
+// Columna Precio: fondo verde suave para diferenciar de Precio compra
+th.col-precio,
+td.col-precio {
+  background-color: rgba(76, 175, 80, 0.08) !important;
+}
+
+:host ::ng-deep .products-list table tr:hover td.col-precio {
+  background-color: rgba(76, 175, 80, 0.12) !important;
+}
+
+:host ::ng-deep .products-list table tr.inactive-row td.col-precio {
+  background-color: rgba(76, 175, 80, 0.05) !important;
+}
+
 // Columna Código barras: más ancho, font 1px menor
 .col-barcode {
   width: 135px !important;
@@ -393,6 +407,18 @@ $edit-col-width: 150px;
 .column-visibility-item {
   text-align: left !important;
   justify-content: flex-start !important;
+}
+
+// Bloques de filtro unificados (etiqueta + controles)
+.filter-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.filter-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.7);
 }
 
 // Override max-width and compact styling for filters menu

@@ -35,7 +35,7 @@
             <mat-icon svgIcon="mat:filter_list"></mat-icon>
           </button>
           <button
-            #columnVisibilityMenuTrigger
+            #columnVisibilityMenuTrigger="matMenuTrigger"
             mat-stroked-button
             class="column-visibility-btn flex-none"
             type="button"
@@ -69,99 +69,171 @@
         </mat-menu>
         </div>
 
-        <!-- Filters Menu Definition -->
-        <mat-menu #filtersMenu="matMenu" class="filters-custom-menu" panelClass="filters-custom-menu" xPosition="before" (menuOpened)="restorePresetFilterState()">
-          <div class="flex flex-col gap-2 min-w-[460px] p-1" (click)="$event.stopPropagation()">
-            <div class="flex items-center gap-2 pb-1.5 border-b border-primary/30">
-              <mat-icon svgIcon="mat:update" class="icon-sm text-primary"></mat-icon>
-              <h3 class="m-0 font-medium text-sm">Filtro fecha de actualización precio</h3>
-            </div>
-            <mat-form-field appearance="outline" class="w-full filters-field-dense">
-              <mat-label>Actualizado</mat-label>
-              <mat-select [formControl]="presetFilterCtrl">
-                <mat-option value="nunca">Nunca han sido actualizados</mat-option>
-                <mat-option value="mas_2_meses">Hace más de 2 (dos) meses</mat-option>
-                <mat-option value="mas_4_meses">Hace más de 4 (cuatro) meses</mat-option>
-                <mat-option value="menos_2_meses">Recientemente (menos de 2 meses)</mat-option>
-                <mat-option value="personalizado">Personalizado...</mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <div class="flex gap-4 mt-0 w-full min-w-0" *ngIf="presetFilterCtrl.value === 'personalizado'">
-              <mat-form-field appearance="outline" class="filters-field-condicion filters-field-dense">
-                <mat-label>Condición</mat-label>
-                <mat-select [formControl]="presetCustomDateCondCtrl">
-                  <mat-option value="=">=</mat-option>
-                  <mat-option value=">=">&gt;=</mat-option>
-                  <mat-option value="<=">&lt;=</mat-option>
-                </mat-select>
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="flex-1 min-w-0 filters-field-dense">
-                <mat-label>Fecha personalizada</mat-label>
-                <input matInput [matDatepicker]="picker" [formControl]="presetCustomDateCtrl">
-                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                <mat-datepicker #picker></mat-datepicker>
-              </mat-form-field>
-            </div>
-            <div class="flex gap-1.5 mt-2 flex-wrap">
-              <button mat-button class="flex-1 min-w-[90px]" (click)="applyPresetFilter()">
-                <mat-icon svgIcon="mat:check" class="icon-sm mr-1"></mat-icon>
-                Aplicar
-              </button>
-              <button mat-button class="flex-1 min-w-[90px]" (click)="applyPresetFilterAndClose()">
-                <mat-icon svgIcon="mat:check_circle" class="icon-sm mr-1"></mat-icon>
-                Aplicar y cerrar
-              </button>
-              <button mat-button class="flex-1 min-w-[90px]" color="warn" (click)="clearPresetFilter()" *ngIf="hasActiveDateFilter()">
-                <mat-icon svgIcon="mat:delete_sweep" class="icon-sm mr-1"></mat-icon>
-                Limpiar
-              </button>
-            </div>
-
-            <div class="my-1.5 border-b border-primary/20"></div>
-
-            <div class="flex items-center gap-2 pb-1.5 border-b border-primary/30">
+        <!-- Filters Menu Definition - Unified filters (Precio, % Ganancia, Fecha act. precio, Total ventas, Última venta, Fecha creación) -->
+        <mat-menu #filtersMenu="matMenu" class="filters-custom-menu" panelClass="filters-custom-menu" xPosition="before" (menuOpened)="restoreAllFiltersState()">
+          <div class="flex flex-col gap-4 min-w-[480px] p-3" (click)="$event.stopPropagation()">
+            <div class="flex items-center gap-2 pb-2 border-b border-primary/30">
               <mat-icon svgIcon="mat:tune" class="icon-sm text-primary"></mat-icon>
-              <h3 class="m-0 font-medium text-sm">Filtro campos personalizados</h3>
+              <h3 class="m-0 font-medium text-sm">Filtros</h3>
             </div>
-            <mat-form-field appearance="outline" class="w-full filters-field-dense">
-              <mat-label>Campo</mat-label>
-              <mat-select [formControl]="advFilterFieldCtrl">
-                <mat-option value="precio">Precio</mat-option>
-                <mat-option value="precioCompra">Precio compra</mat-option>
-                <mat-option value="totalVentas">Total ventas</mat-option>
-                <mat-option value="porcentaje_ganancia">Porcentaje ganancia</mat-option>
-                <mat-option value="fecha_ultima_venta">Fecha última vez vendido</mat-option>
-              </mat-select>
-            </mat-form-field>
 
-            <div class="flex gap-4 w-full min-w-0 mt-0">
-              <mat-form-field appearance="outline" class="filters-field-condicion-adv filters-field-dense">
-                <mat-label>Condición</mat-label>
-                <mat-select [formControl]="advFilterCondCtrl">
-                  <mat-option value="=">Igual (=)</mat-option>
-                  <mat-option value=">=">Mayor / Igual (&gt;=)</mat-option>
-                  <mat-option value="<=">Menor / Igual (&lt;=)</mat-option>
+            <!-- 1. Precio -->
+            <div class="filter-block">
+              <span class="filter-label">Precio</span>
+              <div class="flex gap-2 items-center flex-wrap">
+                <mat-form-field appearance="outline" class="filters-field-condicion filters-field-dense">
+                  <mat-label>Condición</mat-label>
+                  <mat-select [formControl]="filterPrecioCondCtrl">
+                    <mat-option value="=">Igual (=)</mat-option>
+                    <mat-option value=">=">Mayor / Igual (&gt;=)</mat-option>
+                    <mat-option value="<=">Menor / Igual (&lt;=)</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1 min-w-[100px] filters-field-dense">
+                  <mat-label>Valor</mat-label>
+                  <input matInput type="number" min="0" step="0.01" [formControl]="filterPrecioValorCtrl" placeholder="0">
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- 2. % Ganancia -->
+            <div class="filter-block">
+              <span class="filter-label">% Ganancia</span>
+              <div class="flex gap-2 items-center flex-wrap">
+                <mat-form-field appearance="outline" class="filters-field-condicion filters-field-dense">
+                  <mat-label>Condición</mat-label>
+                  <mat-select [formControl]="filterGananciaCondCtrl">
+                    <mat-option value="=">Igual (=)</mat-option>
+                    <mat-option value=">=">Mayor / Igual (&gt;=)</mat-option>
+                    <mat-option value="<=">Menor / Igual (&lt;=)</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1 min-w-[100px] filters-field-dense">
+                  <mat-label>Valor %</mat-label>
+                  <input matInput type="number" step="0.01" [formControl]="filterGananciaValorCtrl" placeholder="ej. -5 o 25">
+                  <mat-hint *ngIf="filterGananciaValorCtrl.value !== '' && filterGananciaValorCtrl.value !== null && !isValidPercent(filterGananciaValorCtrl.value)">Entre -100 y 100</mat-hint>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- 3. Fecha actualización precio -->
+            <div class="filter-block">
+              <span class="filter-label">Fecha actualización precio</span>
+              <mat-form-field appearance="outline" class="w-full filters-field-dense">
+                <mat-label>Actualizado</mat-label>
+                <mat-select [formControl]="filterFechaActPrecioPresetCtrl">
+                  <mat-option value="nunca">Nunca han sido actualizados</mat-option>
+                  <mat-option value="mas_2_meses">Hace más de 2 (dos) meses</mat-option>
+                  <mat-option value="mas_4_meses">Hace más de 4 (cuatro) meses</mat-option>
+                  <mat-option value="menos_2_meses">Recientemente (menos de 2 meses)</mat-option>
+                  <mat-option value="personalizado">Personalizado...</mat-option>
                 </mat-select>
               </mat-form-field>
-
-              <mat-form-field appearance="outline" class="flex-1 min-w-0 filters-field-dense">
-                <mat-label>Valor</mat-label>
-                <input matInput [formControl]="advFilterValueCtrl">
-              </mat-form-field>
+              <div class="flex gap-2 mt-0" *ngIf="filterFechaActPrecioPresetCtrl.value === 'personalizado'">
+                <mat-form-field appearance="outline" class="filters-field-condicion filters-field-dense">
+                  <mat-label>Condición</mat-label>
+                  <mat-select [formControl]="filterFechaActPrecioCustomCondCtrl">
+                    <mat-option value="=">=</mat-option>
+                    <mat-option value=">=">&gt;=</mat-option>
+                    <mat-option value="<=">&lt;=</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1 filters-field-dense">
+                  <mat-label>Fecha</mat-label>
+                  <input matInput [matDatepicker]="pickerActPrecio" [formControl]="filterFechaActPrecioCustomDateCtrl">
+                  <mat-datepicker-toggle matSuffix [for]="pickerActPrecio"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerActPrecio></mat-datepicker>
+                </mat-form-field>
+              </div>
             </div>
 
-            <div class="flex gap-1.5 mt-2 flex-wrap">
-              <button mat-button class="flex-1 min-w-[90px]" (click)="applyAdvancedFilter()">
+            <!-- 4. Total ventas -->
+            <div class="filter-block">
+              <span class="filter-label">Total ventas</span>
+              <div class="flex gap-2 items-center flex-wrap">
+                <mat-form-field appearance="outline" class="filters-field-condicion filters-field-dense">
+                  <mat-label>Condición</mat-label>
+                  <mat-select [formControl]="filterTotalVentasCondCtrl">
+                    <mat-option value="=">Igual (=)</mat-option>
+                    <mat-option value=">=">Mayor / Igual (&gt;=)</mat-option>
+                    <mat-option value="<=">Menor / Igual (&lt;=)</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1 min-w-[100px] filters-field-dense">
+                  <mat-label>Valor</mat-label>
+                  <input matInput type="number" min="0" [formControl]="filterTotalVentasValorCtrl" placeholder="0">
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- 5. Última venta -->
+            <div class="filter-block">
+              <span class="filter-label">Última venta</span>
+              <mat-form-field appearance="outline" class="w-full filters-field-dense">
+                <mat-label>Vendido</mat-label>
+                <mat-select [formControl]="filterFechaUltimaVentaPresetCtrl">
+                  <mat-option value="nunca">Nunca ha sido vendido</mat-option>
+                  <mat-option value="mas_2_meses">Hace más de 2 (dos) meses</mat-option>
+                  <mat-option value="mas_4_meses">Hace más de 4 (cuatro) meses</mat-option>
+                  <mat-option value="menos_2_meses">Recientemente (menos de 2 meses)</mat-option>
+                  <mat-option value="personalizado">Personalizado...</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <div class="flex gap-2 mt-0" *ngIf="filterFechaUltimaVentaPresetCtrl.value === 'personalizado'">
+                <mat-form-field appearance="outline" class="filters-field-condicion filters-field-dense">
+                  <mat-label>Condición</mat-label>
+                  <mat-select [formControl]="filterFechaUltimaVentaCustomCondCtrl">
+                    <mat-option value="=">=</mat-option>
+                    <mat-option value=">=">&gt;=</mat-option>
+                    <mat-option value="<=">&lt;=</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1 filters-field-dense">
+                  <mat-label>Fecha</mat-label>
+                  <input matInput [matDatepicker]="pickerUltimaVenta" [formControl]="filterFechaUltimaVentaCustomDateCtrl">
+                  <mat-datepicker-toggle matSuffix [for]="pickerUltimaVenta"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerUltimaVenta></mat-datepicker>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- 6. Fecha de creación -->
+            <div class="filter-block">
+              <span class="filter-label">Fecha de creación</span>
+              <mat-form-field appearance="outline" class="w-full filters-field-dense">
+                <mat-label>Creación</mat-label>
+                <mat-select [formControl]="filterFechaCreacionPresetCtrl">
+                  <mat-option value="mas_2_meses">Hace más de 2 (dos) meses</mat-option>
+                  <mat-option value="mas_4_meses">Hace más de 4 (cuatro) meses</mat-option>
+                  <mat-option value="menos_2_meses">Recientemente (menos de 2 meses)</mat-option>
+                  <mat-option value="personalizado">Personalizado...</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <div class="flex gap-2 mt-0" *ngIf="filterFechaCreacionPresetCtrl.value === 'personalizado'">
+                <mat-form-field appearance="outline" class="filters-field-condicion filters-field-dense">
+                  <mat-label>Condición</mat-label>
+                  <mat-select [formControl]="filterFechaCreacionCustomCondCtrl">
+                    <mat-option value="=">=</mat-option>
+                    <mat-option value=">=">&gt;=</mat-option>
+                    <mat-option value="<=">&lt;=</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1 filters-field-dense">
+                  <mat-label>Fecha</mat-label>
+                  <input matInput [matDatepicker]="pickerCreacion" [formControl]="filterFechaCreacionCustomDateCtrl">
+                  <mat-datepicker-toggle matSuffix [for]="pickerCreacion"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerCreacion></mat-datepicker>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- Botones Aplicar y Limpiar -->
+            <div class="flex gap-2 pt-2 border-t border-primary/20">
+              <button type="button" mat-flat-button color="primary" (click)="onApplyFiltersClick($event)">
                 <mat-icon svgIcon="mat:check" class="icon-sm mr-1"></mat-icon>
                 Aplicar
               </button>
-              <button mat-button class="flex-1 min-w-[90px]" (click)="applyAdvancedFilterAndClose()">
-                <mat-icon svgIcon="mat:check_circle" class="icon-sm mr-1"></mat-icon>
-                Aplicar y cerrar
-              </button>
-              <button mat-button class="flex-1 min-w-[90px]" color="warn" (click)="clearAdvancedFilter()"
-                *ngIf="advFilterFieldCtrl.value || advFilterCondCtrl.value || advFilterValueCtrl.value">
+              <button mat-button color="warn" (click)="clearAllFiltersInMenu()" *ngIf="hasAnyFilterValue()">
                 <mat-icon svgIcon="mat:delete_sweep" class="icon-sm mr-1"></mat-icon>
                 Limpiar
               </button>
@@ -190,7 +262,7 @@
       </div>
       <div class="px-4 products-panel">
         <div class="products-container" [style.min-height.px]="getMinHeightValue()">
-          <div class="products-list" (scroll)="onTableScroll($event)">
+          <div class="products-list" [style.max-height.px]="getMaxHeightListValue()" (scroll)="onTableScroll($event)">
             <table class="w-full" mat-table [dataSource]="dataSource" matSort (matSortChange)="sortData($event)">
               <!-- Barcode Column -->
               <ng-container matColumnDef="id">
@@ -229,8 +301,8 @@
               </ng-container>
               <!-- Price Column -->
               <ng-container matColumnDef="precio">
-                <th *matHeaderCellDef mat-header-cell mat-sort-header>Precio</th>
-                <td *matCellDef="let product; let i = index" mat-cell
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-precio">Precio</th>
+                <td *matCellDef="let product; let i = index" mat-cell class="col-precio"
                   (dblclick)="onProductPriceDoubleClick(i, $event); $event.stopPropagation()">
                   <input *ngIf="editingProductPriceIndex === i" class="product-price-input product-price-input-{{ i }}"
                     type="number" min="0" step="0.01" [formControl]="editingProductPriceCtrl"
