@@ -13,6 +13,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { FormsModule } from '@angular/forms';
 import { DragDropModule, CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../core/components/confirm-dialog/confirm-dialog.component';
+import { ConfigurationService } from '../../../pages/auth/service/configuration.service';
 
 @Component({
   selector: 'vex-product-edit',
@@ -49,7 +50,8 @@ export class ProductEditComponent implements OnInit, AfterViewInit {
     private dialogRef: MatDialogRef<ProductEditComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private relationalProductService: RelationalProductService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private configurationService: ConfigurationService
   ) {
     this.form = this.fb.group({
       nombre: ['', Validators.required],
@@ -263,6 +265,39 @@ export class ProductEditComponent implements OnInit, AfterViewInit {
     this.form.controls['activate'].setValue(isChecked ? 1 : 0);
   }
 
+  /**
+   * Calcula el porcentaje de ganancia: ((precio - precioCompra) / precioCompra) * 100
+   * Retorna el texto a mostrar o null si no se puede calcular.
+   */
+  getGananciaPorcentajeDisplay(): string | null {
+    const precio = parseFloat(this.form.get('precio')?.value);
+    const precioCompra = parseFloat(this.form.get('buy_price')?.value);
+    if (isNaN(precio) || isNaN(precioCompra) || precioCompra === 0) {
+      return null;
+    }
+    const percent = ((precio - precioCompra) / precioCompra) * 100;
+    if (percent < 1 && percent >= 0) {
+      return 'Menos del 1 %';
+    }
+    return percent.toFixed(1) + ' %';
+  }
+
+  /** Muestra alerta cuando la ganancia es negativa o inferior al porcentaje mínimo configurado */
+  showGananciaInferiorAlert(): boolean {
+    const precio = parseFloat(this.form.get('precio')?.value);
+    const precioCompra = parseFloat(this.form.get('buy_price')?.value);
+    if (isNaN(precio) || isNaN(precioCompra) || precioCompra === 0) {
+      return false;
+    }
+    const percent = ((precio - precioCompra) / precioCompra) * 100;
+    const porcentajeMinimo = this.configurationService.obtenerPorcentajeMinimoGanancia();
+    return percent < porcentajeMinimo;
+  }
+
+  get porcentajeMinimoGanancia(): number {
+    return this.configurationService.obtenerPorcentajeMinimoGanancia();
+  }
+
   save() {
     if (this.form.invalid) return;
     const form = this.form.value;
@@ -277,29 +312,46 @@ export class ProductEditComponent implements OnInit, AfterViewInit {
     };
 
     // Verificar si se está desactivando el producto (solo en modo edición)
-    const isDeactivating = this.isEditMode && 
-                           this.initialActivateValue === 1 && 
+    const isDeactivating = this.isEditMode &&
+                           this.initialActivateValue === 1 &&
                            product.activate === 0;
 
     if (isDeactivating) {
-      // Mostrar diálogo de confirmación antes de desactivar
       const dialogData: ConfirmDialogData = {
         titulo: 'Confirmar deshabilitación',
         mensaje: `¿Estás seguro de que deseas deshabilitar el producto ${product.nombre}?`
       };
-
       const confirmDialogRef = this.dialog.open(ConfirmDialogComponent, {
         width: '400px',
         data: dialogData
       });
+      confirmDialogRef.afterClosed().subscribe((confirmed: boolean) => {
+        if (confirmed) {
+          this.checkGananciaAndSave(product);
+        }
+      });
+    } else {
+      this.checkGananciaAndSave(product);
+    }
+  }
 
+  /** Si ganancia < porcentaje mínimo en modo edición, muestra confirmación antes de guardar */
+  private checkGananciaAndSave(product: Producto) {
+    if (this.isEditMode && this.showGananciaInferiorAlert()) {
+      const pct = this.configurationService.obtenerPorcentajeMinimoGanancia();
+      const dialogData: ConfirmDialogData = {
+        mensaje: `¿Está seguro de establecer un precio con un porcentaje de ganancia menor al ${pct}%?`
+      };
+      const confirmDialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '400px',
+        data: dialogData
+      });
       confirmDialogRef.afterClosed().subscribe((confirmed: boolean) => {
         if (confirmed) {
           this.executeSave(product);
         }
       });
     } else {
-      // No se está desactivando, guardar directamente
       this.executeSave(product);
     }
   }

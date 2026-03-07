@@ -101,8 +101,14 @@ vex-page-layout-header .container {
   overflow-x: auto !important;
   scrollbar-gutter: stable !important; // Reserva espacio para scrollbar (evita recorte al cargar más filas)
   margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
+  padding-bottom: 150px !important; // Espacio extra para que las últimas filas sean visibles al hacer scroll
   -webkit-overflow-scrolling: touch !important;
+}
+
+// Espaciador al final para que las últimas filas sean visibles al hacer scroll
+.products-list-spacer {
+  min-height: 120px;
+  flex-shrink: 0;
 }
 
 // Search input field height adjustments

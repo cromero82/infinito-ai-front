@@ -20,21 +20,30 @@
       <mat-icon matIconPrefix svgIcon="mat:label"></mat-icon>
     </mat-form-field>
     <mat-form-field>
-      <mat-label>Precio</mat-label>
+      <mat-label>Precio (Venta)</mat-label>
       <input #precioInput formControlName="precio" matInput type="number" (focus)="onPrecioFocus()" />
       <mat-icon matIconPrefix svgIcon="mat:attach_money"></mat-icon>
     </mat-form-field>
-    <mat-form-field>
-      <mat-label>Precio de compra</mat-label>
-      <input #buyPriceInput formControlName="buy_price" matInput type="number" (focus)="onBuyPriceFocus()" />
-      <mat-icon matIconPrefix svgIcon="mat:shopping_cart"></mat-icon>
-    </mat-form-field>
-    <div class="flex items-center mt-4">
+    <div class="precio-compra-row">
+      <mat-form-field class="precio-compra-field">
+        <mat-label>Precio de compra</mat-label>
+        <input #buyPriceInput formControlName="buy_price" matInput type="number" (focus)="onBuyPriceFocus()" />
+        <mat-icon matIconPrefix svgIcon="mat:shopping_cart"></mat-icon>
+      </mat-form-field>
+      <mat-form-field class="ganancia-porcentaje-field">
+        <mat-label>% Ganancia</mat-label>
+        <input matInput [value]="getGananciaPorcentajeDisplay() ?? '—'" readonly />
+      </mat-form-field>
+    </div>
+    <div class="flex items-center mt-4 gap-4 flex-wrap">
       <mat-slide-toggle 
         [checked]="isActivateChecked"
         (change)="onActivateChange($event)">
         {{ isActivateChecked ? 'Producto activo' : 'Producto inactivo' }}
       </mat-slide-toggle>
+    </div>
+    <div class="ganancia-alert" *ngIf="showGananciaInferiorAlert()">
+      <span class="ganancia-alert-label">Producto con ganancia inferior al {{ porcentajeMinimoGanancia }} %</span>
     </div>
   </mat-dialog-content>
   <mat-dialog-actions align="end">

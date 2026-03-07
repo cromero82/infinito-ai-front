@@ -35,3 +35,9 @@ export interface ProductPage {
   numberOfElements: number;
   empty: boolean;
 }
+
+/** Respuesta de busquedaPorFiltros: page envuelve la paginación, percentFromTotal en raíz */
+export interface BusquedaPorFiltrosResponse {
+  page: ProductPage;
+  percentFromTotal?: number;
+}

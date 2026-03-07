@@ -44,7 +44,7 @@ export class FechaUtilService {
    */
   formatDateRelativeTable(dateValue: Date | string | null | undefined): FechaRelativaTableResult | null {
     if (dateValue == null) return null;
-    const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
+    const date = typeof dateValue === 'string' ? this.parseDateAsLocal(dateValue) : dateValue;
     if (isNaN(date.getTime())) return null;
 
     const now = new Date();
@@ -74,6 +74,20 @@ export class FechaUtilService {
     const dateStr = this.formatDateDDMMYYYY(date);
     const label = this.getRelativeLabel(diffDays);
     return { line1: dateStr, line2: label, hasTwoLines: true };
+  }
+
+  /**
+   * Parsea una fecha string. Si es solo fecha (YYYY-MM-DD), la interpreta como fecha local
+   * para evitar que UTC midnight se convierta en "ayer" en zonas horarias al oeste de UTC.
+   */
+  private parseDateAsLocal(dateValue: string): Date {
+    const trimmed = String(dateValue).trim();
+    const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+    if (dateOnlyMatch) {
+      const [, y, m, d] = dateOnlyMatch;
+      return new Date(parseInt(y!, 10), parseInt(m!, 10) - 1, parseInt(d!, 10));
+    }
+    return new Date(dateValue);
   }
 
   private formatDateDDMMYYYY(date: Date): string {
@@ -106,7 +120,7 @@ export class FechaUtilService {
       return '';
     }
 
-    const date = new Date(dateString);
+    const date = this.parseDateAsLocal(dateString);
     if (isNaN(date.getTime())) {
       return dateString;
     }

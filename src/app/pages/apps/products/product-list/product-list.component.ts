@@ -32,6 +32,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 export interface FilterCondition {
   campo: string;
@@ -68,7 +69,8 @@ export interface FilterCondition {
     MatMenuModule,
     MatChipsModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    MatCheckboxModule
   ],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.scss']
@@ -121,10 +123,14 @@ export class ProductListComponent implements OnInit, AfterViewInit {
   // Variables para filtros y ordenamiento
   activeFilters: FilterCondition[] = [];
 
+  /** Porcentaje del total (de busquedaPorFiltros) cuando hay filtros activos */
+  percentFromTotal: number | null = null;
+
   // Controles unificados de filtros (todos los campos uno debajo del otro)
   filterPrecioCondCtrl = new FormControl<string>('=', { nonNullable: true });
   filterPrecioValorCtrl = new FormControl<string>('');
 
+  filterGananciaPresetCtrl = new FormControl<string>('');
   filterGananciaCondCtrl = new FormControl<string>('=', { nonNullable: true });
   filterGananciaValorCtrl = new FormControl<string>('');
 
@@ -143,6 +149,8 @@ export class ProductListComponent implements OnInit, AfterViewInit {
   filterFechaCreacionCustomCondCtrl = new FormControl<string>('=', { nonNullable: true });
   filterFechaCreacionCustomDateCtrl = new FormControl<Date | null>(null);
 
+  /** Ver únicamente productos activos (deshabilitado por defecto) */
+  filterVerSoloActivosCtrl = new FormControl<boolean>(false, { nonNullable: true });
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -465,6 +473,7 @@ export class ProductListComponent implements OnInit, AfterViewInit {
   hasAnyFilterValue(): boolean {
     return !!(
       this.filterPrecioValorCtrl.value ||
+      this.filterGananciaPresetCtrl.value ||
       this.filterGananciaValorCtrl.value ||
       this.filterFechaActPrecioPresetCtrl.value ||
       this.filterTotalVentasValorCtrl.value ||
@@ -496,18 +505,28 @@ export class ProductListComponent implements OnInit, AfterViewInit {
       }
     }
 
-    // % Ganancia (permite negativos, validación -100 a 100)
-    const gananciaVal = this.filterGananciaValorCtrl.value;
-    const gananciaStr = typeof gananciaVal === 'number' ? String(gananciaVal) : (gananciaVal ?? '').toString().trim();
-    if (gananciaStr && this.isValidPercent(gananciaStr)) {
-      const n = parseFloat(gananciaStr.replace(',', '.'));
-      if (!isNaN(n)) {
-        filters.push({
-          campo: 'porcentaje_ganancia',
-          condicion: this.filterGananciaCondCtrl.value,
-          valor: String(n),
-          label: `% Ganancia ${this.filterGananciaCondCtrl.value} ${n}%`
-        });
+    // % Ganancia: preset "no_calcular" (precioCompra = 0) o "personalizado" (valor numérico)
+    const gananciaPreset = this.filterGananciaPresetCtrl.value;
+    if (gananciaPreset === 'no_calcular') {
+      filters.push({
+        campo: 'precioCompra',
+        condicion: '=',
+        valor: '0',
+        label: 'No se puede calcular % (sin precio compra)'
+      });
+    } else if (gananciaPreset === 'personalizado') {
+      const gananciaVal = this.filterGananciaValorCtrl.value;
+      const gananciaStr = typeof gananciaVal === 'number' ? String(gananciaVal) : (gananciaVal ?? '').toString().trim();
+      if (gananciaStr && this.isValidPercent(gananciaStr)) {
+        const n = parseFloat(gananciaStr.replace(',', '.'));
+        if (!isNaN(n)) {
+          filters.push({
+            campo: 'porcentaje_ganancia',
+            condicion: this.filterGananciaCondCtrl.value,
+            valor: String(n),
+            label: `% Ganancia ${this.filterGananciaCondCtrl.value} ${n}%`
+          });
+        }
       }
     }
 
@@ -633,11 +652,13 @@ export class ProductListComponent implements OnInit, AfterViewInit {
   /** Aplica todos los filtros desde los controles, actualiza activeFilters, hace fetch y cierra el menú */
   applyAllFiltersAndClose(): void {
     const filters = this.collectFiltersFromControls();
-    // No aplicar % Ganancia si el valor no es válido
-    const gVal = this.filterGananciaValorCtrl.value;
-    const gStr = typeof gVal === 'number' ? String(gVal) : (gVal ?? '').toString().trim();
-    if (gStr && !this.isValidPercent(gStr)) {
-      return; // El hint ya indica el error
+    // No aplicar % Ganancia personalizado si el valor no es válido
+    if (this.filterGananciaPresetCtrl.value === 'personalizado') {
+      const gVal = this.filterGananciaValorCtrl.value;
+      const gStr = typeof gVal === 'number' ? String(gVal) : (gVal ?? '').toString().trim();
+      if (gStr && !this.isValidPercent(gStr)) {
+        return; // El hint ya indica el error
+      }
     }
     this.activeFilters = filters;
     this.fetchProducts(true);
@@ -648,6 +669,7 @@ export class ProductListComponent implements OnInit, AfterViewInit {
   clearAllFiltersInMenu(): void {
     this.filterPrecioCondCtrl.setValue('=', { emitEvent: false });
     this.filterPrecioValorCtrl.setValue('', { emitEvent: false });
+    this.filterGananciaPresetCtrl.setValue('', { emitEvent: false });
     this.filterGananciaCondCtrl.setValue('=', { emitEvent: false });
     this.filterGananciaValorCtrl.setValue('', { emitEvent: false });
     this.filterFechaActPrecioPresetCtrl.setValue('', { emitEvent: false });
@@ -661,7 +683,9 @@ export class ProductListComponent implements OnInit, AfterViewInit {
     this.filterFechaCreacionPresetCtrl.setValue('', { emitEvent: false });
     this.filterFechaCreacionCustomCondCtrl.setValue('=', { emitEvent: false });
     this.filterFechaCreacionCustomDateCtrl.setValue(null, { emitEvent: false });
+    this.filterVerSoloActivosCtrl.setValue(false, { emitEvent: false });
     this.activeFilters = [];
+    this.percentFromTotal = null;
     this.fetchProducts(true);
     setTimeout(() => this.filtersMenuTrigger?.closeMenu(), 100);
   }
@@ -675,7 +699,10 @@ export class ProductListComponent implements OnInit, AfterViewInit {
       if (f.campo === 'precio') {
         this.filterPrecioCondCtrl.setValue(f.condicion, { emitEvent: false });
         this.filterPrecioValorCtrl.setValue(String(f.valor ?? ''), { emitEvent: false });
+      } else if (f.campo === 'precioCompra' && f.condicion === '=' && f.valor === '0') {
+        this.filterGananciaPresetCtrl.setValue('no_calcular', { emitEvent: false });
       } else if (f.campo === 'porcentaje_ganancia') {
+        this.filterGananciaPresetCtrl.setValue('personalizado', { emitEvent: false });
         this.filterGananciaCondCtrl.setValue(f.condicion, { emitEvent: false });
         this.filterGananciaValorCtrl.setValue(String(f.valor ?? ''), { emitEvent: false });
       } else if (f.campo === 'fechaUltimaActualizacionPrecio') {
@@ -752,7 +779,10 @@ export class ProductListComponent implements OnInit, AfterViewInit {
       this.activeFilters.splice(index, 1);
       if (filter.campo === 'precio') {
         this.filterPrecioValorCtrl.setValue('', { emitEvent: false });
+      } else if (filter.campo === 'precioCompra' && filter.condicion === '=' && filter.valor === '0') {
+        this.filterGananciaPresetCtrl.setValue('', { emitEvent: false });
       } else if (filter.campo === 'porcentaje_ganancia') {
+        this.filterGananciaPresetCtrl.setValue('', { emitEvent: false });
         this.filterGananciaValorCtrl.setValue('', { emitEvent: false });
       } else if (filter.campo === 'fechaUltimaActualizacionPrecio') {
         this.filterFechaActPrecioPresetCtrl.setValue('', { emitEvent: false });
@@ -775,8 +805,10 @@ export class ProductListComponent implements OnInit, AfterViewInit {
 
   clearAllFilters(): void {
     this.activeFilters = [];
+    this.percentFromTotal = null;
     this.filterPrecioCondCtrl.setValue('=', { emitEvent: false });
     this.filterPrecioValorCtrl.setValue('', { emitEvent: false });
+    this.filterGananciaPresetCtrl.setValue('', { emitEvent: false });
     this.filterGananciaCondCtrl.setValue('=', { emitEvent: false });
     this.filterGananciaValorCtrl.setValue('', { emitEvent: false });
     this.filterFechaActPrecioPresetCtrl.setValue('', { emitEvent: false });
@@ -790,6 +822,7 @@ export class ProductListComponent implements OnInit, AfterViewInit {
     this.filterFechaCreacionPresetCtrl.setValue('', { emitEvent: false });
     this.filterFechaCreacionCustomCondCtrl.setValue('=', { emitEvent: false });
     this.filterFechaCreacionCustomDateCtrl.setValue(null, { emitEvent: false });
+    this.filterVerSoloActivosCtrl.setValue(false, { emitEvent: false });
     if (this.sort) {
       this.sort.active = '';
       this.sort.direction = '';
@@ -846,15 +879,16 @@ export class ProductListComponent implements OnInit, AfterViewInit {
       const campoOrdenamientoApi = this.sortFieldToApiField[sortActiveField] ?? sortActiveField;
       const isDateSort = this.dateSortColumns.has(sortActiveField);
 
-      // Construir filtros: activate no se muestra en la UI. query va como parámetro aparte.
-      const filtros: { campo: string; condicion: string; valor: string }[] = [
-        { campo: 'activate', condicion: '=', valor: '1' },
-        ...this.activeFilters.map(f => ({
-          campo: this.filterCampoToApiField[f.campo] ?? f.campo,
-          condicion: f.condicion,
-          valor: f.valor
-        }))
-      ];
+      // Construir filtros. Solo agregar activate si el usuario marcó "Ver únicamente productos activos".
+      const filtros: { campo: string; condicion: string; valor: string }[] = [];
+      if (this.filterVerSoloActivosCtrl.value) {
+        filtros.push({ campo: 'activate', condicion: '=', valor: '1' });
+      }
+      filtros.push(...this.activeFilters.map(f => ({
+        campo: this.filterCampoToApiField[f.campo] ?? f.campo,
+        condicion: f.condicion,
+        valor: f.valor
+      })));
 
       const payload: any = {
         filtros,
@@ -875,11 +909,16 @@ export class ProductListComponent implements OnInit, AfterViewInit {
         this.loadingMore = false;
       }))
       .subscribe({
-        next: (result: ProductPage) => {
-          const content = result.content ?? [];
-          this.totalPages = result.totalPages ?? 0;
-          this.totalElements = result.totalElements ?? 0;
+        next: (result: any) => {
+          // Soporte formato envuelto (page) o plano; busquedaPorFiltros se mapea en servicio
+          const page = result.page ?? result;
+          const content = page.content ?? [];
+          this.totalPages = page.totalPages ?? 0;
+          this.totalElements = page.totalElements ?? 0;
           this.pageIndex = pageToLoad;
+
+          // percentFromTotal solo viene en busquedaPorFiltros
+          this.percentFromTotal = result.percentFromTotal != null ? result.percentFromTotal : null;
 
           if (reset) {
             this.dataSource = content;
@@ -896,12 +935,12 @@ export class ProductListComponent implements OnInit, AfterViewInit {
           }
 
           // Auto-open edit dialog only if:
-          if (reset && shouldAutoEdit && !this.justClosedDialog && result.totalElements === 1 && content.length > 0) {
+          if (reset && shouldAutoEdit && !this.justClosedDialog && this.totalElements === 1 && content.length > 0) {
             this.editProduct(content[0]);
           }
 
           // Auto-open create product dialog only if:
-          if (reset && result.totalElements === 0 && !this.justClosedDialog) {
+          if (reset && this.totalElements === 0 && !this.justClosedDialog) {
             if (q && this.isNumericBarcode(q)) {
               this.createProduct(q);
             }

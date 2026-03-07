@@ -35,14 +35,21 @@ export class ConfigurationService {
 
     return this.http.get<ConfigurationItem[]>(`${this.apiUrl}/obtenerTodos`, { headers }).pipe(
       map(configuraciones => {
-        // Filtrar la configuración específica
-        const config = configuraciones.find(c => c.key === 'longitud-vertical-panel-productos');
-        
-        if (config && config.value) {
-          // Guardar en localStorage
-          localStorage.setItem('longitud-vertical-panel-productos', config.value);
+        for (const config of configuraciones) {
+          if (config.key === 'longitud-vertical-panel-productos' && config.value) {
+            localStorage.setItem('longitud-vertical-panel-productos', config.value);
+          }
+          if (config.key === 'alerta-precios' && config.value) {
+            try {
+              const parsed = JSON.parse(config.value) as { porcentaje_minimo?: number; porc_maximo?: number };
+              if (parsed.porcentaje_minimo != null) {
+                localStorage.setItem('alerta-precios-porcentaje-minimo', String(parsed.porcentaje_minimo));
+              }
+            } catch (e) {
+              console.warn('Error al parsear alerta-precios:', e);
+            }
+          }
         }
-        
         return configuraciones;
       }),
       catchError(error => {
@@ -54,6 +61,14 @@ export class ConfigurationService {
 
   obtenerLongitudPanelProductos(): string | null {
     return localStorage.getItem('longitud-vertical-panel-productos');
+  }
+
+  /** Obtiene el porcentaje mínimo de ganancia desde localStorage (alerta-precios). Por defecto 5. */
+  obtenerPorcentajeMinimoGanancia(): number {
+    const val = localStorage.getItem('alerta-precios-porcentaje-minimo');
+    if (val == null) return 5;
+    const n = parseFloat(val);
+    return Number.isNaN(n) ? 5 : n;
   }
 }
 

@@ -11,7 +11,7 @@
           Productos
         </h2>
 
-        <mat-form-field appearance="outline" class="w-[200px] mb-[-1.25em]">
+        <mat-form-field appearance="outline" class="w-[400px] mb-[-1.25em]">
           <mat-label>Buscar producto</mat-label>
           <input #searchInput matInput [formControl]="searchCtrl" placeholder="Código o nombre" />
           <button mat-icon-button matSuffix *ngIf="searchCtrl.value" aria-label="Limpiar búsqueda"
@@ -99,7 +99,14 @@
             <!-- 2. % Ganancia -->
             <div class="filter-block">
               <span class="filter-label">% Ganancia</span>
-              <div class="flex gap-2 items-center flex-wrap">
+              <mat-form-field appearance="outline" class="w-full filters-field-dense">
+                <mat-label>Opción</mat-label>
+                <mat-select [formControl]="filterGananciaPresetCtrl">
+                  <mat-option value="no_calcular">No se puede calcular (No tiene fecha de Compra)</mat-option>
+                  <mat-option value="personalizado">Personalizado</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <div class="flex gap-2 items-center flex-wrap" *ngIf="filterGananciaPresetCtrl.value === 'personalizado'">
                 <mat-form-field appearance="outline" class="filters-field-condicion filters-field-dense">
                   <mat-label>Condición</mat-label>
                   <mat-select [formControl]="filterGananciaCondCtrl">
@@ -227,8 +234,8 @@
               </div>
             </div>
 
-            <!-- Botones Aplicar y Limpiar -->
-            <div class="flex gap-2 pt-2 border-t border-primary/20">
+            <!-- Botones Aplicar, Limpiar y checkbox Ver solo activos -->
+            <div class="flex gap-2 pt-2 border-t border-primary/20 items-center flex-wrap">
               <button type="button" mat-flat-button color="primary" (click)="onApplyFiltersClick($event)">
                 <mat-icon svgIcon="mat:check" class="icon-sm mr-1"></mat-icon>
                 Aplicar
@@ -237,6 +244,9 @@
                 <mat-icon svgIcon="mat:delete_sweep" class="icon-sm mr-1"></mat-icon>
                 Limpiar
               </button>
+              <mat-checkbox [formControl]="filterVerSoloActivosCtrl" class="ml-auto">
+                Productos activos únicamente
+              </mat-checkbox>
             </div>
           </div>
         </mat-menu>
@@ -244,7 +254,7 @@
 
       <!-- Active Filters Bar -->
       <div class="w-full px-6 py-3 bg-app-bar flex items-center gap-2 border-b flex-wrap"
-        *ngIf="activeFilters.length > 0">
+        *ngIf="activeFilters.length > 0 || filterVerSoloActivosCtrl.value">
         <span class="text-sm font-medium text-secondary">Filtros:</span>
         <mat-chip-set>
           <mat-chip *ngFor="let filter of activeFilters" [removable]="true" (removed)="removeFilter(filter)"
@@ -259,6 +269,9 @@
           <mat-icon svgIcon="mat:delete_sweep" class="icon-sm mr-1"></mat-icon>
           Limpiar todos
         </button>
+        <span class="ml-auto text-sm text-secondary" *ngIf="percentFromTotal != null">
+          {{ (percentFromTotal * 100) | number:'1.1-1' }}% del total
+        </span>
       </div>
       <div class="px-4 products-panel">
         <div class="products-container" [style.min-height.px]="getMinHeightValue()">
@@ -294,7 +307,7 @@
                     (blur)="onProductNameInputBlur(i)" (click)="$event.stopPropagation()"
                     (input)="$event.stopPropagation()"
                     style="width: 100%; border: 1px solid #ccc; padding: 2px 4px; border-radius: 4px;" />
-                  <span *ngIf="editingProductNameIndex !== i" [matTooltip]="product.nombre">
+                  <span *ngIf="editingProductNameIndex !== i" [matTooltip]="(product.nombre?.length || 0) > 40 ? product.nombre : null">
                     {{ product.nombre }}
                   </span>
                 </td>
@@ -319,8 +332,8 @@
               <!-- Precio Compra Column (personalizable) -->
               <ng-container matColumnDef="precioCompra">
                 <th *matHeaderCellDef mat-header-cell mat-sort-header>Precio compra</th>
-                <td *matCellDef="let product" mat-cell>
-                  ${{ product.precioCompra || product.precio || 0 | number:'1.2-2' }}
+                <<td *matCellDef="let product" mat-cell>
+                  {{ product.precioCompra === 0 ? '-' : '$' + ((product.precioCompra || product.precio || 0) | number:'1.2-2') }}
                 </td>
               </ng-container>
               <!-- Fecha Actualizacion Column -->
@@ -404,6 +417,7 @@
                 [class.selected-row]="isRowSelected(row)"></tr>
             </table>
             <div class="loading-more" *ngIf="loadingMore">Cargando más productos...</div>
+            <div class="products-list-spacer" aria-hidden="true"></div>
           </div>
         </div>
       </div>

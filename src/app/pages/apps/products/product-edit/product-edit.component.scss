@@ -94,3 +94,44 @@ form[cdkDrag] {
     background-color: rgba(0, 0, 0, 0.02);
   }
 }
+
+// Fila: Precio de compra + % Ganancia
+.precio-compra-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+
+  .precio-compra-field {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .ganancia-porcentaje-field {
+    flex: 0 0 auto;
+    width: 140px;
+
+    input {
+      cursor: default;
+      color: rgba(0, 0, 0, 0.7);
+    }
+  }
+}
+
+// Alerta cuando ganancia < 5% (similar a atendido-por-info en recibo)
+.ganancia-alert {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  margin-top: 8px;
+  background-color: rgba(244, 67, 54, 0.08);
+  border-left: 3px solid rgba(244, 67, 54, 0.6);
+  border-radius: 0 4px 4px 0;
+
+  .ganancia-alert-label {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.75);
+    line-height: 1.5;
+  }
+}

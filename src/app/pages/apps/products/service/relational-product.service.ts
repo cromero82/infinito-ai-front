@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ProductPage, Producto } from '../model/producto';
+import { map } from 'rxjs/operators';
+import { ProductPage, Producto, BusquedaPorFiltrosResponse } from '../model/producto';
 import { environment } from '../../../../../environments/environment';
 
 @Injectable({
@@ -117,7 +118,7 @@ export class RelationalProductService {
    * @param payload Request body containing filters, pagination, and sorting details
    * @param query Search query (sent as URL query param, optional)
    */
-  busquedaPorFiltros(payload: any, query?: string): Observable<ProductPage> {
+  busquedaPorFiltros(payload: any, query?: string): Observable<ProductPage & { percentFromTotal?: number }> {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       'Accept': 'application/json'
@@ -128,6 +129,12 @@ export class RelationalProductService {
       params = params.set('query', query);
     }
 
-    return this.http.post<ProductPage>(`${this.apiUrl}/busquedaPorFiltros`, payload, { headers, params });
+    return this.http.post<BusquedaPorFiltrosResponse>(`${this.apiUrl}/busquedaPorFiltros`, payload, { headers, params })
+      .pipe(
+        map(res => ({
+          ...res.page,
+          percentFromTotal: res.percentFromTotal
+        }))
+      );
   }
 }
