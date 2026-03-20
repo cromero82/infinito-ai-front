@@ -11,34 +11,12 @@
   gap: 12px;
   width: 100%;
   margin-bottom: 8px;
-}
-
-.search-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.87);
-  white-space: nowrap;
-  flex-shrink: 0;
+  margin-top: 5px;
 }
 
 .search-input {
   flex: 1 1 auto;
-  padding: 8px 12px;
-  border: 1px solid rgba(0, 0, 0, 0.23);
-  border-radius: 4px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s ease;
-
-  &:focus {
-    border-color: #3f51b5;
-    border-width: 2px;
-    padding: 7px 11px;
-  }
-
-  &::placeholder {
-    color: rgba(0, 0, 0, 0.38);
-  }
+  width: 100%;
 }
 
 .table-container {

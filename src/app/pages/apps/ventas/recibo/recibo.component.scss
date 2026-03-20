@@ -99,13 +99,15 @@
   overflow: hidden;
 }
 
+// Tipografía alineada con product-list: header 16px, celdas 15px, line-height 1.2
 .detalle-header {
   display: grid;
   grid-template-columns: 0.6fr 130px 95px 140px;
   gap: 8px;
   padding: 8px 8px;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   flex-shrink: 0; /* No permitir que el header se encoja */
 
@@ -118,7 +120,7 @@
 
       &.producto {
         text-align: left;
-        font-family:  'Roboto', sans-serif;
+        font-family: 'Roboto', sans-serif;
         font-weight: 400;
         letter-spacing: 0.3px;
         font-stretch: expanded;
@@ -165,7 +167,8 @@
     grid-template-columns: 0.6fr 130px 95px 140px;
     gap: 8px;
     padding: 8px 8px;
-    font-size: 14px;
+    font-size: 15px !important;
+    line-height: 1.2 !important;
     border-bottom: 1px solid rgba(0, 0, 0, 0.04);
     cursor: pointer;
 
@@ -174,19 +177,19 @@
     }
 
     &:nth-child(even) {
-      background-color: rgba(0, 0, 0, 0.02);
+      background-color: rgba(0, 0, 0, 0.005) !important;
     }
 
     &:hover {
-      background-color: rgba(0, 0, 0, 0.04);
+      background-color: rgba(0, 0, 0, 0.01) !important;
     }
 
     &.selected-detalle {
-      background-color: rgba(63, 81, 181, 0.18);
-      border-left: 4px solid #3f51b5;
+      background-color: rgba(63, 81, 181, 0.15) !important;
+      border-left: 3px solid #3f51b5;
 
       &:hover {
-        background-color: rgba(63, 81, 181, 0.25);
+        background-color: rgba(63, 81, 181, 0.2) !important;
       }
     }
 
@@ -195,7 +198,7 @@
       overflow: hidden;
 
       .atendido-text {
-        font-size: 12px;
+        font-size: 13px;
         color: rgba(0, 0, 0, 0.55);
         white-space: nowrap;
         overflow: hidden;
@@ -206,10 +209,11 @@
 
     .detalle-col.producto {
       text-align: left;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Roboto', sans-serif;
       font-weight: 400;
       letter-spacing: 0.3px;
       font-stretch: expanded;
+      font-size: 15px !important;
     }
 
     .detalle-col.unitario,
@@ -229,7 +233,7 @@
       border: 1px solid rgba(63, 81, 181, 0.5);
       border-radius: 4px;
       padding: 4px 6px;
-      font-size: 14px;
+      font-size: 15px;
       background: white;
       outline: none;
 
@@ -246,7 +250,7 @@
       border: 1px solid rgba(63, 81, 181, 0.5);
       border-radius: 4px;
       padding: 4px 6px;
-      font-size: 14px;
+      font-size: 15px;
       background: white;
       outline: none;
 
@@ -262,7 +266,7 @@
       border: 1px solid rgba(63, 81, 181, 0.5);
       border-radius: 4px;
       padding: 4px 6px;
-      font-size: 14px;
+      font-size: 15px;
       background: white;
       outline: none;
 
@@ -296,9 +300,9 @@
   border-radius: 0 4px 4px 0;
 
   .atendido-por-label {
-    font-size: 14px;
+    font-size: 15px;
     color: rgba(0, 0, 0, 0.65);
-    line-height: 1.5;
+    line-height: 1.2;
 
     strong {
       color: rgba(0, 0, 0, 0.85);
@@ -313,8 +317,9 @@
   padding: 4px 8px 4px 8px;
   margin: 0;
   border-top: 1px solid rgba(0, 0, 0, 0.12);
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
   width: 100%;
   align-items: center;
 
@@ -351,7 +356,7 @@
   }
 
   .total-label {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
     color: rgba(0, 0, 0, 0.7);
   }

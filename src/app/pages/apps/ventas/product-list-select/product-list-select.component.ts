@@ -101,6 +101,14 @@ export class ProductListSelectComponent implements OnInit, AfterViewInit, OnDest
     this.dialogRef.close();
   }
 
+  clearSearch(): void {
+    this.searchCtrl.setValue('');
+    this.products = [];
+    this.error = null;
+    this.page = 0;
+    this.totalPages = 0;
+  }
+
   editProduct(product: Producto, event: Event): void {
     event.stopPropagation();
     const editDialogRef = this.dialog.open(ProductEditComponent, {

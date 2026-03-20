@@ -2,13 +2,24 @@
 
 <div mat-dialog-content class="dialog-content">
   <div class="search-field-wrapper">
-    <input
-      #searchInput
-      id="searchInput"
-      class="search-input"
-      [formControl]="searchCtrl"
-      placeholder="Nombre o código"
-      type="text" />
+    <mat-form-field appearance="outline" class="search-input">
+      <mat-label>Nombre o código de barras</mat-label>
+      <input
+        #searchInput
+        matInput
+        id="searchInput"
+        [formControl]="searchCtrl"
+        placeholder="Ej. código de barras o nombre"
+        autocomplete="off" />
+      <button
+        mat-icon-button
+        matSuffix
+        *ngIf="searchCtrl.value"
+        aria-label="Limpiar búsqueda"
+        (click)="clearSearch()">
+        <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+      </button>
+    </mat-form-field>
   </div>
 
   <div class="table-container" (scroll)="onTableScroll($event)">
