@@ -1,0 +1,202 @@
+.table-scroll-container {
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.search-input {
+  @apply w-64;
+}
+
+.filter-select {
+  min-width: 160px;
+}
+
+// Filtros compactos: alinear con tabla (13px, ~28px altura)
+:host ::ng-deep {
+  .search-input.mat-mdc-form-field,
+  .filter-select.mat-mdc-form-field {
+    font-size: 13px !important;
+
+    .mat-mdc-form-field-flex {
+      height: 28px !important;
+      align-items: center !important;
+    }
+
+    .mat-mdc-form-field-infix {
+      min-height: 24px !important;
+      padding-top: 4px !important;
+      padding-bottom: 4px !important;
+    }
+
+    .mat-mdc-text-field-wrapper input,
+    .mat-mdc-select-value,
+    .mat-mdc-floating-label {
+      font-size: 13px !important;
+    }
+
+    .mat-mdc-input-element,
+    .mat-mdc-select-value-text {
+      font-size: 13px !important;
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      min-height: 0 !important;
+    }
+  }
+
+  // mat-input (Observación): misma corrección que mat-select - eliminar espacio superior cuando no enfocado
+  .search-input.mat-mdc-form-field {
+    .mat-mdc-form-field-infix {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .mat-mdc-text-field-wrapper,
+    .mat-mdc-form-field-flex {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .mdc-notched-outline__notch {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .mat-mdc-input-element {
+      line-height: 24px !important;
+    }
+
+    // Notch con espacio para el label flotante (enfocado o con valor)
+    &.mat-form-field-should-float .mdc-notched-outline__notch,
+    &:focus-within .mdc-notched-outline__notch {
+      padding-top: 12px !important;
+    }
+
+    &:not(.mat-form-field-should-float):not(:focus-within) .mat-mdc-floating-label {
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+    }
+
+    // Enfocado O con valor: label flotante dentro del notch (translateY sube el label)
+    &.mat-form-field-should-float .mat-mdc-floating-label,
+    &:focus-within .mat-mdc-floating-label {
+      top: 50% !important;
+      transform: translateY(calc(-50% - 14px)) scale(0.75) !important;
+    }
+  }
+
+  // mat-select: eliminar espacio superior extra cuando no está enfocado
+  .filter-select.mat-mdc-form-field {
+    .mat-mdc-form-field-infix {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .mat-mdc-text-field-wrapper,
+    .mat-mdc-form-field-flex {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    // Reducir espacio del notch para compactar
+    .mdc-notched-outline__notch {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .mat-mdc-select-value {
+      line-height: 24px !important;
+    }
+
+    // Notch con espacio para el label flotante cuando tiene valor
+    &.mat-form-field-should-float .mdc-notched-outline__notch {
+      padding-top: 12px !important;
+    }
+
+    // Ajustar posición del label cuando NO flota - centrar verticalmente para evitar que quede cortado por el borde
+    &:not(.mat-form-field-should-float) .mat-mdc-floating-label {
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+    }
+
+    // Cuando tiene valor o está enfocado: label flotante dentro del notch, arriba del contenido
+    &.mat-form-field-should-float .mat-mdc-floating-label {
+      top: -10px !important;
+      transform: translateY(0) scale(0.75) !important;
+    }
+  }
+
+  .filter-select .mat-mdc-select {
+    min-height: 24px !important;
+  }
+
+  .btn-filter-compact {
+    min-height: 26px !important;
+    padding: 0 10px !important;
+    line-height: 26px !important;
+    font-size: 13px !important;
+  }
+}
+
+// Botón editar compacto para no inflar la altura de las filas
+:host ::ng-deep .edit-btn-compact {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  padding: 0 !important;
+
+  .mat-icon {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 18px !important;
+  }
+}
+
+// Tabla compacta: usar ::ng-deep para atravesar encapsulación de Angular Material
+:host ::ng-deep {
+  table.egresos-table-compact.mat-mdc-table {
+    font-size: 13px !important;
+    --mat-table-row-item-container-height: 28px;
+    --mat-table-header-container-height: 28px;
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell],
+    td.mat-mdc-cell,
+    td[mat-cell] {
+      font-size: 13px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      line-height: 1.2 !important;
+      min-height: unset !important;
+      height: 28px !important;
+      vertical-align: middle !important;
+    }
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell] {
+      font-weight: 600 !important;
+    }
+
+    tr.mat-mdc-row {
+      height: 28px !important;
+      min-height: unset !important;
+      cursor: pointer;
+
+      &:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.005) !important;
+      }
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.01) !important;
+      }
+    }
+
+    tr.mat-mdc-header-row {
+      height: 28px !important;
+      min-height: unset !important;
+      background-color: rgba(0, 0, 0, 0.008) !important;
+    }
+  }
+}

@@ -1,0 +1,68 @@
+<div class="mt-6 flex flex-col md:flex-row md:items-start">
+  <div class="flex-auto w-full">
+    <div class="card">
+      <div class="px-6 py-4 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2 class="title m-0">Proveedores</h2>
+        <div class="flex items-center gap-4">
+          <mat-form-field appearance="outline" class="search-input">
+            <mat-label>Buscar proveedor</mat-label>
+            <input #searchInput matInput [formControl]="searchCtrl" placeholder="Nombre, teléfono, documento, correo o ID" />
+            <button mat-icon-button matSuffix *ngIf="searchCtrl.value" aria-label="Limpiar búsqueda" (click)="searchCtrl.setValue('')">
+              <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+            </button>
+          </mat-form-field>
+          <button
+            (click)="createProveedor()"
+            color="primary"
+            mat-mini-fab
+            matTooltip="Agregar proveedor"
+            type="button">
+            <mat-icon svgIcon="mat:add" class="icon-sm"></mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 overflow-x-auto">
+        <div *ngIf="loading" class="text-center py-8">Cargando proveedores...</div>
+
+        <table *ngIf="!loading" mat-table [dataSource]="filteredDataSource" class="w-full">
+          <ng-container matColumnDef="nombre">
+            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+            <td mat-cell *matCellDef="let proveedor">{{ proveedor.nombre }}</td>
+          </ng-container>
+          <ng-container matColumnDef="tipoEgreso">
+            <th mat-header-cell *matHeaderCellDef>Tipo de egreso</th>
+            <td mat-cell *matCellDef="let proveedor">{{ proveedor.tipoEgreso?.nombre || '-' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="telefono">
+            <th mat-header-cell *matHeaderCellDef>Teléfono</th>
+            <td mat-cell *matCellDef="let proveedor">{{ proveedor.telefono || '-' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="documento">
+            <th mat-header-cell *matHeaderCellDef>Documento</th>
+            <td mat-cell *matCellDef="let proveedor">{{ getDocumentoDisplay(proveedor.documento) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="correo">
+            <th mat-header-cell *matHeaderCellDef>Correo</th>
+            <td mat-cell *matCellDef="let proveedor">{{ proveedor.correo || '-' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="edit">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let proveedor">
+              <button mat-icon-button color="accent" (click)="editProveedor(proveedor); $event.stopPropagation()">
+                <mat-icon svgIcon="mat:edit"></mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+
+        <div *ngIf="!loading && filteredDataSource.length === 0" class="text-center py-8 text-secondary">
+          No se encontraron proveedores
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -127,7 +127,16 @@ export class ToolbarUserDropdownComponent implements OnInit {
         colorClass: 'text-orange-600',
         route: '/apps/clientes/list'
       });
-      
+
+      this.items.push({
+        id: '5b',
+        icon: 'mat:account_balance_wallet',
+        label: 'Gastos',
+        description: 'Egresos y gestión de proveedores',
+        colorClass: 'text-teal-600',
+        route: '/apps/gastos'
+      });
+
       this.items.push({
         id: '6',
         icon: 'mat:backup',

@@ -1,0 +1,44 @@
+.search-input {
+  @apply w-80;
+}
+
+.search-input .mat-mdc-form-field-flex {
+  height: 38px !important;
+}
+
+.search-input .mat-mdc-form-field-flex > .mat-mdc-form-field-infix {
+  height: 30px !important;
+}
+
+table.mat-mdc-table {
+  font-size: 16px !important;
+
+  th.mat-mdc-header-cell {
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    padding: 2px 12px !important;
+    line-height: 1.2 !important;
+  }
+
+  td.mat-mdc-cell {
+    font-size: 16px !important;
+    padding: 2px 12px !important;
+    line-height: 1.2 !important;
+  }
+
+  tr.mat-mdc-row {
+    cursor: pointer;
+
+    &:nth-child(even) {
+      background-color: rgba(0, 0, 0, 0.005) !important;
+    }
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.01) !important;
+    }
+  }
+
+  tr.mat-mdc-header-row {
+    background-color: rgba(0, 0, 0, 0.008) !important;
+  }
+}

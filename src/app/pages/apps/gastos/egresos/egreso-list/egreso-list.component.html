@@ -1,0 +1,92 @@
+<div class="mt-6 flex flex-col md:flex-row md:items-start">
+  <div class="flex-auto w-full">
+    <div class="card">
+      <div class="px-6 py-4 border-b flex flex-col gap-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h2 class="title m-0">Egresos</h2>
+          <div class="flex items-center gap-4 flex-wrap">
+            <mat-form-field appearance="outline" class="search-input" subscriptSizing="dynamic">
+              <mat-label>Observación</mat-label>
+              <input #searchInput matInput [formControl]="descripcionCtrl" placeholder="Buscar por observación" />
+              <button mat-icon-button matSuffix *ngIf="descripcionCtrl.value" aria-label="Limpiar" (click)="descripcionCtrl.setValue('')">
+                <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+              </button>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="filter-select" subscriptSizing="dynamic">
+              <mat-label>Tipo</mat-label>
+              <mat-select [formControl]="tipoEgresoIdCtrl">
+                <mat-option [value]="">Todos</mat-option>
+                <mat-option *ngFor="let t of tiposEgreso" [value]="t.id">{{ t.nombre }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="filter-select" subscriptSizing="dynamic">
+              <mat-label>Proveedor</mat-label>
+              <mat-select [formControl]="proveedorIdCtrl">
+                <mat-option [value]="">Todos</mat-option>
+                <mat-option *ngFor="let p of proveedores" [value]="p.id">{{ p.nombre }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <button mat-stroked-button type="button" class="btn-filter-compact" (click)="limpiarFiltros()">Limpiar</button>
+            <button
+              (click)="createEgreso()"
+              color="primary"
+              mat-mini-fab
+              matTooltip="Agregar egreso"
+              type="button">
+              <mat-icon svgIcon="mat:add" class="icon-sm"></mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 overflow-x-auto">
+        <div *ngIf="loading" class="text-center py-8">Cargando egresos...</div>
+
+        <div
+          #tableScroll
+          class="table-scroll-container"
+          *ngIf="!loading"
+          [style.max-height.px]="tableScrollMaxHeight">
+          <table mat-table [dataSource]="dataSource" class="w-full egresos-table-compact">
+          <ng-container matColumnDef="fecha">
+            <th mat-header-cell *matHeaderCellDef>Fecha</th>
+            <td mat-cell *matCellDef="let egreso">{{ formatFecha(egreso.fecha) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="valor">
+            <th mat-header-cell *matHeaderCellDef>Valor</th>
+            <td mat-cell *matCellDef="let egreso">{{ formatCurrency(egreso.valor) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="proveedor">
+            <th mat-header-cell *matHeaderCellDef>Proveedor</th>
+            <td mat-cell *matCellDef="let egreso">{{ egreso.proveedor?.nombre || '-' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="tipoEgreso">
+            <th mat-header-cell *matHeaderCellDef>Tipo</th>
+            <td mat-cell *matCellDef="let egreso">{{ egreso.proveedor?.tipoEgreso?.nombre || '-' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="descripcion">
+            <th mat-header-cell *matHeaderCellDef>Observación</th>
+            <td mat-cell *matCellDef="let egreso">{{ egreso.descripcion || '-' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="edit">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let egreso">
+              <button mat-icon-button color="accent" class="edit-btn-compact" (click)="editEgreso(egreso); $event.stopPropagation()">
+                <mat-icon svgIcon="mat:edit"></mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+          <div *ngIf="loadingMore" class="text-center py-4 text-secondary">Cargando más...</div>
+        </div>
+
+        <div *ngIf="!loading && dataSource.length === 0" class="text-center py-8 text-secondary">
+          No se encontraron egresos
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

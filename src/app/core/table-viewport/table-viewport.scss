@@ -1,0 +1,10 @@
+/**
+ * Estilos para contenedor de tabla con scroll vertical.
+ * Usar con la solución de ajuste de viewport (TableViewportService).
+ *
+ * Aplicar la clase al div que envuelve mat-table y usar [style.max-height.px]="tableScrollMaxHeight"
+ */
+.table-scroll-container {
+  overflow-y: auto;
+  overflow-x: auto;
+}

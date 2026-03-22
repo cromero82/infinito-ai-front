@@ -208,6 +208,30 @@ export const appRoutes: VexRoutes = [
             ]
           },
           {
+            path: 'gastos',
+            loadComponent: () =>
+              import('./pages/apps/gastos/gastos.component').then(
+                (m) => m.GastosComponent
+              ),
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                loadComponent: () =>
+                  import('./pages/apps/gastos/egresos/egreso-list/egreso-list.component').then(
+                    (m) => m.EgresoListComponent
+                  )
+              },
+              {
+                path: 'proveedores',
+                loadComponent: () =>
+                  import('./pages/apps/gastos/proveedores/proveedor-list/proveedor-list.component').then(
+                    (m) => m.ProveedorListComponent
+                  )
+              }
+            ]
+          },
+          {
             path: 'tipos',
             loadChildren: () => import('./pages/apps/tipos/tipos.routes')
           },

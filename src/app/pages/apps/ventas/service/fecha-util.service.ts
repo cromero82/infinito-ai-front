@@ -79,8 +79,9 @@ export class FechaUtilService {
   /**
    * Parsea una fecha string. Si es solo fecha (YYYY-MM-DD), la interpreta como fecha local
    * para evitar que UTC midnight se convierta en "ayer" en zonas horarias al oeste de UTC.
+   * Público para reutilizar en otros módulos (ej. gastos).
    */
-  private parseDateAsLocal(dateValue: string): Date {
+  parseDateAsLocal(dateValue: string): Date {
     const trimmed = String(dateValue).trim();
     const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
     if (dateOnlyMatch) {

@@ -1,0 +1,44 @@
+---
+description: Ajuste de viewport para tablas con número de registros visibles según pantalla e infinite scroll
+globs: **/*-list*.component.ts, **/*list*.component.html
+alwaysApply: false
+---
+
+# Ajuste de pantalla a tabla de datos - Registros visibles
+
+**Usar esta regla solo cuando:** El usuario pida ajustar el número de registros visibles en una tabla/listado según la resolución de pantalla, o implementar infinite scroll en una tabla paginada.
+
+## Problema
+Tablas que cargan muchos registros o usan paginación fija no se adaptan al viewport. Resultado: se ven pocas filas, espacio vacío, o scroll innecesario.
+
+## Solución reutilizable
+
+### 1. Servicio: `TableViewportService`
+Ubicación: `src/app/core/table-viewport/table-viewport.service.ts`
+
+```ts
+const v = this.tableViewportService.calculate({ reservedHeight: 388 });
+this.pageSize = v.pageSize;
+this.tableScrollMaxHeight = v.maxHeight;
+```
+
+**Opciones:** `reservedHeight` (espacio para navbar, header, tabs, filtros), `rowHeight` (default 28), `minHeight` (default 140), `minPageSize` (default 5).
+
+### 2. Template
+- Contenedor con `#tableScroll`, clase `table-scroll-container` y `[style.max-height.px]="tableScrollMaxHeight"`
+- `overflow-y: auto` en el contenedor
+
+### 3. Infinite scroll
+- `@HostListener('window:resize')` → llamar `applyViewport()`
+- Scroll listener: cuando `scrollTop + clientHeight >= scrollHeight - 100` → cargar siguiente página
+- Añadir resultados a `dataSource` sin reemplazar
+- `maybeLoadMoreIfNoScroll()`: si el contenido no llena el contenedor y hay más páginas, cargar más
+
+### 4. CSS compartido
+`src/app/core/table-viewport/table-viewport.scss`:
+```scss
+.table-scroll-container { overflow-y: auto; overflow-x: auto; }
+```
+
+## Ejemplo de referencia
+`src/app/pages/apps/gastos/egresos/egreso-list/egreso-list.component.ts`

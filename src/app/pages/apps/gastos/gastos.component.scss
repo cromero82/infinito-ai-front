@@ -1,0 +1,5 @@
+// Tabs Egresos/Proveedores más compactos
+:host ::ng-deep .mat-mdc-tab-nav-bar .mat-mdc-tab-link {
+  min-height: 28px !important;
+  padding: 0 12px !important;
+}

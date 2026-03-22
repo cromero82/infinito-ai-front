@@ -1,0 +1,42 @@
+.dialog-header {
+  cursor: move;
+}
+
+.headline {
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.errores-alert {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background-color: rgba(244, 67, 54, 0.08);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  border-radius: 4px;
+}
+
+.errores-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #c62828;
+  margin-bottom: 8px;
+}
+
+.errores-alert-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+}
+
+.errores-alert-list {
+  margin: 0;
+  padding-left: 24px;
+  color: #b71c1c;
+}
+
+.errores-campo-label {
+  font-size: 0.85em;
+  color: #795548;
+}
