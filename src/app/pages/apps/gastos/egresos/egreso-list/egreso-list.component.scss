@@ -199,4 +199,14 @@
       background-color: rgba(0, 0, 0, 0.008) !important;
     }
   }
+
+  // Columna Valor: fondo verde suave (igual que Precio en product-list)
+  th.col-valor,
+  td.col-valor {
+    background-color: rgba(76, 175, 80, 0.08) !important;
+  }
+
+  table.egresos-table-compact tr.mat-mdc-row:hover td.col-valor {
+    background-color: rgba(76, 175, 80, 0.12) !important;
+  }
 }

@@ -21,7 +21,14 @@
     </mat-form-field>
     <mat-form-field class="flex-1">
       <mat-label>Valor</mat-label>
-      <input formControlName="valor" matInput type="number" min="0" step="0.01" />
+      <input
+        #valorInput
+        formControlName="valor"
+        matInput
+        type="number"
+        min="0"
+        step="0.01"
+        (focus)="selectValorOnFocus()" />
       <mat-icon matIconPrefix svgIcon="mat:attach_money"></mat-icon>
       <mat-error *ngIf="form.get('valor')?.hasError('required')">Requerido</mat-error>
       <mat-error *ngIf="form.get('valor')?.hasError('min')">Debe ser mayor o igual a 0</mat-error>

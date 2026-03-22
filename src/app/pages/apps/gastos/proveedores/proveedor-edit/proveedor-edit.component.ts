@@ -52,8 +52,9 @@ export class ProveedorEditComponent implements OnInit, AfterViewInit {
   /** UUID original cuando documento viene del backend como UUID (para preservar en update) */
   private originalDocumentoUuid: string | null = null;
   @ViewChild('nombreInput') nombreInput!: ElementRef<HTMLInputElement>;
-  @ViewChild('telefonoInput') telefonoInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('tipoEgresoInput') tipoEgresoInput!: ElementRef<HTMLInputElement>;
   @ViewChild('documentoInput') documentoInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('telefonoInput') telefonoInput!: ElementRef<HTMLInputElement>;
   @ViewChild('correoInput') correoInput!: ElementRef<HTMLInputElement>;
 
   constructor(
@@ -160,12 +161,17 @@ export class ProveedorEditComponent implements OnInit, AfterViewInit {
   private setInitialFocus() {
     try {
       const nombreValue = this.form.controls['nombre'].value;
+      const tipoEgresoValue = this.form.controls['tipoEgreso'].value;
       const documentoValue = this.form.controls['documento'].value;
       const telefonoValue = this.form.controls['telefono'].value;
-      const correoValue = this.form.controls['correo'].value;
 
-      if (!nombreValue && this.nombreInput?.nativeElement) {
+      if ((nombreValue === null || nombreValue === '' || (typeof nombreValue === 'string' && !nombreValue.trim())) && this.nombreInput?.nativeElement) {
         this.nombreInput.nativeElement.focus({ preventScroll: true });
+        return;
+      }
+
+      if (!tipoEgresoValue && this.tipoEgresoInput?.nativeElement) {
+        this.tipoEgresoInput.nativeElement.focus({ preventScroll: true });
         return;
       }
 

@@ -54,6 +54,7 @@ export class EgresoEditComponent implements OnInit, AfterViewInit {
   showAddProveedor$!: Observable<boolean>;
 
   @ViewChild('fechaInput') fechaInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('valorInput') valorInput!: ElementRef<HTMLInputElement>;
 
   constructor(
     private fb: FormBuilder,
@@ -176,6 +177,10 @@ export class EgresoEditComponent implements OnInit, AfterViewInit {
     if (overlayElement) {
       (overlayElement as HTMLElement).style.position = 'relative';
     }
+  }
+
+  selectValorOnFocus() {
+    setTimeout(() => this.valorInput?.nativeElement?.select(), 0);
   }
 
   private setInitialFocus() {
