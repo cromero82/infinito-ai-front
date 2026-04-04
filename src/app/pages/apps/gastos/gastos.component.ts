@@ -26,6 +26,10 @@ export class GastosComponent {
     {
       label: 'Proveedores',
       route: './proveedores'
+    },
+    {
+      label: 'Resumen económico',
+      route: './resumen-economico'
     }
   ];
 }

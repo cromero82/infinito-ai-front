@@ -1,44 +1,135 @@
+@import '../../../../../core/table-viewport/table-viewport.scss';
+
 .search-input {
-  @apply w-80;
+  @apply w-64;
 }
 
-.search-input .mat-mdc-form-field-flex {
-  height: 38px !important;
-}
+// Filtro búsqueda compacto: alinear con tabla (13px, ~28px altura)
+:host ::ng-deep {
+  .search-input.mat-mdc-form-field {
+    font-size: 13px !important;
 
-.search-input .mat-mdc-form-field-flex > .mat-mdc-form-field-infix {
-  height: 30px !important;
-}
-
-table.mat-mdc-table {
-  font-size: 16px !important;
-
-  th.mat-mdc-header-cell {
-    font-size: 17px !important;
-    font-weight: 600 !important;
-    padding: 2px 12px !important;
-    line-height: 1.2 !important;
-  }
-
-  td.mat-mdc-cell {
-    font-size: 16px !important;
-    padding: 2px 12px !important;
-    line-height: 1.2 !important;
-  }
-
-  tr.mat-mdc-row {
-    cursor: pointer;
-
-    &:nth-child(even) {
-      background-color: rgba(0, 0, 0, 0.005) !important;
+    .mat-mdc-form-field-flex {
+      height: 28px !important;
+      align-items: center !important;
     }
 
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.01) !important;
+    .mat-mdc-form-field-infix {
+      min-height: 24px !important;
+      padding-top: 4px !important;
+      padding-bottom: 4px !important;
+    }
+
+    .mat-mdc-text-field-wrapper input,
+    .mat-mdc-floating-label {
+      font-size: 13px !important;
+    }
+
+    .mat-mdc-input-element {
+      font-size: 13px !important;
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      min-height: 0 !important;
+    }
+
+    .mat-mdc-form-field-infix {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .mat-mdc-text-field-wrapper,
+    .mat-mdc-form-field-flex {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .mdc-notched-outline__notch {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .mat-mdc-input-element {
+      line-height: 24px !important;
+    }
+
+    &.mat-form-field-should-float .mdc-notched-outline__notch,
+    &:focus-within .mdc-notched-outline__notch {
+      padding-top: 12px !important;
+    }
+
+    &:not(.mat-form-field-should-float):not(:focus-within) .mat-mdc-floating-label {
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+    }
+
+    &.mat-form-field-should-float .mat-mdc-floating-label,
+    &:focus-within .mat-mdc-floating-label {
+      top: 50% !important;
+      transform: translateY(calc(-50% - 14px)) scale(0.75) !important;
     }
   }
+}
 
-  tr.mat-mdc-header-row {
-    background-color: rgba(0, 0, 0, 0.008) !important;
+// Botón editar compacto
+:host ::ng-deep .edit-btn-compact {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  padding: 0 !important;
+
+  .mat-icon {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 18px !important;
+  }
+}
+
+// Tabla compacta (igual que egreso-list)
+:host ::ng-deep {
+  table.proveedores-table-compact.mat-mdc-table {
+    font-size: 13px !important;
+    --mat-table-row-item-container-height: 28px;
+    --mat-table-header-container-height: 28px;
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell],
+    td.mat-mdc-cell,
+    td[mat-cell] {
+      font-size: 13px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      line-height: 1.2 !important;
+      min-height: unset !important;
+      height: 28px !important;
+      vertical-align: middle !important;
+    }
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell] {
+      font-weight: 600 !important;
+    }
+
+    tr.mat-mdc-row {
+      height: 28px !important;
+      min-height: unset !important;
+      cursor: pointer;
+
+      &:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.005) !important;
+      }
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.01) !important;
+      }
+    }
+
+    tr.mat-mdc-header-row {
+      height: 28px !important;
+      min-height: unset !important;
+      background-color: rgba(0, 0, 0, 0.008) !important;
+    }
   }
 }

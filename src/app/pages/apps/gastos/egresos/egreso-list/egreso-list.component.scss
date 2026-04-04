@@ -1,7 +1,4 @@
-.table-scroll-container {
-  overflow-y: auto;
-  overflow-x: auto;
-}
+@import '../../../../../core/table-viewport/table-viewport.scss';
 
 .search-input {
   @apply w-64;

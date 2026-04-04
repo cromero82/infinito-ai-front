@@ -1,0 +1,233 @@
+<div class="resumen-page mt-6 flex flex-col flex-1 min-h-0 min-w-0 w-full">
+  <div class="flex flex-col flex-1 min-h-0 w-full">
+    <div class="card resumen-card flex flex-col flex-1 min-h-0 overflow-hidden">
+      <div class="px-6 py-4 border-b flex flex-col gap-4 flex-shrink-0">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-wrap">
+          <h2 class="title m-0">Resumen económico</h2>
+          <div class="flex items-center gap-3 flex-wrap">
+            <mat-button-toggle-group
+              [value]="vista"
+              (change)="setVista($event.value)"
+              class="vista-toggle">
+              <mat-button-toggle value="diaria">Diaria</mat-button-toggle>
+              <mat-button-toggle value="mensual">Mensual</mat-button-toggle>
+              <mat-button-toggle value="anual">Anual</mat-button-toggle>
+            </mat-button-toggle-group>
+            <button
+              mat-stroked-button
+              color="primary"
+              type="button"
+              (click)="abrirUtilidadEdit()"
+              matTooltip="Crear estadística para un período (POST manual)">
+              <mat-icon class="icon-sm" svgIcon="mat:published_with_changes"></mat-icon>
+              Procesar período
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="resumen-table-section px-6 py-4 flex flex-col flex-1 min-h-0 overflow-hidden">
+        <div *ngIf="loading" class="text-center py-8">Cargando estadísticas...</div>
+
+        <ng-container *ngIf="!loading" [ngSwitch]="vista">
+          <!-- Diaria -->
+          <div *ngSwitchCase="'diaria'" #tableScrollDiaria class="table-scroll-container">
+            <table mat-table [dataSource]="dataDiaria" class="w-full resumen-table-compact">
+              <ng-container matColumnDef="periodo">
+                <th mat-header-cell *matHeaderCellDef>Período (día)</th>
+                <td mat-cell *matCellDef="let row">{{ periodoLabelDiaria(row) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="totalVentas">
+                <th mat-header-cell *matHeaderCellDef>Ventas</th>
+                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.totalVentas) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="totalEgresos">
+                <th mat-header-cell *matHeaderCellDef>Egresos</th>
+                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.totalEgresos) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="utilidad">
+                <th mat-header-cell *matHeaderCellDef>Utilidad</th>
+                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.utilidad) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="porcentajeUtilidad">
+                <th mat-header-cell *matHeaderCellDef>% utilidad</th>
+                <td mat-cell *matCellDef="let row">{{ formatPct(row.porcentajeUtilidad) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="semaforo">
+                <th mat-header-cell *matHeaderCellDef>Semáforo</th>
+                <td mat-cell *matCellDef="let row" class="cell-semaforo">
+                  <span
+                    class="semaforo-dot"
+                    role="img"
+                    [attr.aria-label]="row.tipoResultadoFin?.color || 'Sin color'"
+                    [style.background-color]="colorSemaforo(row)"
+                    [matTooltip]="row.tipoResultadoFin?.color || '—'"></span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="tipoResultado">
+                <th mat-header-cell *matHeaderCellDef>Resultado</th>
+                <td mat-cell *matCellDef="let row">{{ row.tipoResultadoFin?.descripcion || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="fechaCreacion">
+                <th mat-header-cell *matHeaderCellDef>Registro</th>
+                <td mat-cell *matCellDef="let row">{{ formatFechaHora(row.fechaCreacion) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="acciones">
+                <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                <td mat-cell *matCellDef="let row">
+                  <button
+                    mat-stroked-button
+                    color="accent"
+                    type="button"
+                    class="btn-recalcular"
+                    [disabled]="isRecalculando(row)"
+                    matTooltip="Recalcular estadística (PUT)"
+                    (click)="recalcular(row); $event.stopPropagation()">
+                    Recalcular
+                  </button>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="displayedColumnsDiaria"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumnsDiaria"></tr>
+            </table>
+            <div *ngIf="loadingMore" class="text-center py-3 text-secondary">Cargando más...</div>
+          </div>
+
+          <!-- Mensual -->
+          <div *ngSwitchCase="'mensual'" class="table-scroll-container">
+            <table mat-table [dataSource]="dataMensual" class="w-full resumen-table-compact">
+              <ng-container matColumnDef="periodo">
+                <th mat-header-cell *matHeaderCellDef>Período (mes)</th>
+                <td mat-cell *matCellDef="let row">{{ periodoLabelMensual(row) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="totalVentas">
+                <th mat-header-cell *matHeaderCellDef>Ventas</th>
+                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.totalVentas) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="totalEgresos">
+                <th mat-header-cell *matHeaderCellDef>Egresos</th>
+                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.totalEgresos) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="utilidad">
+                <th mat-header-cell *matHeaderCellDef>Utilidad</th>
+                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.utilidad) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="porcentajeUtilidad">
+                <th mat-header-cell *matHeaderCellDef>% utilidad</th>
+                <td mat-cell *matCellDef="let row">{{ formatPct(row.porcentajeUtilidad) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="semaforo">
+                <th mat-header-cell *matHeaderCellDef>Semáforo</th>
+                <td mat-cell *matCellDef="let row" class="cell-semaforo">
+                  <span
+                    class="semaforo-dot"
+                    role="img"
+                    [attr.aria-label]="row.tipoResultadoFin?.color || 'Sin color'"
+                    [style.background-color]="colorSemaforo(row)"
+                    [matTooltip]="row.tipoResultadoFin?.color || '—'"></span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="tipoResultado">
+                <th mat-header-cell *matHeaderCellDef>Resultado</th>
+                <td mat-cell *matCellDef="let row">{{ row.tipoResultadoFin?.descripcion || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="fechaCreacion">
+                <th mat-header-cell *matHeaderCellDef>Registro</th>
+                <td mat-cell *matCellDef="let row">{{ formatFechaHora(row.fechaCreacion) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="acciones">
+                <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                <td mat-cell *matCellDef="let row">
+                  <button
+                    mat-stroked-button
+                    color="accent"
+                    type="button"
+                    class="btn-recalcular"
+                    [disabled]="isRecalculando(row)"
+                    matTooltip="Recalcular estadística (PUT)"
+                    (click)="recalcular(row); $event.stopPropagation()">
+                    Recalcular
+                  </button>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="displayedColumnsMensual"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumnsMensual"></tr>
+            </table>
+          </div>
+
+          <!-- Anual -->
+          <div *ngSwitchCase="'anual'" class="table-scroll-container">
+            <table mat-table [dataSource]="dataAnual" class="w-full resumen-table-compact">
+              <ng-container matColumnDef="periodo">
+                <th mat-header-cell *matHeaderCellDef>Período (año)</th>
+                <td mat-cell *matCellDef="let row">{{ periodoLabelAnual(row) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="totalVentas">
+                <th mat-header-cell *matHeaderCellDef>Ventas</th>
+                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.totalVentas) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="totalEgresos">
+                <th mat-header-cell *matHeaderCellDef>Egresos</th>
+                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.totalEgresos) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="utilidad">
+                <th mat-header-cell *matHeaderCellDef>Utilidad</th>
+                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.utilidad) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="porcentajeUtilidad">
+                <th mat-header-cell *matHeaderCellDef>% utilidad</th>
+                <td mat-cell *matCellDef="let row">{{ formatPct(row.porcentajeUtilidad) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="semaforo">
+                <th mat-header-cell *matHeaderCellDef>Semáforo</th>
+                <td mat-cell *matCellDef="let row" class="cell-semaforo">
+                  <span
+                    class="semaforo-dot"
+                    role="img"
+                    [attr.aria-label]="row.tipoResultadoFin?.color || 'Sin color'"
+                    [style.background-color]="colorSemaforo(row)"
+                    [matTooltip]="row.tipoResultadoFin?.color || '—'"></span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="tipoResultado">
+                <th mat-header-cell *matHeaderCellDef>Resultado</th>
+                <td mat-cell *matCellDef="let row">{{ row.tipoResultadoFin?.descripcion || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="fechaCreacion">
+                <th mat-header-cell *matHeaderCellDef>Registro</th>
+                <td mat-cell *matCellDef="let row">{{ formatFechaHora(row.fechaCreacion) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="acciones">
+                <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                <td mat-cell *matCellDef="let row">
+                  <button
+                    mat-stroked-button
+                    color="accent"
+                    type="button"
+                    class="btn-recalcular"
+                    [disabled]="isRecalculando(row)"
+                    matTooltip="Recalcular estadística (PUT)"
+                    (click)="recalcular(row); $event.stopPropagation()">
+                    Recalcular
+                  </button>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="displayedColumnsAnual"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumnsAnual"></tr>
+            </table>
+          </div>
+        </ng-container>
+
+        <div *ngIf="!loading && vista === 'diaria' && dataDiaria.length === 0" class="text-center py-8 text-secondary">
+          No hay estadísticas diarias
+        </div>
+        <div *ngIf="!loading && vista === 'mensual' && dataMensual.length === 0" class="text-center py-8 text-secondary">
+          No hay estadísticas mensuales
+        </div>
+        <div *ngIf="!loading && vista === 'anual' && dataAnual.length === 0" class="text-center py-8 text-secondary">
+          No hay estadísticas anuales
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

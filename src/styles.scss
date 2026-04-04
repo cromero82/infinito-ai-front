@@ -28,3 +28,42 @@ html {
   // --vex-color-warn: yellow;
   // --vex-color-warn-contrast: black;
 }
+
+/* Snackbar (mismo estilo que recibo; panelClass usado desde cualquier pantalla) */
+.recibo-snackbar-success,
+.recibo-snackbar-error {
+  .mat-mdc-snack-bar-label {
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 400;
+    line-height: 1.5;
+    padding: 4px 8px;
+
+    strong {
+      font-weight: 900;
+      font-size: 1.15em;
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+.mat-mdc-snack-bar-container.recibo-snackbar-success,
+.mat-mdc-snack-bar-container.recibo-snackbar-error {
+  padding: 14px 16px;
+  min-height: 48px;
+}
+
+.recibo-snackbar-success {
+  .mat-mdc-snack-bar-label {
+    strong {
+      color: rgba(129, 199, 132, 1);
+    }
+  }
+}
+
+.recibo-snackbar-error {
+  .mat-mdc-snack-bar-label {
+    strong {
+      color: rgba(239, 154, 154, 1);
+    }
+  }
+}

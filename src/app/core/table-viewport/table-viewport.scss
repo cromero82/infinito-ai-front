@@ -1,10 +1,33 @@
 /**
- * Estilos para contenedor de tabla con scroll vertical.
- * Usar con la solución de ajuste de viewport (TableViewportService).
+ * Contenedor de tabla con scroll vertical/horizontal.
+ * Usar con TableViewportService: [style.max-height.px]="tableScrollMaxHeight"
  *
- * Aplicar la clase al div que envuelve mat-table y usar [style.max-height.px]="tableScrollMaxHeight"
+ * Cabecera inmovilizada: al hacer scroll vertical, la fila de encabezado permanece visible.
  */
 .table-scroll-container {
   overflow-y: auto;
   overflow-x: auto;
+  position: relative;
+}
+
+/* mat-table (MDC): celdas de encabezado sticky dentro del contenedor con overflow */
+.table-scroll-container .mat-mdc-table {
+  th.mat-mdc-header-cell {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: var(--mat-sys-surface-container-high, #f0f0f0);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Material legacy (mat-table sin prefijo mdc) */
+.table-scroll-container .mat-table {
+  th.mat-header-cell {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: var(--mat-sys-surface-container-high, #f0f0f0);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+  }
 }

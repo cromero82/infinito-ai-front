@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -11,6 +11,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { ProveedorService, ProveedorDto, getDocumentoDisplay, isUuidDocumento } from '../service/proveedor.service';
 import { ProveedorEditComponent } from '../proveedor-edit/proveedor-edit.component';
+import { TableViewportService } from '../../../../../core/table-viewport/table-viewport.service';
 
 @Component({
   selector: 'vex-proveedor-list',
@@ -38,16 +39,19 @@ export class ProveedorListComponent implements OnInit, AfterViewInit {
   filteredDataSource: ProveedorDto[] = [];
   loading = false;
   searchCtrl = new UntypedFormControl('');
+  tableScrollMaxHeight = 400;
   private justClosedDialog = false;
 
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
   constructor(
     private proveedorService: ProveedorService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private tableViewportService: TableViewportService
   ) {}
 
   ngOnInit() {
+    this.applyViewport();
     this.loadProveedores();
     this.searchCtrl.valueChanges
       .pipe(
@@ -66,6 +70,16 @@ export class ProveedorListComponent implements OnInit, AfterViewInit {
         this.searchInput.nativeElement.focus();
       }
     }, 100);
+  }
+
+  @HostListener('window:resize')
+  onWindowResize() {
+    this.applyViewport();
+  }
+
+  private applyViewport() {
+    const v = this.tableViewportService.calculate({ reservedHeight: 388 });
+    this.tableScrollMaxHeight = v.maxHeight;
   }
 
   loadProveedores() {

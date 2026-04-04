@@ -134,7 +134,8 @@ export const appRoutes: VexRoutes = [
                 loadComponent: () =>
                   import('./pages/apps/ventas/historial-ventas/historial-ventas.component').then(
                     (m) => m.HistorialVentasComponent
-                  )
+                  ),
+                data: { scrollDisabled: true }
               },
               {
                 path: 'dashboard',
@@ -228,6 +229,14 @@ export const appRoutes: VexRoutes = [
                   import('./pages/apps/gastos/proveedores/proveedor-list/proveedor-list.component').then(
                     (m) => m.ProveedorListComponent
                   )
+              },
+              {
+                path: 'resumen-economico',
+                loadComponent: () =>
+                  import(
+                    './pages/apps/gastos/resumen-economico/resumen-economico-list/resumen-economico-list.component'
+                  ).then((m) => m.ResumenEconomicoListComponent),
+                data: { scrollDisabled: true }
               }
             ]
           },

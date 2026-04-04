@@ -1,5 +1,5 @@
-<div class="container py-6">
-  <div class="card overflow-hidden">
+<div class="container py-6 gastos-page flex flex-col flex-1 min-h-0 min-w-0">
+  <div class="card overflow-hidden flex-shrink-0">
     <div class="h-16 relative overflow-hidden">
       <img
         class="w-full h-full object-cover"
@@ -44,5 +44,7 @@
     </div>
   </div>
 
-  <router-outlet></router-outlet>
+  <div class="gastos-outlet flex flex-col flex-1 min-h-0 min-w-0">
+    <router-outlet></router-outlet>
+  </div>
 </div>

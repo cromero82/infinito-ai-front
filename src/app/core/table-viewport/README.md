@@ -41,14 +41,13 @@ onWindowResize() {
 
 ### 4. Estilos
 
-Incluir `table-viewport.scss` en el componente o definir localmente:
+Incluir `table-viewport.scss` en el `styleUrl` del componente (recomendado):
 
 ```scss
-.table-scroll-container {
-  overflow-y: auto;
-  overflow-x: auto;
-}
+@import '../../../../../core/table-viewport/table-viewport.scss';
 ```
+
+Incluye `overflow` del contenedor y **cabeceras fijas** (`position: sticky` en `th`) para que el encabezado siga visible al hacer scroll vertical.
 
 ### 5. Infinite scroll
 

@@ -1,0 +1,104 @@
+@import '../../../../../core/table-viewport/table-viewport.scss';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+.resumen-page {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.resumen-card {
+  min-height: 0;
+}
+
+.resumen-table-section .table-scroll-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+}
+
+.vista-toggle {
+  flex-wrap: wrap;
+}
+
+.icon-sm {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  vertical-align: middle;
+}
+
+.cell-semaforo {
+  text-align: center;
+  width: 72px;
+}
+
+.semaforo-dot {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+
+:host ::ng-deep {
+  table.resumen-table-compact.mat-mdc-table {
+    font-size: 13px !important;
+    --mat-table-row-item-container-height: 28px;
+    --mat-table-header-container-height: 28px;
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell],
+    td.mat-mdc-cell,
+    td[mat-cell] {
+      font-size: 13px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      line-height: 1.2 !important;
+      min-height: unset !important;
+      height: 28px !important;
+      vertical-align: middle !important;
+    }
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell] {
+      font-weight: 600 !important;
+    }
+
+    tr.mat-mdc-row {
+      height: 28px !important;
+      min-height: unset !important;
+
+      &:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.005) !important;
+      }
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.01) !important;
+      }
+    }
+
+    tr.mat-mdc-header-row {
+      height: 28px !important;
+      min-height: unset !important;
+      background-color: rgba(0, 0, 0, 0.008) !important;
+    }
+
+    td .btn-recalcular {
+      min-height: 26px !important;
+      padding: 0 8px !important;
+      line-height: 26px !important;
+      font-size: 12px !important;
+    }
+  }
+}

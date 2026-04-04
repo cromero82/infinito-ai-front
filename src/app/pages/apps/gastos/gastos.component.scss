@@ -1,3 +1,20 @@
+// Llenar altura del main cuando la ruta hija usa scrollDisabled (footer siempre visible)
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.gastos-page {
+  flex: 1 1 auto;
+}
+
+.gastos-outlet {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 // Tabs Egresos/Proveedores más compactos
 :host ::ng-deep .mat-mdc-tab-nav-bar .mat-mdc-tab-link {
   min-height: 28px !important;
