@@ -27,6 +27,30 @@
   flex-wrap: wrap;
 }
 
+.resumen-active-filters {
+  max-width: 100%;
+}
+
+.filter-chip-label {
+  margin-right: 0.25rem;
+}
+
+.filter-chip-value {
+  font-weight: 700;
+}
+
+.resumen-filters-menu-content {
+  width: 252px;
+  max-width: min(252px, calc(100vw - 40px));
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.filters-field-dense {
+  min-width: 0;
+  margin-bottom: -1.25em;
+}
+
 .icon-sm {
   width: 18px;
   height: 18px;
@@ -50,6 +74,35 @@
 }
 
 :host ::ng-deep {
+  .filters-custom-menu {
+    max-width: min(272px, calc(100vw - 24px)) !important;
+
+    .mat-mdc-menu-content {
+      padding: 6px !important;
+      overflow-x: hidden !important;
+    }
+  }
+
+  .filters-field-dense {
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+
+    .mat-mdc-form-field-flex {
+      min-width: 0;
+      align-items: center !important;
+    }
+
+    .mat-mdc-form-field-infix {
+      min-width: 0 !important;
+      width: auto !important;
+    }
+  }
+
+  .resumen-active-filters .mdc-evolution-chip-set__chips {
+    flex-wrap: wrap;
+  }
+
   table.resumen-table-compact.mat-mdc-table {
     font-size: 13px !important;
     --mat-table-row-item-container-height: 28px;

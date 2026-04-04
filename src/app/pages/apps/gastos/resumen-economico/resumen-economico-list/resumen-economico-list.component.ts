@@ -13,25 +13,77 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
+import { NgFor, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import {
+  MatNativeDateModule,
+  MAT_DATE_LOCALE,
+  MAT_DATE_FORMATS,
+  DateAdapter,
+  NativeDateAdapter
+} from '@angular/material/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import {
   EstadisticaFinancieraService,
   EstadisticaFinancieraDiariaDto,
   EstadisticaFinancieraMensualDto,
   EstadisticaFinancieraAnualDto,
-  EstadisticaFinancieraPutResponse
+  EstadisticaFinancieraPutResponse,
+  EstadisticaFechaFiltro,
+  EstadisticaMesFiltro,
+  EstadisticaAnioFiltro
 } from '../service/estadistica-financiera.service';
 import { TableViewportService } from '../../../../../core/table-viewport/table-viewport.service';
 import { UtilidadEditComponent, UtilidadEditPeriodo } from '../utilidad-edit/utilidad-edit.component';
 import { httpErrorMessage } from '../http-error.util';
 import { FooterService } from '../../../../../layouts/services/footer.service';
+import { MonthYearPickerComponent } from '../../../../../core/components/month-year-picker/month-year-picker.component';
 
 export type VistaEstadistica = 'diaria' | 'mensual' | 'anual';
+
+class DateAdapterDDMMYYYY extends NativeDateAdapter {
+  override format(date: Date, displayFormat: object): string {
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const y = date.getFullYear();
+    return `${d}/${m}/${y}`;
+  }
+
+  override parse(value: unknown): Date | null {
+    if (typeof value === 'string' && value.includes('/')) {
+      const [d, m, y] = value.split('/').map(Number);
+      if (d && m && y) {
+        return new Date(y, m - 1, d);
+      }
+    }
+    return super.parse(value);
+  }
+}
 
 @Component({
   selector: 'gm-resumen-economico-list',
   standalone: true,
+  providers: [
+    { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
+    { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
+    {
+      provide: MAT_DATE_FORMATS,
+      useValue: {
+        parse: { dateInput: 'dd/MM/yyyy' },
+        display: {
+          dateInput: 'dd/MM/yyyy',
+          monthYearLabel: 'MMM yyyy',
+          dateA11yLabel: 'dd/MM/yyyy',
+          monthYearA11yLabel: 'MMMM yyyy'
+        }
+      }
+    }
+  ],
   imports: [
     MatTableModule,
     MatIconModule,
@@ -39,6 +91,15 @@ export type VistaEstadistica = 'diaria' | 'mensual' | 'anual';
     MatButtonToggleModule,
     MatTooltipModule,
     MatSnackBarModule,
+    MatMenuModule,
+    MatChipsModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MonthYearPickerComponent,
+    ReactiveFormsModule,
+    NgFor,
     NgIf,
     NgSwitch,
     NgSwitchCase
@@ -49,15 +110,29 @@ export type VistaEstadistica = 'diaria' | 'mensual' | 'anual';
 export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnDestroy {
   vista: VistaEstadistica = 'diaria';
 
+  readonly filterFechaInicioCtrl = new FormControl<Date | null>(null);
+  readonly filterFechaFinCtrl = new FormControl<Date | null>(null);
+  readonly filterMesInicioCtrl = new FormControl<Date | null>(null);
+  readonly filterMesFinCtrl = new FormControl<Date | null>(null);
+  readonly filterAnioInicioCtrl = new FormControl<string>('');
+  readonly filterAnioFinCtrl = new FormControl<string>('');
+
   dataDiaria: EstadisticaFinancieraDiariaDto[] = [];
   dataMensual: EstadisticaFinancieraMensualDto[] = [];
   dataAnual: EstadisticaFinancieraAnualDto[] = [];
+  activeFilters: Array<{ label: string; value: string }> = [];
 
   loading = false;
   loadingMore = false;
   pageSize = 10;
   pageIndex = 0;
   hasMoreDiaria = false;
+  appliedFechaInicio: string | null = null;
+  appliedFechaFin: string | null = null;
+  appliedMesInicio: string | null = null;
+  appliedMesFin: string | null = null;
+  appliedAnioInicio: string | null = null;
+  appliedAnioFin: string | null = null;
 
   displayedColumnsDiaria = [
     'periodo',
@@ -97,6 +172,7 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
   recalculandoId: number | null = null;
 
   @ViewChild('tableScrollDiaria') tableScrollDiaria!: ElementRef<HTMLElement>;
+  @ViewChild('filtersMenuTrigger') filtersMenuTrigger?: MatMenuTrigger;
 
   private onScrollBound = () => this.onTableScrollDiaria();
 
@@ -139,6 +215,7 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
     if (this.vista === v) return;
     this.footerService.clearFooterItems();
     this.vista = v;
+    this.syncActiveFilters();
     this.cargarVista();
   }
 
@@ -158,7 +235,11 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
       this.pageIndex = 0;
       this.dataDiaria = [];
     }
-    this.estadisticaService.getDiaria(reset ? 0 : this.pageIndex + 1, this.pageSize).subscribe({
+    this.estadisticaService.getDiaria(
+      reset ? 0 : this.pageIndex + 1,
+      this.pageSize,
+      this.getFechaFiltro()
+    ).subscribe({
       next: (page) => {
         if (reset) {
           this.dataDiaria = page.content;
@@ -187,7 +268,7 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
 
   private cargarMensual() {
     this.loading = true;
-    this.estadisticaService.getMensual().subscribe({
+    this.estadisticaService.getMensual(this.getMesFiltro()).subscribe({
       next: (rows) => {
         this.dataMensual = rows;
         this.loading = false;
@@ -203,7 +284,7 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
 
   private cargarAnual() {
     this.loading = true;
-    this.estadisticaService.getAnual().subscribe({
+    this.estadisticaService.getAnual(this.getAnioFiltro()).subscribe({
       next: (rows) => {
         this.dataAnual = rows;
         this.loading = false;
@@ -244,7 +325,7 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
   loadMoreDiaria() {
     if (this.loadingMore || !this.hasMoreDiaria) return;
     this.loadingMore = true;
-    this.estadisticaService.getDiaria(this.pageIndex + 1, this.pageSize).subscribe({
+    this.estadisticaService.getDiaria(this.pageIndex + 1, this.pageSize, this.getFechaFiltro()).subscribe({
       next: (page) => {
         this.dataDiaria = [...this.dataDiaria, ...page.content];
         this.pageIndex = page.number;
@@ -285,6 +366,139 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
       });
   }
 
+  restoreFiltersState(): void {
+    if (this.vista === 'diaria') {
+      this.filterFechaInicioCtrl.setValue(this.parseDateParam(this.appliedFechaInicio), { emitEvent: false });
+      this.filterFechaFinCtrl.setValue(this.parseDateParam(this.appliedFechaFin), { emitEvent: false });
+      return;
+    }
+
+    if (this.vista === 'mensual') {
+      this.filterMesInicioCtrl.setValue(this.parseMonthParam(this.appliedMesInicio), { emitEvent: false });
+      this.filterMesFinCtrl.setValue(this.parseMonthParam(this.appliedMesFin), { emitEvent: false });
+      return;
+    }
+
+    this.filterAnioInicioCtrl.setValue(this.appliedAnioInicio ?? '', { emitEvent: false });
+    this.filterAnioFinCtrl.setValue(this.appliedAnioFin ?? '', { emitEvent: false });
+  }
+
+  applyFilters(): void {
+    if (this.vista === 'diaria') {
+      this.applyDateFilters();
+      return;
+    }
+    if (this.vista === 'mensual') {
+      this.applyMonthFilters();
+      return;
+    }
+    this.applyYearFilters();
+  }
+
+  private applyDateFilters(): void {
+    const fechaInicio = this.formatDateParam(this.filterFechaInicioCtrl.value);
+    const fechaFin = this.formatDateParam(this.filterFechaFinCtrl.value);
+
+    if (fechaInicio && fechaFin && fechaInicio > fechaFin) {
+      this.snackBar.open('La fecha inicio no puede ser mayor que la fecha fin', undefined, {
+        duration: 5000,
+        horizontalPosition: 'right',
+        panelClass: ['recibo-snackbar-error']
+      });
+      return;
+    }
+
+    this.appliedFechaInicio = fechaInicio;
+    this.appliedFechaFin = fechaFin;
+    this.syncActiveFilters();
+    this.cargarVista();
+    setTimeout(() => this.filtersMenuTrigger?.closeMenu(), 100);
+  }
+
+  private applyMonthFilters(): void {
+    const mesInicio = this.formatMonthParam(this.filterMesInicioCtrl.value);
+    const mesFin = this.formatMonthParam(this.filterMesFinCtrl.value);
+
+    if (mesInicio && mesFin && mesInicio > mesFin) {
+      this.snackBar.open('El mes inicio no puede ser mayor que el mes fin', undefined, {
+        duration: 5000,
+        horizontalPosition: 'right',
+        panelClass: ['recibo-snackbar-error']
+      });
+      return;
+    }
+
+    this.appliedMesInicio = mesInicio;
+    this.appliedMesFin = mesFin;
+    this.syncActiveFilters();
+    this.cargarVista();
+    setTimeout(() => this.filtersMenuTrigger?.closeMenu(), 100);
+  }
+
+  private applyYearFilters(): void {
+    const anioInicio = this.normalizeYearParam(this.filterAnioInicioCtrl.value);
+    const anioFin = this.normalizeYearParam(this.filterAnioFinCtrl.value);
+
+    if (
+      (this.filterAnioInicioCtrl.value?.trim() && !anioInicio) ||
+      (this.filterAnioFinCtrl.value?.trim() && !anioFin)
+    ) {
+      this.snackBar.open('Ingrese años válidos en formato YYYY', undefined, {
+        duration: 5000,
+        horizontalPosition: 'right',
+        panelClass: ['recibo-snackbar-error']
+      });
+      return;
+    }
+
+    if (anioInicio && anioFin && Number(anioInicio) > Number(anioFin)) {
+      this.snackBar.open('El año inicial no puede ser mayor que el año final', undefined, {
+        duration: 5000,
+        horizontalPosition: 'right',
+        panelClass: ['recibo-snackbar-error']
+      });
+      return;
+    }
+
+    this.appliedAnioInicio = anioInicio;
+    this.appliedAnioFin = anioFin;
+    this.syncActiveFilters();
+    this.cargarVista();
+    setTimeout(() => this.filtersMenuTrigger?.closeMenu(), 100);
+  }
+
+  clearActiveFilter(): void {
+    if (this.vista === 'diaria') {
+      this.appliedFechaInicio = null;
+      this.appliedFechaFin = null;
+      this.filterFechaInicioCtrl.setValue(null, { emitEvent: false });
+      this.filterFechaFinCtrl.setValue(null, { emitEvent: false });
+    } else if (this.vista === 'mensual') {
+      this.appliedMesInicio = null;
+      this.appliedMesFin = null;
+      this.filterMesInicioCtrl.setValue(null, { emitEvent: false });
+      this.filterMesFinCtrl.setValue(null, { emitEvent: false });
+    } else {
+      this.appliedAnioInicio = null;
+      this.appliedAnioFin = null;
+      this.filterAnioInicioCtrl.setValue('', { emitEvent: false });
+      this.filterAnioFinCtrl.setValue('', { emitEvent: false });
+    }
+
+    this.syncActiveFilters();
+    this.cargarVista();
+  }
+
+  hasActiveFilter(): boolean {
+    if (this.vista === 'diaria') {
+      return !!this.appliedFechaInicio || !!this.appliedFechaFin;
+    }
+    if (this.vista === 'mensual') {
+      return !!this.appliedMesInicio || !!this.appliedMesFin;
+    }
+    return !!this.appliedAnioInicio || !!this.appliedAnioFin;
+  }
+
   /** Color del API para columna Semáforo */
   colorSemaforo(row: { tipoResultadoFin: { color?: string } | null }): string {
     const c = row.tipoResultadoFin?.color?.trim();
@@ -321,6 +535,149 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
     } catch {
       return iso;
     }
+  }
+
+  private getFechaFiltro(): EstadisticaFechaFiltro | undefined {
+    if (!this.appliedFechaInicio && !this.appliedFechaFin) {
+      return undefined;
+    }
+    return {
+      fechaInicio: this.appliedFechaInicio,
+      fechaFin: this.appliedFechaFin
+    };
+  }
+
+  private getMesFiltro(): EstadisticaMesFiltro | undefined {
+    if (!this.appliedMesInicio && !this.appliedMesFin) {
+      return undefined;
+    }
+    return {
+      mesInicio: this.appliedMesInicio,
+      mesFin: this.appliedMesFin
+    };
+  }
+
+  private getAnioFiltro(): EstadisticaAnioFiltro | undefined {
+    if (!this.appliedAnioInicio && !this.appliedAnioFin) {
+      return undefined;
+    }
+    return {
+      anioInicio: this.appliedAnioInicio,
+      anioFin: this.appliedAnioFin
+    };
+  }
+
+  private syncActiveFilters(): void {
+    const filter = this.buildActiveFilterLabel();
+    this.activeFilters = filter ? [filter] : [];
+  }
+
+  private buildActiveFilterLabel(): { label: string; value: string } | null {
+    if (this.vista === 'diaria') {
+      return this.buildDateFilterLabel();
+    }
+    if (this.vista === 'mensual') {
+      return this.buildMonthFilterLabel();
+    }
+    return this.buildYearFilterLabel();
+  }
+
+  private buildDateFilterLabel(): { label: string; value: string } | null {
+    const fechaInicio = this.formatDateDisplay(this.appliedFechaInicio);
+    const fechaFin = this.formatDateDisplay(this.appliedFechaFin);
+
+    if (this.appliedFechaInicio && this.appliedFechaFin) {
+      return { label: 'Fechas:', value: `${fechaInicio} a ${fechaFin}` };
+    }
+    if (this.appliedFechaInicio) {
+      return { label: 'Desde:', value: fechaInicio ?? '' };
+    }
+    if (this.appliedFechaFin) {
+      return { label: 'Hasta:', value: fechaFin ?? '' };
+    }
+    return null;
+  }
+
+  private buildMonthFilterLabel(): { label: string; value: string } | null {
+    const mesInicio = this.formatMonthDisplay(this.appliedMesInicio);
+    const mesFin = this.formatMonthDisplay(this.appliedMesFin);
+
+    if (this.appliedMesInicio && this.appliedMesFin) {
+      return { label: 'Meses:', value: `${mesInicio} a ${mesFin}` };
+    }
+    if (this.appliedMesInicio) {
+      return { label: 'Desde mes:', value: mesInicio ?? '' };
+    }
+    if (this.appliedMesFin) {
+      return { label: 'Hasta mes:', value: mesFin ?? '' };
+    }
+    return null;
+  }
+
+  private buildYearFilterLabel(): { label: string; value: string } | null {
+    if (this.appliedAnioInicio && this.appliedAnioFin) {
+      return { label: 'Años:', value: `${this.appliedAnioInicio} a ${this.appliedAnioFin}` };
+    }
+    if (this.appliedAnioInicio) {
+      return { label: 'Desde año:', value: this.appliedAnioInicio };
+    }
+    if (this.appliedAnioFin) {
+      return { label: 'Hasta año:', value: this.appliedAnioFin };
+    }
+    return null;
+  }
+
+  private formatDateParam(value: Date | null): string | null {
+    if (!value) return null;
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private parseDateParam(value: string | null): Date | null {
+    if (!value) return null;
+    const parsed = new Date(`${value}T00:00:00`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  private formatDateDisplay(value: string | null): string | null {
+    const parsed = this.parseDateParam(value);
+    if (!parsed) return null;
+    const day = String(parsed.getDate()).padStart(2, '0');
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const year = parsed.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
+  private formatMonthDisplay(value: string | null): string | null {
+    if (!value) return null;
+    const match = value.match(/^(\d{4})-(\d{2})$/);
+    if (!match) return null;
+    return `${match[2]}-${match[1]}`;
+  }
+
+  private formatMonthParam(value: Date | null): string | null {
+    if (!value || Number.isNaN(value.getTime())) return null;
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+  }
+
+  private parseMonthParam(value: string | null): Date | null {
+    if (!value) return null;
+    const match = value.match(/^(\d{4})-(\d{2})$/);
+    if (!match) return null;
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    if (month < 1 || month > 12) return null;
+    return new Date(year, month - 1, 1);
+  }
+
+  private normalizeYearParam(value: string | null): string | null {
+    const normalized = value?.trim() ?? '';
+    if (!normalized) return null;
+    return /^\d{4}$/.test(normalized) ? normalized : null;
   }
 
   periodoLabelDiaria(row: EstadisticaFinancieraDiariaDto): string {

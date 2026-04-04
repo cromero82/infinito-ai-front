@@ -1,6 +1,17 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
+import { catchError, throwError } from 'rxjs';
+
+const PREVIOUS_RELOGIN_URL_KEY = 'url-previous-relogin';
+const PREVIOUS_RELOGIN_USER_KEY = 'user-previous-relogin';
+const TOKEN_EXPIRED_MESSAGE = 'El token ha expirado';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const router = inject(Router);
+  const snackBar = inject(MatSnackBar);
+
   // Rutas que no requieren autenticación
   const excludedRoutes = [
     '/auth/login',
@@ -13,25 +24,58 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Verificar si la URL contiene alguna de las rutas excluidas
   const shouldExclude = excludedRoutes.some(route => url.includes(route));
 
-  // Si la ruta está excluida, no agregar el token
-  if (shouldExclude) {
-    return next(req);
-  }
-
   // Obtener el token del localStorage
   const token = localStorage.getItem('user-token');
 
-  // Si hay token, agregarlo al header
-  if (token) {
-    const clonedRequest = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    return next(clonedRequest);
-  }
+  const requestToSend =
+    !shouldExclude && token
+      ? req.clone({
+          setHeaders: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+      : req;
 
-  // Si no hay token, continuar con la petición original
-  return next(req);
+  return next(requestToSend).pipe(
+    catchError((error: HttpErrorResponse) => {
+      const message =
+        error.error?.message ||
+        error.error?.mensaje ||
+        TOKEN_EXPIRED_MESSAGE;
+
+      const isTokenExpiredError =
+        error.status === 401 &&
+        typeof message === 'string' &&
+        message.trim().toLowerCase() === TOKEN_EXPIRED_MESSAGE.toLowerCase();
+
+      if (isTokenExpiredError) {
+        const currentUser = localStorage.getItem('user-nombre');
+
+        if (router.url !== '/login') {
+          localStorage.setItem(PREVIOUS_RELOGIN_URL_KEY, router.url);
+
+          if (currentUser) {
+            localStorage.setItem(PREVIOUS_RELOGIN_USER_KEY, currentUser);
+          } else {
+            localStorage.removeItem(PREVIOUS_RELOGIN_USER_KEY);
+          }
+        }
+
+        localStorage.removeItem('user-token');
+        snackBar.dismiss();
+        snackBar.open(message, 'Cerrar', {
+          duration: 7000,
+          horizontalPosition: 'center',
+          verticalPosition: 'top'
+        });
+
+        if (router.url !== '/login') {
+          void router.navigate(['/login']);
+        }
+      }
+
+      return throwError(() => error);
+    })
+  );
 };
 

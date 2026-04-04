@@ -297,6 +297,8 @@ export class AuthService {
     localStorage.removeItem('user-nombre');
     localStorage.removeItem('user-roles');
     localStorage.removeItem('user-rol-nombre');
+    localStorage.removeItem('url-previous-relogin');
+    localStorage.removeItem('user-previous-relogin');
   }
 
   isAuthenticated(): boolean {

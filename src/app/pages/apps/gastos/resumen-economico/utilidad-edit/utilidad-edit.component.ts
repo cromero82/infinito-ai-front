@@ -18,6 +18,7 @@ import { NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { EstadisticaFinancieraService } from '../service/estadistica-financiera.service';
 import { httpErrorMessage } from '../http-error.util';
+import { MonthYearPickerComponent } from '../../../../../core/components/month-year-picker/month-year-picker.component';
 
 export type UtilidadEditPeriodo = 'dia' | 'mes' | 'anio';
 
@@ -74,6 +75,7 @@ class DateAdapterDDMMYYYY extends NativeDateAdapter {
     MatIconModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MonthYearPickerComponent,
     NgIf,
     NgSwitch,
     NgSwitchCase
@@ -85,6 +87,7 @@ export class UtilidadEditComponent implements OnInit {
   form: FormGroup;
   /** Mismo patrón que CorteVentasComponent (fechaInicioCtrl): evita desvinculación con el datepicker */
   fechaDiaCtrl = new FormControl<Date | null>(null, [Validators.required]);
+  valorMesCtrl = new FormControl<Date | null>(null, [Validators.required]);
   periodo: UtilidadEditPeriodo;
 
   constructor(
@@ -109,24 +112,27 @@ export class UtilidadEditComponent implements OnInit {
     if (this.periodo === 'dia') {
       this.fechaDiaCtrl.setValidators([Validators.required]);
       this.fechaDiaCtrl.setValue(fechaHoy);
-      this.form.get('valorMes')!.clearValidators();
+      this.valorMesCtrl.clearValidators();
+      this.valorMesCtrl.setValue(null);
       this.form.get('valorAnio')!.clearValidators();
     } else if (this.periodo === 'mes') {
       this.fechaDiaCtrl.clearValidators();
       this.fechaDiaCtrl.setValue(null);
       const y = today.getFullYear();
-      const m = String(today.getMonth() + 1).padStart(2, '0');
-      this.form.get('valorMes')!.setValidators([Validators.required]);
-      this.form.get('valorMes')!.setValue(`${y}-${m}`);
+      const mesActual = new Date(y, today.getMonth(), 1);
+      this.valorMesCtrl.setValidators([Validators.required]);
+      this.valorMesCtrl.setValue(mesActual);
       this.form.get('valorAnio')!.clearValidators();
     } else {
       this.fechaDiaCtrl.clearValidators();
       this.fechaDiaCtrl.setValue(null);
-      this.form.get('valorMes')!.clearValidators();
+      this.valorMesCtrl.clearValidators();
+      this.valorMesCtrl.setValue(null);
       this.form.get('valorAnio')!.setValidators([Validators.required, Validators.min(2000), Validators.max(2100)]);
     }
     this.form.updateValueAndValidity();
     this.fechaDiaCtrl.updateValueAndValidity();
+    this.valorMesCtrl.updateValueAndValidity();
   }
 
   get titulo(): string {
@@ -150,6 +156,12 @@ export class UtilidadEditComponent implements OnInit {
     return `${y}-${mm}-${dd}`;
   }
 
+  private dateToYyyyMm(d: Date): string {
+    const y = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}-${mm}`;
+  }
+
   private buildValorTiempo(): string | null {
     if (this.periodo === 'dia') {
       const fd = this.fechaDiaCtrl.value;
@@ -157,9 +169,9 @@ export class UtilidadEditComponent implements OnInit {
       return this.dateToYyyyMmDd(fd);
     }
     if (this.periodo === 'mes') {
-      const v = (this.form.get('valorMes')!.value as string)?.trim();
-      if (!v || !/^\d{4}-\d{2}$/.test(v)) return null;
-      return v;
+      const mes = this.valorMesCtrl.value;
+      if (!mes || !(mes instanceof Date) || isNaN(mes.getTime())) return null;
+      return this.dateToYyyyMm(mes);
     }
     const y = Number(this.form.get('valorAnio')!.value);
     if (isNaN(y)) return null;
@@ -167,7 +179,11 @@ export class UtilidadEditComponent implements OnInit {
   }
 
   puedeRegistrar(): boolean {
-    if (this.periodo === 'mes' || this.periodo === 'anio') return this.form.valid;
+    if (this.periodo === 'mes') {
+      const mes = this.valorMesCtrl.value;
+      return !!mes && mes instanceof Date && !isNaN(mes.getTime());
+    }
+    if (this.periodo === 'anio') return this.form.valid;
     const fd = this.fechaDiaCtrl.value;
     return !!fd && fd instanceof Date && !isNaN(fd.getTime());
   }

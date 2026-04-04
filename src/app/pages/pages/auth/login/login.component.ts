@@ -45,6 +45,10 @@ import { forkJoin, of } from 'rxjs';
   ]
 })
 export class LoginComponent {
+  private readonly defaultRedirectUrl = '/apps/ventas';
+  private readonly previousReloginUrlKey = 'url-previous-relogin';
+  private readonly previousReloginUserKey = 'user-previous-relogin';
+
   form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required]
@@ -151,10 +155,12 @@ export class LoginComponent {
       })
     ).subscribe({
       next: () => {
+        const redirectUrl = this.resolvePostLoginUrl();
+
         this.snackbar.open('Inicio de sesión exitoso', 'Cerrar', {
           duration: 3000
         });
-        this.router.navigate(['/apps/ventas']);
+        void this.router.navigateByUrl(redirectUrl);
       },
       error: (error) => {
         // Extraer el mensaje de error del servidor
@@ -179,6 +185,36 @@ export class LoginComponent {
         });
       }
     });
+  }
+
+  private resolvePostLoginUrl(): string {
+    const previousUrl = localStorage.getItem(this.previousReloginUrlKey);
+    const previousUser = localStorage.getItem(this.previousReloginUserKey);
+    const currentUser = localStorage.getItem('user-nombre');
+
+    const shouldRestorePreviousUrl =
+      !!previousUrl && this.isSameUser(previousUser, currentUser);
+
+    this.clearPreviousReloginState();
+
+    return shouldRestorePreviousUrl ? previousUrl! : this.defaultRedirectUrl;
+  }
+
+  private isSameUser(previousUser: string | null, currentUser: string | null): boolean {
+    if (!previousUser || !currentUser) {
+      return false;
+    }
+
+    return this.normalizeUserName(previousUser) === this.normalizeUserName(currentUser);
+  }
+
+  private normalizeUserName(userName: string): string {
+    return userName.trim().toLowerCase();
+  }
+
+  private clearPreviousReloginState(): void {
+    localStorage.removeItem(this.previousReloginUrlKey);
+    localStorage.removeItem(this.previousReloginUserKey);
   }
 
   toggleVisibility() {

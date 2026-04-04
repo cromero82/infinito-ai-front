@@ -3,7 +3,33 @@
     <div class="card resumen-card flex flex-col flex-1 min-h-0 overflow-hidden">
       <div class="px-6 py-4 border-b flex flex-col gap-4 flex-shrink-0">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-wrap">
-          <h2 class="title m-0">Resumen económico</h2>
+          <div class="flex items-center gap-2 flex-wrap min-w-0">
+            <h2 class="title m-0">Resumen económico</h2>
+            <button
+              mat-icon-button
+              type="button"
+              color="primary"
+              [matMenuTriggerFor]="filtersMenu"
+              #filtersMenuTrigger="matMenuTrigger"
+              (menuOpened)="restoreFiltersState()"
+              matTooltip="Filtrar">
+              <mat-icon svgIcon="mat:filter_list"></mat-icon>
+            </button>
+            <mat-chip-set *ngIf="activeFilters.length > 0" class="resumen-active-filters">
+              <mat-chip
+                *ngFor="let filter of activeFilters"
+                [removable]="true"
+                color="primary"
+                selected
+                (removed)="clearActiveFilter()">
+                <span class="filter-chip-label">{{ filter.label }}</span>
+                <span class="filter-chip-value">{{ filter.value }}</span>
+                <button matChipRemove aria-label="Quitar filtro">
+                  <mat-icon svgIcon="mat:close" class="icon-sm"></mat-icon>
+                </button>
+              </mat-chip>
+            </mat-chip-set>
+          </div>
           <div class="flex items-center gap-3 flex-wrap">
             <mat-button-toggle-group
               [value]="vista"
@@ -24,6 +50,77 @@
             </button>
           </div>
         </div>
+
+        <mat-menu
+          #filtersMenu="matMenu"
+          class="filters-custom-menu"
+          panelClass="filters-custom-menu"
+          xPosition="before">
+          <div class="resumen-filters-menu-content flex flex-col gap-4 p-3" (click)="$event.stopPropagation()">
+            <div class="flex items-center gap-2 pb-2 border-b border-primary/30">
+              <mat-icon svgIcon="mat:tune" class="icon-sm text-primary"></mat-icon>
+              <h3 class="m-0 font-medium text-sm">Filtros</h3>
+            </div>
+
+            <ng-container [ngSwitch]="vista">
+              <ng-container *ngSwitchCase="'diaria'">
+                <mat-form-field appearance="outline" class="w-full filters-field-dense">
+                  <mat-label>Fecha inicio</mat-label>
+                  <input matInput [matDatepicker]="pickerInicio" [formControl]="filterFechaInicioCtrl" />
+                  <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerInicio></mat-datepicker>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full filters-field-dense">
+                  <mat-label>Fecha fin</mat-label>
+                  <input matInput [matDatepicker]="pickerFin" [formControl]="filterFechaFinCtrl" />
+                  <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerFin></mat-datepicker>
+                </mat-form-field>
+              </ng-container>
+
+              <ng-container *ngSwitchCase="'mensual'">
+                <app-month-year-picker
+                  [formControl]="filterMesInicioCtrl"
+                  label="Mes inicio"
+                  placeholder="MM-YYYY"
+                  separator="-"></app-month-year-picker>
+
+                <app-month-year-picker
+                  [formControl]="filterMesFinCtrl"
+                  label="Mes fin"
+                  placeholder="MM-YYYY"
+                  separator="-"></app-month-year-picker>
+              </ng-container>
+
+              <ng-container *ngSwitchCase="'anual'">
+                <mat-form-field appearance="outline" class="w-full filters-field-dense">
+                  <mat-label>Año inicial</mat-label>
+                  <input matInput placeholder="YYYY" maxlength="4" [formControl]="filterAnioInicioCtrl" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full filters-field-dense">
+                  <mat-label>Año final</mat-label>
+                  <input matInput placeholder="YYYY" maxlength="4" [formControl]="filterAnioFinCtrl" />
+                </mat-form-field>
+              </ng-container>
+            </ng-container>
+
+            <div class="flex justify-end gap-2 flex-wrap">
+              <button
+                *ngIf="hasActiveFilter()"
+                mat-button
+                color="warn"
+                type="button"
+                (click)="clearActiveFilter(); filtersMenuTrigger.closeMenu()">
+                Limpiar
+              </button>
+              <button mat-flat-button color="primary" type="button" (click)="applyFilters()">
+                Aplicar
+              </button>
+            </div>
+          </div>
+        </mat-menu>
       </div>
 
       <div class="resumen-table-section px-6 py-4 flex flex-col flex-1 min-h-0 overflow-hidden">

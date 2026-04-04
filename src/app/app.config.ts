@@ -12,6 +12,7 @@ import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatBottomSheetModule } from '@angular/material/bottom-sheet';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { provideIcons } from './core/icons/icons.provider';
 import { provideLuxon } from './core/luxon/luxon.provider';
 import { provideVex } from '@vex/vex.provider';
@@ -25,7 +26,8 @@ export const appConfig: ApplicationConfig = {
       BrowserModule,
       MatDialogModule,
       MatBottomSheetModule,
-      MatNativeDateModule
+      MatNativeDateModule,
+      MatSnackBarModule
     ),
     provideRouter(
       appRoutes,

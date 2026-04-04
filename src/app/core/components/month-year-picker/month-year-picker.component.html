@@ -1,0 +1,26 @@
+<mat-form-field appearance="outline" class="month-year-picker-field w-full" subscriptSizing="dynamic">
+  <mat-label>{{ label }}</mat-label>
+  <input
+    class="month-year-picker-hidden-input"
+    [matDatepicker]="picker"
+    [value]="value"
+    tabindex="-1"
+    aria-hidden="true" />
+  <input
+    matInput
+    [value]="displayValue"
+    [placeholder]="placeholder"
+    [required]="required"
+    [disabled]="disabled"
+    readonly
+    (click)="picker.open()"
+    (blur)="markTouched()" />
+  <mat-datepicker-toggle matSuffix [for]="picker" [disabled]="disabled"></mat-datepicker-toggle>
+  <mat-datepicker
+    #picker
+    startView="multi-year"
+    [panelClass]="panelClass"
+    (yearSelected)="chosenYearHandler($event)"
+    (monthSelected)="chosenMonthHandler($event, picker)"></mat-datepicker>
+  <mat-hint *ngIf="hint">{{ hint }}</mat-hint>
+</mat-form-field>

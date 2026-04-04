@@ -6,9 +6,6 @@
 </div>
 <mat-divider class="text-border"></mat-divider>
 <mat-dialog-content class="flex flex-col gap-4" [formGroup]="form">
-  <p class="text-secondary text-sm m-0">
-    Indique el período para iniciar el registro de estadísticas (crear). El envío usa aaaa-mm-dd, aaaa-mm o aaaa según la vista.
-  </p>
 
   <ng-container [ngSwitch]="periodo">
     <mat-form-field *ngSwitchCase="'dia'" appearance="outline" class="w-full" subscriptSizing="dynamic">
@@ -19,11 +16,12 @@
       <mat-hint>Visualización dd/mm/aaaa · envío aaaa-mm-dd</mat-hint>
     </mat-form-field>
 
-    <mat-form-field *ngSwitchCase="'mes'" appearance="outline" class="w-full" subscriptSizing="dynamic">
-      <mat-label>Mes</mat-label>
-      <input matInput type="month" formControlName="valorMes" />
-      <mat-hint>Envío: aaaa-mm</mat-hint>
-    </mat-form-field>
+    <app-month-year-picker
+      *ngSwitchCase="'mes'"
+      [formControl]="valorMesCtrl"
+      label="Mes"
+      placeholder="MM/AAAA"
+      hint="Visualización mm/aaaa · envío aaaa-mm"></app-month-year-picker>
 
     <mat-form-field *ngSwitchCase="'anio'" appearance="outline" class="w-full" subscriptSizing="dynamic">
       <mat-label>Año</mat-label>

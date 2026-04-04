@@ -61,6 +61,21 @@ export interface ValorTiempoRequest {
   valorTiempo: string;
 }
 
+export interface EstadisticaFechaFiltro {
+  fechaInicio?: string | null;
+  fechaFin?: string | null;
+}
+
+export interface EstadisticaMesFiltro {
+  mesInicio?: string | null;
+  mesFin?: string | null;
+}
+
+export interface EstadisticaAnioFiltro {
+  anioInicio?: string | null;
+  anioFin?: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class EstadisticaFinancieraService {
   private apiUrl = 'http://localhost:8088/estadistica-financiera';
@@ -77,22 +92,61 @@ export class EstadisticaFinancieraService {
     return this.http.put<EstadisticaFinancieraPutResponse>(this.apiUrl, request, { headers });
   }
 
-  getDiaria(page = 0, size = 10): Observable<PageResponseEstadistica<EstadisticaFinancieraDiariaDto>> {
+  private buildFechaParams(filtro?: EstadisticaFechaFiltro): HttpParams {
+    let params = new HttpParams();
+    if (filtro?.fechaInicio) {
+      params = params.set('fechaInicio', filtro.fechaInicio);
+    }
+    if (filtro?.fechaFin) {
+      params = params.set('fechaFin', filtro.fechaFin);
+    }
+    return params;
+  }
+
+  private buildMesParams(filtro?: EstadisticaMesFiltro): HttpParams {
+    let params = new HttpParams();
+    if (filtro?.mesInicio) {
+      params = params.set('mesInicio', filtro.mesInicio);
+    }
+    if (filtro?.mesFin) {
+      params = params.set('mesFin', filtro.mesFin);
+    }
+    return params;
+  }
+
+  private buildAnioParams(filtro?: EstadisticaAnioFiltro): HttpParams {
+    let params = new HttpParams();
+    if (filtro?.anioInicio) {
+      params = params.set('anioInicio', filtro.anioInicio);
+    }
+    if (filtro?.anioFin) {
+      params = params.set('anioFin', filtro.anioFin);
+    }
+    return params;
+  }
+
+  getDiaria(
+    page = 0,
+    size = 10,
+    filtro?: EstadisticaFechaFiltro
+  ): Observable<PageResponseEstadistica<EstadisticaFinancieraDiariaDto>> {
     const headers = new HttpHeaders({ Accept: 'application/json' });
-    const params = new HttpParams().set('page', String(page)).set('size', String(size));
+    const params = this.buildFechaParams(filtro).set('page', String(page)).set('size', String(size));
     return this.http.get<PageResponseEstadistica<EstadisticaFinancieraDiariaDto>>(
       `${this.apiUrl}/diaria`,
       { headers, params }
     );
   }
 
-  getMensual(): Observable<EstadisticaFinancieraMensualDto[]> {
+  getMensual(filtro?: EstadisticaMesFiltro): Observable<EstadisticaFinancieraMensualDto[]> {
     const headers = new HttpHeaders({ Accept: 'application/json' });
-    return this.http.get<EstadisticaFinancieraMensualDto[]>(`${this.apiUrl}/mensual`, { headers });
+    const params = this.buildMesParams(filtro);
+    return this.http.get<EstadisticaFinancieraMensualDto[]>(`${this.apiUrl}/mensual`, { headers, params });
   }
 
-  getAnual(): Observable<EstadisticaFinancieraAnualDto[]> {
+  getAnual(filtro?: EstadisticaAnioFiltro): Observable<EstadisticaFinancieraAnualDto[]> {
     const headers = new HttpHeaders({ Accept: 'application/json' });
-    return this.http.get<EstadisticaFinancieraAnualDto[]>(`${this.apiUrl}/anual`, { headers });
+    const params = this.buildAnioParams(filtro);
+    return this.http.get<EstadisticaFinancieraAnualDto[]>(`${this.apiUrl}/anual`, { headers, params });
   }
 }
