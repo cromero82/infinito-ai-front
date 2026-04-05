@@ -43,6 +43,7 @@ import { UtilidadEditComponent, UtilidadEditPeriodo } from '../utilidad-edit/uti
 import { httpErrorMessage } from '../http-error.util';
 import { FooterService } from '../../../../../layouts/services/footer.service';
 import { MonthYearPickerComponent } from '../../../../../core/components/month-year-picker/month-year-picker.component';
+import { FechaUtilService } from '../../../ventas/service/fecha-util.service';
 
 export type VistaEstadistica = 'diaria' | 'mensual' | 'anual';
 
@@ -170,6 +171,8 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
 
   /** Id de fila en proceso de recálculo (PUT) */
   recalculandoId: number | null = null;
+  selectedRowId: number | null = null;
+  selectedRowVista: VistaEstadistica | null = null;
 
   @ViewChild('tableScrollDiaria') tableScrollDiaria!: ElementRef<HTMLElement>;
   @ViewChild('filtersMenuTrigger') filtersMenuTrigger?: MatMenuTrigger;
@@ -181,7 +184,8 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
     private tableViewportService: TableViewportService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private footerService: FooterService
+    private footerService: FooterService,
+    private fechaUtilService: FechaUtilService
   ) {}
 
   ngOnInit() {
@@ -499,6 +503,24 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
     return !!this.appliedAnioInicio || !!this.appliedAnioFin;
   }
 
+  selectRow(row: { id: number }): void {
+    this.selectedRowId = row.id;
+    this.selectedRowVista = this.vista;
+  }
+
+  isRowSelected(row: { id: number }): boolean {
+    return this.selectedRowVista === this.vista && this.selectedRowId === row.id;
+  }
+
+  periodoTooltipDiaria(row: EstadisticaFinancieraDiariaDto): string {
+    const raw = row.valorTiempo || row.dia;
+    if (!raw) return '';
+    const date = this.fechaUtilService.parseDateAsLocal(raw);
+    if (Number.isNaN(date.getTime())) return '';
+    const daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    return daysOfWeek[date.getDay()] ?? '';
+  }
+
   /** Color del API para columna Semáforo */
   colorSemaforo(row: { tipoResultadoFin: { color?: string } | null }): string {
     const c = row.tipoResultadoFin?.color?.trim();
@@ -680,12 +702,48 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
     return /^\d{4}$/.test(normalized) ? normalized : null;
   }
 
+  private formatPeriodoDiaConMesTexto(value: string | null | undefined): string {
+    const raw = value?.trim();
+    if (!raw) return '—';
+
+    const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return raw;
+
+    const year = match[1];
+    const month = Number(match[2]);
+    const day = match[3];
+    if (month < 1 || month > 12) return raw;
+
+    const monthName = this.getMonthShortName(month);
+    return `${year}/${monthName}/${day}`;
+  }
+
+  private formatPeriodoMesConTexto(value: string | null | undefined): string {
+    const raw = value?.trim();
+    if (!raw) return '—';
+
+    const match = raw.match(/^(\d{4})-(\d{2})$/);
+    if (!match) return raw;
+
+    const year = match[1];
+    const month = Number(match[2]);
+    if (month < 1 || month > 12) return raw;
+
+    const monthName = this.getMonthShortName(month);
+    return `${year}/${monthName}`;
+  }
+
+  private getMonthShortName(month: number): string {
+    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    return monthNames[month - 1] ?? String(month).padStart(2, '0');
+  }
+
   periodoLabelDiaria(row: EstadisticaFinancieraDiariaDto): string {
-    return row.valorTiempo || row.dia || '—';
+    return this.formatPeriodoDiaConMesTexto(row.valorTiempo || row.dia);
   }
 
   periodoLabelMensual(row: EstadisticaFinancieraMensualDto): string {
-    return row.valorTiempo || row.mes || '—';
+    return this.formatPeriodoMesConTexto(row.valorTiempo || row.mes);
   }
 
   periodoLabelAnual(row: EstadisticaFinancieraAnualDto): string {
@@ -796,6 +854,16 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
     this.footerService.setFooterItems([
       { textoClave: labelPeriodo, valorClave: String(n), estiloCssClave: '' },
       {
+        textoClave: 'Total utilidad',
+        valorClave: this.formatCurrency(sumUtilidad),
+        estiloCssClave: 'footer-item-utilidad-highlight'
+      },
+      {
+        textoClave: '% utilidad',
+        valorClave: pctStr,
+        estiloCssClave: 'footer-item-total-highlight'
+      },
+      {
         textoClave: 'Total ventas',
         valorClave: this.formatCurrency(sumVentas),
         estiloCssClave: ''
@@ -804,16 +872,6 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
         textoClave: 'Total egresos',
         valorClave: this.formatCurrency(sumEgresos),
         estiloCssClave: ''
-      },
-      {
-        textoClave: 'Total utilidad',
-        valorClave: this.formatCurrency(sumUtilidad),
-        estiloCssClave: ''
-      },
-      {
-        textoClave: '% utilidad',
-        valorClave: pctStr,
-        estiloCssClave: 'footer-item-total-highlight'
       }
     ]);
   }

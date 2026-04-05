@@ -132,7 +132,7 @@
             <table mat-table [dataSource]="dataDiaria" class="w-full resumen-table-compact">
               <ng-container matColumnDef="periodo">
                 <th mat-header-cell *matHeaderCellDef>Período (día)</th>
-                <td mat-cell *matCellDef="let row">{{ periodoLabelDiaria(row) }}</td>
+                <td mat-cell *matCellDef="let row" [matTooltip]="periodoTooltipDiaria(row)">{{ periodoLabelDiaria(row) }}</td>
               </ng-container>
               <ng-container matColumnDef="totalVentas">
                 <th mat-header-cell *matHeaderCellDef>Ventas</th>
@@ -143,8 +143,8 @@
                 <td mat-cell *matCellDef="let row">{{ formatCurrency(row.totalEgresos) }}</td>
               </ng-container>
               <ng-container matColumnDef="utilidad">
-                <th mat-header-cell *matHeaderCellDef>Utilidad</th>
-                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.utilidad) }}</td>
+                <th mat-header-cell *matHeaderCellDef class="col-utilidad">Utilidad</th>
+                <td mat-cell *matCellDef="let row" class="col-utilidad">{{ formatCurrency(row.utilidad) }}</td>
               </ng-container>
               <ng-container matColumnDef="porcentajeUtilidad">
                 <th mat-header-cell *matHeaderCellDef>% utilidad</th>
@@ -185,7 +185,11 @@
                 </td>
               </ng-container>
               <tr mat-header-row *matHeaderRowDef="displayedColumnsDiaria"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumnsDiaria"></tr>
+              <tr
+                mat-row
+                *matRowDef="let row; columns: displayedColumnsDiaria"
+                [class.selected-row]="isRowSelected(row)"
+                (click)="selectRow(row)"></tr>
             </table>
             <div *ngIf="loadingMore" class="text-center py-3 text-secondary">Cargando más...</div>
           </div>
@@ -206,8 +210,8 @@
                 <td mat-cell *matCellDef="let row">{{ formatCurrency(row.totalEgresos) }}</td>
               </ng-container>
               <ng-container matColumnDef="utilidad">
-                <th mat-header-cell *matHeaderCellDef>Utilidad</th>
-                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.utilidad) }}</td>
+                <th mat-header-cell *matHeaderCellDef class="col-utilidad">Utilidad</th>
+                <td mat-cell *matCellDef="let row" class="col-utilidad">{{ formatCurrency(row.utilidad) }}</td>
               </ng-container>
               <ng-container matColumnDef="porcentajeUtilidad">
                 <th mat-header-cell *matHeaderCellDef>% utilidad</th>
@@ -248,7 +252,11 @@
                 </td>
               </ng-container>
               <tr mat-header-row *matHeaderRowDef="displayedColumnsMensual"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumnsMensual"></tr>
+              <tr
+                mat-row
+                *matRowDef="let row; columns: displayedColumnsMensual"
+                [class.selected-row]="isRowSelected(row)"
+                (click)="selectRow(row)"></tr>
             </table>
           </div>
 
@@ -268,8 +276,8 @@
                 <td mat-cell *matCellDef="let row">{{ formatCurrency(row.totalEgresos) }}</td>
               </ng-container>
               <ng-container matColumnDef="utilidad">
-                <th mat-header-cell *matHeaderCellDef>Utilidad</th>
-                <td mat-cell *matCellDef="let row">{{ formatCurrency(row.utilidad) }}</td>
+                <th mat-header-cell *matHeaderCellDef class="col-utilidad">Utilidad</th>
+                <td mat-cell *matCellDef="let row" class="col-utilidad">{{ formatCurrency(row.utilidad) }}</td>
               </ng-container>
               <ng-container matColumnDef="porcentajeUtilidad">
                 <th mat-header-cell *matHeaderCellDef>% utilidad</th>
@@ -310,7 +318,11 @@
                 </td>
               </ng-container>
               <tr mat-header-row *matHeaderRowDef="displayedColumnsAnual"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumnsAnual"></tr>
+              <tr
+                mat-row
+                *matRowDef="let row; columns: displayedColumnsAnual"
+                [class.selected-row]="isRowSelected(row)"
+                (click)="selectRow(row)"></tr>
             </table>
           </div>
         </ng-container>

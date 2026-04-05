@@ -37,6 +37,7 @@ export class ProveedorListComponent implements OnInit, AfterViewInit {
   ];
   dataSource: ProveedorDto[] = [];
   filteredDataSource: ProveedorDto[] = [];
+  selectedRowId: number | null = null;
   loading = false;
   searchCtrl = new UntypedFormControl('');
   tableScrollMaxHeight = 400;
@@ -149,6 +150,14 @@ export class ProveedorListComponent implements OnInit, AfterViewInit {
 
   getDocumentoDisplay(documento: string | null | undefined): string {
     return getDocumentoDisplay(documento);
+  }
+
+  selectRow(proveedor: ProveedorDto): void {
+    this.selectedRowId = proveedor.id;
+  }
+
+  isRowSelected(proveedor: ProveedorDto): boolean {
+    return this.selectedRowId === proveedor.id;
   }
 
   private focusSearchInput() {

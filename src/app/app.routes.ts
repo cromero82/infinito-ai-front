@@ -221,7 +221,8 @@ export const appRoutes: VexRoutes = [
                 loadComponent: () =>
                   import('./pages/apps/gastos/egresos/egreso-list/egreso-list.component').then(
                     (m) => m.EgresoListComponent
-                  )
+                  ),
+                data: { scrollDisabled: true }
               },
               {
                 path: 'proveedores',

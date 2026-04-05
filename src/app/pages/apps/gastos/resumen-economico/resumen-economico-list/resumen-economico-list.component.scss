@@ -73,6 +73,15 @@
   vertical-align: middle;
 }
 
+// Columna Utilidad: header opaco y celdas con violeta suave.
+th.col-utilidad {
+  background-color: #eee8ff !important;
+}
+
+td.col-utilidad {
+  background-color: rgba(124, 77, 255, 0.08) !important;
+}
+
 :host ::ng-deep {
   .filters-custom-menu {
     max-width: min(272px, calc(100vw - 24px)) !important;
@@ -103,6 +112,10 @@
     flex-wrap: wrap;
   }
 
+  table.resumen-table-compact.mat-mdc-table tr:hover td.col-utilidad {
+    background-color: rgba(124, 77, 255, 0.12) !important;
+  }
+
   table.resumen-table-compact.mat-mdc-table {
     font-size: 13px !important;
     --mat-table-row-item-container-height: 28px;
@@ -131,6 +144,7 @@
     tr.mat-mdc-row {
       height: 28px !important;
       min-height: unset !important;
+      cursor: pointer;
 
       &:nth-child(even) {
         background-color: rgba(0, 0, 0, 0.005) !important;
@@ -138,6 +152,15 @@
 
       &:hover {
         background-color: rgba(0, 0, 0, 0.01) !important;
+      }
+
+      &.selected-row {
+        background-color: rgba(63, 81, 181, 0.12) !important;
+
+        td.mat-mdc-cell,
+        td[mat-cell] {
+          font-weight: 500;
+        }
       }
     }
 
@@ -152,6 +175,10 @@
       padding: 0 8px !important;
       line-height: 26px !important;
       font-size: 12px !important;
+    }
+
+    td.col-utilidad {
+      font-weight: 700 !important;
     }
   }
 }

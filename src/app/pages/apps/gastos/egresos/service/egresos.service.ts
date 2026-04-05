@@ -28,6 +28,8 @@ export interface EgresoSearchParams {
   descripcion?: string;
   tipoEgresoId?: number;
   proveedorId?: number;
+  fechaInicio?: string;
+  fechaFin?: string;
   page?: number;
   size?: number;
 }
@@ -54,14 +56,27 @@ export class EgresosService {
 
   searchEgresos(params: EgresoSearchParams): Observable<PageResponse<EgresoDto>> {
     const headers = new HttpHeaders({ 'Accept': 'application/json' });
-    const httpParams = new HttpParams()
-      .set('descripcion', params.descripcion ?? '')
-      .set('tipoEgresoId', params.tipoEgresoId != null ? params.tipoEgresoId.toString() : '')
-      .set('proveedorId', params.proveedorId != null ? params.proveedorId.toString() : '')
+    let httpParams = new HttpParams()
       .set('page', (params.page ?? 0).toString())
       .set('size', (params.size ?? 10).toString());
 
-    return this.http.get<PageResponse<EgresoDto>>(`${this.apiUrl}/searchDescripciones`, { headers, params: httpParams });
+    if (params.descripcion) {
+      httpParams = httpParams.set('descripcion', params.descripcion);
+    }
+    if (params.tipoEgresoId != null) {
+      httpParams = httpParams.set('tipoEgresoId', params.tipoEgresoId.toString());
+    }
+    if (params.proveedorId != null) {
+      httpParams = httpParams.set('proveedorId', params.proveedorId.toString());
+    }
+    if (params.fechaInicio) {
+      httpParams = httpParams.set('fechaInicio', params.fechaInicio);
+    }
+    if (params.fechaFin) {
+      httpParams = httpParams.set('fechaFin', params.fechaFin);
+    }
+
+    return this.http.get<PageResponse<EgresoDto>>(`${this.apiUrl}/search`, { headers, params: httpParams });
   }
 
   createEgreso(egreso: CreateEgresoRequest): Observable<EgresoDto> {

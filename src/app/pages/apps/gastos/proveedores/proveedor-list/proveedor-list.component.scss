@@ -124,6 +124,15 @@
       &:hover {
         background-color: rgba(0, 0, 0, 0.01) !important;
       }
+
+      &.selected-row {
+        background-color: rgba(63, 81, 181, 0.12) !important;
+
+        td.mat-mdc-cell,
+        td[mat-cell] {
+          font-weight: 500;
+        }
+      }
     }
 
     tr.mat-mdc-header-row {

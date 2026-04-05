@@ -1,15 +1,74 @@
 @import '../../../../../core/table-viewport/table-viewport.scss';
 
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+.egresos-page {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.egresos-card {
+  min-height: 0;
+}
+
+.egresos-table-section .table-scroll-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+}
+
 .search-input {
-  @apply w-64;
+  @apply w-48;
 }
 
 .filter-select {
-  min-width: 160px;
+  min-width: 120px;
+}
+
+.egresos-active-filters {
+  max-width: 100%;
+  flex: 0 0 auto;
+}
+
+.filter-chip-label {
+  margin-right: 0.25rem;
+  font-size: 0.8125rem;
+}
+
+.filter-chip-value {
+  font-weight: 700;
+  font-size: 0.8125rem;
+}
+
+.egresos-filters-menu-content {
+  width: 252px;
+  max-width: min(252px, calc(100vw - 40px));
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.filters-field-dense {
+  min-width: 0;
+  margin-bottom: -1.25em;
 }
 
 // Filtros compactos: alinear con tabla (13px, ~28px altura)
 :host ::ng-deep {
+  .filters-custom-menu {
+    max-width: min(272px, calc(100vw - 24px)) !important;
+
+    .mat-mdc-menu-content {
+      padding: 6px !important;
+      overflow-x: hidden !important;
+    }
+  }
+
   .search-input.mat-mdc-form-field,
   .filter-select.mat-mdc-form-field {
     font-size: 13px !important;
@@ -38,6 +97,22 @@
 
     .mat-mdc-form-field-subscript-wrapper {
       min-height: 0 !important;
+    }
+  }
+
+  .filters-field-dense {
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+
+    .mat-mdc-form-field-flex {
+      min-width: 0;
+      align-items: center !important;
+    }
+
+    .mat-mdc-form-field-infix {
+      min-width: 0 !important;
+      width: auto !important;
     }
   }
 
@@ -129,7 +204,9 @@
 
   .btn-filter-compact {
     min-height: 26px !important;
-    padding: 0 10px !important;
+    min-width: 0 !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
     line-height: 26px !important;
     font-size: 13px !important;
   }
@@ -188,6 +265,15 @@
       &:hover {
         background-color: rgba(0, 0, 0, 0.01) !important;
       }
+
+      &.selected-row {
+        background-color: rgba(63, 81, 181, 0.12) !important;
+
+        td.mat-mdc-cell,
+        td[mat-cell] {
+          font-weight: 500;
+        }
+      }
     }
 
     tr.mat-mdc-header-row {
@@ -198,12 +284,19 @@
   }
 
   // Columna Valor: fondo verde suave (igual que Precio en product-list)
-  th.col-valor,
+  th.col-valor {
+    background-color: #edf7ef !important;
+  }
+
   td.col-valor {
     background-color: rgba(76, 175, 80, 0.08) !important;
   }
 
   table.egresos-table-compact tr.mat-mdc-row:hover td.col-valor {
     background-color: rgba(76, 175, 80, 0.12) !important;
+  }
+
+  .egresos-active-filters .mdc-evolution-chip-set__chips {
+    flex-wrap: nowrap;
   }
 }
