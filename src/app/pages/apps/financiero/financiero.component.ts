@@ -7,15 +7,15 @@ import { NgFor, NgIf } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 
 @Component({
-  selector: 'gm-gastos',
-  templateUrl: './gastos.component.html',
-  styleUrl: './gastos.component.scss',
+  selector: 'gm-financiero',
+  templateUrl: './financiero.component.html',
+  styleUrl: './financiero.component.scss',
   animations: [scaleIn400ms, fadeInRight400ms],
   standalone: true,
   imports: [MatTabsModule, NgFor, NgIf, RouterLinkActive, RouterLink, RouterOutlet]
 })
-export class GastosComponent {
-  tituloSeccion = 'Gastos';
+export class FinancieroComponent {
+  tituloSeccion = 'Financiero';
 
   links: Link[] = [
     {

@@ -209,10 +209,10 @@ export const appRoutes: VexRoutes = [
             ]
           },
           {
-            path: 'gastos',
+            path: 'financiero',
             loadComponent: () =>
-              import('./pages/apps/gastos/gastos.component').then(
-                (m) => m.GastosComponent
+              import('./pages/apps/financiero/financiero.component').then(
+                (m) => m.FinancieroComponent
               ),
             children: [
               {

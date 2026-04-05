@@ -131,10 +131,10 @@ export class ToolbarUserDropdownComponent implements OnInit {
       this.items.push({
         id: '5b',
         icon: 'mat:account_balance_wallet',
-        label: 'Gastos',
+        label: 'Financiero',
         description: 'Egresos y gestión de proveedores',
         colorClass: 'text-teal-600',
-        route: '/apps/gastos'
+        route: '/apps/financiero'
       });
 
       this.items.push({
