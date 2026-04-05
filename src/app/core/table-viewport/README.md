@@ -66,4 +66,4 @@ Incluye `overflow` del contenedor y **cabeceras fijas** (`position: sticky` en `
 
 ## Referencia
 
-Implementación completa: `src/app/pages/apps/gastos/egresos/egreso-list/`
+Implementación completa: `src/app/pages/apps/financiero/egresos/egreso-list/`

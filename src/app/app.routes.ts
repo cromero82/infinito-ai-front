@@ -219,7 +219,7 @@ export const appRoutes: VexRoutes = [
                 path: '',
                 pathMatch: 'full',
                 loadComponent: () =>
-                  import('./pages/apps/gastos/egresos/egreso-list/egreso-list.component').then(
+                  import('./pages/apps/financiero/egresos/egreso-list/egreso-list.component').then(
                     (m) => m.EgresoListComponent
                   ),
                 data: { scrollDisabled: true }
@@ -227,7 +227,7 @@ export const appRoutes: VexRoutes = [
               {
                 path: 'proveedores',
                 loadComponent: () =>
-                  import('./pages/apps/gastos/proveedores/proveedor-list/proveedor-list.component').then(
+                  import('./pages/apps/financiero/proveedores/proveedor-list/proveedor-list.component').then(
                     (m) => m.ProveedorListComponent
                   ),
                 data: { scrollDisabled: true }
@@ -236,7 +236,7 @@ export const appRoutes: VexRoutes = [
                 path: 'resumen-economico',
                 loadComponent: () =>
                   import(
-                    './pages/apps/gastos/resumen-economico/resumen-economico-list/resumen-economico-list.component'
+                    './pages/apps/financiero/resumen-economico/resumen-economico-list/resumen-economico-list.component'
                   ).then((m) => m.ResumenEconomicoListComponent),
                 data: { scrollDisabled: true }
               }
