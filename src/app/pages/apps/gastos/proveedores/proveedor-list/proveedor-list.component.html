@@ -1,6 +1,6 @@
-<div class="mt-6 flex flex-col md:flex-row md:items-start">
-  <div class="flex-auto w-full">
-    <div class="card">
+<div class="proveedores-page mt-3 flex flex-col flex-1 min-h-0 min-w-0 w-full">
+  <div class="flex flex-col flex-1 min-h-0 w-full">
+    <div class="card proveedores-card flex flex-col flex-1 min-h-0 overflow-hidden">
       <div class="px-6 py-4 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h2 class="title m-0">Proveedores</h2>
         <div class="flex items-center gap-4">
@@ -22,13 +22,12 @@
         </div>
       </div>
 
-      <div class="px-6 py-4 overflow-x-auto">
+      <div class="proveedores-table-section px-6 py-4 flex flex-col flex-1 min-h-0 overflow-hidden">
         <div *ngIf="loading" class="text-center py-8">Cargando proveedores...</div>
 
         <div
           class="table-scroll-container"
-          *ngIf="!loading"
-          [style.max-height.px]="tableScrollMaxHeight">
+          *ngIf="!loading">
           <table mat-table [dataSource]="filteredDataSource" class="w-full proveedores-table-compact">
           <ng-container matColumnDef="nombre">
             <th mat-header-cell *matHeaderCellDef>Nombre</th>

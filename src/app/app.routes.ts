@@ -229,7 +229,8 @@ export const appRoutes: VexRoutes = [
                 loadComponent: () =>
                   import('./pages/apps/gastos/proveedores/proveedor-list/proveedor-list.component').then(
                     (m) => m.ProveedorListComponent
-                  )
+                  ),
+                data: { scrollDisabled: true }
               },
               {
                 path: 'resumen-economico',

@@ -1,4 +1,4 @@
-<div class="egresos-page mt-6 flex flex-col flex-1 min-h-0 min-w-0 w-full">
+<div class="egresos-page mt-3 flex flex-col flex-1 min-h-0 min-w-0 w-full">
   <div class="flex flex-col flex-1 min-h-0 w-full">
     <div class="card egresos-card flex flex-col flex-1 min-h-0 overflow-hidden">
       <div class="px-6 py-4 border-b flex flex-col gap-4">
@@ -106,14 +106,13 @@
         </mat-menu>
       </div>
 
-      <div class="egresos-table-section px-6 py-4 flex flex-col flex-1 min-h-0 overflow-hidden">
+      <div class="egresos-table-section px-6 pt-4 pb-2 flex flex-col flex-1 min-h-0 overflow-hidden">
         <div *ngIf="loading" class="text-center py-8">Cargando egresos...</div>
 
         <div
           #tableScroll
           class="table-scroll-container"
-          *ngIf="!loading"
-          [style.max-height.px]="tableScrollMaxHeight">
+          *ngIf="!loading">
           <table mat-table [dataSource]="dataSource" class="w-full egresos-table-compact">
           <ng-container matColumnDef="fecha">
             <th mat-header-cell *matHeaderCellDef>Fecha</th>
