@@ -1,4 +1,4 @@
-import { FriendSuggestion } from '../app/pages/apps/social/social.component';
+import { FriendSuggestion } from '../app/pages/apps/usuario/usuario.component';
 
 export const friendSuggestions: FriendSuggestion[] = [
   {

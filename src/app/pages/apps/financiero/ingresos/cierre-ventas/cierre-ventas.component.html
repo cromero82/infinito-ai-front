@@ -1,13 +1,11 @@
-<h2 mat-dialog-title class="dialog-title">Corte de Ventas</h2>
+<h2 mat-dialog-title class="dialog-title">Cierre de Ventas</h2>
 
 <div mat-dialog-content class="dialog-content">
-  <!-- Sección de rango de fechas -->
   <div class="fechas-container">
-    <!-- Desde -->
     <div class="fecha-grupo">
       <span class="fecha-label">Desde:</span>
       <mat-checkbox [formControl]="desdeUltimoCorteCtrl" class="fecha-checkbox">
-        Siguiente venta luego Ultimo corte
+        Siguiente venta luego Ultimo cierre
       </mat-checkbox>
       <div class="fecha-input-group">
         <mat-form-field appearance="outline" class="fecha-field">
@@ -24,7 +22,6 @@
       </div>
     </div>
 
-    <!-- Hasta -->
     <div class="fecha-grupo">
       <span class="fecha-label">Hasta:</span>
       <mat-checkbox [formControl]="hastaActualmenteCtrl" class="fecha-checkbox">
@@ -45,7 +42,6 @@
       </div>
     </div>
 
-    <!-- Botón Consultar -->
     <div class="consultar-container">
       <button
         mat-flat-button
@@ -60,10 +56,8 @@
     </div>
   </div>
 
-  <!-- Tabla de métodos de pago -->
   <div class="table-container" *ngIf="datosConsultados">
     <table mat-table [dataSource]="corteVentasRows" class="corte-table">
-      <!-- Columna Método de Pago -->
       <ng-container matColumnDef="metodoPago">
         <th mat-header-cell *matHeaderCellDef class="header-cell">Método de Pago</th>
         <td mat-cell *matCellDef="let row" class="cell metodo-pago-cell">
@@ -71,7 +65,6 @@
         </td>
       </ng-container>
 
-      <!-- Columna Total Sistema -->
       <ng-container matColumnDef="totalSistema">
         <th mat-header-cell *matHeaderCellDef class="header-cell">Total Sistema</th>
         <td mat-cell *matCellDef="let row" class="cell total-sistema-cell">
@@ -81,7 +74,6 @@
         </td>
       </ng-container>
 
-      <!-- Columna Total Físico / Real -->
       <ng-container matColumnDef="totalReal">
         <th mat-header-cell *matHeaderCellDef class="header-cell">Total Físico / Real</th>
         <td mat-cell *matCellDef="let row; let i = index" class="cell total-real-cell">
@@ -108,11 +100,10 @@
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns" class="header-row"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index" 
+      <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
           class="data-row" [class.row-alt]="i % 2 !== 0"></tr>
     </table>
 
-    <!-- Sección de Totales -->
     <div class="totales-container">
       <div class="total-row">
         <span class="total-label">TOTAL</span>
@@ -126,19 +117,16 @@
     </div>
   </div>
 
-  <!-- Loading inicial -->
   <div class="loading-container" *ngIf="cargaInicial && consultando">
     <mat-spinner diameter="40"></mat-spinner>
     <p class="loading-text">Cargando datos...</p>
   </div>
 
-  <!-- Loading consulta manual -->
   <div class="loading-container" *ngIf="!cargaInicial && consultando">
     <mat-spinner diameter="40"></mat-spinner>
     <p class="loading-text">Consultando ventas...</p>
   </div>
 
-  <!-- Mensaje de error o sin datos -->
   <div class="mensaje-inicial" *ngIf="!datosConsultados && !consultando && !cargaInicial">
     <mat-icon svgIcon="mat:info" class="info-icon"></mat-icon>
     <p>Seleccione el rango de fechas y presione "Consultar" para cargar los datos.</p>
@@ -156,7 +144,7 @@
     (click)="registrar()"
     [disabled]="!esFormularioValido() || loading">
     <mat-spinner diameter="20" *ngIf="loading" class="button-spinner"></mat-spinner>
-    <span *ngIf="!loading">Registrar corte</span>
+    <span *ngIf="!loading">Registrar cierre</span>
     <span *ngIf="loading">Registrando...</span>
   </button>
 </div>

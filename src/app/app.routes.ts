@@ -109,10 +109,10 @@ export const appRoutes: VexRoutes = [
             path: 'products',
             children: [
               {
-                path: 'list',
+                path: 'admin-productos',
                 loadComponent: () =>
-                  import('./pages/apps/products/product-list/product-list.component').then(
-                    (m) => m.ProductListComponent
+                  import('./pages/apps/products/admin-productos/admin-productos.component').then(
+                    (m) => m.AdminProductosComponent
                   ),
                 data: { scrollDisabled: true }
               }
@@ -137,13 +137,6 @@ export const appRoutes: VexRoutes = [
                   ),
                 data: { scrollDisabled: true }
               },
-              {
-                path: 'dashboard',
-                loadComponent: () =>
-                  import('./pages/apps/ventas/ventas-dashboard/ventas-dashboard.component').then(
-                    (m) => m.VentasDashboardComponent
-                  )
-              }
             ]
           },
           {
@@ -238,6 +231,14 @@ export const appRoutes: VexRoutes = [
                   import(
                     './pages/apps/financiero/resumen-economico/resumen-economico-list/resumen-economico-list.component'
                   ).then((m) => m.ResumenEconomicoListComponent),
+                data: { scrollDisabled: true }
+              },
+              {
+                path: 'ingresos',
+                loadComponent: () =>
+                  import('./pages/apps/financiero/ingresos/ingresos.component').then(
+                    (m) => m.IngresosComponent
+                  ),
                 data: { scrollDisabled: true }
               }
             ]

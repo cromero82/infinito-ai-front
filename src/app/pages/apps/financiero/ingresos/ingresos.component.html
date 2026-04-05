@@ -1,22 +1,20 @@
 <div class="card">
   <div class="border-b py-2 px-6 flex items-center">
-    <h2 class="m-0 title flex-auto"> Cortes de ventas</h2>
+    <h2 class="m-0 title flex-auto">Ingresos</h2>
 
-    <button 
-      mat-flat-button 
-      color="primary" 
-      type="button" 
-      (click)="abrirModalCorteVentas()" 
-      matTooltip="Corte de ventas"
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      (click)="abrirModalCierreVentas()"
+      matTooltip="Cierre de ventas"
       class="mr-2">
       <mat-icon svgIcon="mat:add"></mat-icon>
-      <span class="ml-1">Corte de Ventas</span>
+      <span class="ml-1">Cierre de ventas</span>
     </button>
-
-      </div>
+  </div>
 
   <div class="pt-3 pb-4 px-4 split-pane-container">
-    <!-- Sección izquierda: Filtros -->
     <div class="split-pane-left" [style.width.px]="leftPanelWidth" [class.oculto]="filtrosOcultos">
       <div>
         <div class="flex items-center justify-between mb-2">
@@ -30,7 +28,7 @@
             <mat-icon svgIcon="mat:chevron_left"></mat-icon>
           </button>
         </div>
-        
+
         <div class="flex flex-col gap-3">
           <mat-form-field appearance="outline">
             <mat-label>Fecha Inicio</mat-label>
@@ -46,22 +44,20 @@
             <mat-datepicker #pickerFin></mat-datepicker>
           </mat-form-field>
 
-          <button 
-            mat-flat-button 
-            color="primary" 
+          <button
+            mat-flat-button
+            color="primary"
             type="button"
             [disabled]="!fechaInicioCtrl.value || !fechaFinCtrl.value || loading"
             (click)="aplicarFiltro()">
             Aplicar Filtro
           </button>
-
-                  </div>
+        </div>
       </div>
 
-      <!-- Resumen -->
       <div class="mt-2">
         <h3 class="title font-medium mb-2">Resumen</h3>
-        
+
         <div class="pb-2 pt-2 px-4 flex flex-col border-b">
           <h2 class="resumen-total font-bold m-0 text-primary">{{ formatCurrency(promedioVentas) }}</h2>
           <h3 class="title font-medium mt-1 mb-0 text-sm">Promedio</h3>
@@ -74,8 +70,7 @@
       </div>
     </div>
 
-    <!-- Divisor redimensionable -->
-    <div 
+    <div
       class="split-pane-divider"
       (mousedown)="startResize($event)"
       [class.resizing]="isResizing"
@@ -92,7 +87,6 @@
       </button>
     </div>
 
-    <!-- Sección derecha: Gráfico y detalles -->
     <div class="split-pane-right flex flex-col">
       <div *ngIf="loading" class="text-secondary py-8 text-center">
         Cargando ventas...
@@ -102,9 +96,7 @@
         {{ error }}
       </div>
 
-      <!-- Botones de navegación y configuración de días (siempre visibles) -->
       <div *ngIf="!loading && !error" class="flex flex-col items-center gap-4 mt-4 mb-6">
-        <!-- Botones de navegación -->
         <div class="flex justify-center items-center gap-6">
           <button
             mat-flat-button
@@ -117,7 +109,7 @@
             <mat-icon svgIcon="mat:chevron_left"></mat-icon>
             <span class="ml-2">Anterior</span>
           </button>
-          
+
           <div class="text-center">
             <div class="text-secondary text-sm font-medium">
               <span *ngIf="fechaInicioActual && fechaFinActual">
@@ -136,7 +128,7 @@
               </span>
             </div>
           </div>
-          
+
           <button
             mat-flat-button
             color="primary"
@@ -150,7 +142,6 @@
           </button>
         </div>
 
-        <!-- Configuración de período -->
         <div class="flex justify-center items-center">
           <mat-button-toggle-group [formControl]="periodoCtrl" [disabled]="loading">
             <mat-button-toggle value="semanal">Semanal</mat-button-toggle>
@@ -160,45 +151,41 @@
         </div>
       </div>
 
-      <!-- Gráfico (solo si hay datos) -->
       <div *ngIf="!loading && !error && ventasPorFecha.length > 0">
         <vex-chart [options]="chartOptions" [series]="chartSeries"></vex-chart>
       </div>
 
-      <!-- Mensaje cuando no hay datos -->
       <div *ngIf="!loading && !error && ventasPorFecha.length === 0" class="text-secondary py-8 text-center">
         No hay ventas disponibles para el período seleccionado.
       </div>
 
-      <!-- Tabla de detalles (solo si hay datos) -->
       <div *ngIf="!loading && !error && ventasPorFecha.length > 0" class="mt-6">
         <h3 class="title font-medium mb-4">Detalles por Fecha</h3>
-          <div class="overflow-x-auto">
-            <table class="w-full border-collapse">
-              <thead>
-                <tr class="border-b">
-                  <th class="text-left py-2 px-4">Fecha</th>
-                  <th class="text-right py-2 px-4">Total</th>
-                  <th class="text-left py-2 px-4">Métodos de Pago</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let venta of ventasPorFechaVisibles" class="border-b hover:bg-gray-50">
-                  <td class="py-2 px-4">{{ venta.fecha }}</td>
-                  <td class="text-right py-2 px-4 font-medium">{{ formatCurrency(venta.total) }}</td>
-                  <td class="py-2 px-4">
-                    <div class="flex flex-col gap-1">
-                      <span *ngFor="let detalle of venta.detalles" class="text-sm">
-                        {{ detalle.metodoPagoNombre }}: {{ formatCurrency(detalle.total) }}
-                      </span>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="border-b">
+                <th class="text-left py-2 px-4">Fecha</th>
+                <th class="text-right py-2 px-4">Total</th>
+                <th class="text-left py-2 px-4">Métodos de Pago</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let venta of ventasPorFechaVisibles" class="border-b hover:bg-gray-50">
+                <td class="py-2 px-4">{{ venta.fecha }}</td>
+                <td class="text-right py-2 px-4 font-medium">{{ formatCurrency(venta.total) }}</td>
+                <td class="py-2 px-4">
+                  <div class="flex flex-col gap-1">
+                    <span *ngFor="let detalle of venta.detalles" class="text-sm">
+                      {{ detalle.metodoPagoNombre }}: {{ formatCurrency(detalle.total) }}
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+      </div>
     </div>
   </div>
 </div>
-

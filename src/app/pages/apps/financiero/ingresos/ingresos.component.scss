@@ -22,18 +22,18 @@ table td {
   height: 40px;
   font-weight: 500;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  
+
   &:hover:not(:disabled) {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     transform: translateY(-1px);
     transition: all 0.2s ease;
   }
-  
+
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
-  
+
   mat-icon {
     font-size: 24px;
     width: 24px;
@@ -41,7 +41,6 @@ table td {
   }
 }
 
-// Split pane (paneles redimensionables)
 .split-pane-container {
   display: flex;
   height: calc(100vh - 200px);
@@ -54,15 +53,15 @@ table td {
   overflow-y: auto;
   padding-right: 8px;
   border-right: 1px solid rgba(0, 0, 0, 0.12);
-  min-width: 200px; // Ancho mínimo para asegurar que los filtros sean legibles
+  min-width: 200px;
   transition: width 0.3s ease;
-  
+
   &.oculto {
     min-width: 0;
     padding: 0;
     overflow: hidden;
     border-right: none;
-    
+
     > * {
       display: none;
     }
@@ -93,7 +92,7 @@ table td {
     width: 40px;
     cursor: pointer;
     background-color: rgba(0, 0, 0, 0.02);
-    
+
     &:hover {
       background-color: rgba(0, 0, 0, 0.08);
     }
@@ -117,7 +116,7 @@ table td {
   width: 32px;
   height: 32px;
   line-height: 32px;
-  
+
   mat-icon {
     font-size: 20px;
     width: 20px;
@@ -131,14 +130,14 @@ table td {
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   mat-icon {
     font-size: 24px;
     width: 24px;
     height: 24px;
     color: rgba(0, 0, 0, 0.6);
   }
-  
+
   &:hover mat-icon {
     color: rgba(0, 0, 0, 0.87);
   }
@@ -151,14 +150,11 @@ table td {
   padding-left: 12px;
 }
 
-// Asegurar que el contenido del panel izquierdo se ajuste automáticamente
 .split-pane-left > * {
   width: 100%;
 }
 
-// Estilos para los totales del resumen (tamaño reducido)
 .resumen-total {
-  font-size: 1.75rem; // Más pequeño que display-2 (2.5rem) pero más grande que display-3 (1.5rem)
+  font-size: 1.75rem;
   line-height: 1.2;
 }
-

@@ -24,6 +24,10 @@ export class FinancieroComponent {
       routerLinkActiveOptions: { exact: true }
     },
     {
+      label: 'Ingresos',
+      route: './ingresos'
+    },
+    {
       label: 'Proveedores',
       route: './proveedores'
     },

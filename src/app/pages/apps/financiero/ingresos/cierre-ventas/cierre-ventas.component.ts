@@ -14,14 +14,12 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
-import { MetodoPagoService, MetodoPagoDto } from '../service/metodo-pago.service';
-import { CorteVentaService, ConsultarRangoCorteDto } from '../service/corte-venta.service';
+import { MetodoPagoService, MetodoPagoDto } from '../../../ventas/service/metodo-pago.service';
+import { CorteVentaService, ConsultarRangoCorteDto } from '../../../ventas/service/corte-venta.service';
 
-export interface CorteVentasData {
-  // Puede recibir datos opcionales si es necesario
-}
+export interface CierreVentasData {}
 
-export interface CorteVentasResultado {
+export interface CierreVentasResultado {
   success: boolean;
   registrosCreados: number;
 }
@@ -33,7 +31,6 @@ interface CorteVentaRow {
   desfase: number;
 }
 
-/** DateAdapter que muestra fechas en formato dd/MM/yyyy */
 class DateAdapterDDMMYYYY extends NativeDateAdapter {
   override format(date: Date, displayFormat: object): string {
     const d = String(date.getDate()).padStart(2, '0');
@@ -54,7 +51,7 @@ class DateAdapterDDMMYYYY extends NativeDateAdapter {
 }
 
 @Component({
-  selector: 'vex-corte-ventas',
+  selector: 'vex-cierre-ventas',
   standalone: true,
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
@@ -87,51 +84,44 @@ class DateAdapterDDMMYYYY extends NativeDateAdapter {
     MatCheckboxModule,
     ReactiveFormsModule
   ],
-  templateUrl: './corte-ventas.component.html',
-  styleUrls: ['./corte-ventas.component.scss']
+  templateUrl: './cierre-ventas.component.html',
+  styleUrls: ['./cierre-ventas.component.scss']
 })
-export class CorteVentasComponent implements OnInit, OnDestroy {
-  // Controles de fecha
+export class CierreVentasComponent implements OnInit, OnDestroy {
   fechaInicioCtrl = new FormControl<Date | null>(new Date(), [Validators.required]);
   horaInicioCtrl = new FormControl<string>('08:00', [Validators.required]);
   fechaFinCtrl = new FormControl<Date | null>(new Date(), [Validators.required]);
   horaFinCtrl = new FormControl<string>('18:00', [Validators.required]);
 
-  // Checkboxes
   desdeUltimoCorteCtrl = new FormControl<boolean>(true);
   hastaActualmenteCtrl = new FormControl<boolean>(true);
 
-  // Datos del formulario
   corteVentasRows: CorteVentaRow[] = [];
   displayedColumns: string[] = ['metodoPago', 'totalSistema', 'totalReal'];
 
-  // Estados
   loading = false;
   consultando = false;
   datosConsultados = false;
   cargaInicial = true;
 
-  // Totales
   totalSistema = 0;
   totalReal = 0;
   totalDesfases = 0;
 
-  // Datos del último corte
   fechaIniRespuesta: string | null = null;
   fechaFinRespuesta: string | null = null;
 
   private destroy$ = new Subject<void>();
 
   constructor(
-    private dialogRef: MatDialogRef<CorteVentasComponent, CorteVentasResultado | null>,
-    @Inject(MAT_DIALOG_DATA) data: CorteVentasData,
+    private dialogRef: MatDialogRef<CierreVentasComponent, CierreVentasResultado | null>,
+    @Inject(MAT_DIALOG_DATA) data: CierreVentasData,
     private metodoPagoService: MetodoPagoService,
     private corteVentaService: CorteVentaService,
     private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
-    // Escuchar cambios en los checkboxes para habilitar/deshabilitar campos de fecha
     this.desdeUltimoCorteCtrl.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(checked => {
@@ -156,7 +146,6 @@ export class CorteVentasComponent implements OnInit, OnDestroy {
         }
       });
 
-    // Inicializar estado de los campos de fecha
     if (this.desdeUltimoCorteCtrl.value) {
       this.fechaInicioCtrl.disable();
       this.horaInicioCtrl.disable();
@@ -166,7 +155,6 @@ export class CorteVentasComponent implements OnInit, OnDestroy {
       this.horaFinCtrl.disable();
     }
 
-    // Consultar al abrir el modal
     this.consultarInicial();
   }
 
@@ -175,19 +163,14 @@ export class CorteVentasComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  /**
-   * Consulta inicial al abrir el modal
-   */
   private consultarInicial(): void {
     this.cargaInicial = true;
     this.consultando = true;
 
-    // Primero cargar métodos de pago
     this.metodoPagoService.obtenerMetodosPago()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (metodos) => {
-          // Luego consultar el rango con valores por defecto
           this.consultarRangoConMetodos(metodos ?? []);
         },
         error: (err) => {
@@ -205,7 +188,6 @@ export class CorteVentasComponent implements OnInit, OnDestroy {
     this.consultando = true;
     this.datosConsultados = false;
 
-    // Primero obtener los métodos de pago
     this.metodoPagoService.obtenerMetodosPago()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -252,21 +234,17 @@ export class CorteVentasComponent implements OnInit, OnDestroy {
   }
 
   private procesarRespuestaConsulta(respuesta: ConsultarRangoCorteDto, metodos: MetodoPagoDto[]): void {
-    // Guardar fechas de respuesta
     this.fechaIniRespuesta = respuesta.fechaIni;
     this.fechaFinRespuesta = respuesta.fechaFin;
 
-    // Setear fechas e horas en los inputs desde la respuesta
     this.setearFechaHoraDesdeISO(respuesta.fechaIni, this.fechaInicioCtrl, this.horaInicioCtrl);
     this.setearFechaHoraDesdeISO(respuesta.fechaFin, this.fechaFinCtrl, this.horaFinCtrl);
 
-    // Crear mapa de totales por método de pago
     const totalesPorMetodo = new Map<number, number>();
     respuesta.ventasTipo.forEach(vt => {
       totalesPorMetodo.set(vt.metodoPagoId, vt.totalSistema);
     });
 
-    // Crear filas del formulario
     this.corteVentasRows = metodos.map(metodo => {
       const totalSistema = totalesPorMetodo.get(metodo.id) || 0;
       const totalRealCtrl = new FormControl<number | null>(totalSistema, [
@@ -274,7 +252,6 @@ export class CorteVentasComponent implements OnInit, OnDestroy {
         Validators.min(0)
       ]);
 
-      // Escuchar cambios para actualizar desfase
       totalRealCtrl.valueChanges
         .pipe(takeUntil(this.destroy$))
         .subscribe(() => this.actualizarTotales());
@@ -287,18 +264,11 @@ export class CorteVentasComponent implements OnInit, OnDestroy {
       };
     });
 
-    // Usar el total de la respuesta
     this.totalSistema = respuesta.total;
     this.datosConsultados = true;
     this.actualizarTotales();
   }
 
-  /**
-   * Parsea una fecha ISO y setea los valores en los controles de fecha y hora
-   * @param fechaISO Fecha en formato ISO (ej: "2025-12-15T17:17:31.96592")
-   * @param fechaCtrl Control de fecha
-   * @param horaCtrl Control de hora
-   */
   private setearFechaHoraDesdeISO(
     fechaISO: string | null,
     fechaCtrl: FormControl<Date | null>,
@@ -307,14 +277,11 @@ export class CorteVentasComponent implements OnInit, OnDestroy {
     if (!fechaISO) return;
 
     try {
-      // Parsear la fecha ISO
       const dateObj = new Date(fechaISO);
 
       if (!isNaN(dateObj.getTime())) {
-        // Setear la fecha
         fechaCtrl.setValue(dateObj, { emitEvent: false });
 
-        // Extraer la hora en formato HH:mm
         const hours = String(dateObj.getHours()).padStart(2, '0');
         const minutes = String(dateObj.getMinutes()).padStart(2, '0');
         horaCtrl.setValue(`${hours}:${minutes}`, { emitEvent: false });
@@ -444,7 +411,7 @@ export class CorteVentasComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.snackBar.open(
-            'Se registró el corte de ventas correctamente',
+            'Se registró el cierre de ventas correctamente',
             'Cerrar',
             { duration: 3000 }
           );
@@ -454,9 +421,9 @@ export class CorteVentasComponent implements OnInit, OnDestroy {
           });
         },
         error: (err) => {
-          console.error('Error registrando corte de ventas', err);
+          console.error('Error registrando cierre de ventas', err);
           this.snackBar.open(
-            'Error al registrar el corte de ventas. Por favor intente nuevamente.',
+            'Error al registrar el cierre de ventas. Por favor intente nuevamente.',
             'Cerrar',
             { duration: 5000 }
           );

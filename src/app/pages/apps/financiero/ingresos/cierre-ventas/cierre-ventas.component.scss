@@ -14,7 +14,6 @@
   overflow-y: auto;
 }
 
-// Sección de fechas
 .fechas-container {
   display: flex;
   flex-wrap: wrap;
@@ -103,7 +102,6 @@
   padding-bottom: 8px;
 }
 
-// Tabla
 .table-container {
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 4px;
@@ -268,7 +266,6 @@
   font-weight: 500;
 }
 
-// Estilos de desfase
 .desfase-texto {
   font-size: 11px;
   font-weight: 600;
@@ -291,7 +288,6 @@
   background-color: rgba(255, 153, 51, 0.15);
 }
 
-// Sección de totales
 .totales-container {
   background-color: #ebf4eb;
   border: 1px solid #e4e8e4;
@@ -340,7 +336,6 @@
   border-radius: 4px;
 }
 
-// Loading y mensaje inicial
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -379,7 +374,6 @@
   }
 }
 
-// Botones del diálogo
 .dialog-actions {
   padding-top: 16px;
   gap: 12px;

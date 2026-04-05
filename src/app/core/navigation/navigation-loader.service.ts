@@ -29,7 +29,7 @@ export class NavigationLoaderService {
       {
         type: 'link',
         label: 'Productos',
-        route: '/apps/products/list',
+        route: '/apps/products/admin-productos',
         icon: 'mat:shopping_cart'
       },
       {
@@ -40,8 +40,8 @@ export class NavigationLoaderService {
       },
       {
         type: 'link',
-        label: 'Dashboard Cortes',
-        route: '/apps/ventas/dashboard',
+        label: 'Financiero',
+        route: '/apps/financiero',
         icon: 'mat:dashboard'
       },
     ]);
