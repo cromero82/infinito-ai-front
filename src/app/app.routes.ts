@@ -211,6 +211,10 @@ export const appRoutes: VexRoutes = [
               {
                 path: '',
                 pathMatch: 'full',
+                redirectTo: 'ingresos'
+              },
+              {
+                path: 'egresos',
                 loadComponent: () =>
                   import('./pages/apps/financiero/egresos/egreso-list/egreso-list.component').then(
                     (m) => m.EgresoListComponent

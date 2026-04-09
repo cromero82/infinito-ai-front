@@ -19,13 +19,12 @@ export class FinancieroComponent {
 
   links: Link[] = [
     {
-      label: 'Egresos',
-      route: './',
-      routerLinkActiveOptions: { exact: true }
-    },
-    {
       label: 'Ingresos',
       route: './ingresos'
+    },
+    {
+      label: 'Egresos',
+      route: './egresos'
     },
     {
       label: 'Proveedores',

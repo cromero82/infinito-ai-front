@@ -1,6 +1,6 @@
 ---
-description: Ajuste de viewport para tablas con número de registros visibles según pantalla e infinite scroll
-globs: **/*-list*.component.ts, **/*list*.component.html
+description: Ajuste de viewport para tablas y contenedores hijos con footer fijo, scrollDisabled e infinite scroll
+globs: **/*-list*.component.ts, **/*list*.component.html, **/*list*.component.scss, **/financiero/**/*.component.html, **/financiero/**/*.component.scss
 alwaysApply: false
 ---
 
@@ -40,5 +40,19 @@ this.tableScrollMaxHeight = v.maxHeight;
 .table-scroll-container { overflow-y: auto; overflow-x: auto; }
 ```
 
+### 5. Layout con tabs + footer fijo (`scrollDisabled`)
+- Cuando la ruta usa `data: { scrollDisabled: true }`, no usar alturas rígidas tipo `height: calc(100vh - ...)` dentro del componente hijo.
+- El patrón base debe ser:
+  - `:host { display:flex; flex-direction:column; flex:1 1 auto; min-height:0; min-width:0; }`
+  - `*-page { flex:1 1 auto; min-height:0; }`
+  - wrapper interno `flex flex-col flex-1 min-h-0 w-full`
+  - `card ... flex flex-col flex-1 min-h-0 overflow-hidden`
+- El contenedor principal de datos debe usar `flex: 1 1 auto`, `min-height: 0` y `overflow: hidden/auto` para que el espacio libre se convierta en altura útil de tabla, no en hueco antes del footer.
+- Si hay panel dividido, usar:
+  - `.split-pane-container { display:flex; flex:1 1 auto; min-height:0; height:100%; overflow:hidden; }`
+  - panel derecho/listado `display:flex; flex-direction:column; min-height:0`
+  - tabla/detalle final `flex:1 1 auto; min-height:0; overflow:auto`
+- La separación vertical entre tabs del contenedor padre y el componente hijo debe replicarse arriba y abajo con un valor pequeño y consistente (`mt-1` / padding inferior equivalente), evitando `pb` grandes en el padre.
+
 ## Ejemplo de referencia
-`src/app/pages/apps/gastos/egresos/egreso-list/egreso-list.component.ts`
+`src/app/pages/apps/financiero/egresos/egreso-list/egreso-list.component.ts`

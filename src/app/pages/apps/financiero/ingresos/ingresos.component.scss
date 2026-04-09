@@ -4,6 +4,23 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+.ingresos-page {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.ingresos-card {
+  min-height: 0;
+}
+
 table {
   font-size: 14px;
 }
@@ -43,17 +60,22 @@ table td {
 
 .split-pane-container {
   display: flex;
-  height: calc(100vh - 200px);
-  min-height: 600px;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
   position: relative;
 }
 
 .split-pane-left {
+  display: flex;
+  flex-direction: column;
   flex-shrink: 0;
   overflow-y: auto;
   padding-right: 8px;
   border-right: 1px solid rgba(0, 0, 0, 0.12);
   min-width: 200px;
+  min-height: 0;
   transition: width 0.3s ease;
 
   &.oculto {
@@ -145,9 +167,34 @@ table td {
 
 .split-pane-right {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  overflow-y: auto;
+  min-height: 0;
+  overflow: hidden;
   padding-left: 12px;
+}
+
+.ingresos-toolbar-panel {
+  flex-shrink: 0;
+}
+
+.ingresos-content-panel {
+  min-height: 0;
+}
+
+.ingresos-chart-panel {
+  flex-shrink: 0;
+}
+
+.ingresos-details-panel {
+  min-height: 0;
+}
+
+.ingresos-details-table {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 .split-pane-left > * {
