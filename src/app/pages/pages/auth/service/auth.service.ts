@@ -292,13 +292,16 @@ export class AuthService {
     return false;
   }
 
-  logout(): void {
+  logout(preserveReloginState = false): void {
     localStorage.removeItem('user-token');
     localStorage.removeItem('user-nombre');
     localStorage.removeItem('user-roles');
     localStorage.removeItem('user-rol-nombre');
-    localStorage.removeItem('url-previous-relogin');
-    localStorage.removeItem('user-previous-relogin');
+
+    if (!preserveReloginState) {
+      localStorage.removeItem('url-previous-relogin');
+      localStorage.removeItem('user-previous-relogin');
+    }
   }
 
   isAuthenticated(): boolean {

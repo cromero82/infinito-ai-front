@@ -2,15 +2,19 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
+import { AuthService } from '../../pages/pages/auth/service/auth.service';
 import { catchError, throwError } from 'rxjs';
 
 const PREVIOUS_RELOGIN_URL_KEY = 'url-previous-relogin';
 const PREVIOUS_RELOGIN_USER_KEY = 'user-previous-relogin';
 const TOKEN_EXPIRED_MESSAGE = 'El token ha expirado';
+const MISSING_TOKEN_MESSAGE =
+  'Missing token: use Authorization: Bearer <token> or token header';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const snackBar = inject(MatSnackBar);
+  const authService = inject(AuthService);
 
   // Rutas que no requieren autenticación
   const excludedRoutes = [
@@ -43,12 +47,16 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         error.error?.mensaje ||
         TOKEN_EXPIRED_MESSAGE;
 
-      const isTokenExpiredError =
-        error.status === 401 &&
-        typeof message === 'string' &&
-        message.trim().toLowerCase() === TOKEN_EXPIRED_MESSAGE.toLowerCase();
+      const normalizedMessage =
+        typeof message === 'string' ? message.trim().toLowerCase() : '';
+      const reloginMessages = [
+        TOKEN_EXPIRED_MESSAGE.toLowerCase(),
+        MISSING_TOKEN_MESSAGE.toLowerCase()
+      ];
+      const shouldRedirectToLogin =
+        error.status === 401 && reloginMessages.includes(normalizedMessage);
 
-      if (isTokenExpiredError) {
+      if (shouldRedirectToLogin) {
         const currentUser = localStorage.getItem('user-nombre');
 
         if (router.url !== '/login') {
@@ -61,7 +69,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           }
         }
 
-        localStorage.removeItem('user-token');
+        authService.logout(true);
         snackBar.dismiss();
         snackBar.open(message, 'Cerrar', {
           duration: 7000,
