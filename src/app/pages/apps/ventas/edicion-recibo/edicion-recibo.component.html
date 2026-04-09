@@ -132,14 +132,14 @@
 
     <!-- Métodos de pago (solo si diferencia > 0) -->
     <div *ngIf="diferencia > 0" class="metodos-pago-section">
-      <vex-metodos-pago
+      <metodos-pago
         [recibo]="recibo"
         [detalles]="detalles"
         [disabled]="false"
         [valorReferencia]="diferencia"
         [permitirReSeleccionar]="true"
         (metodoPagoSeleccionado)="onMetodoPagoSeleccionado($event)">
-      </vex-metodos-pago>
+      </metodos-pago>
     </div>
   </div>
 </div>

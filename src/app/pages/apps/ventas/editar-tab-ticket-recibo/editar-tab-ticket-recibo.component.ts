@@ -12,7 +12,7 @@ export interface EditarTabTicketReciboData {
 }
 
 @Component({
-  selector: 'vex-editar-tab-ticket-recibo',
+  selector: 'editar-tab-ticket-recibo',
   standalone: true,
   imports: [
     CommonModule,

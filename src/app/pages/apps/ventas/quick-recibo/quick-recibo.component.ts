@@ -20,7 +20,7 @@ export interface QuickReciboData {
 }
 
 @Component({
-  selector: 'vex-quick-recibo',
+  selector: 'quick-recibo',
   standalone: true,
   imports: [
     CommonModule,

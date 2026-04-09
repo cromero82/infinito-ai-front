@@ -19,7 +19,7 @@ export interface ProductListSelectData {
 }
 
 @Component({
-  selector: 'vex-product-list-select',
+  selector: 'product-list-select',
   standalone: true,
   imports: [
     CommonModule,

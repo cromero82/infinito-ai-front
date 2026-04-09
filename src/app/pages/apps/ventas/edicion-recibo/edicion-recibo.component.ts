@@ -20,7 +20,7 @@ export interface CambioDetalle {
 }
 
 @Component({
-  selector: 'vex-edicion-recibo',
+  selector: 'edicion-recibo',
   standalone: true,
   imports: [CommonModule, MetodosPagoComponent, MatButtonModule],
   templateUrl: './edicion-recibo.component.html',

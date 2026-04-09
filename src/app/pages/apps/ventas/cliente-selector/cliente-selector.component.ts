@@ -15,7 +15,7 @@ import { Subject, Observable, combineLatest } from 'rxjs';
 import { takeUntil, map, startWith, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
-  selector: 'vex-cliente-selector',
+  selector: 'cliente-selector',
   standalone: true,
   imports: [
     CommonModule,

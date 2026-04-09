@@ -10,7 +10,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'vex-metodos-pago',
+  selector: 'metodos-pago',
   standalone: true,
   imports: [
     CommonModule,

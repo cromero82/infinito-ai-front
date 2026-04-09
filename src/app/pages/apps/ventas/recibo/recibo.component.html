@@ -104,12 +104,12 @@
     </div>
     <div class="detalle-footer" [class.has-atendido]="mostrarColumnaAtendido">
         <div class="metodos-pago-container">
-          <vex-metodos-pago
+          <metodos-pago
             [recibo]="recibo"
             [detalles]="detalles"
             [disabled]="actualizandoMetodoPago || estaEnEdicion"
             (metodoPagoSeleccionado)="onMetodoPagoSeleccionado($event)">
-          </vex-metodos-pago>
+          </metodos-pago>
         </div>
         <div *ngIf="mostrarColumnaAtendido"></div>
         <div></div>
@@ -134,12 +134,12 @@
   </ng-template>
 
   <!-- Componente de Edición Recibo -->
-  <vex-edicion-recibo
+  <edicion-recibo
     *ngIf="estaEnEdicion && reciboId"
     [reciboId]="reciboId"
     [detalles]="detalles"
     [recibo]="recibo"
     (metodoPagoSeleccionado)="onMetodoPagoSeleccionadoDesdeEdicion($event)"
     (finalizar)="onFinalizarEdicion()">
-  </vex-edicion-recibo>
+  </edicion-recibo>
 </div>
