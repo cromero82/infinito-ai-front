@@ -9,7 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../../../pages/auth/service/auth.service';
+import { AuthService } from '../../../../auth/service/auth.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { catchError, finalize } from 'rxjs/operators';
 import { throwError } from 'rxjs';
@@ -292,7 +292,7 @@ export class MiPerfilUsuarioComponent implements OnInit, AfterViewInit {
         })
       )
       .subscribe({
-        next: (response) => {
+        next: (_response: unknown) => {
           // Actualizar valores originales con los nuevos
           if (datosActualizados.nombre) {
             this.nombreOriginal = datosActualizados.nombre;

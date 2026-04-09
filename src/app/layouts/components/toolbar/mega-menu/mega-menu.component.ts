@@ -25,77 +25,73 @@ export interface MegaMenuPage {
 export class MegaMenuComponent implements OnInit {
   features: MegaMenuFeature[] = [
     {
-      icon: 'mat:layers',
-      label: 'Dashboard',
-      route: '/'
-    },
-    {
       icon: 'mat:assignment',
-      label: 'AIO-Table',
-      route: '/apps/aio-table'
+      label: 'Ventas',
+      route: '/apps/ventas'
     },
     {
-      icon: 'mat:contact_support',
-      label: 'Help Center',
-      route: '/apps/help-center'
+      icon: 'mat:shopping_cart',
+      label: 'Productos',
+      route: '/apps/products/admin-productos'
     },
     {
-      icon: 'mat:contacts',
-      label: 'Contacts',
-      route: '/apps/contacts/grid'
+      icon: 'mat:history',
+      label: 'Historial',
+      route: '/apps/ventas/historial'
     },
     {
-      icon: 'mat:assessment',
-      label: 'Scrumboard',
-      route: '/apps/scrumboard/1'
+      icon: 'mat:dashboard',
+      label: 'Financiero',
+      route: '/apps/financiero'
     },
     {
-      icon: 'mat:book',
-      label: 'Documentation',
-      route: '/documentation'
+      icon: 'mat:people',
+      label: 'Clientes',
+      route: '/apps/clientes/list'
+    },
+    {
+      icon: 'mat:manage_accounts',
+      label: 'Usuarios',
+      route: '/apps/gestion-usuarios'
     }
   ];
 
   pages: MegaMenuPage[] = [
     {
-      label: 'All-In-One Table',
-      route: '/apps/aio-table'
+      label: 'Punto de venta',
+      route: '/apps/ventas'
     },
     {
-      label: 'Authentication',
+      label: 'Iniciar sesión',
       route: '/login'
     },
     {
-      label: 'Components',
-      route: '/ui/components/overview'
+      label: 'Productos',
+      route: '/apps/products/admin-productos'
     },
     {
-      label: 'Documentation',
-      route: '/documentation'
+      label: 'Historial de ventas',
+      route: '/apps/ventas/historial'
     },
     {
-      label: 'FAQ',
-      route: '/pages/faq'
+      label: 'Financiero',
+      route: '/apps/financiero'
     },
     {
-      label: 'Form Elements',
-      route: '/ui/forms/form-elements'
+      label: 'Clientes',
+      route: '/apps/clientes/list'
     },
     {
-      label: 'Form Wizard',
-      route: '/ui/forms/form-wizard'
+      label: 'Gestión de usuarios',
+      route: '/apps/gestion-usuarios'
     },
     {
-      label: 'Guides',
-      route: '/pages/guides'
+      label: 'Tipos',
+      route: '/apps/tipos'
     },
     {
-      label: 'Help Center',
-      route: '/apps/help-center'
-    },
-    {
-      label: 'Scrumboard',
-      route: '/apps/scrumboard'
+      label: 'Carga de productos',
+      route: '/apps/cargue-productos'
     }
   ];
 

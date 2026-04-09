@@ -12,7 +12,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Router } from '@angular/router';
-import { AuthService } from '../../../../pages/auth/service/auth.service';
+import { AuthService } from '../../../../../auth/service/auth.service';
 import { BitacoraUsuarioService, BitacoraUsuarioDto, BitacoraUsuarioPage } from '../service/bitacora-usuario.service';
 
 export interface UsuarioDto {
@@ -90,11 +90,11 @@ export class UsuarioMonitoreoComponent implements OnInit, OnDestroy {
     this.authService.obtenerUsuarios().pipe(
       takeUntil(this.destroy$)
     ).subscribe({
-      next: (usuarios) => {
+      next: (usuarios: unknown) => {
         this.usuarios = usuarios as UsuarioDto[];
         this.loading = false;
       },
-      error: (err) => {
+      error: (err: unknown) => {
         console.error('Error loading usuarios', err);
         this.error = 'Error al cargar la lista de usuarios.';
         this.loading = false;

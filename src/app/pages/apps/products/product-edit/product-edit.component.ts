@@ -13,7 +13,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { FormsModule } from '@angular/forms';
 import { DragDropModule, CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../core/components/confirm-dialog/confirm-dialog.component';
-import { ConfigurationService } from '../../../pages/auth/service/configuration.service';
+import { ConfigurationService } from '../../../../auth/service/configuration.service';
 
 @Component({
   selector: 'vex-product-edit',

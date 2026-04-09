@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
-import { ConfigurationService } from '../../../pages/auth/service/configuration.service';
+import { ConfigurationItem, ConfigurationService } from '../../../../auth/service/configuration.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs/operators';
 
@@ -46,7 +46,7 @@ export class MiPerfilPreferenciasComponent implements OnInit {
 
   cargarAlertaPrecios(): void {
     this.configurationService.obtenerTodasConfiguraciones().subscribe({
-      next: (configs) => {
+      next: (configs: ConfigurationItem[]) => {
         const alertaPrecios = configs.find(c => c.key === 'alerta-precios');
         if (alertaPrecios?.value) {
           try {
@@ -96,8 +96,9 @@ export class MiPerfilPreferenciasComponent implements OnInit {
           localStorage.setItem('alerta-precios-porcentaje-maximo', String(max));
           this.snackBar.open('Configuración guardada correctamente', 'Cerrar', { duration: 3000 });
         },
-        error: (err) => {
-          const msg = err?.error?.message || err?.message || 'Error al guardar la configuración';
+        error: (err: unknown) => {
+          const errorResponse = err as { error?: { message?: string }; message?: string };
+          const msg = errorResponse.error?.message || errorResponse.message || 'Error al guardar la configuración';
           this.snackBar.open(msg, 'Cerrar', { duration: 5000 });
         }
       });

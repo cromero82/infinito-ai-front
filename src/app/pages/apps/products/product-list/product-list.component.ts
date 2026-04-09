@@ -23,8 +23,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { ProductEditComponent } from '../product-edit/product-edit.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../core/components/confirm-dialog/confirm-dialog.component';
-import { ConfigurationService } from '../../../pages/auth/service/configuration.service';
-import { UsuarioPerfilService } from '../../../pages/auth/service/usuario-perfil.service';
+import { ConfigurationService } from '../../../../auth/service/configuration.service';
+import { UsuarioPerfilService } from '../../../../auth/service/usuario-perfil.service';
 import { FechaUtilService, FechaRelativaTableResult } from '../../ventas/service/fecha-util.service';
 import { GoogleSearchButtonComponent } from '../../../../@vex/components/google-search-button';
 import { MatSelectModule } from '@angular/material/select';
@@ -1546,7 +1546,7 @@ export class ProductListComponent implements OnInit, AfterViewInit {
       })
     ).subscribe({
       next: () => {},
-      error: (err) => {
+      error: (err: unknown) => {
         console.error('Error al guardar configuración de columnas:', err);
         alert('No se pudo guardar la configuración en el servidor. Los cambios se aplicaron localmente.');
       }

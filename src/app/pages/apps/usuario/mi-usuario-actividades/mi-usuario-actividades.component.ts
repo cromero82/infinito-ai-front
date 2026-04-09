@@ -6,7 +6,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { NgFor, NgIf, CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
-import { AuthService } from '../../../pages/auth/service/auth.service';
 import { SesionesService, SesionDto } from '../../ventas/service/sesiones.service';
 
 @Component({
@@ -23,7 +22,6 @@ export class MiUsuarioActividadesComponent implements OnInit {
   loading = false;
   
   constructor(
-    private authService: AuthService,
     private sesionesService: SesionesService
   ) {}
 

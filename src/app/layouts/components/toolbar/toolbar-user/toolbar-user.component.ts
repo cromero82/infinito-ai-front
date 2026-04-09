@@ -8,7 +8,7 @@ import { VexPopoverService } from '@vex/components/vex-popover/vex-popover.servi
 import { ToolbarUserDropdownComponent } from './toolbar-user-dropdown/toolbar-user-dropdown.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatRippleModule } from '@angular/material/core';
-import { AuthService } from '../../../../pages/pages/auth/service/auth.service';
+import { AuthService } from '../../../../auth/service/auth.service';
 
 @Component({
   selector: 'vex-toolbar-user',

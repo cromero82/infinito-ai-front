@@ -2,7 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
-import { AuthService } from '../../pages/pages/auth/service/auth.service';
+import { AuthService } from '../../auth/service/auth.service';
 import { catchError, throwError } from 'rxjs';
 
 const PREVIOUS_RELOGIN_URL_KEY = 'url-previous-relogin';

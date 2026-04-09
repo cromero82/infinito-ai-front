@@ -5,7 +5,7 @@ import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { NgFor, NgIf } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
-import { AuthService } from '../../pages/auth/service/auth.service';
+import { AuthService } from '../../../auth/service/auth.service';
 
 export interface FriendSuggestion {
   name: string;

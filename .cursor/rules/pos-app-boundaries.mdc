@@ -1,0 +1,14 @@
+---
+description: Contexto global de arquitectura POS sobre Vex Angular 17 y criterio para no reintroducir pantallas template
+alwaysApply: true
+---
+
+# POS App Boundaries
+
+Esta app fue construida sobre la template `Vex` para Angular 17 Material, pero el producto real es una app tipo POS.
+
+- Tratar como base de la app POS los componentes y flujos conectados a `NavigationLoaderService` y a `ToolbarUserDropdownComponent`.
+- Considerar también como parte válida del POS sus dependencias reutilizables cuando sean necesarias para renderizar ventas, productos, financiero, clientes, gestión de usuarios y autenticación.
+- No proponer ni reintroducir componentes demo o rutas heredadas de la template Vex si no participan en el render real de la app POS.
+- Antes de conservar una pantalla heredada, verificar si está enlazada desde `NavigationLoaderService`, rutas activas del POS o layouts realmente usados.
+- Cuando se haga limpieza, preferir primero eliminar imports, rutas y componentes claramente muertos o no renderizados antes que borrar piezas con uso ambiguo.

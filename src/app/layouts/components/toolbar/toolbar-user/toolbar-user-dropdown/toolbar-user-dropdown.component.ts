@@ -15,7 +15,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { AuthService } from '../../../../../pages/pages/auth/service/auth.service';
+import { AuthService } from '../../../../../auth/service/auth.service';
 import { SesionesService } from '../../../../../pages/apps/ventas/service/sesiones.service';
 import { TicketsService, TicketDto } from '../../../../../pages/apps/ventas/service/tickets.service';
 import { TicketReciboService } from '../../../../../pages/apps/ventas/service/ticket-recibo.service';

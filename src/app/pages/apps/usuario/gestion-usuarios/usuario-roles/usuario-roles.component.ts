@@ -9,7 +9,7 @@ import { NgFor, NgIf, CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { Subject, forkJoin } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { AuthService } from '../../../../pages/auth/service/auth.service';
+import { AuthService } from '../../../../../auth/service/auth.service';
 
 export interface Rol {
   id: number;
@@ -140,7 +140,7 @@ export class UsuarioRolesComponent implements OnInit, OnDestroy {
             duration: 3000
           });
         },
-        error: (err) => {
+        error: (err: unknown) => {
           console.error('Error updating roles', err);
           this.loading = false;
           this.snackBar.open('Error al actualizar los roles', 'Cerrar', {
