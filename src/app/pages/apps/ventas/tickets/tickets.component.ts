@@ -212,6 +212,10 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
   }
 
   getTicketLabel(ticket: TicketDto): string {
+    if (ticket.cliente?.nombre) {
+      return this.getBaseTicketLabel(ticket);
+    }
+
     const productCount = this.splitTicketProductCounts[ticket.id];
     if (productCount !== undefined) {
       return `${this.getBaseTicketLabel(ticket)} (${productCount} ${this.getProductosLabel(productCount)})`;
@@ -365,13 +369,14 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
 
     const nextNumber = this.getNextTicketNumber();
     const nombre = `Ticket ${nextNumber}`;
+    const reciboIdPadre = this.currentReciboId ?? undefined;
 
     try {
       this.headerActionsBusy = true;
       this.loading = true;
       const nuevoTicket = await firstValueFrom(this.ticketsService.createTicket(this.sessionId, nombre));
       this.tickets = [...this.tickets, nuevoTicket];
-      await this.processDetalleMove(nuevoTicket, true);
+      await this.processDetalleMove(nuevoTicket, true, reciboIdPadre);
     } catch (error) {
       this.loading = false;
       console.error('Error creando ticket para dividir productos', error);
@@ -1104,9 +1109,13 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
     return remainingTickets[nextIndex]?.id ?? remainingTickets[0]?.id ?? null;
   }
 
-  private async processDetalleMove(targetTicket: TicketDto, shouldTrackSplitLabel: boolean): Promise<void> {
+  private async processDetalleMove(
+    targetTicket: TicketDto,
+    shouldTrackSplitLabel: boolean,
+    reciboPadreId?: number
+  ): Promise<void> {
     try {
-      const moveResult = await this.reciboComponent?.moveSelectedDetallesToTicket(targetTicket.id);
+      const moveResult = await this.reciboComponent?.moveSelectedDetallesToTicket(targetTicket.id, reciboPadreId);
       if (!moveResult) {
         return;
       }

@@ -17,9 +17,16 @@ export class TicketReciboService {
 
   constructor(private http: HttpClient) {}
 
-  getByTicketId(ticketId: number, sessionId: number): Observable<TicketReciboDto | null> {
+  getByTicketId(
+    ticketId: number,
+    sessionId: number,
+    reciboPadreId?: number
+  ): Observable<TicketReciboDto | null> {
     const headers = new HttpHeaders({ 'Accept': 'application/json' });
-    return this.http.get<TicketReciboDto | null>(`${this.apiUrl}/ticket/${ticketId}?sessionId=${sessionId}`, {
+    const query = reciboPadreId !== undefined && reciboPadreId !== null
+      ? `?sessionId=${sessionId}&reciboPadreId=${reciboPadreId}`
+      : `?sessionId=${sessionId}`;
+    return this.http.get<TicketReciboDto | null>(`${this.apiUrl}/ticket/${ticketId}${query}`, {
       headers
     });
   }

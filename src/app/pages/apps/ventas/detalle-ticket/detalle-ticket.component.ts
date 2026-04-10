@@ -1066,7 +1066,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.moveToExistingTicketRequested.emit(ticketId);
   }
 
-  async moveSelectedDetallesToTicket(targetTicketId: number): Promise<TicketSplitMoveResult | null> {
+  async moveSelectedDetallesToTicket(
+    targetTicketId: number,
+    reciboPadreId?: number
+  ): Promise<TicketSplitMoveResult | null> {
     if (!this.reciboId || !this.recibo || !this.ticket?.id || this.sessionId === null) {
       return null;
     }
@@ -1089,7 +1092,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     try {
       const targetRelation = await firstValueFrom(
-        this.ticketReciboService.getByTicketId(targetTicketId, this.sessionId)
+        this.ticketReciboService.getByTicketId(targetTicketId, this.sessionId, reciboPadreId)
       );
 
       if (!targetRelation?.reciboId) {

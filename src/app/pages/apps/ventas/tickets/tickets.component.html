@@ -90,34 +90,34 @@
             <button
               mat-flat-button
               color="primary"
-              class="new-ticket-btn ltr:ml-4 rtl:mr-4 flex-none"
+              class="header-action-btn new-ticket-btn flex-none"
               type="button"
               [disabled]="headerActionsDisabled"
               (click)="newTicket()">
-              <mat-icon class="ltr:mr-2 rtl:ml-2 ltr:-ml-1 rtl:-mr-1 icon-sm" svgIcon="mat:add"></mat-icon>
+              <mat-icon class="header-action-icon icon-sm" svgIcon="mat:add"></mat-icon>
               <span>Nuevo ticket</span>
             </button>
             <button
               mat-flat-button
               color="accent"
-              class="quick-recibo-btn ltr:ml-2 rtl:mr-2 flex-none"
+              class="header-action-btn quick-recibo-btn flex-none"
               type="button"
               [disabled]="headerActionsDisabled"
               (click)="openQuickRecibo()">
-              <mat-icon class="ltr:mr-2 rtl:ml-2 ltr:-ml-1 rtl:-mr-1 icon-sm" svgIcon="mat:bolt"></mat-icon>
+              <mat-icon class="header-action-icon icon-sm" svgIcon="mat:bolt"></mat-icon>
               <span>Ticket rápido</span>
             </button>
             <button
               mat-flat-button
-              class="opciones-recibo-btn ltr:ml-2 rtl:mr-2 flex-none"
+              class="opciones-recibo-btn flex-none"
               type="button"
               [matMenuTriggerFor]="opcionesReciboMenu"
               [disabled]="headerActionsDisabled"
               [matTooltip]="'Mas opciones de este ticket'"
               matTooltipPosition="above">
-              <mat-icon class="ltr:mr-2 rtl:ml-2 ltr:-ml-1 rtl:-mr-1 icon-sm" svgIcon="mat:more_vert"></mat-icon>
+              <mat-icon class="header-action-icon icon-sm" svgIcon="mat:more_vert"></mat-icon>
               <span></span>
-              <mat-icon class="ltr:ml-1 rtl:mr-1 icon-sm" svgIcon="mat:arrow_drop_down"></mat-icon>
+              <mat-icon class="options-arrow-icon icon-sm" svgIcon="mat:arrow_drop_down"></mat-icon>
             </button>
             <mat-menu #opcionesReciboMenu="matMenu" xPosition="after" yPosition="below" class="opciones-recibo-menu">
               <button mat-menu-item class="opciones-recibo-menu-item-toggle" (click)="$event.stopPropagation()">

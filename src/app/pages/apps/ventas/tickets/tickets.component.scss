@@ -114,7 +114,7 @@ vex-page-layout-header .container {
 .tabs-row {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 4px;
   width: 100%;
   justify-content: space-between;
   flex-shrink: 0; /* Fila de tabs y botones no se encoge */
@@ -324,18 +324,50 @@ vex-page-layout-header .container {
   }
 }
 
-.new-ticket-btn {
+.header-action-btn {
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-left: 16px;
+  justify-content: center;
+  gap: 0;
+  min-width: auto;
+  padding-inline: 6px;
+}
+
+:host ::ng-deep .header-action-btn .mdc-button__label,
+:host ::ng-deep .opciones-recibo-btn .mdc-button__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+:host ::ng-deep .header-action-btn .mat-icon,
+:host ::ng-deep .header-action-btn .material-icons,
+:host ::ng-deep .opciones-recibo-btn .mat-icon,
+:host ::ng-deep .opciones-recibo-btn .material-icons {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.new-ticket-btn {
+  margin-inline-start: 0;
+}
+
+.quick-recibo-btn {
+  margin-inline-start: 0;
 }
 
 .opciones-recibo-btn {
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
+  margin-inline-start: 0;
+  min-width: auto;
+  padding-inline: 4px;
+}
+
+.options-arrow-icon {
+  margin: 0;
 }
 
 :host ::ng-deep .opciones-recibo-menu-item-toggle {
