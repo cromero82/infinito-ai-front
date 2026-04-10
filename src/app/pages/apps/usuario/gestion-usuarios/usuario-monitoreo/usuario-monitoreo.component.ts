@@ -506,7 +506,7 @@ export class UsuarioMonitoreoComponent implements OnInit, OnDestroy {
   }
 
   navigateToHistorialVentas(referenciaId: number): void {
-    this.router.navigate(['/apps/ventas/historial'], { 
+    this.router.navigate(['/apps/tickets/historial'], { 
       queryParams: { sesionId: referenciaId }
     });
   }

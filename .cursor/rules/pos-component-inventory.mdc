@@ -1,0 +1,30 @@
+---
+description: Inventario corto de modulos y renombres actuales del POS para trabajo en src/app/pages/apps
+globs: src/app/pages/apps/**/*.{ts,html,scss}
+alwaysApply: false
+---
+
+# POS Component Inventory
+
+- Usar este mapa antes de buscar referencias o proponer nuevos componentes dentro de `src/app/pages/apps`.
+- La base funcional del POS sigue anclada a `NavigationLoaderService` y `ToolbarUserDropdownComponent`.
+- El flujo de tickets sigue viviendo en carpeta `src/app/pages/apps/ventas`, pero sus componentes visibles quedaron renombrados.
+
+## Mapa actual
+
+- `ventas/tickets` -> `TicketsComponent`, selector `tickets`
+- `ventas/detalle-ticket` -> `DetalleTicketComponent`, selector `detalle-ticket`
+- `ventas/edicion-ticket` -> `EdicionTicketComponent`, selector `edicion-ticket`
+- `ventas/ticket-rapido` -> `TicketRapidoComponent`, selector `ticket-rapido`
+- `ventas/selector-productos` -> `SelectorProductosComponent`, selector `selector-productos`
+- `ventas/metodos-pago` -> `MetodosPagoComponent`, selector `metodos-pago`
+- `productos/lista-productos` -> `ListaProductosComponent`, selector `lista-productos`
+- `productos/editar-producto` -> `EditarProductoComponent`, selector `editar-producto`
+- `productos/comparador-precio-producto` -> `ComparadorPrecioProductoComponent`, selector `comparador-precio-producto`
+- `productos/admin-productos` funciona como contenedor de `lista-productos`
+
+## Guía rápida
+
+- Antes de crear un componente nuevo, verificar si ya existe una pieza POS reutilizable en este inventario.
+- Si un nombre viejo aparece en una conversación o diff, mapearlo primero: `tickets-recibo -> tickets`, `recibo -> detalle-ticket`, `product-list -> lista-productos`, `product-edit -> editar-producto`.
+- No reintroducir nombres demo o componentes heredados de la template Vex para este flujo POS.

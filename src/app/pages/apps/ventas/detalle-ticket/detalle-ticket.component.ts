@@ -1,0 +1,2593 @@
+import {
+  Component,
+  Input,
+  OnChanges,
+  SimpleChanges,
+  OnInit,
+  OnDestroy,
+  HostListener,
+  Output,
+  EventEmitter,
+  ViewChild,
+  ElementRef,
+  ChangeDetectorRef
+} from '@angular/core';
+import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { RelationalProductService } from '../../productos/service/relational-product.service';
+import { Producto, ProductPage } from '../../productos/model/producto';
+import { Subject, of, throwError, Observable, EMPTY } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil, switchMap, tap, map, finalize } from 'rxjs/operators';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import {
+  ReciboDetalleService,
+  ReciboDetalleDto,
+  CreateReciboDetalleRequest,
+  UpdateReciboDetalleRequest
+} from '../service/recibo-detalle.service';
+import { MetodoPagoService, MetodoPagoDto } from '../service/metodo-pago.service';
+import { ReciboService, ReciboDto, ActualizarReciboRequest } from '../service/recibo.service';
+import { TicketReciboService, TicketReciboDto } from '../service/ticket-recibo.service';
+import { EstadoRecibosService, EstadoReciboDto } from '../service/estado-recibos.service';
+import { FechaUtilService } from '../service/fecha-util.service';
+import { TicketsService } from '../service/tickets.service';
+import {
+  SelectorProductosComponent,
+  SelectorProductosData
+} from '../selector-productos/selector-productos.component';
+import {
+  PagoEfectivoCambioComponent,
+  PagoEfectivoCambioData,
+  PagoEfectivoCambioResultado
+} from '../pago-efectivo-cambio/pago-efectivo-cambio.component';
+import { EdicionTicketComponent } from '../edicion-ticket/edicion-ticket.component';
+import { MetodosPagoComponent } from '../metodos-pago/metodos-pago.component';
+
+const ESTADOS_RECIBO = {
+  PENDIENTE_PAGO: 1,
+  PAGADO: 2,
+  ANULADO: 3,
+  SIGLA_EDICION: 'ED'
+} as const;
+
+@Component({
+  selector: 'detalle-ticket',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatDialogModule,
+    MatIconModule,
+    MatTooltipModule,
+    MatSnackBarModule,
+    CurrencyPipe,
+    DatePipe,
+    EdicionTicketComponent,
+    MetodosPagoComponent
+  ],
+  templateUrl: './detalle-ticket.component.html',
+  styleUrls: ['./detalle-ticket.component.scss']
+})
+export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
+  @Input() ticket: any;
+  @Input() reciboId: number | null = null;
+  @Input() searchInputElement: HTMLInputElement | null = null;
+  @Input() sessionId: number | null = null;
+  @Output() focusSearchInputRequest = new EventEmitter<void>();
+  @Output() metodoPagoActualizado = new EventEmitter<void>();
+
+  recibo: ReciboDto | null = null;
+  detalles: ReciboDetalleDto[] = [];
+  detallesParaImprimir: ReciboDetalleDto[] = []; // Guardar detalles antes del pago
+  selectedDetalleIndex = -1;
+  editingDetalleIndex = -1;
+  editingUnitarioIndex = -1;
+  editingProductoIndex = -1;
+  private startingEdit = false;
+  private lastClickTime = 0;
+  private isDoubleClickActive = false; // Nueva bandera para bloquear durante doble click
+  private blockFocusRequest = false; // Bandera global para bloquear focusSearchInputRequest
+  editingCantidadCtrl = new FormControl<string>('', { nonNullable: true });
+  editingUnitarioCtrl = new FormControl<string>('', { nonNullable: true });
+  editingProductoCtrl = new FormControl<string>('', { nonNullable: true });
+
+  loading = false;
+  detallesLoading = false;
+  error: string | null = null;
+  detallesError: string | null = null;
+
+  productSearchCtrl = new FormControl('', { nonNullable: true });
+  productSearchError: string | null = null;
+  searchingProduct = false;
+  private lastSearchDisabled = false;
+  private dialogAbierto = false;
+  private destroy$ = new Subject<void>();
+  @ViewChild('detalleList') detalleListRef?: ElementRef<HTMLDivElement>;
+  private readonly currencyFormatter = new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+  actualizandoMetodoPago = false;
+  estadosRecibos: EstadoReciboDto[] = [];
+  estaEnEdicion = false;
+  metodosPago: MetodoPagoDto[] = [];
+
+  /** True cuando el ticket pertenece a una sesión distinta de la actual (otra sesión). */
+  ticketDeOtraSesion = false;
+
+  /** True cuando se debe mostrar la columna "Atendido" en la lista de detalles. */
+  mostrarColumnaAtendido = false;
+
+  constructor(
+    private reciboService: ReciboService,
+    private reciboDetalleService: ReciboDetalleService,
+    private relationalProductService: RelationalProductService,
+    private dialog: MatDialog,
+    private metodoPagoService: MetodoPagoService,
+    private ticketReciboService: TicketReciboService,
+    private snackBar: MatSnackBar,
+    private estadoRecibosService: EstadoRecibosService,
+    private ticketsService: TicketsService,
+    private cdr: ChangeDetectorRef,
+    private fechaUtilService: FechaUtilService
+  ) {}
+
+  ngOnInit(): void {
+    this.productSearchCtrl.valueChanges
+      .pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((value) => {
+        const term = value?.trim();
+        if (!term) {
+          this.productSearchError = null;
+          return;
+        }
+        this.performProductSearch(term, true);
+      });
+    this.focusSearchInputRequest.emit();
+    this.cargarEstadosRecibos();
+    this.cargarMetodosPago();
+    this.updateSearchDisabled();
+  }
+
+  private updateSearchDisabled(): void {
+    const disabled = !this.reciboId || this.searchingProduct || this.loading;
+    if (disabled !== this.lastSearchDisabled) {
+      this.lastSearchDisabled = disabled;
+      if (disabled) {
+        this.productSearchCtrl.disable({ emitEvent: false });
+      } else {
+        this.productSearchCtrl.enable({ emitEvent: false });
+      }
+    }
+  }
+
+  /**
+   * Ejecuta updateSearchDisabled en el siguiente tick para evitar NG0100 en el padre
+   * (el padre enlaza mat-form-field a productSearchCtrl y vería el cambio en el mismo ciclo).
+   */
+  private scheduleUpdateSearchDisabled(): void {
+    setTimeout(() => this.updateSearchDisabled(), 0);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.dialogAbierto = false;
+    this.searchingProduct = false;
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardShortcuts(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement | null;
+    const isTextInput =
+      target !== null &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        (target as HTMLElement).isContentEditable);
+    const isSearchInput = target === this.searchInputElement;
+
+    // Manejar teclas de flecha arriba y abajo
+    const isArrowUp = event.key === 'ArrowUp' || event.code === 'ArrowUp';
+    const isArrowDown = event.key === 'ArrowDown' || event.code === 'ArrowDown';
+
+    if (isArrowUp || isArrowDown) {
+      // Solo procesar si no estamos en un input de texto (excepto el search input)
+      if (isTextInput && !isSearchInput) {
+        return;
+      }
+
+      // Solo procesar si hay detalles disponibles
+      if (this.detalles.length === 0) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (isArrowUp) {
+        this.navigateDetalleUp();
+        return;
+      }
+
+      if (isArrowDown) {
+        this.navigateDetalleDown();
+        return;
+      }
+    }
+
+    // Manejar teclas + y - solo si hay un detalle seleccionado
+    if (this.selectedDetalleIndex < 0) {
+      return;
+    }
+
+    const isMinusKey =
+      event.key === '-' ||
+      event.key === 'Minus' ||
+      event.code === 'Minus' ||
+      event.code === 'NumpadSubtract';
+
+    const isPlusKey =
+      event.key === '+' ||
+      event.key === 'Add' ||
+      event.code === 'NumpadAdd' ||
+      (event.code === 'Equal' && event.shiftKey);
+
+    if (!isMinusKey && !isPlusKey) {
+      return;
+    }
+
+    if (isTextInput && !isSearchInput) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isMinusKey) {
+      this.decrementSelectedDetalleQuantity();
+      return;
+    }
+
+    if (isPlusKey) {
+      this.incrementSelectedDetalleQuantity();
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Recalcular ticketDeOtraSesion cuando cambia ticket o sessionId
+    if ('ticket' in changes || 'sessionId' in changes) {
+      this.actualizarTicketDeOtraSesion();
+    }
+
+    if ('reciboId' in changes) {
+      const change = changes['reciboId'];
+      const value = change.currentValue as number | null;
+      const previous = change.previousValue as number | null;
+      this.scheduleUpdateSearchDisabled();
+      if (value === previous) {
+        return;
+      }
+      if (value === null || value === undefined) {
+        this.resetState();
+      } else {
+        this.fetchRecibo(value);
+      }
+    }
+  }
+
+  /**
+   * Compara user-nombre del localStorage con ticket.atendidoPor.nombre.
+   * Si son diferentes, el ticket fue atendido inicialmente por otro usuario.
+   */
+  private actualizarTicketDeOtraSesion(): void {
+    const userNombre = localStorage.getItem('user-nombre');
+    const atendidoPorNombre = this.ticket?.atendidoPor?.nombre ?? null;
+
+    if (!userNombre || !atendidoPorNombre) {
+      this.ticketDeOtraSesion = false;
+      return;
+    }
+
+    this.ticketDeOtraSesion = userNombre.trim().toLowerCase() !== atendidoPorNombre.trim().toLowerCase();
+  }
+
+  /**
+   * Determina si la columna "Atendido" debe mostrarse.
+   * Condiciones: el cliente del recibo NO es "ANONIMO" y al menos 1 detalle
+   * tiene nombreUsuarioAtendio (crudo del API) distinto al user-nombre del localStorage.
+   */
+  private actualizarMostrarColumnaAtendido(): void {
+    const clienteNombre = this.recibo?.cliente?.nombre?.trim().toUpperCase() ?? '';
+    if (!clienteNombre || clienteNombre === 'ANONIMO') {
+      this.mostrarColumnaAtendido = false;
+      return;
+    }
+
+    const userNombre = localStorage.getItem('user-nombre')?.trim().toLowerCase() ?? '';
+    if (!userNombre) {
+      this.mostrarColumnaAtendido = false;
+      return;
+    }
+
+    this.mostrarColumnaAtendido = this.detalles.some(det =>
+      det.nombreUsuarioAtendio != null &&
+      det.nombreUsuarioAtendio.trim().length > 0 &&
+      det.nombreUsuarioAtendio.trim().toLowerCase() !== userNombre
+    );
+  }
+
+  /** Formatea la información de "Atendido" para una fila: NombreCorto (fecha). */
+  formatAtendidoPor(det: ReciboDetalleDto): string {
+    if (!det.nombreUsuarioAtendio) {
+      return '';
+    }
+    const nombre = this.abreviarNombre(det.nombreUsuarioAtendio);
+    const fecha = this.fechaUtilService.formatDate(det.fechaCreacion);
+    return fecha ? `${nombre} ${fecha}` : nombre;
+  }
+
+  /** Abrevia un nombre completo: "Jhon Doe" → "Jhon D." */
+  private abreviarNombre(nombre: string): string {
+    const palabras = nombre.trim().split(/\s+/);
+    if (palabras.length <= 1) {
+      return nombre.trim();
+    }
+    return `${palabras[0]} ${palabras[1].charAt(0).toUpperCase()}.`;
+  }
+
+  searchAndAddProduct(): void {
+    const searchValue = this.productSearchCtrl.value?.trim();
+    if (!this.reciboId) {
+      this.productSearchError = 'Seleccione un ticket válido.';
+      return;
+    }
+    if (!searchValue) {
+      this.productSearchError = 'Ingrese un código o nombre de producto.';
+      return;
+    }
+
+    this.performProductSearch(searchValue, false);
+  }
+
+  private addProductToRecibo(product: Producto): void {
+    if (!this.reciboId) {
+      this.productSearchError = 'No hay un recibo seleccionado.';
+      this.searchingProduct = false;
+      this.updateSearchDisabled();
+      return;
+    }
+
+    if (!product.id) {
+      this.productSearchError = 'El producto no tiene un identificador válido.';
+      this.searchingProduct = false;
+      this.updateSearchDisabled();
+      return;
+    }
+
+    // Check if product already exists in detalles
+    const existingDetalleIndex = this.detalles.findIndex(
+      (det) => det.productoId === product.id
+    );
+
+    if (existingDetalleIndex >= 0) {
+      // Product exists, increment quantity
+      const existingDetalle = this.detalles[existingDetalleIndex];
+      const currentCantidad = Number(existingDetalle.cantidad ?? 0);
+      const unitPrice =
+        existingDetalle.producto?.precio ??
+        (currentCantidad > 0 ? Number(existingDetalle.subtotal ?? 0) / currentCantidad : product.precio ?? 0);
+
+      if (!existingDetalle.id || unitPrice <= 0 || !existingDetalle.reciboId || !existingDetalle.productoId) {
+        this.productSearchError = 'No se pudo actualizar el producto existente.';
+        this.searchingProduct = false;
+        this.updateSearchDisabled();
+        this.focusSearchInputRequest.emit();
+        return;
+      }
+
+      const newCantidad = currentCantidad + 1;
+      const newSubtotal = unitPrice * newCantidad;
+      const previousDetalle = { ...existingDetalle };
+
+      const payload: UpdateReciboDetalleRequest = {
+        reciboId: existingDetalle.reciboId,
+        productoId: existingDetalle.productoId,
+        cantidad: newCantidad,
+        subtotal: newSubtotal
+      };
+
+      const optimisticDetalle: ReciboDetalleDto = {
+        ...existingDetalle,
+        cantidad: newCantidad,
+        subtotal: newSubtotal
+      };
+
+      const updatedList = [...this.detalles];
+      updatedList[existingDetalleIndex] = optimisticDetalle;
+      this.detalles = updatedList;
+      this.recalculateTotal();
+      this.selectedDetalleIndex = existingDetalleIndex;
+      this.productSearchCtrl.setValue('');
+      this.searchingProduct = false;
+      this.updateSearchDisabled();
+      this.productSearchError = null;
+      this.focusSearchInputRequest.emit();
+      this.scrollDetalleListToBottom();
+
+      this.reciboDetalleService.updateDetalle(existingDetalle.id, payload).subscribe({
+        next: (updatedDetalle) => {
+          const updatedListFinal = [...this.detalles];
+          const detalleActualizado = {
+            ...optimisticDetalle,
+            ...updatedDetalle,
+            cantidad: newCantidad,
+            subtotal: newSubtotal,
+            producto: updatedDetalle.producto ?? existingDetalle.producto
+          };
+          updatedListFinal[existingDetalleIndex] = detalleActualizado;
+          this.detalles = updatedListFinal;
+          this.recalculateTotal();
+        },
+        error: (err: unknown) => {
+          const revertedList = [...this.detalles];
+          revertedList[existingDetalleIndex] = previousDetalle;
+          this.detalles = revertedList;
+          this.recalculateTotal();
+          console.error('Error actualizando cantidad del producto', err);
+          this.productSearchError = 'No se pudo actualizar la cantidad.';
+        }
+      });
+      return;
+    }
+
+    // Product doesn't exist, create new detail
+    const cantidad = 1;
+    const subtotal = (product.precio ?? 0) * cantidad;
+    const payload: CreateReciboDetalleRequest = {
+      reciboId: this.reciboId,
+      productoId: product.id,
+      cantidad,
+      subtotal
+    };
+
+    this.reciboDetalleService.createDetalle(payload).subscribe({
+      next: (detalle) => {
+        this.productSearchCtrl.setValue('');
+        this.searchingProduct = false;
+        this.updateSearchDisabled();
+        this.productSearchError = null;
+        const detalleConProducto: ReciboDetalleDto = detalle.producto
+          ? detalle
+          : {
+              ...detalle,
+              producto: detalle.producto ?? {
+                id: product.id!,
+                barcode: product.barcode,
+                nombre: product.nombre,
+                precio: product.precio,
+                precioCompra: product.precioCompra ?? 0,
+                foto: product.foto ?? null,
+                activate: (product as any).activate ?? 1
+              }
+            };
+        this.detalles = [...this.detalles, detalleConProducto];
+        this.recalculateTotal();
+        this.selectedDetalleIndex = this.detalles.length - 1;
+        this.focusSearchInputRequest.emit();
+        this.scrollDetalleListToBottom();
+      },
+      error: (err: unknown) => {
+        console.error('Error agregando producto al recibo', err);
+        this.productSearchError = 'No se pudo agregar el producto.';
+        this.searchingProduct = false;
+        this.updateSearchDisabled();
+        this.focusSearchInputRequest.emit();
+      }
+    });
+  }
+
+  private fetchRecibo(id: number): void {
+    this.loading = true;
+    this.scheduleUpdateSearchDisabled();
+    this.error = null;
+    this.reciboService.getRecibo(id).subscribe({
+      next: (resp) => {
+        this.recibo = {
+          ...resp,
+          sesionId: this.sessionId ?? resp.sesionId
+        };
+        this.actualizarEstadoEdicion();
+        this.loading = false;
+        this.scheduleUpdateSearchDisabled();
+        this.fetchDetalles(id);
+      },
+      error: (err: unknown) => {
+        console.error('Error loading recibo', err);
+        this.recibo = null;
+        this.estaEnEdicion = false;
+        this.error = 'No se pudo cargar el recibo.';
+        this.loading = false;
+        this.scheduleUpdateSearchDisabled();
+        this.detalles = [];
+        this.detallesError = null;
+        this.detallesLoading = false;
+      }
+    });
+  }
+
+  private fetchDetalles(reciboId: number): void {
+    this.detallesLoading = true;
+    this.detallesError = null;
+    this.reciboDetalleService.getDetallesByRecibo(reciboId).subscribe({
+      next: (detalles) => {
+        this.detalles = detalles || [];
+        this.detallesLoading = false;
+        this.recalculateTotal();
+        this.selectedDetalleIndex = this.detalles.length ? 0 : -1;
+        this.actualizarMostrarColumnaAtendido();
+      },
+      error: (err: unknown) => {
+        console.error('Error loading recibo detalles', err);
+        this.detalles = [];
+        this.detallesError = 'No se pudieron cargar los detalles del recibo.';
+        this.detallesLoading = false;
+        this.recalculateTotal();
+        this.selectedDetalleIndex = -1;
+      }
+    });
+  }
+
+  private resetState(): void {
+    this.recibo = null;
+    this.detalles = [];
+    this.error = null;
+    this.detallesError = null;
+    this.loading = false;
+    this.detallesLoading = false;
+    this.productSearchCtrl.setValue('');
+    this.productSearchError = null;
+    this.searchingProduct = false;
+    this.dialogAbierto = false;
+    this.estaEnEdicion = false;
+    this.updateSearchDisabled();
+    this.focusSearchInputRequest.emit();
+  }
+
+  private performProductSearch(term: string, triggeredAutomatically: boolean): void {
+    if (this.searchingProduct || this.dialogAbierto) {
+      return;
+    }
+    if (!this.reciboId) {
+      this.productSearchError = 'Seleccione un ticket válido.';
+      return;
+    }
+
+    this.productSearchError = null;
+    this.searchingProduct = true;
+    this.updateSearchDisabled();
+    this.relationalProductService.getProducts(term, 0, 1, true).subscribe({
+      next: (page: ProductPage) => {
+        const total = page?.totalElements ?? page?.content?.length ?? 0;
+        const products = page?.content ?? [];
+        if (total === 1 && products[0]) {
+          this.addProductToRecibo(products[0]);
+          return;
+        }
+
+        this.searchingProduct = false;
+        this.updateSearchDisabled();
+
+        if (total === 0) {
+          console.log('No se encontraron productos para:', term);
+          if (!triggeredAutomatically) {
+            console.log('Mostrando alerta de producto no encontrado');
+            this.snackBar.open(`No se encontro ningun registro por codigo de barras o nombre ${term}`, 'Cerrar', {
+              duration: 5000,
+              panelClass: ['alert-danger', 'snackbar-error'],
+              horizontalPosition: 'center',
+              verticalPosition: 'top'
+            });
+          }
+          this.focusSearchInputRequest.emit();
+          return;
+        }
+
+        // total > 1
+        if (this.dialogAbierto) {
+          return;
+        }
+        this.dialogAbierto = true;
+        const dialogRef = this.dialog.open<
+          SelectorProductosComponent,
+          SelectorProductosData,
+          Producto
+        >(SelectorProductosComponent, {
+          width: '800px',
+          data: { term },
+          autoFocus: false
+        });
+
+        dialogRef.afterClosed().subscribe((selected) => {
+          this.dialogAbierto = false;
+          this.searchingProduct = false;
+          this.updateSearchDisabled();
+          if (selected) {
+            this.addProductToRecibo(selected);
+          } else {
+            this.focusSearchInputRequest.emit();
+          }
+        });
+      },
+      error: (err: unknown) => {
+        console.error('Error searching product', err);
+        this.searchingProduct = false;
+        this.updateSearchDisabled();
+        if (!triggeredAutomatically) {
+          this.productSearchError = 'Error al buscar el producto.';
+        }
+        this.focusSearchInputRequest.emit();
+      }
+    });
+  }
+
+  private recalculateTotal(): number {
+    if (!this.recibo) {
+      return 0;
+    }
+    const sum = this.detalles.reduce(
+      (acc, det) => acc + Number(det?.subtotal ?? 0),
+      0
+    );
+    this.recibo = {
+      ...this.recibo,
+      total: sum
+    };
+    return sum;
+  }
+
+  onDetalleRowMouseDown(index: number, event: MouseEvent): void {
+    const currentTime = Date.now();
+    const timeDiff = currentTime - this.lastClickTime;
+    
+    // Si es un doble clic (menos de 300ms entre clics), prevenir el click
+    if (timeDiff < 300) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    this.lastClickTime = currentTime;
+  }
+
+  onDetalleRowClick(index: number, event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    
+    // Verificar si el clic fue en un input de edición activo
+    if (target.classList.contains('producto-input') || 
+        target.classList.contains('valor-unitario-input') || 
+        target.classList.contains('cantidad-input')) {
+      // No hacer nada si el clic fue en inputs de edición activos
+      return;
+    }
+    
+    // Prevenir selección si estamos en modo de edición, iniciando edición o doble click activo
+    if (this.startingEdit || 
+        this.editingProductoIndex !== -1 || 
+        this.editingUnitarioIndex !== -1 || 
+        this.editingDetalleIndex !== -1 ||
+        this.estaEnEdicion ||
+        this.isDoubleClickActive) {
+      return;
+    }
+    
+    // Permitir selección en todas las demás áreas, incluyendo columnas editables
+    // cuando no estamos en modo de edición
+    this.selectDetalle(index);
+  }
+
+  selectDetalle(index: number): void {
+    // No hacer nada si se está iniciando una edición
+    if (this.startingEdit) {
+      return;
+    }
+    
+    if (index < 0 || index >= this.detalles.length) {
+      this.selectedDetalleIndex = -1;
+    } else {
+      this.selectedDetalleIndex = index;
+      this.scrollToSelectedDetalle();
+    }
+    
+    // TEMPORALMENTE COMENTADO para aislar el problema de doble click
+    // Solo emitir focusSearchInputRequest si no estamos en modo de edición
+    // if (this.editingProductoIndex === -1 && 
+    //     this.editingUnitarioIndex === -1 && 
+    //     this.editingDetalleIndex === -1 &&
+    //     !this.estaEnEdicion) {
+    //   this.focusSearchInputRequest.emit();
+    // }
+  }
+
+  private navigateDetalleUp(): void {
+    if (this.detalles.length === 0) {
+      return;
+    }
+
+    // Si estamos en el primer elemento, no hacer nada (no permitir wraparound)
+    if (this.selectedDetalleIndex <= 0) {
+      return;
+    }
+
+    // Ir al elemento anterior
+    this.selectedDetalleIndex--;
+    this.scrollToSelectedDetalle();
+  }
+
+  private navigateDetalleDown(): void {
+    if (this.detalles.length === 0) {
+      return;
+    }
+
+    // Si estamos en el último elemento, no hacer nada (no permitir wraparound)
+    if (this.selectedDetalleIndex >= this.detalles.length - 1) {
+      return;
+    }
+
+    // Ir al elemento siguiente
+    this.selectedDetalleIndex++;
+    this.scrollToSelectedDetalle();
+  }
+
+  private scrollToSelectedDetalle(): void {
+    if (this.selectedDetalleIndex < 0 || this.selectedDetalleIndex >= this.detalles.length) {
+      return;
+    }
+
+    const listEl = this.detalleListRef?.nativeElement;
+    if (!listEl) {
+      return;
+    }
+
+    // Esperar a que Angular actualice el DOM
+    setTimeout(() => {
+      const selectedRow = listEl.querySelector(`.detalle-row:nth-child(${this.selectedDetalleIndex + 1})`) as HTMLElement;
+      if (selectedRow) {
+        const rowTop = selectedRow.offsetTop;
+        const rowHeight = selectedRow.offsetHeight;
+        const listTop = listEl.scrollTop;
+        const listHeight = listEl.clientHeight;
+
+        console.log('Scroll debug:', {
+          selectedIndex: this.selectedDetalleIndex,
+          rowTop,
+          rowHeight,
+          listTop,
+          listHeight,
+          rowBottom: rowTop + rowHeight,
+          listBottom: listTop + listHeight
+        });
+
+        // Lógica de scroll natural: solo hacer scroll cuando sea realmente necesario
+        const rowBottom = rowTop + rowHeight;
+        const listBottom = listTop + listHeight;
+        const middlePoint = listTop + (listHeight / 2);
+
+        console.log('Natural scroll analysis:', {
+          rowTop,
+          rowBottom,
+          listTop,
+          listBottom,
+          middlePoint,
+          isAbove: rowTop < listTop,
+          isBelowMiddle: rowBottom > middlePoint,
+          isFullyVisible: rowTop >= listTop && rowBottom <= listBottom
+        });
+
+        let needsScroll = false;
+        let targetScrollTop = listTop;
+
+        // Si el elemento está por encima de la vista visible, hacer scroll hacia arriba
+        if (rowTop < listTop) {
+          needsScroll = true;
+          targetScrollTop = Math.max(0, rowTop - 20); // Pequeño margen arriba
+          console.log('Element is above viewport, scrolling up');
+        }
+        // Si el elemento está por debajo de la mitad de la pantalla, hacer scroll hacia abajo
+        else if (rowBottom > middlePoint) {
+          needsScroll = true;
+          targetScrollTop = rowBottom - listHeight + 20; // Dejar espacio abajo
+          console.log('Element is below middle point, scrolling down');
+        }
+        else {
+          console.log('Element is in good position, no scroll needed');
+          return; // No hacer scroll si el elemento está bien posicionado
+        }
+
+        // Asegurar que el scroll no sea negativo ni exceda el máximo
+        const maxScroll = listEl.scrollHeight - listEl.clientHeight;
+        const clampedScrollTop = Math.max(0, Math.min(targetScrollTop, maxScroll));
+
+        console.log('Natural scroll to:', clampedScrollTop);
+        listEl.scrollTop = clampedScrollTop;
+      }
+    }, 200); // Aumentado a 200ms para asegurar que el DOM esté completamente listo
+  }
+
+  onDetalleDoubleClick(index: number, event: MouseEvent): void {
+    event.stopPropagation();
+    if (index < 0 || index >= this.detalles.length) {
+      return;
+    }
+    const target = event.target as HTMLElement;
+    const detalle = this.detalles[index];
+    
+    // Check if double-click was on "Valor unitario" field
+    if (target.classList.contains('detalle-col') && target.classList.contains('unitario')) {
+      this.onUnitarioDoubleClick(index, event);
+      return;
+    }
+    
+    // Check if double-click was on "Producto" field
+    if (target.classList.contains('detalle-col') && target.classList.contains('producto')) {
+      this.onProductoDoubleClick(index, event);
+      return;
+    }
+    
+    // Default: edit cantidad
+    this.startingEdit = true;
+    this.editingDetalleIndex = index;
+    this.editingCantidadCtrl.setValue(String(detalle.cantidad ?? 1));
+    // Focus the input after a short delay to ensure it's rendered
+    setTimeout(() => {
+      const input = document.querySelector(`.cantidad-input-${index}`) as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+      // Restablecer startingEdit después de un corto tiempo
+      setTimeout(() => {
+        this.startingEdit = false;
+      }, 50);
+    }, 0);
+  }
+
+  onUnitarioDoubleClick(index: number, event: MouseEvent): void {
+    event.stopPropagation();
+    if (index < 0 || index >= this.detalles.length) {
+      return;
+    }
+    const detalle = this.detalles[index];
+    if (!detalle.producto?.id) {
+      return;
+    }
+    
+    // Activar bandera de doble click
+    this.isDoubleClickActive = true;
+    this.startingEdit = true;
+    
+    const currentPrecio = detalle.producto.precio ?? (detalle.cantidad > 0 ? detalle.subtotal / detalle.cantidad : 0);
+    this.editingUnitarioIndex = index;
+    this.editingUnitarioCtrl.setValue(String(currentPrecio));
+    
+    setTimeout(() => {
+      const input = document.querySelector(`.valor-unitario-input-${index}`) as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+      setTimeout(() => {
+        this.startingEdit = false;
+        // Desactivar bandera después de un tiempo
+        setTimeout(() => {
+          this.isDoubleClickActive = false;
+        }, 200);
+      }, 50);
+    }, 0);
+  }
+
+  onCantidadInputKeydown(event: Event, index: number): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (keyboardEvent.key === 'Enter' || keyboardEvent.key === 'NumpadEnter') {
+      keyboardEvent.preventDefault();
+      keyboardEvent.stopPropagation();
+      // Use setTimeout to ensure the form control value is updated
+      setTimeout(() => {
+        this.saveCantidadEdit(index, true);
+      }, 0);
+    } else if (keyboardEvent.key === 'Escape') {
+      keyboardEvent.preventDefault();
+      keyboardEvent.stopPropagation();
+      this.cancelCantidadEdit();
+    }
+  }
+
+  onCantidadInputBlur(index: number): void {
+    // Use setTimeout to allow click events to fire first
+    setTimeout(() => {
+      if (this.editingDetalleIndex === index) {
+        this.saveCantidadEdit(index);
+      }
+    }, 150);
+  }
+
+  saveCantidadEdit(index: number, focusSearch: boolean = false): void {
+    if (this.editingDetalleIndex !== index || index < 0 || index >= this.detalles.length) {
+      this.cancelCantidadEdit();
+      return;
+    }
+
+    const detalle = this.detalles[index];
+    // Get value directly from the input element if possible, otherwise from form control
+    const inputElement = document.querySelector(`.cantidad-input-${index}`) as HTMLInputElement;
+    const newCantidadStr = inputElement?.value?.trim() || this.editingCantidadCtrl.value?.trim() || '';
+    const newCantidad = Number(newCantidadStr);
+
+    if (isNaN(newCantidad) || newCantidad <= 0) {
+      this.cancelCantidadEdit();
+      return;
+    }
+
+    if (newCantidad === detalle.cantidad) {
+      this.cancelCantidadEdit();
+      return;
+    }
+
+    const unitPrice =
+      detalle.producto?.precio ??
+      (detalle.cantidad > 0 ? Number(detalle.subtotal ?? 0) / detalle.cantidad : 0);
+
+    if (!detalle.id || unitPrice <= 0 || !detalle.reciboId || !detalle.productoId) {
+      this.cancelCantidadEdit();
+      return;
+    }
+
+    const newSubtotal = unitPrice * newCantidad;
+    const previousDetalle = { ...detalle };
+
+    const payload: UpdateReciboDetalleRequest = {
+      reciboId: detalle.reciboId,
+      productoId: detalle.productoId,
+      cantidad: newCantidad,
+      subtotal: newSubtotal
+    };
+
+    const optimisticDetalle: ReciboDetalleDto = {
+      ...detalle,
+      cantidad: newCantidad,
+      subtotal: newSubtotal
+    };
+
+    // Clear editing state immediately to return to normal display
+    this.editingDetalleIndex = -1;
+    this.editingCantidadCtrl.setValue('');
+    
+    const updatedList = [...this.detalles];
+    updatedList[index] = optimisticDetalle;
+    this.detalles = updatedList;
+    const newTotal = this.recalculateTotal();
+    if (focusSearch) {
+      this.focusSearchInputRequest.emit();
+    }
+
+    this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
+      next: (updatedDetalle) => {
+        const updatedListFinal = [...this.detalles];
+        const detalleActualizado = {
+          ...optimisticDetalle,
+          ...updatedDetalle,
+          cantidad: newCantidad,
+          subtotal: newSubtotal,
+          producto: updatedDetalle.producto ?? detalle.producto
+        };
+        updatedListFinal[index] = detalleActualizado;
+        this.detalles = updatedListFinal;
+        const finalTotal = this.recalculateTotal();
+        
+        // Update recibo total on backend
+        if (this.recibo && this.recibo.id && this.recibo.ticketId && this.recibo.clienteId) {
+          // Calcular montoRecibido: si es efectivo, igual al total; si no, igual al total
+          const montoRecibidoFinal = (this.recibo.metodoPagoId === 1) ? finalTotal : finalTotal;
+          
+          this.reciboService.actualizarRecibo(this.recibo.id, {
+            clienteId: this.recibo.clienteId,
+            ticketId: this.recibo.ticketId,
+            estadoId: this.recibo.estadoId ?? ESTADOS_RECIBO.PENDIENTE_PAGO,
+            metodoPagoId: this.recibo.metodoPagoId ?? 0,
+            total: String(finalTotal.toFixed(2)),
+            sesionId: this.recibo.sesionId,
+            montoRecibido: montoRecibidoFinal
+          }).subscribe({
+            next: (updatedRecibo) => {
+              this.recibo = updatedRecibo;
+              
+              // Emitir evento para que el componente padre recargue los tickets
+              this.metodoPagoActualizado.emit();
+            },
+            error: (err) => {
+              console.error('Error updating recibo total', err);
+            }
+          });
+        }
+      },
+      error: (err: unknown) => {
+        const revertedList = [...this.detalles];
+        revertedList[index] = previousDetalle;
+        this.detalles = revertedList;
+        this.recalculateTotal();
+        console.error('Error updating detalle quantity', err);
+        this.cancelCantidadEdit();
+      }
+    });
+  }
+
+  cancelCantidadEdit(): void {
+    this.editingDetalleIndex = -1;
+    this.editingCantidadCtrl.setValue('');
+  }
+
+  onUnitarioInputKeydown(event: Event, index: number): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (keyboardEvent.key === 'Enter' || keyboardEvent.key === 'NumpadEnter') {
+      keyboardEvent.preventDefault();
+      keyboardEvent.stopPropagation();
+      setTimeout(() => {
+        this.saveUnitarioEdit(index, true);
+      }, 0);
+    } else if (keyboardEvent.key === 'Escape') {
+      keyboardEvent.preventDefault();
+      keyboardEvent.stopPropagation();
+      this.cancelUnitarioEdit();
+    }
+  }
+
+  onUnitarioInputBlur(index: number): void {
+    setTimeout(() => {
+      if (this.editingUnitarioIndex === index) {
+        this.saveUnitarioEdit(index);
+      }
+    }, 150);
+  }
+
+  saveUnitarioEdit(index: number, focusSearch: boolean = false): void {
+    if (this.editingUnitarioIndex !== index || index < 0 || index >= this.detalles.length) {
+      this.cancelUnitarioEdit();
+      return;
+    }
+
+    const detalle = this.detalles[index];
+    if (!detalle.producto?.id) {
+      this.cancelUnitarioEdit();
+      return;
+    }
+
+    const inputElement = document.querySelector(`.valor-unitario-input-${index}`) as HTMLInputElement;
+    const newPrecioStr = inputElement?.value?.trim() || this.editingUnitarioCtrl.value?.trim() || '';
+    const newPrecio = Number(newPrecioStr);
+
+    if (isNaN(newPrecio) || newPrecio <= 0) {
+      this.cancelUnitarioEdit();
+      return;
+    }
+
+    const currentPrecio = detalle.producto.precio ?? (detalle.cantidad > 0 ? detalle.subtotal / detalle.cantidad : 0);
+    if (newPrecio === currentPrecio) {
+      this.cancelUnitarioEdit();
+      return;
+    }
+
+    // Clear editing state immediately
+    this.editingUnitarioIndex = -1;
+    this.editingUnitarioCtrl.setValue('');
+
+    // Update product via RelationalProductService
+    const productUpdate: Producto = {
+      ...detalle.producto,
+      precio: newPrecio,
+      foto: detalle.producto.foto ?? ''
+    };
+
+    this.relationalProductService.updateProduct(detalle.producto.id, productUpdate).subscribe({
+      next: (updatedProduct) => {
+        // Find all detalles that use this product
+        const detallesToUpdate = this.detalles.filter((det) => det.productoId === updatedProduct.id);
+        
+        // Optimistically update all detalles
+        const updatedList = this.detalles.map((det) => {
+          if (det.productoId === updatedProduct.id) {
+            const newSubtotal = updatedProduct.precio * det.cantidad;
+            return {
+              ...det,
+              subtotal: newSubtotal,
+              producto: {
+                ...det.producto!,
+                ...updatedProduct,
+                precio: updatedProduct.precio
+              }
+            };
+          }
+          return det;
+        });
+        this.detalles = updatedList;
+        this.recalculateTotal();
+        
+        // Update each detalle via API
+        detallesToUpdate.forEach((det) => {
+          if (!det.id) {
+            return;
+          }
+          const newSubtotal = updatedProduct.precio * det.cantidad;
+          const payload: UpdateReciboDetalleRequest = {
+            reciboId: det.reciboId,
+            productoId: det.productoId,
+            cantidad: det.cantidad,
+            subtotal: newSubtotal
+          };
+          
+          this.reciboDetalleService.updateDetalle(det.id, payload).subscribe({
+            next: (apiUpdatedDetalle: ReciboDetalleDto) => {
+              const finalIndex = this.detalles.findIndex((d) => d.id === det.id);
+              if (finalIndex >= 0) {
+                const finalList = [...this.detalles];
+                const newSubtotal = updatedProduct.precio * det.cantidad;
+                finalList[finalIndex] = {
+                  ...apiUpdatedDetalle,
+                  subtotal: newSubtotal,
+                  cantidad: det.cantidad,
+                  producto: apiUpdatedDetalle.producto
+                    ? {
+                        ...apiUpdatedDetalle.producto,
+                        precio: updatedProduct.precio
+                      }
+                    : {
+                        ...det.producto!,
+                        precio: updatedProduct.precio
+                      }
+                };
+                this.detalles = finalList;
+                this.recalculateTotal();
+              }
+            },
+            error: (err) => {
+              console.error('Error updating detalle after product price change', err);
+            }
+          });
+        });
+        
+        // Update recibo total on backend
+        const finalTotal = this.recalculateTotal();
+        if (this.recibo && this.recibo.id && this.recibo.ticketId && this.recibo.clienteId) {
+          // Calcular montoRecibido: si es efectivo, igual al total; si no, igual al total
+          const montoRecibidoFinal = (this.recibo.metodoPagoId === 1) ? finalTotal : finalTotal;
+          
+          this.reciboService.actualizarRecibo(this.recibo.id, {
+            clienteId: this.recibo.clienteId,
+            ticketId: this.recibo.ticketId,
+            estadoId: this.recibo.estadoId ?? ESTADOS_RECIBO.PENDIENTE_PAGO,
+            metodoPagoId: this.recibo.metodoPagoId ?? 0,
+            total: String(finalTotal.toFixed(2)),
+            sesionId: this.recibo.sesionId,
+            montoRecibido: montoRecibidoFinal
+          }).subscribe({
+            next: (updatedRecibo) => {
+              this.recibo = updatedRecibo;
+              
+              // Emitir evento para que el componente padre recargue los tickets
+              this.metodoPagoActualizado.emit();
+            },
+            error: (err) => {
+              console.error('Error updating recibo total', err);
+            }
+          });
+        }
+        if (focusSearch) {
+          this.focusSearchInputRequest.emit();
+        }
+      },
+      error: (err: unknown) => {
+        console.error('Error updating product price', err);
+        this.cancelUnitarioEdit();
+      }
+    });
+  }
+
+  cancelUnitarioEdit(): void {
+    this.editingUnitarioIndex = -1;
+    this.editingUnitarioCtrl.setValue('');
+  }
+
+  onProductoDoubleClick(index: number, event: MouseEvent): void {
+    event.stopPropagation();
+    if (index < 0 || index >= this.detalles.length) {
+      return;
+    }
+    const detalle = this.detalles[index];
+    if (!detalle.producto?.id || !detalle.producto?.nombre) {
+      return;
+    }
+    
+    // Activar bandera de doble click y bloqueo de focus
+    this.isDoubleClickActive = true;
+    this.blockFocusRequest = true;
+    this.startingEdit = true;
+    
+    this.editingProductoIndex = index;
+    this.editingProductoCtrl.setValue(detalle.producto.nombre);
+    
+    // Focus the input after a short delay to ensure it's rendered
+    setTimeout(() => {
+      const input = document.querySelector(`.producto-input-${index}`) as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+      setTimeout(() => {
+        this.startingEdit = false;
+        // Desactivar bandera después de un tiempo
+        setTimeout(() => {
+          this.isDoubleClickActive = false;
+          this.blockFocusRequest = false;
+        }, 300);
+      }, 50);
+    }, 0);
+  }
+
+  onCantidadDoubleClick(index: number, event: MouseEvent): void {
+    event.stopPropagation();
+    if (index < 0 || index >= this.detalles.length) {
+      return;
+    }
+    const detalle = this.detalles[index];
+    
+    // Activar bandera de doble click
+    this.isDoubleClickActive = true;
+    this.startingEdit = true;
+    
+    this.editingDetalleIndex = index;
+    this.editingCantidadCtrl.setValue(String(detalle.cantidad ?? 1));
+    
+    setTimeout(() => {
+      const input = document.querySelector(`.cantidad-input-${index}`) as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+      setTimeout(() => {
+        this.startingEdit = false;
+        // Desactivar bandera después de un tiempo
+        setTimeout(() => {
+          this.isDoubleClickActive = false;
+        }, 200);
+      }, 50);
+    }, 0);
+  }
+
+  onProductoInputKeydown(event: Event, index: number): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (keyboardEvent.key === 'Enter' || keyboardEvent.key === 'NumpadEnter') {
+      keyboardEvent.preventDefault();
+      keyboardEvent.stopPropagation();
+      setTimeout(() => {
+        this.saveProductoEdit(index, true);
+      }, 0);
+    } else if (keyboardEvent.key === 'Escape') {
+      keyboardEvent.preventDefault();
+      keyboardEvent.stopPropagation();
+      this.cancelProductoEdit();
+    }
+  }
+
+  onProductoInputBlur(index: number): void {
+    setTimeout(() => {
+      if (this.editingProductoIndex === index) {
+        this.saveProductoEdit(index);
+      }
+    }, 150);
+  }
+
+  saveProductoEdit(index: number, focusSearch: boolean = false): void {
+    if (this.editingProductoIndex !== index || index < 0 || index >= this.detalles.length) {
+      this.cancelProductoEdit();
+      return;
+    }
+
+    const detalle = this.detalles[index];
+    if (!detalle.producto?.id) {
+      this.cancelProductoEdit();
+      return;
+    }
+
+    const inputElement = document.querySelector(`.producto-input-${index}`) as HTMLInputElement;
+    const newNombre = (inputElement?.value?.trim() || this.editingProductoCtrl.value?.trim() || '').trim();
+
+    if (!newNombre || newNombre.length === 0) {
+      this.cancelProductoEdit();
+      return;
+    }
+
+    if (newNombre === detalle.producto.nombre) {
+      this.cancelProductoEdit();
+      return;
+    }
+
+    // Clear editing state immediately
+    this.editingProductoIndex = -1;
+    this.editingProductoCtrl.setValue('');
+
+    // Update product via RelationalProductService
+    const productUpdate: Producto = {
+      ...detalle.producto,
+      nombre: newNombre,
+      foto: detalle.producto.foto ?? ''
+    };
+
+    this.relationalProductService.updateProduct(detalle.producto.id, productUpdate).subscribe({
+      next: (updatedProduct) => {
+        // Update all detalles that use this product
+        const updatedList = this.detalles.map((det) => {
+          if (det.productoId === updatedProduct.id) {
+            return {
+              ...det,
+              producto: {
+                ...det.producto!,
+                ...updatedProduct,
+                nombre: updatedProduct.nombre
+              }
+            };
+          }
+          return det;
+        });
+        this.detalles = updatedList;
+        if (focusSearch) {
+          this.focusSearchInputRequest.emit();
+        }
+      },
+      error: (err: unknown) => {
+        console.error('Error updating product name', err);
+        this.cancelProductoEdit();
+      }
+    });
+  }
+
+  cancelProductoEdit(): void {
+    this.editingProductoIndex = -1;
+    this.editingProductoCtrl.setValue('');
+  }
+
+  deleteSelectedDetalle(): void {
+    if (this.selectedDetalleIndex < 0 || this.selectedDetalleIndex >= this.detalles.length) {
+      return;
+    }
+    const detalle = this.detalles[this.selectedDetalleIndex];
+    this.reciboDetalleService.deleteDetalle(detalle.id).subscribe({
+      next: () => {
+        const updated = [...this.detalles];
+        updated.splice(this.selectedDetalleIndex, 1);
+        this.detalles = updated;
+        this.recalculateTotal();
+        this.selectedDetalleIndex =
+          this.detalles.length === 0
+            ? -1
+            : Math.min(this.selectedDetalleIndex, this.detalles.length - 1);
+        this.focusSearchInputRequest.emit();
+      },
+      error: (err: unknown) => {
+        console.error('Error deleting detalle', err);
+      }
+    });
+  }
+
+  private incrementSelectedDetalleQuantity(): void {
+    if (this.selectedDetalleIndex < 0 || this.selectedDetalleIndex >= this.detalles.length) {
+      return;
+    }
+
+    const detalle = this.detalles[this.selectedDetalleIndex];
+    const currentCantidad = Number(detalle.cantidad ?? 0);
+    const unitPrice =
+      detalle.producto?.precio ??
+      (currentCantidad > 0 ? Number(detalle.subtotal ?? 0) / currentCantidad : 0);
+
+    if (!detalle.id || unitPrice <= 0 || !detalle.reciboId || !detalle.productoId) {
+      return;
+    }
+
+    const newCantidad = currentCantidad + 1;
+    const newSubtotal = unitPrice * newCantidad;
+    const previousDetalle = { ...detalle };
+
+    const payload: UpdateReciboDetalleRequest = {
+      reciboId: detalle.reciboId,
+      productoId: detalle.productoId,
+      cantidad: newCantidad,
+      subtotal: newSubtotal
+    };
+
+    const optimisticDetalle: ReciboDetalleDto = {
+      ...detalle,
+      cantidad: newCantidad,
+      subtotal: newSubtotal
+    };
+
+    const updatedList = [...this.detalles];
+    updatedList[this.selectedDetalleIndex] = optimisticDetalle;
+    this.detalles = updatedList;
+    this.recalculateTotal();
+
+    // Keep focus on search input
+        this.focusSearchInputRequest.emit();
+
+    this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
+      next: (updatedDetalle) => {
+        const updatedListFinal = [...this.detalles];
+        const detalleActualizado = {
+          ...optimisticDetalle,
+          ...updatedDetalle,
+          cantidad: newCantidad,
+          subtotal: newSubtotal
+        };
+        updatedListFinal[this.selectedDetalleIndex] = detalleActualizado;
+        this.detalles = updatedListFinal;
+        this.recalculateTotal();
+      },
+      error: (err: unknown) => {
+        const revertedList = [...this.detalles];
+        revertedList[this.selectedDetalleIndex] = previousDetalle;
+        this.detalles = revertedList;
+        this.recalculateTotal();
+        console.error('Error updating detalle quantity', err);
+      }
+    });
+  }
+
+  private decrementSelectedDetalleQuantity(): void {
+    if (this.selectedDetalleIndex < 0 || this.selectedDetalleIndex >= this.detalles.length) {
+      return;
+    }
+
+    const detalle = this.detalles[this.selectedDetalleIndex];
+    const currentCantidad = Number(detalle.cantidad ?? 0);
+    if (currentCantidad <= 1) {
+      this.deleteSelectedDetalle();
+      return;
+    }
+
+    const unitPrice =
+      detalle.producto?.precio ??
+      (currentCantidad > 0 ? Number(detalle.subtotal ?? 0) / currentCantidad : 0);
+
+    if (!detalle.id || unitPrice <= 0 || !detalle.reciboId || !detalle.productoId) {
+      return;
+    }
+
+    const newCantidad = currentCantidad - 1;
+    const newSubtotal = unitPrice * newCantidad;
+    const previousDetalle = { ...detalle };
+
+    const payload: UpdateReciboDetalleRequest = {
+      reciboId: detalle.reciboId,
+      productoId: detalle.productoId,
+      cantidad: newCantidad,
+      subtotal: newSubtotal
+    };
+
+    const optimisticDetalle: ReciboDetalleDto = {
+      ...detalle,
+      cantidad: newCantidad,
+      subtotal: newSubtotal
+    };
+
+    const updatedList = [...this.detalles];
+    updatedList[this.selectedDetalleIndex] = optimisticDetalle;
+    this.detalles = updatedList;
+    this.recalculateTotal();
+    this.focusSearchInputRequest.emit();
+
+    this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
+      next: () => {
+        const updatedListFinal = [...this.detalles];
+        updatedListFinal[this.selectedDetalleIndex] = {
+          ...optimisticDetalle,
+          cantidad: newCantidad,
+          subtotal: newSubtotal
+        };
+        this.detalles = updatedListFinal;
+        this.recalculateTotal();
+      },
+      error: (err: unknown) => {
+        const revertedList = [...this.detalles];
+        revertedList[this.selectedDetalleIndex] = previousDetalle;
+        this.detalles = revertedList;
+        this.recalculateTotal();
+        console.error('Error updating detalle quantity', err);
+      }
+    });
+  }
+
+  private scrollDetalleListToBottom(): void {
+    const listEl = this.detalleListRef?.nativeElement;
+    if (!listEl) {
+      return;
+    }
+    requestAnimationFrame(() => {
+      listEl.scrollTop = listEl.scrollHeight;
+    });
+  }
+
+  onMetodoPagoSeleccionado(metodo: MetodoPagoDto): void {
+    this.seleccionarMetodoPago(metodo);
+  }
+
+  onFinalizarEdicion(): void {
+    console.log('onFinalizarEdicion called in recibo component');
+    console.log('recibo:', this.recibo);
+    console.log('metodosPago length:', this.metodosPago.length);
+    
+    // Si el recibo ya tiene un método de pago seleccionado, usar ese
+    if (this.recibo && this.recibo.metodoPagoId) {
+      if (this.metodosPago.length > 0) {
+        // Buscar el método de pago en la lista
+        const metodo = this.metodosPago.find(m => m.id === this.recibo!.metodoPagoId);
+        console.log('metodo encontrado:', metodo);
+        if (metodo) {
+          // Ejecutar el pago usando el método ya seleccionado,
+          // omitiendo el diálogo de efectivo si aplica
+          this.ejecutarPago(metodo, true);
+        } else {
+          console.error('No se encontró el método de pago con id:', this.recibo.metodoPagoId);
+        }
+      } else {
+        // Si los métodos de pago aún no se han cargado, esperar un momento
+        console.log('Esperando a que se carguen los métodos de pago...');
+        setTimeout(() => {
+          const metodo = this.metodosPago.find(m => m.id === this.recibo!.metodoPagoId);
+          if (metodo) {
+            console.log('metodo encontrado después de esperar:', metodo);
+            this.ejecutarPago(metodo, true);
+          } else {
+            console.error('No se encontró el método de pago después de esperar');
+          }
+        }, 500);
+      }
+    } else {
+      console.warn('El recibo no tiene un método de pago seleccionado. recibo:', this.recibo);
+    }
+  }
+
+  private ejecutarPago(metodo: MetodoPagoDto, omitirDialogoEfectivo: boolean = false): void {
+    console.log('ejecutarPago called with:', { metodo, recibo: this.recibo, reciboId: this.reciboId, actualizandoMetodoPago: this.actualizandoMetodoPago });
+    
+    if (!metodo || metodo.estado === 'inactivo' || !this.recibo || !this.reciboId || this.actualizandoMetodoPago) {
+      console.log('Validación falló en ejecutarPago:', { 
+        metodo: !!metodo, 
+        metodoEstado: metodo?.estado, 
+        recibo: !!this.recibo, 
+        reciboId: this.reciboId, 
+        actualizandoMetodoPago: this.actualizandoMetodoPago 
+      });
+      return;
+    }
+
+    console.log('Ejecutando pago con método:', metodo);
+
+    const totalARegistrar = Number(this.recibo!.total ?? 0);
+
+    if (metodo.id === 1 && !omitirDialogoEfectivo) {
+      const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && !!this.recibo && !!this.detalles?.length;
+      // Guardar detalles antes del pago para poder imprimirlos después
+      if (quiereImprimir && this.detalles?.length) {
+        this.detallesParaImprimir = [...this.detalles];
+        console.log('Detalles guardados para impresión:', this.detallesParaImprimir.length);
+      }
+      this.actualizandoMetodoPago = true;
+      const dialogRef = this.dialog.open<
+        PagoEfectivoCambioComponent,
+        PagoEfectivoCambioData,
+        PagoEfectivoCambioResultado
+      >(PagoEfectivoCambioComponent, {
+        width: '640px',
+        data: {
+          total: totalARegistrar,
+          ejecutarPago: (montoRecibido: number) => this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
+          imprimirRecibo: quiereImprimir ? () => this.imprimirRecibo() : undefined,
+          mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg)
+        },
+        autoFocus: false,
+        disableClose: true
+      });
+      dialogRef
+        .afterClosed()
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => (this.actualizandoMetodoPago = false))
+        )
+        .subscribe((resultado) => {
+          if (resultado) {
+            setTimeout(() => this.metodoPagoActualizado.emit(), 0);
+            // Enfocar el input de búsqueda después de cerrar el modal
+            setTimeout(() => this.focusSearchInputRequest.emit(), 200);
+          }
+        });
+      return;
+    }
+
+    // Guardar detalles antes del pago para poder imprimirlos después (métodos no efectivo)
+    const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
+    if (debeImprimir && this.detalles?.length) {
+      this.detallesParaImprimir = [...this.detalles];
+      console.log('Detalles guardados para impresión (método no efectivo - ejecutarPago):', this.detallesParaImprimir.length);
+    }
+
+    const preProceso$: Observable<void> = of(void 0);
+
+    this.actualizandoMetodoPago = true;
+
+    preProceso$
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap(() => this.obtenerTicketAsociado()),
+        switchMap((ticketId) => {
+          const sesionId = this.getSessionId();
+          // Calcular montoRecibido: si es efectivo, igual al total (se pasará desde el modal); si no, igual al total
+          const montoRecibidoFinal = metodo.id === 1 ? totalARegistrar : totalARegistrar;
+          
+          const payload: ActualizarReciboRequest = {
+            clienteId: this.recibo!.clienteId,
+            ticketId,
+            estadoId: ESTADOS_RECIBO.PAGADO,
+            metodoPagoId: metodo.id,
+            total: totalARegistrar.toFixed(2),
+            sesionId: sesionId ?? undefined,
+            montoRecibido: montoRecibidoFinal
+          };
+
+          return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
+            switchMap(() => {
+              const sessionId = this.getSessionId();
+              if (!sessionId) {
+                throw new Error('No se encontró sessionId.');
+              }
+              return this.ticketReciboService.getByTicketId(ticketId, sessionId).pipe(
+                map((relacion) => {
+                  if (!relacion?.reciboId) {
+                    throw new Error('No se encontró relación recibo para este ticket.');
+                  }
+                  return { reciboId: relacion.reciboId, totalGuardado: totalARegistrar };
+                })
+              );
+            })
+          );
+        }),
+        switchMap(({ reciboId, totalGuardado }) =>
+          this.reciboService.getRecibo(reciboId).pipe(
+            tap((reciboActualizado) => {
+              this.recibo = {
+                ...this.recibo!,
+                ...reciboActualizado,
+                sesionId: this.sessionId ?? reciboActualizado.sesionId
+              };
+              this.fetchDetalles(reciboActualizado.id);
+            }),
+            switchMap(() => {
+              // Recargar tickets después de actualizar el recibo
+              const sessionId = this.getSessionId();
+              if (sessionId) {
+                return this.ticketsService.getTicketsBySession(sessionId).pipe(
+                  takeUntil(this.destroy$),
+                  map(() => totalGuardado),
+                  tap({
+                    error: (err) => {
+                      console.error('Error recargando tickets después de actualizar recibo', err);
+                    }
+                  })
+                );
+              }
+              return of(totalGuardado);
+            })
+          )
+        ),
+        finalize(() => {
+          this.actualizandoMetodoPago = false;
+        })
+      )
+      .subscribe({
+        next: (totalGuardado) => {
+          // Si debe imprimir, hacerlo automáticamente sin mostrar snackbar
+          if (debeImprimir) {
+            console.log('Pago exitoso (método no efectivo - ejecutarPago), imprimiendo automáticamente...');
+            setTimeout(() => {
+              this.imprimirRecibo();
+            }, 300);
+          } else {
+            this.mostrarSnackbarPagoExitoso(totalGuardado);
+            // Enfocar el input de búsqueda después del pago cuando no se imprime
+            // Usamos un delay más largo para asegurar que el snackbar se haya mostrado completamente
+            console.log('Pago exitoso sin impresión, restaurando focus al input de búsqueda...');
+            setTimeout(() => {
+              console.log('Emitiendo evento focusSearchInputRequest...');
+              this.focusSearchInputRequest.emit();
+            }, 500);
+          }
+        },
+        error: (err: unknown) => {
+          console.error('Error actualizando método de pago', err);
+          const totalFormateado = this.formatCurrency(totalARegistrar);
+          const snackBarRef = this.snackBar.open(
+            `No fue posible registrar el recibo - total: ${totalFormateado}`,
+            undefined,
+            {
+              duration: 7000,
+              horizontalPosition: 'right',
+              panelClass: ['recibo-snackbar-error']
+            }
+          );
+          // Make the currency value bold
+          setTimeout(() => {
+            const snackBarElement = document.querySelector('.recibo-snackbar-error .mat-mdc-snack-bar-label');
+            if (snackBarElement) {
+              const text = snackBarElement.textContent || '';
+              const currencyRegex = /\$\s*[\d.,]+/;
+              const match = text.match(currencyRegex);
+              if (match) {
+                const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+                snackBarElement.innerHTML = boldText;
+              }
+            }
+          }, 0);
+        }
+      });
+  }
+
+  onMetodoPagoSeleccionadoDesdeEdicion(event: { metodo: MetodoPagoDto; valorReferencia: number | null }): void {
+    // Cuando se selecciona un método de pago desde el componente de edición,
+    // usar valorReferencia (diferencia) para el diálogo, pero procesar el total completo
+    const metodo = event.metodo;
+    const valorReferencia = event.valorReferencia;
+
+    if (!metodo || metodo.estado === 'inactivo' || !this.recibo || !this.reciboId || this.actualizandoMetodoPago) {
+      return;
+    }
+
+    // Obtener el total del recibo completo para el PUT
+    const totalARegistrar = Number(this.recibo!.total ?? 0);
+    // Usar valorReferencia (diferencia) para el diálogo de pago en efectivo
+    const valorParaDialogo = valorReferencia !== null && valorReferencia > 0 ? valorReferencia : totalARegistrar;
+
+    if (metodo.id === 1) {
+      const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && !!this.recibo && !!this.detalles?.length;
+      // Guardar detalles antes del pago para poder imprimirlos después
+      if (quiereImprimir && this.detalles?.length) {
+        this.detallesParaImprimir = [...this.detalles];
+        console.log('Detalles guardados para impresión:', this.detallesParaImprimir.length);
+      }
+      this.actualizandoMetodoPago = true;
+      const dialogRef = this.dialog.open<
+        PagoEfectivoCambioComponent,
+        PagoEfectivoCambioData,
+        PagoEfectivoCambioResultado
+      >(PagoEfectivoCambioComponent, {
+        width: '640px',
+        data: {
+          total: valorParaDialogo,
+          ejecutarPago: (montoRecibido: number) => this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
+          imprimirRecibo: quiereImprimir ? () => this.imprimirRecibo() : undefined,
+          mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg)
+        },
+        autoFocus: false,
+        disableClose: true
+      });
+      dialogRef
+        .afterClosed()
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => (this.actualizandoMetodoPago = false))
+        )
+        .subscribe((resultado) => {
+          if (resultado) {
+            setTimeout(() => this.metodoPagoActualizado.emit(), 0);
+            // Enfocar el input de búsqueda después de cerrar el modal
+            setTimeout(() => this.focusSearchInputRequest.emit(), 200);
+          }
+        });
+      return;
+    }
+
+    // Guardar detalles antes del pago para poder imprimirlos después (métodos no efectivo)
+    const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
+    if (debeImprimir && this.detalles?.length) {
+      this.detallesParaImprimir = [...this.detalles];
+      console.log('Detalles guardados para impresión (método no efectivo - onMetodoPagoSeleccionadoDesdeEdicion):', this.detallesParaImprimir.length);
+    }
+
+    const preProceso$: Observable<void> = of(void 0);
+
+    this.actualizandoMetodoPago = true;
+
+    preProceso$
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap(() => this.obtenerTicketAsociado()),
+        switchMap((ticketId) => {
+          const sesionId = this.getSessionId();
+          // Calcular montoRecibido: si es efectivo, igual al total (se pasará desde el modal); si no, igual al total
+          const montoRecibidoFinal = metodo.id === 1 ? totalARegistrar : totalARegistrar;
+          
+          const payload: ActualizarReciboRequest = {
+            clienteId: this.recibo!.clienteId,
+            ticketId,
+            estadoId: ESTADOS_RECIBO.PAGADO,
+            metodoPagoId: metodo.id,
+            total: totalARegistrar.toFixed(2),
+            sesionId: sesionId ?? undefined,
+            montoRecibido: montoRecibidoFinal
+          };
+
+          return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
+            switchMap(() => {
+              const sessionId = this.getSessionId();
+              if (!sessionId) {
+                throw new Error('No se encontró sessionId.');
+              }
+              return this.ticketReciboService.getByTicketId(ticketId, sessionId).pipe(
+                map((relacion) => {
+                  if (!relacion?.reciboId) {
+                    throw new Error('No se encontró relación recibo para este ticket.');
+                  }
+                  return { reciboId: relacion.reciboId, totalGuardado: totalARegistrar };
+                })
+              );
+            })
+          );
+        }),
+        switchMap(({ reciboId, totalGuardado }) =>
+          this.reciboService.getRecibo(reciboId).pipe(
+            tap((reciboActualizado) => {
+              this.recibo = {
+                ...this.recibo!,
+                ...reciboActualizado,
+                sesionId: this.sessionId ?? reciboActualizado.sesionId
+              };
+              this.fetchDetalles(reciboActualizado.id);
+            }),
+            switchMap(() => {
+              // Recargar tickets después de actualizar el recibo
+              const sessionId = this.getSessionId();
+              if (sessionId) {
+                return this.ticketsService.getTicketsBySession(sessionId).pipe(
+                  takeUntil(this.destroy$),
+                  map(() => totalGuardado),
+                  tap({
+                    error: (err) => {
+                      console.error('Error recargando tickets después de actualizar recibo', err);
+                    }
+                  })
+                );
+              }
+              return of(totalGuardado);
+            })
+          )
+        ),
+        finalize(() => {
+          this.actualizandoMetodoPago = false;
+        })
+      )
+      .subscribe({
+        next: (totalGuardado) => {
+          // Si debe imprimir, hacerlo automáticamente sin mostrar snackbar
+          if (debeImprimir) {
+            console.log('Pago exitoso (método no efectivo - onMetodoPagoSeleccionadoDesdeEdicion), imprimiendo automáticamente...');
+            setTimeout(() => {
+              this.imprimirRecibo();
+            }, 300);
+          } else {
+            this.mostrarSnackbarPagoExitoso(totalGuardado);
+            // Enfocar el input de búsqueda después del pago cuando no se imprime
+            // Usamos un delay más largo para asegurar que el snackbar se haya mostrado completamente
+            console.log('Pago exitoso sin impresión, restaurando focus al input de búsqueda...');
+            setTimeout(() => {
+              console.log('Emitiendo evento focusSearchInputRequest...');
+              this.focusSearchInputRequest.emit();
+            }, 500);
+          }
+        },
+        error: (err: unknown) => {
+          console.error('Error actualizando método de pago', err);
+          const totalFormateado = this.formatCurrency(totalARegistrar);
+          const snackBarRef = this.snackBar.open(
+            `No fue posible registrar el recibo - total: ${totalFormateado}`,
+            undefined,
+            {
+              duration: 7000,
+              horizontalPosition: 'right',
+              panelClass: ['recibo-snackbar-error']
+            }
+          );
+          // Make the currency value bold
+          setTimeout(() => {
+            const snackBarElement = document.querySelector('.recibo-snackbar-error .mat-mdc-snack-bar-label');
+            if (snackBarElement) {
+              const text = snackBarElement.textContent || '';
+              const currencyRegex = /\$\s*[\d.,]+/;
+              const match = text.match(currencyRegex);
+              if (match) {
+                const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+                snackBarElement.innerHTML = boldText;
+              }
+            }
+          }, 0);
+        }
+      });
+  }
+
+  private cargarEstadosRecibos(): void {
+    this.estadoRecibosService
+      .getEstadosRecibos()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (estados) => {
+          this.estadosRecibos = estados ?? [];
+          // Si ya hay un recibo cargado, actualizar el estado de edición
+          if (this.recibo) {
+            this.actualizarEstadoEdicion();
+          }
+        },
+        error: (err) => console.error('Error cargando estados de recibo', err)
+      });
+  }
+
+  private actualizarEstadoEdicion(): void {
+    if (!this.recibo || this.estadosRecibos.length === 0) {
+      this.estaEnEdicion = false;
+      return;
+    }
+
+    // Buscar el estado con sigla "ED"
+    const estadoEdicion = this.estadosRecibos.find(
+      (e) => e.sigla === ESTADOS_RECIBO.SIGLA_EDICION
+    );
+
+    if (!estadoEdicion) {
+      this.estaEnEdicion = false;
+      return;
+    }
+
+    // Verificar si el recibo está en estado de edición
+    this.estaEnEdicion = this.recibo.estadoId === estadoEdicion.id;
+  }
+
+  private cargarMetodosPago(): void {
+    this.metodoPagoService
+      .obtenerMetodosPago()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (metodos) =>
+          (this.metodosPago = (metodos ?? []).slice().sort((a, b) => a.id - b.id)),
+        error: (err) => console.error('Error cargando métodos de pago', err)
+      });
+  }
+
+  formatCurrency(value: number | null | undefined): string {
+    const numericValue = Number(value ?? 0);
+    const formatted = this.currencyFormatter.format(numericValue);
+    return formatted.replace('COP', '$').trim();
+  }
+
+  /** Formatea una fecha ISO (e.g. "2026-02-11T21:00:48") a formato legible con hora. */
+  formatFechaCreacion(fechaIso: string | null | undefined): string {
+    if (!fechaIso) {
+      return '';
+    }
+    try {
+      const date = new Date(fechaIso);
+      return date.toLocaleString('es-CO', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return fechaIso;
+    }
+  }
+
+  seleccionarMetodoPago(metodo: MetodoPagoDto): void {
+    if (!metodo || metodo.estado === 'inactivo' || !this.recibo || !this.reciboId || this.actualizandoMetodoPago) {
+      return;
+    }
+
+    if (this.recibo.metodoPagoId === metodo.id) {
+      return;
+    }
+
+    const totalARegistrar = Number(this.recibo!.total ?? 0);
+
+    if (metodo.id === 1) {
+      const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && !!this.recibo && !!this.detalles?.length;
+      // Guardar detalles antes del pago para poder imprimirlos después
+      if (quiereImprimir && this.detalles?.length) {
+        this.detallesParaImprimir = [...this.detalles];
+        console.log('Detalles guardados para impresión:', this.detallesParaImprimir.length);
+      }
+      this.actualizandoMetodoPago = true;
+      const dialogRef = this.dialog.open<
+        PagoEfectivoCambioComponent,
+        PagoEfectivoCambioData,
+        PagoEfectivoCambioResultado
+      >(PagoEfectivoCambioComponent, {
+        width: '640px',
+        data: {
+          total: totalARegistrar,
+          ejecutarPago: (montoRecibido: number) => this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
+          imprimirRecibo: quiereImprimir ? () => this.imprimirRecibo() : undefined,
+          mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg)
+        },
+        autoFocus: false,
+        disableClose: true
+      });
+      dialogRef
+        .afterClosed()
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => (this.actualizandoMetodoPago = false))
+        )
+        .subscribe((resultado) => {
+          if (resultado) {
+            setTimeout(() => this.metodoPagoActualizado.emit(), 0);
+            // Enfocar el input de búsqueda después de cerrar el modal
+            setTimeout(() => this.focusSearchInputRequest.emit(), 200);
+          }
+        });
+      return;
+    }
+
+    // Guardar detalles antes del pago para poder imprimirlos después (métodos no efectivo)
+    const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
+    if (debeImprimir && this.detalles?.length) {
+      this.detallesParaImprimir = [...this.detalles];
+      console.log('Detalles guardados para impresión (método no efectivo - seleccionarMetodoPago):', this.detallesParaImprimir.length);
+    }
+
+    const preProceso$: Observable<void> = of(void 0);
+
+    this.actualizandoMetodoPago = true;
+
+    preProceso$
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap(() => this.obtenerTicketAsociado()),
+        switchMap((ticketId) => {
+          const sesionId = this.getSessionId();
+          // Calcular montoRecibido: si es efectivo, igual al total (se pasará desde el modal); si no, igual al total
+          const montoRecibidoFinal = metodo.id === 1 ? totalARegistrar : totalARegistrar;
+          
+          const payload: ActualizarReciboRequest = {
+            clienteId: this.recibo!.clienteId,
+            ticketId,
+            estadoId: ESTADOS_RECIBO.PAGADO,
+            metodoPagoId: metodo.id,
+            total: totalARegistrar.toFixed(2),
+            sesionId: sesionId ?? undefined,
+            montoRecibido: montoRecibidoFinal
+          };
+
+          return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
+            switchMap(() => {
+              const sessionId = this.getSessionId();
+              if (!sessionId) {
+                throw new Error('No se encontró sessionId.');
+              }
+              return this.ticketReciboService.getByTicketId(ticketId, sessionId).pipe(
+                map((relacion) => {
+                  if (!relacion?.reciboId) {
+                    throw new Error('No se encontró relación recibo para este ticket.');
+                  }
+                  return { reciboId: relacion.reciboId, totalGuardado: totalARegistrar };
+                })
+              );
+            })
+          );
+        }),
+        switchMap(({ reciboId, totalGuardado }) =>
+          this.reciboService.getRecibo(reciboId).pipe(
+            tap((reciboActualizado) => {
+              this.recibo = {
+                ...this.recibo!,
+                ...reciboActualizado,
+                sesionId: this.sessionId ?? reciboActualizado.sesionId
+              };
+              this.fetchDetalles(reciboActualizado.id);
+            }),
+            switchMap(() => {
+              // Recargar tickets después de actualizar el recibo
+              const sessionId = this.getSessionId();
+              if (sessionId) {
+                return this.ticketsService.getTicketsBySession(sessionId).pipe(
+                  takeUntil(this.destroy$),
+                  map(() => totalGuardado),
+                  tap({
+                    error: (err) => {
+                      console.error('Error recargando tickets después de actualizar recibo', err);
+                    }
+                  })
+                );
+              }
+              return of(totalGuardado);
+            })
+          )
+        ),
+        finalize(() => {
+          this.actualizandoMetodoPago = false;
+        })
+      )
+      .subscribe({
+        next: (totalGuardado) => {
+          // Si debe imprimir, hacerlo automáticamente sin mostrar snackbar
+          if (debeImprimir) {
+            console.log('Pago exitoso (método no efectivo - seleccionarMetodoPago), imprimiendo automáticamente...');
+            setTimeout(() => {
+              this.imprimirRecibo();
+            }, 300);
+          } else {
+            this.mostrarSnackbarPagoExitoso(totalGuardado);
+            // Enfocar el input de búsqueda después del pago cuando no se imprime
+            // Usamos un delay más largo para asegurar que el snackbar se haya mostrado completamente
+            console.log('Pago exitoso sin impresión, restaurando focus al input de búsqueda...');
+            setTimeout(() => {
+              console.log('Emitiendo evento focusSearchInputRequest...');
+              this.focusSearchInputRequest.emit();
+            }, 500);
+          }
+        },
+        error: (err: unknown) => {
+          console.error('Error actualizando método de pago', err);
+          const totalFormateado = this.formatCurrency(totalARegistrar);
+          const snackBarRef = this.snackBar.open(
+            `No fue posible registrar el recibo - total: ${totalFormateado}`,
+            undefined,
+            {
+              duration: 7000,
+              horizontalPosition: 'right',
+              panelClass: ['recibo-snackbar-error']
+            }
+          );
+          // Make the currency value bold
+          setTimeout(() => {
+            const snackBarElement = document.querySelector('.recibo-snackbar-error .mat-mdc-snack-bar-label');
+            if (snackBarElement) {
+              const text = snackBarElement.textContent || '';
+              const currencyRegex = /\$\s*[\d.,]+/;
+              const match = text.match(currencyRegex);
+              if (match) {
+                const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+                snackBarElement.innerHTML = boldText;
+              }
+            }
+          }, 0);
+        }
+      });
+  }
+
+  private obtenerTicketAsociado(): Observable<number> {
+    if (this.ticket?.id) {
+      return of(this.ticket.id);
+    }
+    if (this.recibo?.ticketId) {
+      return of(this.recibo.ticketId);
+    }
+    if (!this.recibo?.id) {
+      return throwError(() => new Error('Recibo no válido para determinar ticket.'));
+    }
+
+    return this.ticketReciboService.getByReciboId(this.recibo.id).pipe(
+      map((relacion) => {
+        if (!relacion?.ticketId) {
+          throw new Error('No se encontró un ticket asociado al recibo.');
+        }
+        return relacion.ticketId;
+      })
+    );
+  }
+
+  private getSessionId(): number | null {
+    // First try to use the input sessionId
+    if (this.sessionId !== null && this.sessionId !== undefined) {
+      return this.sessionId;
+    }
+    // Fallback to localStorage
+    const stored = localStorage.getItem('session-id');
+    const parsed = stored ? Number(stored) : NaN;
+    if (!parsed || Number.isNaN(parsed)) {
+      return null;
+    }
+    return parsed;
+  }
+
+  /**
+   * Ejecuta la API de pago (actualizar recibo, recargar tickets). Usado por el modal de efectivo.
+   */
+  private ejecutarPagoApi$(metodo: MetodoPagoDto, totalARegistrar: number, montoRecibido?: number): Observable<number> {
+    return this.obtenerTicketAsociado().pipe(
+      switchMap((ticketId) => {
+        const sesionId = this.getSessionId();
+        // Calcular montoRecibido: si es efectivo y se proporciona, usarlo; si no, igual al total
+        const montoRecibidoFinal = metodo.id === 1 && montoRecibido !== undefined 
+          ? montoRecibido 
+          : totalARegistrar;
+        
+        const payload: ActualizarReciboRequest = {
+          clienteId: this.recibo!.clienteId,
+          ticketId,
+          estadoId: ESTADOS_RECIBO.PAGADO,
+          metodoPagoId: metodo.id,
+          total: totalARegistrar.toFixed(2),
+          sesionId: sesionId ?? undefined,
+          montoRecibido: montoRecibidoFinal
+        };
+        return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
+          switchMap(() => {
+            const sessionId = this.getSessionId();
+            if (!sessionId) throw new Error('No se encontró sessionId.');
+            return this.ticketReciboService.getByTicketId(ticketId, sessionId).pipe(
+              map((relacion) => {
+                if (!relacion?.reciboId) throw new Error('No se encontró relación recibo para este ticket.');
+                return { reciboId: relacion.reciboId, totalGuardado: totalARegistrar };
+              })
+            );
+          })
+        );
+      }),
+      switchMap(({ reciboId, totalGuardado }) =>
+        this.reciboService.getRecibo(reciboId).pipe(
+          tap((reciboActualizado) => {
+            this.recibo = {
+              ...this.recibo!,
+              ...reciboActualizado,
+              sesionId: this.sessionId ?? reciboActualizado.sesionId
+            };
+            this.fetchDetalles(reciboActualizado.id);
+          }),
+          switchMap(() => {
+            const sessionId = this.getSessionId();
+            if (sessionId) {
+              return this.ticketsService.getTicketsBySession(sessionId).pipe(
+                takeUntil(this.destroy$),
+                map(() => totalGuardado),
+                tap({
+                  error: (err) => console.error('Error recargando tickets después de actualizar recibo', err)
+                })
+              );
+            }
+            return of(totalGuardado);
+          })
+        )
+      )
+    );
+  }
+
+  /**
+   * Muestra solo el snackbar de pago exitoso (sin lógica de impresión). Usado cuando el modal de efectivo
+   * maneja la impresión internamente.
+   */
+  private mostrarSnackbarPagoExitosoSinImpresion(totalGuardado: number): void {
+    const totalFormateado = this.formatCurrency(totalGuardado);
+    this.snackBar.open(
+      `Recibo por valor de ${totalFormateado} guardado correctamente`,
+      undefined,
+      {
+        duration: 5000,
+        horizontalPosition: 'right',
+        panelClass: ['recibo-snackbar-success']
+      }
+    );
+    setTimeout(() => {
+      const snackBarElement = document.querySelector('.recibo-snackbar-success .mat-mdc-snack-bar-label');
+      if (snackBarElement) {
+        const text = snackBarElement.textContent || '';
+        const currencyRegex = /\$\s*[\d.,]+/;
+        const match = text.match(currencyRegex);
+        if (match) {
+          const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+          snackBarElement.innerHTML = boldText;
+        }
+      }
+    }, 0);
+    setTimeout(() => this.metodoPagoActualizado.emit(), 0);
+    // Enfocar el input de búsqueda después del pago
+    setTimeout(() => this.focusSearchInputRequest.emit(), 300);
+  }
+
+  /**
+   * Muestra el snackbar de pago exitoso. Si "imprimir recibo al pagar" está activo,
+   * inyecta el recibo en el DOM y muestra el botón "Imprimir" en el snackbar. La impresión
+   * se dispara al hacer clic en "Imprimir" (gesto directo del usuario) para evitar bloqueos del navegador.
+   */
+  private mostrarSnackbarPagoExitoso(totalGuardado: number): void {
+    const totalFormateado = this.formatCurrency(totalGuardado);
+    const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && this.recibo && this.detalles?.length;
+    let limpiarRecibo: (() => void) | null = null;
+    if (quiereImprimir && this.recibo && this.detalles?.length) {
+      limpiarRecibo = this.prepararReciboParaImpresion(this.recibo, this.detalles);
+    }
+    const config = {
+      duration: 8000,
+      horizontalPosition: 'right' as const,
+      panelClass: ['recibo-snackbar-success']
+    };
+    const snackRef = this.snackBar.open(
+      `Recibo por valor de ${totalFormateado} guardado correctamente`,
+      quiereImprimir ? 'Imprimir' : undefined,
+      config
+    );
+    if (quiereImprimir && limpiarRecibo) {
+      snackRef.onAction().subscribe(() => {
+        window.print();
+        const prevAfterPrint = window.onafterprint;
+        const cleanup = () => {
+          limpiarRecibo?.();
+          window.onafterprint = prevAfterPrint ?? null;
+        };
+        window.onafterprint = cleanup;
+        setTimeout(cleanup, 4000);
+      });
+      snackRef.afterDismissed().subscribe(() => limpiarRecibo?.());
+    }
+    setTimeout(() => {
+      const snackBarElement = document.querySelector('.recibo-snackbar-success .mat-mdc-snack-bar-label');
+      if (snackBarElement) {
+        const text = snackBarElement.textContent || '';
+        const currencyRegex = /\$\s*[\d.,]+/;
+        const match = text.match(currencyRegex);
+        if (match) {
+          const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+          snackBarElement.innerHTML = boldText;
+        }
+      }
+    }, 0);
+    setTimeout(() => this.metodoPagoActualizado.emit(), 0);
+  }
+
+  /**
+   * Inyecta el recibo en la ventana actual (oculto en pantalla, visible al imprimir).
+   * Devuelve una función para limpiar el DOM. La impresión se dispara desde el clic en "Imprimir" del snackbar.
+   */
+  private prepararReciboParaImpresion(recibo: ReciboDto, detalles: ReciboDetalleDto[]): () => void {
+    const idRoot = 'recibo-pos-print-root';
+    const idStyles = 'recibo-pos-print-styles';
+    const contenido = this.buildReciboHtmlFragment(detalles);
+
+    const styleEl = document.createElement('style');
+    styleEl.id = idStyles;
+    styleEl.textContent = `
+@media screen { #${idRoot} { display: none !important; } }
+@media print {
+  body * { visibility: hidden; }
+  #${idRoot}, #${idRoot} * { visibility: visible !important; }
+  #${idRoot} { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; display: block !important; font-family: 'Courier New', monospace !important; font-size: 12px !important; margin: 8px !important; max-width: 280px !important; }
+  #${idRoot} .pos-titulo { text-align: center; font-weight: bold; font-size: 14px; margin: 0 0 4px 0; }
+  #${idRoot} .pos-fecha, #${idRoot} .pos-leyenda { text-align: center; margin: 2px 0; }
+  #${idRoot} .pos-leyenda { font-size: 10px; }
+  #${idRoot} .pos-sep { border: none; border-top: 1px dashed #000; margin: 6px 0; }
+  #${idRoot} .pos-tabla { width: 100%; border-collapse: collapse; font-size: 11px; }
+  #${idRoot} .pos-tabla th { text-align: left; border-bottom: 1px solid #000; padding: 2px 4px; }
+  #${idRoot} .pos-tabla td { padding: 2px 4px; }
+  #${idRoot} .pos-total { font-weight: bold; text-align: right; margin-top: 4px; }
+}
+`;
+
+    const wrap = document.createElement('div');
+    wrap.id = idRoot;
+    wrap.innerHTML = contenido;
+    document.body.appendChild(styleEl);
+    document.body.appendChild(wrap);
+
+    return () => {
+      const s = document.getElementById(idStyles);
+      const r = document.getElementById(idRoot);
+      if (s?.parentNode) s.parentNode.removeChild(s);
+      if (r?.parentNode) r.parentNode.removeChild(r);
+    };
+  }
+
+  /** Construye el fragmento HTML del recibo (solo el cuerpo, sin documento completo). */
+  private buildReciboHtmlFragment(detalles: ReciboDetalleDto[]): string {
+    const fechaHora = new Date();
+    const fechaHoraStr = fechaHora.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'medium' });
+    const total = detalles.reduce((sum, det) => sum + Number(det.subtotal ?? 0), 0);
+    const lineas: string[] = [];
+    lineas.push('<div class="pos-recibo">');
+    lineas.push('<p class="pos-titulo">Gestor infinito market</p>');
+    lineas.push(`<p class="pos-fecha">${this.escapeHtml(fechaHoraStr)}</p>`);
+    lineas.push('<p class="pos-leyenda">Recibo no apto como factura</p>');
+    lineas.push('<hr class="pos-sep"/>');
+    lineas.push('<table class="pos-tabla"><thead><tr><th>Producto</th><th>V.Unit</th><th>Cant</th><th>Subtotal</th></tr></thead><tbody>');
+    for (const det of detalles) {
+      const nombre = det.producto?.nombre ?? `Producto ${det.productoId}`;
+      const unitario = det.producto?.precio ?? (det.cantidad ? det.subtotal / det.cantidad : 0);
+      lineas.push('<tr>', `<td>${this.escapeHtml(nombre)}</td>`, `<td>${this.formatCurrency(unitario)}</td>`, `<td>${det.cantidad}</td>`, `<td>${this.formatCurrency(det.subtotal)}</td>`, '</tr>');
+    }
+    lineas.push('</tbody></table>', '<hr class="pos-sep"/>', `<p class="pos-total">TOTAL: ${this.formatCurrency(total)}</p>`, '</div>');
+    return lineas.join('');
+  }
+
+  /**
+   * Imprime el recibo actual usando window.open() como en el ejemplo funcional.
+   * Verifica localStorage antes de imprimir.
+   */
+  imprimirRecibo(): void {
+    console.log('=== IMPRIMIR RECIBO LLAMADO ===');
+    console.log('localStorage imprimir-recibo:', localStorage.getItem('imprimir-recibo'));
+    
+    // Verificar localStorage antes de imprimir
+    const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
+    
+    if (!debeImprimir) {
+      console.log('Impresión deshabilitada: imprimir-recibo no está en true');
+      return;
+    }
+
+    if (!this.recibo) {
+      console.log('No hay recibo para imprimir');
+      return;
+    }
+
+    // Usar detalles guardados antes del pago si están disponibles
+    if (this.detallesParaImprimir?.length > 0) {
+      console.log('Usando detalles guardados antes del pago:', this.detallesParaImprimir.length);
+      const detallesTemporales = [...this.detallesParaImprimir];
+      this.detallesParaImprimir = []; // Limpiar después de usar
+      this.ejecutarImpresionConDetalles(detallesTemporales);
+      return;
+    }
+
+    // Si no hay detalles pero hay recibo, recargar los detalles primero
+    if (!this.detalles?.length && this.recibo.id) {
+      console.log('Detalles vacíos, recargando detalles del recibo...', { reciboId: this.recibo.id });
+      this.reciboDetalleService.getDetallesByRecibo(this.recibo.id).subscribe({
+        next: (detalles) => {
+          console.log('Detalles cargados:', detalles?.length);
+          this.detalles = detalles || [];
+          if (this.detalles.length > 0) {
+            // Intentar imprimir de nuevo con los detalles cargados
+            setTimeout(() => this.ejecutarImpresion(), 100);
+          } else {
+            console.log('No hay detalles para imprimir después de recargar');
+          }
+        },
+        error: (err) => {
+          console.error('Error cargando detalles para imprimir', err);
+        }
+      });
+      return;
+    }
+
+    if (!this.detalles?.length) {
+      console.log('No hay detalles para imprimir', { detalles: this.detalles?.length });
+      return;
+    }
+
+    this.ejecutarImpresion();
+  }
+
+  private ejecutarImpresion(): void {
+    this.ejecutarImpresionConDetalles(this.detalles);
+  }
+
+  private ejecutarImpresionConDetalles(detalles: ReciboDetalleDto[]): void {
+    console.log('Generando HTML del recibo...', { detalles: detalles?.length });
+    // Generar el HTML del recibo
+    const cuerpo = this.buildReciboHtmlFragment(detalles);
+    const htmlCompleto = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Imprimir Recibo</title>
+<style>
+@page {
+  size: 80mm auto;
+  margin: 0;
+}
+html{padding:0;margin:0;font-family:'Courier New','Courier',monospace;width:80mm;font-size:12px}
+body{margin:0;padding:8px;width:80mm;background:white}
+p{margin-top:0.25rem;margin-bottom:0.25rem;white-space:pre-wrap}
+.pos-titulo{text-align:center;font-weight:bold;font-size:14px;margin:0 0 4px 0}
+.pos-fecha,.pos-leyenda{text-align:center;margin:2px 0}
+.pos-leyenda{font-size:10px}
+.pos-sep{border:none;border-top:1px dashed #000;margin:6px 0}
+.pos-tabla{width:100%;border-collapse:collapse;font-size:11px}
+.pos-tabla th{text-align:left;border-bottom:1px solid #000;padding:2px 4px}
+.pos-tabla td{padding:2px 4px}
+.pos-total{font-weight:bold;text-align:right;margin-top:4px;font-size:14px}
+</style>
+<script>
+window.onafterprint = function() {
+  setTimeout(function() {
+    window.close();
+  }, 100);
+};
+window.onload = function() {
+  setTimeout(function() {
+    window.print();
+  }, 250);
+};
+</script>
+</head><body>${cuerpo}</body></html>`;
+
+    console.log('Abriendo ventana de impresión...');
+    // Abrir ventana de impresión usando window.open() como en el ejemplo
+    const printerWindow = window.open('', '_blank');
+    
+    if (!printerWindow) {
+      console.error('No se pudo abrir la ventana de impresión - ventanas emergentes bloqueadas');
+      alert('Por favor, permite ventanas emergentes para imprimir');
+      return;
+    }
+
+    console.log('Escribiendo HTML en la ventana...');
+    // Escribir el HTML completo en la ventana
+    printerWindow.document.write(htmlCompleto);
+    
+    // Cerrar el documento para que se renderice
+    printerWindow.document.close();
+    
+    // Enfocar la ventana
+    printerWindow.focus();
+    
+    console.log('Ventana de impresión abierta, se imprimirá automáticamente');
+    // La impresión se ejecutará automáticamente cuando la ventana cargue
+    // gracias al window.onload en el script dentro del HTML
+    
+    // Enfocar el input de búsqueda después de que la ventana de impresión se cierre
+    // Usamos un delay más largo para asegurar que la ventana de impresión se haya cerrado completamente
+    // La ventana se cierra en window.onafterprint después de 100ms, así que esperamos un poco más
+    setTimeout(() => this.focusSearchInputRequest.emit(), 1500);
+  }
+
+  /**
+   * Abre el recibo actual en nueva pestaña. Se llama desde el menú Opciones (Descargar recibo).
+   */
+  descargarReciboActual(): boolean {
+    if (!this.recibo || !this.detalles?.length) return false;
+    try {
+      this.abrirReciboEnNuevaPestana(this.recibo, this.detalles);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Genera el HTML del recibo y lo abre en nueva pestaña (para menú Descargar recibo).
+   */
+  private abrirReciboEnNuevaPestana(recibo: ReciboDto, detalles: ReciboDetalleDto[]): void {
+    const cuerpo = this.buildReciboHtmlFragment(detalles);
+    const htmlCompleto = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Recibo</title>
+<style>body{font-family:'Courier New',monospace;font-size:12px;margin:16px;max-width:280px}.pos-titulo{text-align:center;font-weight:bold;font-size:14px;margin:0 0 4px 0}.pos-fecha,.pos-leyenda{text-align:center;margin:2px 0}.pos-leyenda{font-size:10px}.pos-sep{border:none;border-top:1px dashed #000;margin:6px 0}.pos-tabla{width:100%;border-collapse:collapse;font-size:11px}.pos-tabla th{text-align:left;border-bottom:1px solid #000;padding:2px 4px}.pos-tabla td{padding:2px 4px}.pos-total{font-weight:bold;text-align:right;margin-top:4px}</style></head><body>${cuerpo}</body></html>`;
+    const dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(htmlCompleto);
+    const link = document.createElement('a');
+    link.href = dataUri;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+}
+

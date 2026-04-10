@@ -516,7 +516,7 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
         this.volviendoAEditar = false;
 
         // Redirigir a la pantalla de ventas
-        this.router.navigate(['/apps/ventas']);
+        this.router.navigate(['/apps/tickets']);
       },
       error: (err) => {
         console.error('Error volviendo a editar recibo', err);

@@ -26,18 +26,18 @@ export class MegaMenuComponent implements OnInit {
   features: MegaMenuFeature[] = [
     {
       icon: 'mat:assignment',
-      label: 'Ventas',
-      route: '/apps/ventas'
+      label: 'Tickets',
+      route: '/apps/tickets'
     },
     {
       icon: 'mat:shopping_cart',
       label: 'Productos',
-      route: '/apps/products/admin-productos'
+      route: '/apps/productos/admin-productos'
     },
     {
       icon: 'mat:history',
       label: 'Historial',
-      route: '/apps/ventas/historial'
+      route: '/apps/tickets/historial'
     },
     {
       icon: 'mat:dashboard',
@@ -59,7 +59,7 @@ export class MegaMenuComponent implements OnInit {
   pages: MegaMenuPage[] = [
     {
       label: 'Punto de venta',
-      route: '/apps/ventas'
+      route: '/apps/tickets'
     },
     {
       label: 'Iniciar sesión',
@@ -67,11 +67,11 @@ export class MegaMenuComponent implements OnInit {
     },
     {
       label: 'Productos',
-      route: '/apps/products/admin-productos'
+      route: '/apps/productos/admin-productos'
     },
     {
       label: 'Historial de ventas',
-      route: '/apps/ventas/historial'
+      route: '/apps/tickets/historial'
     },
     {
       label: 'Financiero',

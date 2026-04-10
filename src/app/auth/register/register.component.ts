@@ -102,7 +102,7 @@ export class RegisterComponent {
         this.snackbar.open('Registro exitoso', 'Cerrar', {
           duration: 3000
         });
-        this.router.navigate(['/apps/ventas']);
+        this.router.navigate(['/apps/tickets']);
       },
       error: (error) => {
         let mensaje = 'Error al registrar usuario';

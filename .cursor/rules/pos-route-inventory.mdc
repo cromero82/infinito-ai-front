@@ -1,0 +1,27 @@
+---
+description: Inventario corto de rutas y puntos raiz del POS para navegacion, menus y redirecciones
+globs: src/app/{app.routes.ts,core/navigation/**/*.ts,layouts/components/toolbar/mega-menu/*.ts,layouts/components/toolbar/toolbar-user/toolbar-user-dropdown/*.ts}
+alwaysApply: false
+---
+
+# POS Route Inventory
+
+- Usar este mapa cuando se modifiquen rutas, menús, accesos rápidos o redirecciones del POS.
+- Tomar como fuentes de verdad `app.routes.ts`, `NavigationLoaderService`, `mega-menu.component.ts` y `ToolbarUserDropdownComponent`.
+
+## Rutas POS vigentes
+
+- `Tickets` -> `/apps/tickets`
+- `Historial Tickets` -> `/apps/tickets/historial`
+- `Productos` -> `/apps/productos/admin-productos`
+- `Clientes` -> `/apps/clientes/list`
+- `Financiero` -> `/apps/financiero`
+- `Gestión de usuarios` -> `/apps/gestion-usuarios`
+- `Tipos` -> `/apps/tipos`
+- `Cargue de productos` -> `/apps/cargue-productos`
+
+## Convenciones
+
+- Si se cambia una ruta del POS, revisar también navegación lateral, `mega-menu`, redirecciones de auth y accesos desde dropdown.
+- Evitar buscar en módulos demo eliminados de la template Vex; este inventario resume las entradas activas del producto.
+- Recordar que el módulo de tickets sigue en carpeta `ventas`, aunque la URL pública ya es `tickets`.

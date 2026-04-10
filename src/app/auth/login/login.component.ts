@@ -45,7 +45,7 @@ import { forkJoin, of } from 'rxjs';
   ]
 })
 export class LoginComponent {
-  private readonly defaultRedirectUrl = '/apps/ventas';
+  private readonly defaultRedirectUrl = '/apps/tickets';
   private readonly previousReloginUrlKey = 'url-previous-relogin';
   private readonly previousReloginUserKey = 'user-previous-relogin';
 

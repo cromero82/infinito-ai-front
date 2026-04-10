@@ -10,6 +10,10 @@ const PREVIOUS_RELOGIN_USER_KEY = 'user-previous-relogin';
 const TOKEN_EXPIRED_MESSAGE = 'El token ha expirado';
 const MISSING_TOKEN_MESSAGE =
   'Missing token: use Authorization: Bearer <token> or token header';
+const AUTH_SERVER_UNAVAILABLE_MESSAGE =
+  'Invalid token or auth service unavailable';
+const AUTH_SERVER_UNAVAILABLE_SNACKBAR_MESSAGE =
+  'Revise si el servidor de autorizacion esta disponible y tiene conexion.';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
@@ -53,6 +57,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         TOKEN_EXPIRED_MESSAGE.toLowerCase(),
         MISSING_TOKEN_MESSAGE.toLowerCase()
       ];
+      const isAuthServerUnavailableError =
+        error.status === 401 &&
+        normalizedMessage === AUTH_SERVER_UNAVAILABLE_MESSAGE.toLowerCase();
       const shouldRedirectToLogin =
         error.status === 401 && reloginMessages.includes(normalizedMessage);
 
@@ -80,6 +87,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         if (router.url !== '/login') {
           void router.navigate(['/login']);
         }
+      } else if (isAuthServerUnavailableError) {
+        setTimeout(() => {
+          snackBar.dismiss();
+          snackBar.open(AUTH_SERVER_UNAVAILABLE_SNACKBAR_MESSAGE, 'Cerrar', {
+            duration: 7000,
+            horizontalPosition: 'center',
+            verticalPosition: 'top'
+          });
+        }, 0);
       }
 
       return throwError(() => error);

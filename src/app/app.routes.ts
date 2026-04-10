@@ -29,19 +29,19 @@ export const appRoutes: VexRoutes = [
     children: [
       {
         path: '',
-        redirectTo: 'apps/ventas',
+        redirectTo: 'apps/tickets',
         pathMatch: 'full'
       },
       {
         path: 'apps',
         children: [
           {
-            path: 'products',
+            path: 'productos',
             children: [
               {
                 path: 'admin-productos',
                 loadComponent: () =>
-                  import('./pages/apps/products/admin-productos/admin-productos.component').then(
+                  import('./pages/apps/productos/admin-productos/admin-productos.component').then(
                     (m) => m.AdminProductosComponent
                   ),
                 data: { scrollDisabled: true }
@@ -49,13 +49,13 @@ export const appRoutes: VexRoutes = [
             ]
           },
           {
-            path: 'ventas',
+            path: 'tickets',
             children: [
               {
                 path: '',
                 loadComponent: () =>
-                  import('./pages/apps/ventas/tickets-recibo/tickets-recibo.component').then(
-                    (m) => m.TicketsReciboComponent
+                  import('./pages/apps/ventas/tickets/tickets.component').then(
+                    (m) => m.TicketsComponent
                   ),
                 data: { scrollDisabled: true }
               },
@@ -179,7 +179,7 @@ export const appRoutes: VexRoutes = [
       },
       {
         path: '**',
-        redirectTo: 'apps/ventas'
+        redirectTo: 'apps/tickets'
       }
     ]
   }

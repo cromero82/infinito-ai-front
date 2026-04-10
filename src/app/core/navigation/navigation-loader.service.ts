@@ -22,20 +22,20 @@ export class NavigationLoaderService {
     this._items.next([
       {
         type: 'link',
-        label: 'Ventas',
-        route: '/apps/ventas',
+        label: 'Tickets',
+        route: '/apps/tickets',
             icon: 'mat:assignment'
       },
       {
         type: 'link',
         label: 'Productos',
-        route: '/apps/products/admin-productos',
+        route: '/apps/productos/admin-productos',
         icon: 'mat:shopping_cart'
       },
       {
         type: 'link',
-        label: 'Historial Ventas',
-        route: '/apps/ventas/historial',
+        label: 'Historial Tickets',
+        route: '/apps/tickets/historial',
         icon: 'mat:history'
       },
       {

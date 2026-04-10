@@ -18,8 +18,8 @@ import {
   ConflictoItem
 } from './service/cargue-productos.service';
 import { CargueProductoModalComponent } from './cargue-producto-modal/cargue-producto-modal.component';
-import { RelationalProductService } from '../products/service/relational-product.service';
-import { ProductEditComponent } from '../products/product-edit/product-edit.component';
+import { RelationalProductService } from '../productos/service/relational-product.service';
+import { EditarProductoComponent } from '../productos/editar-producto/editar-producto.component';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -512,7 +512,7 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
             // El producto existe, abrir en modo edición
             this.productosExistentes[key] = true;
             
-            const dialogRef = this.dialog.open(ProductEditComponent, {
+            const dialogRef = this.dialog.open(EditarProductoComponent, {
               width: '600px',
               data: {
                 id: producto.id,
@@ -563,7 +563,7 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
     conflicto: CargueProductoConflictoDto
   ): void {
     // Abrir el modal de edición en modo creación (sin ID) para que el usuario pueda editar antes de registrar
-    const dialogRef = this.dialog.open(ProductEditComponent, {
+    const dialogRef = this.dialog.open(EditarProductoComponent, {
       width: '600px',
       disableClose: false,
       data: {
@@ -773,7 +773,7 @@ export class CargueProductosComponent implements OnInit, OnDestroy {
         this.productosExistentes[key] = true;
         
         // Abrir el modal de edición con los datos del producto
-        const dialogRef = this.dialog.open(ProductEditComponent, {
+        const dialogRef = this.dialog.open(EditarProductoComponent, {
           width: '600px',
           data: {
             id: producto.id,
