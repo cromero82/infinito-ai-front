@@ -3,6 +3,14 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 
+export interface ReciboDetalleHistoricoAccionDto {
+  id: number;
+  reciboDetalleId: number;
+  fechaHora: string;
+  usuarioId: string;
+  accion: string;
+}
+
 export interface ReciboDetalleDto {
   id: number;
   reciboId: number;
@@ -10,7 +18,9 @@ export interface ReciboDetalleDto {
   cantidad: number;
   subtotal: number;
   fechaCreacion?: string;
+  usuarioCreacion?: string;
   nombreUsuarioAtendio?: string | null;
+  historicoAcciones?: ReciboDetalleHistoricoAccionDto[] | null;
   producto?: {
     id: number;
     barcode: string;

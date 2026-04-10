@@ -129,7 +129,14 @@ export class LoginComponent {
           })
         );
 
-        return forkJoin([config$, perfil$]).pipe(
+        const todosUsuarios$ = this.authService.cargarTodosUsuariosEnStorage().pipe(
+          catchError((error) => {
+            console.warn('No se pudo obtener la caché de todos los usuarios:', error);
+            return of(null);
+          })
+        );
+
+        return forkJoin([config$, perfil$, todosUsuarios$]).pipe(
           map(() => sesion)
         );
       }),

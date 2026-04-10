@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 
 export interface LoginRequest {
@@ -36,10 +36,31 @@ export interface JwtPayload {
   exp: number;
 }
 
+export interface UsuarioAuthRol {
+  id: number;
+  nombre: string;
+  sigla: string;
+}
+
+export interface UsuarioAuthDto {
+  id: string;
+  nombre: string;
+  correoElectronico: string;
+  telefono: string;
+  activo: boolean;
+  roles: UsuarioAuthRol[];
+}
+
+export interface UsuarioCacheDto {
+  id: string;
+  nombre: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+  private readonly todosUsuariosStorageKey = 'todos-usuarios';
   private urlService = 'http://localhost:8081';
   private servicePath = '/auth';
   private apiUrl = `${this.urlService}${this.servicePath}`;
@@ -326,11 +347,50 @@ export class AuthService {
     );
   }
 
-  obtenerUsuarios(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/usuarios`).pipe(
+  obtenerUsuarios(): Observable<UsuarioAuthDto[]> {
+    return this.http.get<UsuarioAuthDto[]>(`${this.apiUrl}/usuarios`).pipe(
       catchError(error => {
         console.error('Error al obtener usuarios:', error);
         return throwError(() => error);
+      })
+    );
+  }
+
+  obtenerTodosUsuariosCache(): UsuarioCacheDto[] {
+    const raw = localStorage.getItem(this.todosUsuariosStorageKey);
+    if (!raw) {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed)
+        ? parsed.filter((usuario): usuario is UsuarioCacheDto =>
+            !!usuario &&
+            typeof usuario.id === 'string' &&
+            typeof usuario.nombre === 'string'
+          )
+        : [];
+    } catch (error) {
+      console.warn('No se pudo leer la caché de todos-usuarios:', error);
+      return [];
+    }
+  }
+
+  tieneTodosUsuariosEnCache(): boolean {
+    return this.obtenerTodosUsuariosCache().length > 0;
+  }
+
+  cargarTodosUsuariosEnStorage(forceRefresh = false): Observable<UsuarioCacheDto[]> {
+    const usuariosCacheados = this.obtenerTodosUsuariosCache();
+    if (!forceRefresh && usuariosCacheados.length > 0) {
+      return of(usuariosCacheados);
+    }
+
+    return this.obtenerUsuarios().pipe(
+      map((usuarios) => usuarios.map(({ id, nombre }) => ({ id, nombre }))),
+      tap((usuarios) => {
+        localStorage.setItem(this.todosUsuariosStorageKey, JSON.stringify(usuarios));
       })
     );
   }

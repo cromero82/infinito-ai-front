@@ -29,7 +29,7 @@
                 (dblclick)="onDetalleDoubleClick(i, $event)"
                 (mousedown)="onDetalleRowMouseDown(i, $event)"
                 (contextmenu)="onDetalleContextMenu(i, $event)">
-                <span class="detalle-col producto" (dblclick)="onProductoDoubleClick(i, $event); $event.stopPropagation()">
+                <div class="detalle-col producto" (dblclick)="onProductoDoubleClick(i, $event); $event.stopPropagation()">
                   <input
                     *ngIf="editingProductoIndex === i"
                     class="producto-input producto-input-{{ i }}"
@@ -40,10 +40,29 @@
                     (blur)="onProductoInputBlur(i)"
                     (click)="$event.stopPropagation()"
                     (input)="$event.stopPropagation()" />
-                  <span *ngIf="editingProductoIndex !== i">
-                    {{ det.producto ? det.producto.nombre : ('Producto ' + det.productoId) }}
-                  </span>
-                </span>
+                  <ng-container *ngIf="editingProductoIndex !== i">
+                    <div class="producto-main-line">
+                      <button
+                        *ngIf="hasHistoricoAcciones(det)"
+                        class="historico-toggle"
+                        type="button"
+                        (click)="toggleHistoricoAcciones(det, $event)">
+                        {{ isHistoricoExpandido(det) ? '[-]' : '[+]' }}
+                      </button>
+                      <span class="producto-nombre">
+                        {{ det.producto ? det.producto.nombre : ('Producto ' + det.productoId) }}
+                      </span>
+                    </div>
+                    <div
+                      *ngIf="hasHistoricoAcciones(det) && isHistoricoExpandido(det)"
+                      class="historico-acciones"
+                      (click)="$event.stopPropagation()">
+                      <div class="historico-accion" *ngFor="let accion of getHistoricoAccionesOrdenadas(det)">
+                        {{ getDescripcionHistoricoAccion(det, accion) }}
+                      </div>
+                    </div>
+                  </ng-container>
+                </div>
                 <span class="detalle-col atendido" *ngIf="mostrarColumnaAtendido">
                   <span *ngIf="det.nombreUsuarioAtendio" class="atendido-text">
                     {{ formatAtendidoPor(det) }}

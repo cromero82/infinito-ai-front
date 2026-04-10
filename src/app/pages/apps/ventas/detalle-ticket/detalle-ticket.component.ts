@@ -29,6 +29,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import {
   ReciboDetalleService,
   ReciboDetalleDto,
+  ReciboDetalleHistoricoAccionDto,
   CreateReciboDetalleRequest,
   UpdateReciboDetalleRequest
 } from '../service/recibo-detalle.service';
@@ -38,6 +39,7 @@ import { TicketReciboService, TicketReciboDto } from '../service/ticket-recibo.s
 import { EstadoRecibosService, EstadoReciboDto } from '../service/estado-recibos.service';
 import { FechaUtilService } from '../service/fecha-util.service';
 import { TicketsService } from '../service/tickets.service';
+import { AuthService } from '../../../../auth/service/auth.service';
 import {
   SelectorProductosComponent,
   SelectorProductosData
@@ -158,6 +160,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
   /** True cuando se debe mostrar la columna "Atendido" en la lista de detalles. */
   mostrarColumnaAtendido = false;
+  private readonly historicoExpandidoDetalleIds = new Set<number>();
+  private usuariosCachePorId = new Map<string, string>();
+  private historicoRefreshIntervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private reciboService: ReciboService,
@@ -169,11 +174,13 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private estadoRecibosService: EstadoRecibosService,
     private ticketsService: TicketsService,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef,
     private fechaUtilService: FechaUtilService
   ) {}
 
   ngOnInit(): void {
+    this.cargarUsuariosDesdeStorage();
     this.productSearchCtrl.valueChanges
       .pipe(
         debounceTime(400),
@@ -215,6 +222,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.detenerActualizacionHistorico();
     this.destroy$.next();
     this.destroy$.complete();
     this.dialogAbierto = false;
@@ -380,6 +388,182 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     return `${palabras[0]} ${palabras[1].charAt(0).toUpperCase()}.`;
   }
 
+  hasHistoricoAcciones(det: ReciboDetalleDto): boolean {
+    return Array.isArray(det.historicoAcciones) && det.historicoAcciones.length > 0;
+  }
+
+  isHistoricoExpandido(det: ReciboDetalleDto): boolean {
+    return this.historicoExpandidoDetalleIds.has(det.id);
+  }
+
+  toggleHistoricoAcciones(det: ReciboDetalleDto, event: MouseEvent): void {
+    event.stopPropagation();
+
+    if (!this.hasHistoricoAcciones(det)) {
+      return;
+    }
+
+    if (this.historicoExpandidoDetalleIds.has(det.id)) {
+      this.historicoExpandidoDetalleIds.delete(det.id);
+    } else {
+      this.historicoExpandidoDetalleIds.add(det.id);
+    }
+
+    this.sincronizarActualizacionHistorico();
+  }
+
+  private sincronizarActualizacionHistorico(): void {
+    if (this.historicoExpandidoDetalleIds.size > 0) {
+      this.iniciarActualizacionHistorico();
+      return;
+    }
+
+    this.detenerActualizacionHistorico();
+  }
+
+  private iniciarActualizacionHistorico(): void {
+    if (this.historicoRefreshIntervalId !== null) {
+      return;
+    }
+
+    this.historicoRefreshIntervalId = setInterval(() => {
+      if (this.historicoExpandidoDetalleIds.size === 0) {
+        this.detenerActualizacionHistorico();
+        return;
+      }
+
+      this.cdr.markForCheck();
+    }, 60000);
+  }
+
+  private detenerActualizacionHistorico(): void {
+    if (this.historicoRefreshIntervalId === null) {
+      return;
+    }
+
+    clearInterval(this.historicoRefreshIntervalId);
+    this.historicoRefreshIntervalId = null;
+  }
+
+  getHistoricoAccionesOrdenadas(det: ReciboDetalleDto): ReciboDetalleHistoricoAccionDto[] {
+    const historicoCronologico = [...(det.historicoAcciones ?? [])].sort((a, b) => {
+      const fechaA = this.fechaUtilService.parseDateAsLocal(a.fechaHora).getTime();
+      const fechaB = this.fechaUtilService.parseDateAsLocal(b.fechaHora).getTime();
+      return fechaA - fechaB;
+    });
+
+    const accionesVisibles: ReciboDetalleHistoricoAccionDto[] = [];
+
+    for (const accion of historicoCronologico) {
+      const tipoAccion = accion.accion?.trim().toLowerCase();
+
+      if (tipoAccion === 'agrega') {
+        accionesVisibles.push(accion);
+        continue;
+      }
+
+      if (tipoAccion === 'elimina' && accionesVisibles.length > 0) {
+        accionesVisibles.pop();
+      }
+    }
+
+    return accionesVisibles;
+  }
+
+  getDescripcionHistoricoAccion(det: ReciboDetalleDto, accion: ReciboDetalleHistoricoAccionDto): string {
+    const tiempo = this.formatearTiempoRelativo(accion.fechaHora);
+    if (!this.debeMostrarUsuarioEnHistorico(det)) {
+      return tiempo;
+    }
+
+    const usuario = this.obtenerNombreUsuarioHistorico(accion.usuarioId);
+    return `${tiempo} por ${usuario}`;
+  }
+
+  private debeMostrarUsuarioEnHistorico(det: ReciboDetalleDto): boolean {
+    const usuarioLogueado = this.normalizarNombreUsuario(this.authService.getNombre());
+    if (!usuarioLogueado) {
+      return true;
+    }
+
+    return this.getHistoricoAccionesOrdenadas(det).some((accion) => {
+      const nombreUsuario = this.normalizarNombreUsuario(this.obtenerNombreUsuarioHistorico(accion.usuarioId));
+      return !!nombreUsuario && nombreUsuario !== usuarioLogueado;
+    });
+  }
+
+  private obtenerNombreUsuarioHistorico(usuarioId: string | null | undefined): string {
+    const usuarioIdNormalizado = usuarioId?.trim();
+    if (!usuarioIdNormalizado) {
+      return 'Usuario desconocido';
+    }
+
+    return this.usuariosCachePorId.get(usuarioIdNormalizado) ?? 'Usuario desconocido';
+  }
+
+  private normalizarNombreUsuario(nombre: string | null | undefined): string {
+    return nombre?.trim().toLowerCase() ?? '';
+  }
+
+  private formatearTiempoRelativo(fechaHora: string | null | undefined): string {
+    if (!fechaHora) {
+      return 'fecha no disponible';
+    }
+
+    const fecha = this.fechaUtilService.parseDateAsLocal(fechaHora);
+    if (Number.isNaN(fecha.getTime())) {
+      return 'fecha no disponible';
+    }
+
+    const diffMs = Date.now() - fecha.getTime();
+    const diffMinutes = Math.floor(Math.max(diffMs, 0) / 60000);
+
+    if (diffMinutes < 1) {
+      return 'hace unos segundos';
+    }
+    if (diffMinutes === 1) {
+      return 'hace 1 minuto';
+    }
+    if (diffMinutes < 60) {
+      return `hace ${diffMinutes} minutos`;
+    }
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours === 1) {
+      return 'hace 1 hora';
+    }
+    if (diffHours < 24) {
+      return `hace ${diffHours} horas`;
+    }
+
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) {
+      return 'hace 1 día';
+    }
+    if (diffDays < 7) {
+      return `hace ${diffDays} días`;
+    }
+
+    const diffWeeks = Math.floor(diffDays / 7);
+    if (diffWeeks === 1) {
+      return 'hace 1 semana';
+    }
+    if (diffWeeks < 5) {
+      return `hace ${diffWeeks} semanas`;
+    }
+
+    const diffMonths = Math.floor(diffDays / 30);
+    if (diffMonths <= 1) {
+      return 'hace 1 mes';
+    }
+    if (diffMonths < 12) {
+      return `hace ${diffMonths} meses`;
+    }
+
+    const diffYears = Math.floor(diffDays / 365);
+    return diffYears <= 1 ? 'hace 1 año' : `hace ${diffYears} años`;
+  }
+
   searchAndAddProduct(): void {
     const searchValue = this.productSearchCtrl.value?.trim();
     if (!this.reciboId) {
@@ -460,17 +644,19 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       this.scrollDetalleListToBottom();
 
       this.reciboDetalleService.updateDetalle(existingDetalle.id, payload).subscribe({
-        next: (updatedDetalle) => {
+        next: async (updatedDetalle) => {
+          const detalleBackend = await this.prepararDetalleActualizado(updatedDetalle);
           const updatedListFinal = [...this.detalles];
           const detalleActualizado = {
             ...optimisticDetalle,
-            ...updatedDetalle,
+            ...detalleBackend,
             cantidad: newCantidad,
             subtotal: newSubtotal,
-            producto: updatedDetalle.producto ?? existingDetalle.producto
+            producto: detalleBackend.producto ?? existingDetalle.producto
           };
           updatedListFinal[existingDetalleIndex] = detalleActualizado;
           this.detalles = updatedListFinal;
+          this.depurarHistoricosExpandidos();
           this.recalculateTotal();
         },
         error: (err: unknown) => {
@@ -565,11 +751,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.detallesError = null;
     this.reciboDetalleService.getDetallesByRecibo(reciboId).subscribe({
       next: (detalles) => {
-        this.detalles = detalles || [];
-        this.detallesLoading = false;
-        this.recalculateTotal();
-        this.setSelectedDetalles(this.detalles.length ? [0] : [], 0, false);
-        this.actualizarMostrarColumnaAtendido();
+        void this.procesarDetallesCargados(detalles || []);
       },
       error: (err: unknown) => {
         console.error('Error loading recibo detalles', err);
@@ -582,9 +764,86 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     });
   }
 
+  private async procesarDetallesCargados(detalles: ReciboDetalleDto[]): Promise<void> {
+    try {
+      await this.sincronizarCacheUsuariosHistorico(detalles);
+    } catch (error) {
+      console.warn('No se pudo sincronizar la caché de usuarios para el histórico:', error);
+    }
+
+    this.detalles = detalles;
+    this.depurarHistoricosExpandidos();
+    this.detallesLoading = false;
+    this.recalculateTotal();
+    this.setSelectedDetalles(this.detalles.length ? [0] : [], 0, false);
+    this.actualizarMostrarColumnaAtendido();
+  }
+
+  private async sincronizarCacheUsuariosHistorico(detalles: ReciboDetalleDto[]): Promise<void> {
+    this.cargarUsuariosDesdeStorage();
+    const faltantes = this.obtenerUsuarioIdsFaltantesEnHistorico(detalles);
+    if (!faltantes.length) {
+      return;
+    }
+
+    try {
+      await firstValueFrom(this.authService.cargarTodosUsuariosEnStorage(true));
+    } finally {
+      this.cargarUsuariosDesdeStorage();
+    }
+  }
+
+  private async prepararDetalleActualizado(detalle: ReciboDetalleDto): Promise<ReciboDetalleDto> {
+    try {
+      await this.sincronizarCacheUsuariosHistorico([detalle]);
+    } catch (error) {
+      console.warn('No se pudo sincronizar la caché de usuarios para el detalle actualizado:', error);
+    }
+
+    return detalle;
+  }
+
+  private cargarUsuariosDesdeStorage(): void {
+    const usuarios = this.authService.obtenerTodosUsuariosCache();
+    this.usuariosCachePorId = new Map(usuarios.map((usuario) => [usuario.id, usuario.nombre]));
+  }
+
+  private obtenerUsuarioIdsFaltantesEnHistorico(detalles: ReciboDetalleDto[]): string[] {
+    const faltantes = new Set<string>();
+
+    for (const detalle of detalles) {
+      for (const accion of detalle.historicoAcciones ?? []) {
+        const usuarioId = accion.usuarioId?.trim();
+        if (usuarioId && !this.usuariosCachePorId.has(usuarioId)) {
+          faltantes.add(usuarioId);
+        }
+      }
+    }
+
+    return Array.from(faltantes);
+  }
+
+  private depurarHistoricosExpandidos(): void {
+    const detalleIdsConHistorico = new Set(
+      this.detalles
+        .filter((detalle) => this.hasHistoricoAcciones(detalle))
+        .map((detalle) => detalle.id)
+    );
+
+    for (const detalleId of Array.from(this.historicoExpandidoDetalleIds)) {
+      if (!detalleIdsConHistorico.has(detalleId)) {
+        this.historicoExpandidoDetalleIds.delete(detalleId);
+      }
+    }
+
+    this.sincronizarActualizacionHistorico();
+  }
+
   private resetState(): void {
     this.recibo = null;
     this.detalles = [];
+    this.historicoExpandidoDetalleIds.clear();
+    this.detenerActualizacionHistorico();
     this.error = null;
     this.detallesError = null;
     this.loading = false;
@@ -863,13 +1122,14 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           const detalleActualizado = await firstValueFrom(
             this.reciboDetalleService.updateDetalle(detalleDestino.id, payload)
           );
+          const detalleBackend = await this.prepararDetalleActualizado(detalleActualizado);
 
           targetDetalles[existingTargetIndex] = {
             ...detalleDestino,
-            ...detalleActualizado,
+            ...detalleBackend,
             cantidad: payload.cantidad,
             subtotal: payload.subtotal,
-            producto: detalleActualizado.producto ?? detalleDestino.producto ?? detalle.producto
+            producto: detalleBackend.producto ?? detalleDestino.producto ?? detalle.producto
           };
 
           rollback = {
@@ -1227,17 +1487,19 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
-      next: (updatedDetalle) => {
+      next: async (updatedDetalle) => {
+        const detalleBackend = await this.prepararDetalleActualizado(updatedDetalle);
         const updatedListFinal = [...this.detalles];
         const detalleActualizado = {
           ...optimisticDetalle,
-          ...updatedDetalle,
+          ...detalleBackend,
           cantidad: newCantidad,
           subtotal: newSubtotal,
-          producto: updatedDetalle.producto ?? detalle.producto
+          producto: detalleBackend.producto ?? detalle.producto
         };
         updatedListFinal[index] = detalleActualizado;
         this.detalles = updatedListFinal;
+        this.depurarHistoricosExpandidos();
         const finalTotal = this.recalculateTotal();
         
         // Update recibo total on backend
@@ -1381,18 +1643,19 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           };
           
           this.reciboDetalleService.updateDetalle(det.id, payload).subscribe({
-            next: (apiUpdatedDetalle: ReciboDetalleDto) => {
+            next: async (apiUpdatedDetalle: ReciboDetalleDto) => {
+              const detalleBackend = await this.prepararDetalleActualizado(apiUpdatedDetalle);
               const finalIndex = this.detalles.findIndex((d) => d.id === det.id);
               if (finalIndex >= 0) {
                 const finalList = [...this.detalles];
                 const newSubtotal = updatedProduct.precio * det.cantidad;
                 finalList[finalIndex] = {
-                  ...apiUpdatedDetalle,
+                  ...detalleBackend,
                   subtotal: newSubtotal,
                   cantidad: det.cantidad,
-                  producto: apiUpdatedDetalle.producto
+                  producto: detalleBackend.producto
                     ? {
-                        ...apiUpdatedDetalle.producto,
+                        ...detalleBackend.producto,
                         precio: updatedProduct.precio
                       }
                     : {
@@ -1401,6 +1664,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
                       }
                 };
                 this.detalles = finalList;
+                this.depurarHistoricosExpandidos();
                 this.recalculateTotal();
               }
             },
@@ -1675,16 +1939,18 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         this.focusSearchInputRequest.emit();
 
     this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
-      next: (updatedDetalle) => {
+      next: async (updatedDetalle) => {
+        const detalleBackend = await this.prepararDetalleActualizado(updatedDetalle);
         const updatedListFinal = [...this.detalles];
         const detalleActualizado = {
           ...optimisticDetalle,
-          ...updatedDetalle,
+          ...detalleBackend,
           cantidad: newCantidad,
           subtotal: newSubtotal
         };
         updatedListFinal[this.selectedDetalleIndex] = detalleActualizado;
         this.detalles = updatedListFinal;
+        this.depurarHistoricosExpandidos();
         this.recalculateTotal();
       },
       error: (err: unknown) => {
@@ -1741,14 +2007,18 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.focusSearchInputRequest.emit();
 
     this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
-      next: () => {
+      next: async (updatedDetalle) => {
+        const detalleBackend = await this.prepararDetalleActualizado(updatedDetalle);
         const updatedListFinal = [...this.detalles];
         updatedListFinal[this.selectedDetalleIndex] = {
           ...optimisticDetalle,
+          ...detalleBackend,
           cantidad: newCantidad,
-          subtotal: newSubtotal
+          subtotal: newSubtotal,
+          producto: detalleBackend.producto ?? detalle.producto
         };
         this.detalles = updatedListFinal;
+        this.depurarHistoricosExpandidos();
         this.recalculateTotal();
       },
       error: (err: unknown) => {
