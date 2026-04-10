@@ -4,7 +4,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonModule } from '@angular/material/button';
 import { NgIf, NgFor } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { DetalleTicketComponent } from '../detalle-ticket/detalle-ticket.component';
+import { DetalleTicketComponent, TicketMoveOption } from '../detalle-ticket/detalle-ticket.component';
 import { VexPageLayoutComponent } from '@vex/components/vex-page-layout/vex-page-layout.component';
 import { VexPageLayoutHeaderDirective } from '@vex/components/vex-page-layout/vex-page-layout-header.directive';
 import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/vex-page-layout-content.directive';
@@ -25,6 +25,7 @@ import { TicketRapidoComponent, TicketRapidoData } from '../ticket-rapido/ticket
 import { EditarTabTicketComponent, EditarTabTicketData } from '../editar-tab-ticket/editar-tab-ticket.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../core/components/confirm-dialog/confirm-dialog.component';
 import { ReciboDetalleService } from '../service/recibo-detalle.service';
+import { firstValueFrom } from 'rxjs';
 
 const IMPRIMIR_RECIBO_KEY = 'imprimir-recibo';
 const LAST_TICKET_ID_KEY = 'last-ticket-id';
@@ -63,6 +64,8 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
   selectedIndex = 0;
   sessionId: number | null = null;
   loading = false;
+  headerActionsBusy = false;
+  ticketTabsBusy = false;
   currentReciboId: number | null = null;
   /** Recibo expuesto al template solo tras setTimeout para evitar NG0100. */
   reciboForSearch: DetalleTicketComponent | null = null;
@@ -84,6 +87,12 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
 
   /** ID del ticket que debe seleccionarse forzosamente después de recargar */
   private forcedSelectionTicketId: number | null = null;
+
+  /** Cantidad de productos movidos acumulados por ticket dividido. */
+  private splitTicketProductCounts: Record<number, number> = {};
+
+  /** Ticket destino asociado al comentario local del ticket origen. */
+  private splitCommentsByTicketId: Record<number, number> = {};
 
   constructor(
     private ticketsService: TicketsService,
@@ -203,11 +212,61 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
   }
 
   getTicketLabel(ticket: TicketDto): string {
+    const productCount = this.splitTicketProductCounts[ticket.id];
+    if (productCount !== undefined) {
+      return `${this.getBaseTicketLabel(ticket)} (${productCount} ${this.getProductosLabel(productCount)})`;
+    }
+
+    return this.getBaseTicketLabel(ticket);
+  }
+
+  get ticketMoveOptions(): TicketMoveOption[] {
+    const currentTicketId = this.tickets[this.selectedIndex]?.id ?? null;
+    return this.tickets
+      .filter((ticket) => ticket.id !== currentTicketId)
+      .map((ticket) => ({
+        id: ticket.id,
+        label: this.getTicketLabel(ticket)
+      }));
+  }
+
+  get activeSplitComment(): string | null {
+    const currentTicketId = this.tickets[this.selectedIndex]?.id ?? null;
+    if (!currentTicketId) {
+      return null;
+    }
+
+    const targetTicketId = this.splitCommentsByTicketId[currentTicketId];
+    if (!targetTicketId) {
+      return null;
+    }
+
+    const targetTicket = this.tickets.find((ticket) => ticket.id === targetTicketId);
+    if (!targetTicket) {
+      return null;
+    }
+
+    return `Se ha dividido este ticket o cuenta y enviado a '${this.getTicketLabel(targetTicket)}'`;
+  }
+
+  get headerActionsDisabled(): boolean {
+    return this.sessionId === null || this.headerActionsBusy;
+  }
+
+  get ticketTabsDisabled(): boolean {
+    return this.ticketTabsBusy;
+  }
+
+  private getBaseTicketLabel(ticket: TicketDto): string {
     if (ticket.cliente?.nombre) {
       const palabras = ticket.cliente.nombre.trim().split(/\s+/);
       return palabras.slice(0, 2).join(' ');
     }
     return ticket.nombre;
+  }
+
+  private getProductosLabel(count: number): string {
+    return count === 1 ? 'producto' : 'productos';
   }
 
   /** TrackBy function para ngFor de tickets */
@@ -299,12 +358,71 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
     }
   }
 
+  async onMoveToNewTicketRequested(): Promise<void> {
+    if (this.sessionId === null || this.loading || this.headerActionsBusy) {
+      return;
+    }
+
+    const nextNumber = this.getNextTicketNumber();
+    const nombre = `Ticket ${nextNumber}`;
+
+    try {
+      this.headerActionsBusy = true;
+      this.loading = true;
+      const nuevoTicket = await firstValueFrom(this.ticketsService.createTicket(this.sessionId, nombre));
+      this.tickets = [...this.tickets, nuevoTicket];
+      await this.processDetalleMove(nuevoTicket, true);
+    } catch (error) {
+      this.loading = false;
+      console.error('Error creando ticket para dividir productos', error);
+      this.snackBar.open('No se pudo crear el ticket destino.', 'Cerrar', {
+        duration: 5000,
+        horizontalPosition: 'center',
+        verticalPosition: 'top',
+        panelClass: ['error-snackbar']
+      });
+    } finally {
+      this.loading = false;
+      this.headerActionsBusy = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  async onMoveToExistingTicketRequested(ticketId: number): Promise<void> {
+    if (this.loading) {
+      return;
+    }
+
+    const targetTicket = this.tickets.find((ticket) => ticket.id === ticketId);
+    if (!targetTicket) {
+      return;
+    }
+
+    await this.processDetalleMove(targetTicket, false);
+  }
+
   recargarRecibo(): void {
     // Recargar tickets cuando se actualiza el recibo
     if (this.sessionId !== null) {
       this.loadTickets(this.sessionId);
     } else if (this.selectedIndex >= 0 && this.selectedIndex < this.tickets.length) {
       this.fetchReciboForTicket(this.tickets[this.selectedIndex].id, true);
+    }
+  }
+
+  onTicketProcesado(): void {
+    const currentTicketId = this.tickets[this.selectedIndex]?.id ?? null;
+    if (!currentTicketId) {
+      return;
+    }
+
+    delete this.splitTicketProductCounts[currentTicketId];
+    delete this.splitCommentsByTicketId[currentTicketId];
+
+    for (const sourceTicketId of Object.keys(this.splitCommentsByTicketId)) {
+      if (this.splitCommentsByTicketId[Number(sourceTicketId)] === currentTicketId) {
+        delete this.splitCommentsByTicketId[Number(sourceTicketId)];
+      }
     }
   }
 
@@ -335,11 +453,12 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
     const searchInput = this.productSearchInput?.nativeElement;
     const hadFocus = searchInput && document.activeElement === searchInput;
     
-    if (this.sessionId === null) {
+    if (this.sessionId === null || this.headerActionsBusy) {
       return;
     }
     const nextNumber = this.getNextTicketNumber();
     const nombre = `Ticket ${nextNumber}`;
+    this.headerActionsBusy = true;
     this.loading = true;
     this.ticketsService.createTicket(this.sessionId, nombre).subscribe({
       next: (ticket) => {
@@ -347,6 +466,7 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
         this.selectedIndex = this.tickets.length - 1;
         this.fetchReciboForTicket(ticket.id);
         this.loading = false;
+        this.headerActionsBusy = false;
         
         // Siempre enfocar el input de búsqueda al crear un nuevo ticket
         setTimeout(() => {
@@ -355,6 +475,7 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
       },
       error: (err) => {
         this.loading = false;
+        this.headerActionsBusy = false;
         console.error('Error creating ticket', err);
         
         // Mostrar mensaje de error al usuario
@@ -418,7 +539,7 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
     const searchInput = this.productSearchInput?.nativeElement;
     const hadFocus = searchInput && document.activeElement === searchInput;
     
-    if (this.loading) {
+    if (this.ticketTabsBusy) {
       return;
     }
 
@@ -484,6 +605,10 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
   }
 
   onTicketDrop(event: CdkDragDrop<TicketDto[]>): void {
+    if (this.ticketTabsBusy) {
+      return;
+    }
+
     if (event.previousIndex === event.currentIndex) {
       return;
     }
@@ -506,6 +631,7 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
 
     // Persistir el nuevo orden en el backend
     if (this.sessionId !== null) {
+      this.ticketTabsBusy = true;
       const payload: TicketOrdenDto[] = this.tickets.map(t => ({
         id: t.id,
         sessionId: t.sessionId,
@@ -515,8 +641,10 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
       this.ticketsService.updateTicketsOrder(payload).subscribe({
         next: () => {
           // Orden actualizado exitosamente
+          this.ticketTabsBusy = false;
         },
         error: (err) => {
+          this.ticketTabsBusy = false;
           console.error('Error updating tickets order', err);
           
           // Mostrar mensaje de error al usuario
@@ -548,7 +676,7 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
 
   deleteTicket(ticket: TicketDto, index: number, event: MouseEvent): void {
     event.stopPropagation();
-    if (this.loading) {
+    if (this.ticketTabsBusy) {
       return;
     }
     if (this.sessionId === null) {
@@ -637,8 +765,9 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
     
     // Verificar si el input de búsqueda ya tiene el foco antes de eliminar el ticket
     const searchInput = this.productSearchInput?.nativeElement;
-    const hadFocus = searchInput && document.activeElement === searchInput;
+    const hadFocus = !!searchInput && document.activeElement === searchInput;
     
+    this.ticketTabsBusy = true;
     this.loading = true;
     this.ticketsService.deleteTicket(ticket.id).subscribe({
       next: () => {
@@ -664,29 +793,13 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
                 
                 // Establecer selección forzada para el nuevo ticket
                 this.forcedSelectionTicketId = newTicket.id;
-                sessionStorage.setItem(FORCED_SELECTION_TICKET_ID_KEY, String(newTicket.id));
                 console.log('🎯🎯 ESTABLECIENDO SELECCIÓN FORZADA para ticket ID:', newTicket.id);
-                console.log('💾 Guardado en sessionStorage:', FORCED_SELECTION_TICKET_ID_KEY, '=', newTicket.id);
-                console.log('🔄 A punto de recargar la página...');
-                
-                // Forzar recarga completa para mostrar el nuevo ticket
-                const currentUrl = this.router.url;
-                this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-                  this.router.navigate([currentUrl]).then(() => {
-                    console.log('✅ Página recargada, loadTickets debería respetar la selección forzada');
-                    
-                    // Restaurar el foco del input de búsqueda
-                    if (hadFocus) {
-                      setTimeout(() => {
-                        this.focusProductSearch(false);
-                      }, 200);
-                    }
-                  });
-                });
+                this.refreshTicketsAfterDelete(hadFocus);
               },
               error: (err) => {
                 console.error('❌ Error creando nuevo ticket no identificado:', err);
                 this.loading = false;
+                this.ticketTabsBusy = false;
                 
                 // Mostrar mensaje de error al usuario
                 let errorMessage = 'Error al crear un nuevo ticket. Por favor, recargue la página.';
@@ -712,6 +825,7 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
           } else {
             console.log('❌ SessionId es null, no se puede crear nuevo ticket');
             this.loading = false;
+            this.ticketTabsBusy = false;
           }
         } else if (hayTicketsNoIdentificadosRestantes) {
           console.log('🔄 Se eliminó un ticket no identificado pero quedan otros, seleccionando el siguiente...');
@@ -723,48 +837,20 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
             
             // Establecer selección forzada para el ticket existente
             this.forcedSelectionTicketId = siguienteTicketNoIdentificado.id;
-            sessionStorage.setItem(FORCED_SELECTION_TICKET_ID_KEY, String(siguienteTicketNoIdentificado.id));
             console.log('🎯🎯 ESTABLECIENDO SELECCIÓN FORZADA para ticket existente ID:', siguienteTicketNoIdentificado.id);
-            console.log('💾 Guardado en sessionStorage:', FORCED_SELECTION_TICKET_ID_KEY, '=', siguienteTicketNoIdentificado.id);
-            console.log('🔄 A punto de recargar la página...');
-            
-            // Forzar recarga completa para seleccionar el ticket existente
-            const currentUrl = this.router.url;
-            this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-              this.router.navigate([currentUrl]).then(() => {
-                console.log('✅ Página recargada, loadTickets debería respetar la selección forzada del ticket existente');
-                
-                // Restaurar el foco del input de búsqueda
-                if (hadFocus) {
-                  setTimeout(() => {
-                    this.focusProductSearch(false);
-                  }, 200);
-                }
-              });
-            });
+            this.refreshTicketsAfterDelete(hadFocus);
           }
         } else {
-          // Caso normal: solo recargar la página
-          console.log('🔄 Recarga normal de la página...');
-          
-          const currentUrl = this.router.url;
-          this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-            this.router.navigate([currentUrl]).then(() => {
-              console.log('✅ Página recargada exitosamente');
-              
-              // Restaurar el foco si lo tenía antes
-              if (hadFocus) {
-                setTimeout(() => {
-                  this.focusProductSearch(false);
-                }, 500);
-              }
-            });
-          });
+          const targetTicketId = this.getNextTicketIdAfterDelete(ticket.id, index);
+          this.forcedSelectionTicketId = targetTicketId;
+          console.log('🔄 Recargando tickets tras eliminación. Siguiente ticket:', targetTicketId);
+          this.refreshTicketsAfterDelete(hadFocus);
         }
       },
       error: (err) => {
         console.error('❌ Error eliminando ticket:', err);
         this.loading = false;
+        this.ticketTabsBusy = false;
         
         // Mostrar mensaje de error al usuario
         let errorMessage = 'Error al eliminar el ticket. Por favor, intente nuevamente.';
@@ -805,9 +891,11 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
             next: (newTicket) => {
               console.log('➕ Nuevo ticket creado:', newTicket);
               this.tickets = [newTicket];
+              this.pruneSplitState();
               this.selectedIndex = 0;
               this.fetchReciboForTicket(newTicket.id);
               this.loading = false;
+              this.ticketTabsBusy = false;
               
               // Forzar actualización completa de la aplicación
               this.cdr.detectChanges();
@@ -820,11 +908,13 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
               this.selectedIndex = -1;
               this.currentReciboId = null;
               this.loading = false;
+              this.ticketTabsBusy = false;
             }
           });
         } else {
           console.log('📝 Asignando tickets al componente:', tickets);
           this.tickets = tickets;
+          this.pruneSplitState();
 
           // Consultar la sesión para obtener ultimoTicketId y seleccionar ese ticket
           this.sesionesService.getSesionById(sessionId).subscribe({
@@ -865,6 +955,7 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
 
               this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
               this.loading = false;
+              this.ticketTabsBusy = false;
               
               // Forzar actualización completa de la aplicación
               this.cdr.detectChanges();
@@ -877,6 +968,7 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
               this.selectedIndex = 0;
               this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
               this.loading = false;
+              this.ticketTabsBusy = false;
               
               // Forzar actualización completa de la aplicación
               this.cdr.detectChanges();
@@ -892,6 +984,7 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
         this.selectedIndex = -1;
         this.currentReciboId = null;
         this.loading = false;
+        this.ticketTabsBusy = false;
         
         // Mostrar mensaje de error al usuario
         let errorMessage = 'Error al cargar los tickets. Por favor, recargue la página.';
@@ -983,6 +1076,69 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
         });
       }
     });
+  }
+
+  private refreshTicketsAfterDelete(hadFocus: boolean): void {
+    if (this.sessionId === null) {
+      this.loading = false;
+      this.ticketTabsBusy = false;
+      return;
+    }
+
+    this.loadTickets(this.sessionId);
+
+    if (hadFocus) {
+      setTimeout(() => {
+        this.focusProductSearch(false);
+      }, 200);
+    }
+  }
+
+  private getNextTicketIdAfterDelete(deletedTicketId: number, deletedIndex: number): number | null {
+    const remainingTickets = this.tickets.filter((ticket) => ticket.id !== deletedTicketId);
+    if (!remainingTickets.length) {
+      return null;
+    }
+
+    const nextIndex = Math.min(deletedIndex, remainingTickets.length - 1);
+    return remainingTickets[nextIndex]?.id ?? remainingTickets[0]?.id ?? null;
+  }
+
+  private async processDetalleMove(targetTicket: TicketDto, shouldTrackSplitLabel: boolean): Promise<void> {
+    try {
+      const moveResult = await this.reciboComponent?.moveSelectedDetallesToTicket(targetTicket.id);
+      if (!moveResult) {
+        return;
+      }
+
+      if (shouldTrackSplitLabel || this.splitTicketProductCounts[targetTicket.id] !== undefined) {
+        this.splitTicketProductCounts[targetTicket.id] = moveResult.targetProductCount;
+      }
+
+      this.splitCommentsByTicketId[moveResult.sourceTicketId] = moveResult.targetTicketId;
+
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('Error moviendo detalles entre tickets', error);
+    }
+  }
+
+  private pruneSplitState(): void {
+    const validTicketIds = new Set(this.tickets.map((ticket) => ticket.id));
+
+    for (const key of Object.keys(this.splitTicketProductCounts)) {
+      if (!validTicketIds.has(Number(key))) {
+        delete this.splitTicketProductCounts[Number(key)];
+      }
+    }
+
+    for (const key of Object.keys(this.splitCommentsByTicketId)) {
+      const sourceTicketId = Number(key);
+      const targetTicketId = this.splitCommentsByTicketId[sourceTicketId];
+      if (!validTicketIds.has(sourceTicketId) || !validTicketIds.has(targetTicketId)) {
+        delete this.splitCommentsByTicketId[Number(key)];
+      }
+    }
   }
 
 }

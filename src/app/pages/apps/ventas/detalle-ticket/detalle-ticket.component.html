@@ -19,15 +19,16 @@
               <span class="detalle-col subtotal">Subtotal</span>
             </div>
             <!-- La lista usa flex para adaptarse al espacio disponible y permitir scroll -->
-            <div class="detalle-list" #detalleList>
+            <div class="detalle-list" #detalleList (contextmenu)="onDetalleListContextMenu($event)">
               <div
                 class="detalle-row"
                 *ngFor="let det of detalles; let i = index"
-                [class.selected-detalle]="selectedDetalleIndex === i"
+                [class.selected-detalle]="isDetalleSelected(i)"
                 [class.has-atendido]="mostrarColumnaAtendido"
                 (click)="onDetalleRowClick(i, $event)"
                 (dblclick)="onDetalleDoubleClick(i, $event)"
-                (mousedown)="onDetalleRowMouseDown(i, $event)">
+                (mousedown)="onDetalleRowMouseDown(i, $event)"
+                (contextmenu)="onDetalleContextMenu(i, $event)">
                 <span class="detalle-col producto" (dblclick)="onProductoDoubleClick(i, $event); $event.stopPropagation()">
                   <input
                     *ngIf="editingProductoIndex === i"
@@ -102,6 +103,11 @@
         a las {{ formatFechaCreacion(ticket.fechaCreacion) }}
       </span>
     </div>
+    <div class="split-ticket-info" *ngIf="splitComment">
+      <span class="split-ticket-label">
+        {{ splitComment }}
+      </span>
+    </div>
     <div class="detalle-footer" [class.has-atendido]="mostrarColumnaAtendido">
         <div class="metodos-pago-container">
           <metodos-pago
@@ -142,4 +148,35 @@
     (metodoPagoSeleccionado)="onMetodoPagoSeleccionadoDesdeEdicion($event)"
     (finalizar)="onFinalizarEdicion()">
   </edicion-ticket>
+
+  <div
+    class="detalle-context-menu-anchor"
+    [style.left.px]="contextMenuPosition.x"
+    [style.top.px]="contextMenuPosition.y">
+    <button
+      #detalleContextMenuTrigger="matMenuTrigger"
+      class="detalle-context-menu-trigger"
+      [matMenuTriggerFor]="detalleContextMenu"
+      type="button">
+    </button>
+  </div>
+
+  <mat-menu #detalleContextMenu="matMenu" class="detalle-context-menu">
+    <button mat-menu-item [matMenuTriggerFor]="moverDetalleMenu">
+      <span>Mover a:</span>
+    </button>
+  </mat-menu>
+
+  <mat-menu #moverDetalleMenu="matMenu" class="detalle-context-menu">
+    <button mat-menu-item type="button" (click)="requestMoveSelectedDetallesToNewTicket()">
+      Nuevo ticket
+    </button>
+    <button
+      *ngFor="let option of availableTicketMoveOptions"
+      mat-menu-item
+      type="button"
+      (click)="requestMoveSelectedDetallesToExistingTicket(option.id)">
+      {{ option.label }}
+    </button>
+  </mat-menu>
 </div>

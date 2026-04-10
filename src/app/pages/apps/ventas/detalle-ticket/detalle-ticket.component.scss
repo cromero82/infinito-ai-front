@@ -310,6 +310,23 @@
   }
 }
 
+.split-ticket-info {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  background-color: rgba(63, 81, 181, 0.08);
+  border-left: 3px solid rgba(63, 81, 181, 0.55);
+  border-radius: 0 4px 4px 0;
+
+  .split-ticket-label {
+    font-size: 15px;
+    color: rgba(0, 0, 0, 0.68);
+    line-height: 1.2;
+  }
+}
+
 .detalle-footer {
   display: grid;
   grid-template-columns: 0.6fr 130px 95px 150px;
@@ -413,5 +430,19 @@
       color: rgba(239, 154, 154, 1);
     }
   }
+}
+
+.detalle-context-menu-anchor {
+  position: fixed;
+  z-index: 1200;
+  pointer-events: none;
+}
+
+.detalle-context-menu-trigger {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 

@@ -58,7 +58,7 @@
               [tabPanel]="tabPanel"
               cdkDropList
               cdkDropListOrientation="horizontal"
-              [cdkDropListDisabled]="loading"
+              [cdkDropListDisabled]="ticketTabsDisabled"
               (cdkDropListDropped)="onTicketDrop($event)">
               <div
                 class="tab-item"
@@ -78,7 +78,7 @@
                   mat-icon-button
                   type="button"
                   class="tab-close"
-                  [disabled]="loading"
+                  [disabled]="ticketTabsDisabled"
                   (click)="deleteTicket(t, i, $event)">
                   <mat-icon svgIcon="mat:close"></mat-icon>
                 </button>
@@ -92,7 +92,7 @@
               color="primary"
               class="new-ticket-btn ltr:ml-4 rtl:mr-4 flex-none"
               type="button"
-              [disabled]="sessionId === null || loading"
+              [disabled]="headerActionsDisabled"
               (click)="newTicket()">
               <mat-icon class="ltr:mr-2 rtl:ml-2 ltr:-ml-1 rtl:-mr-1 icon-sm" svgIcon="mat:add"></mat-icon>
               <span>Nuevo ticket</span>
@@ -102,7 +102,7 @@
               color="accent"
               class="quick-recibo-btn ltr:ml-2 rtl:mr-2 flex-none"
               type="button"
-              [disabled]="sessionId === null || loading"
+              [disabled]="headerActionsDisabled"
               (click)="openQuickRecibo()">
               <mat-icon class="ltr:mr-2 rtl:ml-2 ltr:-ml-1 rtl:-mr-1 icon-sm" svgIcon="mat:bolt"></mat-icon>
               <span>Ticket rápido</span>
@@ -112,7 +112,7 @@
               class="opciones-recibo-btn ltr:ml-2 rtl:mr-2 flex-none"
               type="button"
               [matMenuTriggerFor]="opcionesReciboMenu"
-              [disabled]="sessionId === null || loading"
+              [disabled]="headerActionsDisabled"
               [matTooltip]="'Mas opciones de este ticket'"
               matTooltipPosition="above">
               <mat-icon class="ltr:mr-2 rtl:ml-2 ltr:-ml-1 rtl:-mr-1 icon-sm" svgIcon="mat:more_vert"></mat-icon>
@@ -138,8 +138,13 @@
                 [ticket]="activeTicket"
                 [reciboId]="currentReciboId"
                 [sessionId]="sessionId"
+                [ticketMoveOptions]="ticketMoveOptions"
+                [splitComment]="activeSplitComment"
                 [searchInputElement]="productSearchInput?.nativeElement || null"
                 (focusSearchInputRequest)="focusProductSearch()"
+                (ticketProcesado)="onTicketProcesado()"
+                (moveToNewTicketRequested)="onMoveToNewTicketRequested()"
+                (moveToExistingTicketRequested)="onMoveToExistingTicketRequested($event)"
                 (metodoPagoActualizado)="recargarRecibo()"></detalle-ticket>
             </div>
           </div>

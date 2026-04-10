@@ -19,11 +19,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { RelationalProductService } from '../../productos/service/relational-product.service';
 import { Producto, ProductPage } from '../../productos/model/producto';
-import { Subject, of, throwError, Observable, EMPTY } from 'rxjs';
+import { Subject, of, throwError, Observable, EMPTY, firstValueFrom } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil, switchMap, tap, map, finalize } from 'rxjs/operators';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import {
   ReciboDetalleService,
@@ -56,6 +57,24 @@ const ESTADOS_RECIBO = {
   SIGLA_EDICION: 'ED'
 } as const;
 
+export interface TicketMoveOption {
+  id: number;
+  label: string;
+}
+
+interface TicketSplitMoveResult {
+  sourceTicketId: number;
+  targetTicketId: number;
+  movedItemsCount: number;
+  targetProductCount: number;
+}
+
+interface TargetDetalleRollback {
+  type: 'delete-created' | 'restore-updated';
+  detalleId: number;
+  payload?: UpdateReciboDetalleRequest;
+}
+
 @Component({
   selector: 'detalle-ticket',
   standalone: true,
@@ -67,6 +86,7 @@ const ESTADOS_RECIBO = {
     MatButtonModule,
     MatDialogModule,
     MatIconModule,
+    MatMenuModule,
     MatTooltipModule,
     MatSnackBarModule,
     CurrencyPipe,
@@ -82,13 +102,19 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   @Input() reciboId: number | null = null;
   @Input() searchInputElement: HTMLInputElement | null = null;
   @Input() sessionId: number | null = null;
+  @Input() ticketMoveOptions: TicketMoveOption[] = [];
+  @Input() splitComment: string | null = null;
   @Output() focusSearchInputRequest = new EventEmitter<void>();
   @Output() metodoPagoActualizado = new EventEmitter<void>();
+  @Output() ticketProcesado = new EventEmitter<void>();
+  @Output() moveToNewTicketRequested = new EventEmitter<void>();
+  @Output() moveToExistingTicketRequested = new EventEmitter<number>();
 
   recibo: ReciboDto | null = null;
   detalles: ReciboDetalleDto[] = [];
   detallesParaImprimir: ReciboDetalleDto[] = []; // Guardar detalles antes del pago
   selectedDetalleIndex = -1;
+  selectedDetalleIndices: number[] = [];
   editingDetalleIndex = -1;
   editingUnitarioIndex = -1;
   editingProductoIndex = -1;
@@ -102,16 +128,20 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
   loading = false;
   detallesLoading = false;
+  movingDetalles = false;
+  contextMenuPosition = { x: 0, y: 0 };
   error: string | null = null;
   detallesError: string | null = null;
 
   productSearchCtrl = new FormControl('', { nonNullable: true });
   productSearchError: string | null = null;
   searchingProduct = false;
+  availableTicketMoveOptions: TicketMoveOption[] = [];
   private lastSearchDisabled = false;
   private dialogAbierto = false;
   private destroy$ = new Subject<void>();
   @ViewChild('detalleList') detalleListRef?: ElementRef<HTMLDivElement>;
+  @ViewChild('detalleContextMenuTrigger') detalleContextMenuTrigger?: MatMenuTrigger;
   private readonly currencyFormatter = new Intl.NumberFormat('es-CO', {
     style: 'currency',
     currency: 'COP',
@@ -165,7 +195,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   private updateSearchDisabled(): void {
-    const disabled = !this.reciboId || this.searchingProduct || this.loading;
+    const disabled = !this.reciboId || this.searchingProduct || this.loading || this.movingDetalles;
     if (disabled !== this.lastSearchDisabled) {
       this.lastSearchDisabled = disabled;
       if (disabled) {
@@ -421,7 +451,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       updatedList[existingDetalleIndex] = optimisticDetalle;
       this.detalles = updatedList;
       this.recalculateTotal();
-      this.selectedDetalleIndex = existingDetalleIndex;
+      this.setSelectedDetalles([existingDetalleIndex], existingDetalleIndex, false);
       this.productSearchCtrl.setValue('');
       this.searchingProduct = false;
       this.updateSearchDisabled();
@@ -487,7 +517,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             };
         this.detalles = [...this.detalles, detalleConProducto];
         this.recalculateTotal();
-        this.selectedDetalleIndex = this.detalles.length - 1;
+        this.setSelectedDetalles([this.detalles.length - 1], this.detalles.length - 1, false);
         this.focusSearchInputRequest.emit();
         this.scrollDetalleListToBottom();
       },
@@ -538,7 +568,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         this.detalles = detalles || [];
         this.detallesLoading = false;
         this.recalculateTotal();
-        this.selectedDetalleIndex = this.detalles.length ? 0 : -1;
+        this.setSelectedDetalles(this.detalles.length ? [0] : [], 0, false);
         this.actualizarMostrarColumnaAtendido();
       },
       error: (err: unknown) => {
@@ -547,7 +577,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         this.detallesError = 'No se pudieron cargar los detalles del recibo.';
         this.detallesLoading = false;
         this.recalculateTotal();
-        this.selectedDetalleIndex = -1;
+        this.setSelectedDetalles([], null, false);
       }
     });
   }
@@ -564,8 +594,16 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.searchingProduct = false;
     this.dialogAbierto = false;
     this.estaEnEdicion = false;
+    this.setSelectedDetalles([], null, false);
     this.updateSearchDisabled();
     this.focusSearchInputRequest.emit();
+  }
+
+  private emitPaymentProcessedEvents(): void {
+    setTimeout(() => {
+      this.ticketProcesado.emit();
+      this.metodoPagoActualizado.emit();
+    }, 0);
   }
 
   private performProductSearch(term: string, triggeredAutomatically: boolean): void {
@@ -690,36 +728,243 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         this.editingUnitarioIndex !== -1 || 
         this.editingDetalleIndex !== -1 ||
         this.estaEnEdicion ||
+        this.movingDetalles ||
         this.isDoubleClickActive) {
       return;
     }
     
-    // Permitir selección en todas las demás áreas, incluyendo columnas editables
-    // cuando no estamos en modo de edición
-    this.selectDetalle(index);
+    this.selectDetalle(index, event.ctrlKey || event.metaKey);
   }
 
-  selectDetalle(index: number): void {
+  selectDetalle(index: number, appendToSelection: boolean = false): void {
     // No hacer nada si se está iniciando una edición
     if (this.startingEdit) {
       return;
     }
     
     if (index < 0 || index >= this.detalles.length) {
-      this.selectedDetalleIndex = -1;
-    } else {
-      this.selectedDetalleIndex = index;
-      this.scrollToSelectedDetalle();
+      this.setSelectedDetalles([], null, false);
+      return;
     }
-    
-    // TEMPORALMENTE COMENTADO para aislar el problema de doble click
-    // Solo emitir focusSearchInputRequest si no estamos en modo de edición
-    // if (this.editingProductoIndex === -1 && 
-    //     this.editingUnitarioIndex === -1 && 
-    //     this.editingDetalleIndex === -1 &&
-    //     !this.estaEnEdicion) {
-    //   this.focusSearchInputRequest.emit();
-    // }
+
+    if (!appendToSelection) {
+      this.setSelectedDetalles([index], index);
+      return;
+    }
+
+    const alreadySelected = this.selectedDetalleIndices.includes(index);
+    const nextSelection = alreadySelected
+      ? this.selectedDetalleIndices.filter((selectedIndex) => selectedIndex !== index)
+      : [...this.selectedDetalleIndices, index];
+
+    this.setSelectedDetalles(nextSelection, alreadySelected ? null : index, !alreadySelected);
+  }
+
+  isDetalleSelected(index: number): boolean {
+    return this.selectedDetalleIndices.includes(index);
+  }
+
+  onDetalleContextMenu(index: number, event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (this.estaEnEdicion || this.movingDetalles || index < 0 || index >= this.detalles.length) {
+      return;
+    }
+
+    if (!this.selectedDetalleIndices.includes(index)) {
+      this.setSelectedDetalles([index], index, false);
+    }
+
+    this.openDetalleContextMenu(event);
+  }
+
+  onDetalleListContextMenu(event: MouseEvent): void {
+    event.preventDefault();
+
+    if (!this.selectedDetalleIndices.length || this.estaEnEdicion || this.movingDetalles) {
+      return;
+    }
+
+    this.openDetalleContextMenu(event);
+  }
+
+  requestMoveSelectedDetallesToNewTicket(): void {
+    if (!this.selectedDetalleIndices.length || this.movingDetalles) {
+      return;
+    }
+
+    this.closeDetalleContextMenu();
+    this.moveToNewTicketRequested.emit();
+  }
+
+  requestMoveSelectedDetallesToExistingTicket(ticketId: number): void {
+    if (!this.selectedDetalleIndices.length || this.movingDetalles) {
+      return;
+    }
+
+    this.closeDetalleContextMenu();
+    this.moveToExistingTicketRequested.emit(ticketId);
+  }
+
+  async moveSelectedDetallesToTicket(targetTicketId: number): Promise<TicketSplitMoveResult | null> {
+    if (!this.reciboId || !this.recibo || !this.ticket?.id || this.sessionId === null) {
+      return null;
+    }
+
+    if (!this.selectedDetalleIndices.length || targetTicketId === this.ticket.id) {
+      return null;
+    }
+
+    const detallesSeleccionados = this.selectedDetalleIndices
+      .map((index) => this.detalles[index])
+      .filter((detalle): detalle is ReciboDetalleDto => !!detalle);
+
+    if (!detallesSeleccionados.length) {
+      return null;
+    }
+
+    this.movingDetalles = true;
+    this.updateSearchDisabled();
+    this.closeDetalleContextMenu();
+
+    try {
+      const targetRelation = await firstValueFrom(
+        this.ticketReciboService.getByTicketId(targetTicketId, this.sessionId)
+      );
+
+      if (!targetRelation?.reciboId) {
+        throw new Error('No se encontró el recibo asociado al ticket destino.');
+      }
+
+      const [targetRecibo, targetDetallesResponse] = await Promise.all([
+        firstValueFrom(this.reciboService.getRecibo(targetRelation.reciboId)),
+        firstValueFrom(this.reciboDetalleService.getDetallesByRecibo(targetRelation.reciboId))
+      ]);
+
+      let targetDetalles = [...(targetDetallesResponse ?? [])];
+
+      for (const detalle of detallesSeleccionados) {
+        const existingTargetIndex = targetDetalles.findIndex(
+          (targetDetalle) => targetDetalle.productoId === detalle.productoId
+        );
+
+        let rollback: TargetDetalleRollback;
+
+        if (existingTargetIndex >= 0) {
+          const detalleDestino = targetDetalles[existingTargetIndex];
+          const payload: UpdateReciboDetalleRequest = {
+            reciboId: detalleDestino.reciboId,
+            productoId: detalleDestino.productoId,
+            cantidad: Number(detalleDestino.cantidad ?? 0) + Number(detalle.cantidad ?? 0),
+            subtotal: Number(detalleDestino.subtotal ?? 0) + Number(detalle.subtotal ?? 0)
+          };
+
+          const detalleActualizado = await firstValueFrom(
+            this.reciboDetalleService.updateDetalle(detalleDestino.id, payload)
+          );
+
+          targetDetalles[existingTargetIndex] = {
+            ...detalleDestino,
+            ...detalleActualizado,
+            cantidad: payload.cantidad,
+            subtotal: payload.subtotal,
+            producto: detalleActualizado.producto ?? detalleDestino.producto ?? detalle.producto
+          };
+
+          rollback = {
+            type: 'restore-updated',
+            detalleId: detalleDestino.id,
+            payload: {
+              reciboId: detalleDestino.reciboId,
+              productoId: detalleDestino.productoId,
+              cantidad: detalleDestino.cantidad,
+              subtotal: detalleDestino.subtotal
+            }
+          };
+        } else {
+          const detalleCreado = await firstValueFrom(
+            this.reciboDetalleService.createDetalle({
+              reciboId: targetRelation.reciboId,
+              productoId: detalle.productoId,
+              cantidad: detalle.cantidad,
+              subtotal: detalle.subtotal
+            })
+          );
+
+          targetDetalles = [
+            ...targetDetalles,
+            {
+              ...detalleCreado,
+              producto: detalleCreado.producto ?? detalle.producto
+            }
+          ];
+
+          rollback = {
+            type: 'delete-created',
+            detalleId: detalleCreado.id
+          };
+        }
+
+        try {
+          await firstValueFrom(this.reciboDetalleService.deleteDetalle(detalle.id));
+        } catch (deleteError) {
+          await this.rollbackTargetDetalleChange(rollback);
+          throw deleteError;
+        }
+      }
+
+      const movedDetalleIds = new Set(detallesSeleccionados.map((detalle) => detalle.id));
+      this.detalles = this.detalles.filter((detalle) => !movedDetalleIds.has(detalle.id));
+      this.recalculateTotal();
+      this.actualizarMostrarColumnaAtendido();
+
+      const sourceTotal = this.calculateDetallesTotal(this.detalles);
+      const targetTotal = this.calculateDetallesTotal(targetDetalles);
+
+      const [sourceReciboActualizado] = await Promise.all([
+        this.updateReciboTotal(this.recibo, sourceTotal),
+        this.updateReciboTotal(targetRecibo, targetTotal)
+      ]);
+
+      this.recibo = {
+        ...sourceReciboActualizado,
+        total: sourceTotal,
+        sesionId: this.sessionId ?? sourceReciboActualizado.sesionId
+      };
+
+      const nextIndex = this.detalles.length
+        ? Math.min(this.selectedDetalleIndices[0], this.detalles.length - 1)
+        : -1;
+
+      this.setSelectedDetalles(nextIndex >= 0 ? [nextIndex] : [], nextIndex, false);
+      this.focusSearchInputRequest.emit();
+
+      this.snackBar.open('Productos movidos correctamente.', 'Cerrar', {
+        duration: 3000,
+        horizontalPosition: 'center',
+        verticalPosition: 'top'
+      });
+
+      return {
+        sourceTicketId: this.ticket.id,
+        targetTicketId,
+        movedItemsCount: detallesSeleccionados.length,
+        targetProductCount: targetDetalles.length
+      };
+    } catch (error) {
+      console.error('Error moviendo productos entre tickets', error);
+      this.snackBar.open('No se pudieron mover los productos seleccionados.', 'Cerrar', {
+        duration: 5000,
+        horizontalPosition: 'center',
+        verticalPosition: 'top',
+        panelClass: ['error-snackbar']
+      });
+      return null;
+    } finally {
+      this.movingDetalles = false;
+      this.updateSearchDisabled();
+    }
   }
 
   private navigateDetalleUp(): void {
@@ -733,8 +978,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     // Ir al elemento anterior
-    this.selectedDetalleIndex--;
-    this.scrollToSelectedDetalle();
+    this.setSelectedDetalles([this.selectedDetalleIndex - 1], this.selectedDetalleIndex - 1);
   }
 
   private navigateDetalleDown(): void {
@@ -748,8 +992,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     // Ir al elemento siguiente
-    this.selectedDetalleIndex++;
-    this.scrollToSelectedDetalle();
+    this.setSelectedDetalles([this.selectedDetalleIndex + 1], this.selectedDetalleIndex + 1);
   }
 
   private scrollToSelectedDetalle(): void {
@@ -1378,10 +1621,11 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         updated.splice(this.selectedDetalleIndex, 1);
         this.detalles = updated;
         this.recalculateTotal();
-        this.selectedDetalleIndex =
+        const nextIndex =
           this.detalles.length === 0
             ? -1
             : Math.min(this.selectedDetalleIndex, this.detalles.length - 1);
+        this.setSelectedDetalles(nextIndex >= 0 ? [nextIndex] : [], nextIndex, false);
         this.focusSearchInputRequest.emit();
       },
       error: (err: unknown) => {
@@ -1517,6 +1761,88 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     });
   }
 
+  private openDetalleContextMenu(event: MouseEvent): void {
+    this.availableTicketMoveOptions = [...this.ticketMoveOptions];
+    this.contextMenuPosition = {
+      x: event.clientX,
+      y: event.clientY
+    };
+
+    this.cdr.detectChanges();
+    setTimeout(() => this.detalleContextMenuTrigger?.openMenu(), 0);
+  }
+
+  private closeDetalleContextMenu(): void {
+    this.detalleContextMenuTrigger?.closeMenu();
+  }
+
+  private setSelectedDetalles(
+    indices: number[],
+    preferredIndex: number | null = null,
+    scrollToSelection: boolean = true
+  ): void {
+    const nextSelection = [...new Set(indices)]
+      .filter((index) => index >= 0 && index < this.detalles.length)
+      .sort((a, b) => a - b);
+
+    this.selectedDetalleIndices = nextSelection;
+
+    if (!nextSelection.length) {
+      this.selectedDetalleIndex = -1;
+      return;
+    }
+
+    if (preferredIndex !== null && nextSelection.includes(preferredIndex)) {
+      this.selectedDetalleIndex = preferredIndex;
+    } else if (!nextSelection.includes(this.selectedDetalleIndex)) {
+      this.selectedDetalleIndex = nextSelection[nextSelection.length - 1];
+    }
+
+    if (scrollToSelection) {
+      this.scrollToSelectedDetalle();
+    }
+  }
+
+  private calculateDetallesTotal(detalles: ReciboDetalleDto[]): number {
+    return detalles.reduce((acc, det) => acc + Number(det?.subtotal ?? 0), 0);
+  }
+
+  private async updateReciboTotal(recibo: ReciboDto, total: number): Promise<ReciboDto> {
+    const ticketId = recibo.ticketId ?? this.ticket?.id ?? null;
+    if (!ticketId) {
+      throw new Error('No se pudo determinar el ticket asociado al recibo.');
+    }
+
+    return firstValueFrom(
+      this.reciboService.actualizarRecibo(recibo.id, {
+        clienteId: recibo.clienteId,
+        ticketId,
+        estadoId: recibo.estadoId ?? ESTADOS_RECIBO.PENDIENTE_PAGO,
+        metodoPagoId: recibo.metodoPagoId ?? 0,
+        total: total.toFixed(2),
+        sesionId: this.sessionId ?? recibo.sesionId,
+        montoRecibido: total
+      })
+    );
+  }
+
+  private async rollbackTargetDetalleChange(rollback: TargetDetalleRollback): Promise<void> {
+    try {
+      if (rollback.type === 'delete-created') {
+        await firstValueFrom(this.reciboDetalleService.deleteDetalle(rollback.detalleId));
+        return;
+      }
+
+      if (rollback.payload) {
+        await firstValueFrom(
+          this.reciboDetalleService.updateDetalle(rollback.detalleId, rollback.payload)
+        );
+      }
+    } catch (rollbackError) {
+      console.error('No se pudo revertir el movimiento parcial del detalle', rollbackError);
+    }
+  }
+
   private scrollDetalleListToBottom(): void {
     const listEl = this.detalleListRef?.nativeElement;
     if (!listEl) {
@@ -1616,7 +1942,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         )
         .subscribe((resultado) => {
           if (resultado) {
-            setTimeout(() => this.metodoPagoActualizado.emit(), 0);
+            this.emitPaymentProcessedEvents();
             // Enfocar el input de búsqueda después de cerrar el modal
             setTimeout(() => this.focusSearchInputRequest.emit(), 200);
           }
@@ -1797,7 +2123,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         )
         .subscribe((resultado) => {
           if (resultado) {
-            setTimeout(() => this.metodoPagoActualizado.emit(), 0);
+            this.emitPaymentProcessedEvents();
             // Enfocar el input de búsqueda después de cerrar el modal
             setTimeout(() => this.focusSearchInputRequest.emit(), 200);
           }
@@ -2047,7 +2373,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         )
         .subscribe((resultado) => {
           if (resultado) {
-            setTimeout(() => this.metodoPagoActualizado.emit(), 0);
+            this.emitPaymentProcessedEvents();
             // Enfocar el input de búsqueda después de cerrar el modal
             setTimeout(() => this.focusSearchInputRequest.emit(), 200);
           }
@@ -2306,7 +2632,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         }
       }
     }, 0);
-    setTimeout(() => this.metodoPagoActualizado.emit(), 0);
+    this.emitPaymentProcessedEvents();
     // Enfocar el input de búsqueda después del pago
     setTimeout(() => this.focusSearchInputRequest.emit(), 300);
   }
@@ -2358,7 +2684,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         }
       }
     }, 0);
-    setTimeout(() => this.metodoPagoActualizado.emit(), 0);
+    this.emitPaymentProcessedEvents();
   }
 
   /**
