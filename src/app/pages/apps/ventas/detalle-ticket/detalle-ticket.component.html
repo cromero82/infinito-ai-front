@@ -46,8 +46,11 @@
                         *ngIf="hasHistoricoAcciones(det)"
                         class="historico-toggle"
                         type="button"
+                        [attr.aria-label]="isHistoricoExpandido(det) ? 'Contraer historico de acciones' : 'Expandir historico de acciones'"
                         (click)="toggleHistoricoAcciones(det, $event)">
-                        {{ isHistoricoExpandido(det) ? '[-]' : '[+]' }}
+                        <mat-icon
+                          class="historico-toggle-icon"
+                          [svgIcon]="isHistoricoExpandido(det) ? 'mat:expand_more' : 'mat:chevron_right'"></mat-icon>
                       </button>
                       <span class="producto-nombre">
                         {{ det.producto ? det.producto.nombre : ('Producto ' + det.productoId) }}
