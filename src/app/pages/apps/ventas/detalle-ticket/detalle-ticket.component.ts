@@ -41,9 +41,11 @@ import { FechaUtilService } from '../service/fecha-util.service';
 import { TicketsService } from '../service/tickets.service';
 import { AuthService } from '../../../../auth/service/auth.service';
 import { ReciboPrintService } from '../service/recibo-print.service';
+import { ModoPrecioLista } from '../service/producto-desde-lista-ventas.service';
 import {
   SelectorProductosComponent,
-  SelectorProductosData
+  SelectorProductosData,
+  SelectorProductosResult
 } from '../selector-productos/selector-productos.component';
 import { EditarProductoComponent } from '../../productos/editar-producto/editar-producto.component';
 import {
@@ -335,6 +337,16 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     }
   }
 
+  private unitPriceFromModo(product: Producto, modo: ModoPrecioLista): number {
+    if (modo === 'precioUnidad') {
+      const u = product.precioUnidad;
+      if (u !== undefined && u !== null && !Number.isNaN(Number(u))) {
+        return Number(u);
+      }
+    }
+    return Number(product.precio ?? 0);
+  }
+
   /**
    * Compara user-nombre del localStorage con ticket.atendidoPor.nombre.
    * Si son diferentes, el ticket fue atendido inicialmente por otro usuario.
@@ -561,7 +573,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     });
   }
 
-  private addProductToRecibo(product: Producto): void {
+  private addProductToRecibo(product: Producto, modoPrecio: ModoPrecioLista = 'precio'): void {
     if (!this.reciboId) {
       this.productSearchError = 'No hay un recibo seleccionado.';
       this.searchingProduct = false;
@@ -661,7 +673,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     // Product doesn't exist, create new detail
     const cantidad = 1;
-    const subtotal = (product.precio ?? 0) * cantidad;
+    const subtotal = this.unitPriceFromModo(product, modoPrecio) * cantidad;
     const payload: CreateReciboDetalleRequest = {
       reciboId: this.reciboId,
       productoId: product.id,
@@ -938,7 +950,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     const dialogRef = this.dialog.open<
       SelectorProductosComponent,
       SelectorProductosData,
-      Producto
+      SelectorProductosResult
     >(SelectorProductosComponent, {
       width: '800px',
       data: { term },
@@ -951,7 +963,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       this.showCreateProductFromSearchButton = false;
       this.updateSearchDisabled();
       if (selected) {
-        this.addProductToRecibo(selected);
+        this.addProductToRecibo(selected.product, selected.modoPrecio);
       } else {
         this.focusSearchInputRequest.emit();
       }
@@ -1012,7 +1024,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   getPrecioUnidadToggleTooltip(detalle: ReciboDetalleDto): string {
-    return this.estaUsandoPrecioUnidad(detalle) ? 'Usar precio normal' : 'Usar precio por unidad';
+    return this.estaUsandoPrecioUnidad(detalle) ? 'Usar precio por empaque' : 'Usar precio por unidad';
   }
 
   togglePrecioUnidad(detalle: ReciboDetalleDto, index: number, event: MouseEvent): void {

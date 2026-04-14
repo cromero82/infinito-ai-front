@@ -1,4 +1,13 @@
-import { Component, Inject, OnDestroy, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import {
+  Component,
+  Inject,
+  OnDestroy,
+  OnInit,
+  AfterViewInit,
+  ViewChild,
+  ElementRef,
+  ChangeDetectorRef
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -13,9 +22,16 @@ import { Producto, ProductPage } from '../../productos/model/producto';
 import { EditarProductoComponent } from '../../productos/editar-producto/editar-producto.component';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { ModoPrecioLista } from '../service/producto-desde-lista-ventas.service';
 
 export interface SelectorProductosData {
   term: string;
+}
+
+/** Resultado del diálogo: producto elegido y modo de precio (venta vs unidad) cuando aplica. */
+export interface SelectorProductosResult {
+  product: Producto;
+  modoPrecio: ModoPrecioLista;
 }
 
 @Component({
@@ -48,10 +64,14 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
   private destroy$ = new Subject<void>();
   @ViewChild('searchInput') searchInput?: ElementRef<HTMLInputElement>;
 
+  modoPrecioElegidoPorProducto: Record<number, ModoPrecioLista> = {};
+  modoPrecioExplicitoPorProducto: Record<number, boolean> = {};
+
   constructor(
-    private dialogRef: MatDialogRef<SelectorProductosComponent>,
+    private dialogRef: MatDialogRef<SelectorProductosComponent, SelectorProductosResult | undefined>,
     private relationalProductService: RelationalProductService,
     private dialog: MatDialog,
+    private cdr: ChangeDetectorRef,
     @Inject(MAT_DIALOG_DATA) public data: SelectorProductosData
   ) {}
 
@@ -94,7 +114,33 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
   }
 
   selectProduct(product: Producto): void {
-    this.dialogRef.close(product);
+    const modo = this.getModoPrecioParaSeleccion(product);
+    this.dialogRef.close({ product, modoPrecio: modo });
+  }
+
+  tienePrecioDual(product: Producto): boolean {
+    const u = product.precioUnidad;
+    return u !== undefined && u !== null && !Number.isNaN(Number(u));
+  }
+
+  seleccionarModoPrecio(product: Producto, modo: ModoPrecioLista, event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    const id = product.id;
+    if (id == null) {
+      return;
+    }
+    this.modoPrecioElegidoPorProducto = { ...this.modoPrecioElegidoPorProducto, [id]: modo };
+    this.modoPrecioExplicitoPorProducto = { ...this.modoPrecioExplicitoPorProducto, [id]: true };
+    this.cdr.markForCheck();
+  }
+
+  getModoPrecioParaSeleccion(product: Producto): ModoPrecioLista {
+    const id = product.id;
+    if (id == null) {
+      return 'precio';
+    }
+    return this.modoPrecioElegidoPorProducto[id] ?? 'precio';
   }
 
   close(): void {
@@ -156,7 +202,7 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
 
     createDialogRef.afterClosed().subscribe((result: Producto | undefined) => {
       if (result) {
-        this.selectProduct(result);
+        this.dialogRef.close({ product: result, modoPrecio: 'precio' });
         return;
       }
 

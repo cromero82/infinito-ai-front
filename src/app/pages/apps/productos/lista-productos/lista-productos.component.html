@@ -340,7 +340,7 @@
               <!-- Precio Compra Column (personalizable) -->
               <ng-container matColumnDef="precioCompra">
                 <th *matHeaderCellDef mat-header-cell mat-sort-header>Precio compra</th>
-                <<td *matCellDef="let product" mat-cell>
+                <td *matCellDef="let product" mat-cell>
                   {{ product.precioCompra === 0 ? '-' : '$' + ((product.precioCompra || product.precio || 0) | number:'1.2-2') }}
                 </td>
               </ng-container>
