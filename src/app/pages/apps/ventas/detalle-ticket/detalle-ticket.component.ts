@@ -490,7 +490,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   getDescripcionHistoricoAccion(det: ReciboDetalleDto, accion: ReciboDetalleHistoricoAccionDto): string {
-    const tiempo = this.fechaUtilService.formatDate(accion.fechaHora);
+    const tiempo = this.fechaUtilService.formatDateConTiempoRelativo(accion.fechaHora);
     if (!this.debeMostrarUsuarioEnHistorico(det)) {
       return tiempo;
     }

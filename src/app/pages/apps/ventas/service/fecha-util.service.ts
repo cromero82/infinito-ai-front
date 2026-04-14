@@ -158,4 +158,84 @@ export class FechaUtilService {
     const monthName = months[date.getMonth()];
     return `${day}-${monthName}, ${timeStr}`;
   }
+
+  /**
+   * Combina {@link formatDate} con un resumen relativo respecto a ahora
+   * ("Hace menos de 1 minuto", "Hace 1 hora", etc.).
+   * Pensado para el historial de acciones en `detalle-ticket`; el resto de la app puede seguir usando solo `formatDate`.
+   */
+  formatDateConTiempoRelativo(dateString: string | null | undefined): string {
+    const formatted = this.formatDate(dateString);
+    if (!formatted) {
+      return '';
+    }
+    const relativo = this.formatearTiempoRelativoDesdeAhora(dateString);
+    return relativo ? `${formatted} · ${relativo}` : formatted;
+  }
+
+  /**
+   * Texto relativo desde ahora (solo fechas pasadas o presentes; si la fecha es futura, cadena vacía).
+   */
+  private formatearTiempoRelativoDesdeAhora(dateString: string | null | undefined): string {
+    if (!dateString) {
+      return '';
+    }
+
+    const fecha = this.parseDateAsLocal(dateString);
+    if (Number.isNaN(fecha.getTime())) {
+      return '';
+    }
+
+    const diffMs = Date.now() - fecha.getTime();
+    if (diffMs < 0) {
+      return '';
+    }
+
+    const diffMinutes = Math.floor(diffMs / 60000);
+
+    if (diffMinutes < 1) {
+      return 'Hace menos de 1 minuto';
+    }
+    if (diffMinutes === 1) {
+      return 'Hace 1 minuto';
+    }
+    if (diffMinutes < 60) {
+      return `Hace ${diffMinutes} minutos`;
+    }
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours === 1) {
+      return 'Hace 1 hora';
+    }
+    if (diffHours < 24) {
+      return `Hace ${diffHours} horas`;
+    }
+
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) {
+      return 'Hace 1 día';
+    }
+    if (diffDays < 7) {
+      return `Hace ${diffDays} días`;
+    }
+
+    const diffWeeks = Math.floor(diffDays / 7);
+    if (diffWeeks === 1) {
+      return 'Hace 1 semana';
+    }
+    if (diffWeeks < 5) {
+      return `Hace ${diffWeeks} semanas`;
+    }
+
+    const diffMonths = Math.floor(diffDays / 30);
+    if (diffMonths <= 1) {
+      return 'Hace 1 mes';
+    }
+    if (diffMonths < 12) {
+      return `Hace ${diffMonths} meses`;
+    }
+
+    const diffYears = Math.floor(diffDays / 365);
+    return diffYears <= 1 ? 'Hace 1 año' : `Hace ${diffYears} años`;
+  }
 }
