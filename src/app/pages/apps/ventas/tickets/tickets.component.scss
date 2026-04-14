@@ -395,6 +395,78 @@ vex-page-layout-header .container {
   }
 }
 
+.recent-recibos-list-container {
+  width: 280px;
+  max-width: 280px;
+  padding: 8px 0;
+}
+
+.recent-recibos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+}
+
+.recent-recibo-item {
+  width: 100%;
+  border: none;
+  text-align: left;
+  padding: 6px 12px;
+  border-bottom: 1px solid #dfdfdf;
+  background-color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  &:first-child {
+    border-top: 1px solid #dfdfdf;
+  }
+}
+
+.recent-recibos-list-container .recibo-total {
+  font-size: 14px;
+  color: #333333;
+  font-weight: 500;
+}
+
+.recent-recibos-list-container .recibo-fecha-cliente-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.recent-recibos-list-container .recibo-fecha {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.62);
+}
+
+/* Misma jerarquía visual que historial-ventas (fecha a la izquierda, cliente a la derecha). */
+.recent-recibos-list-container .recibo-cliente {
+  font-size: 12px;
+  color: #333333;
+  font-weight: 500;
+  text-align: right;
+  flex-shrink: 0;
+  max-width: 58%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-recibos-empty {
+  padding: 12px;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 13px;
+}
+
 .ticket-panel {
   margin-top: 16px;
   margin-bottom: 0;

@@ -40,6 +40,7 @@ import { EstadoRecibosService, EstadoReciboDto } from '../service/estado-recibos
 import { FechaUtilService } from '../service/fecha-util.service';
 import { TicketsService } from '../service/tickets.service';
 import { AuthService } from '../../../../auth/service/auth.service';
+import { ReciboPrintService } from '../service/recibo-print.service';
 import {
   SelectorProductosComponent,
   SelectorProductosData
@@ -115,7 +116,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
   recibo: ReciboDto | null = null;
   detalles: ReciboDetalleDto[] = [];
-  detallesParaImprimir: ReciboDetalleDto[] = []; // Guardar detalles antes del pago
+  /** Copia de líneas tomada antes de iniciar el pago (lista de 3 últimos + impresión). */
+  detallesParaImprimir: ReciboDetalleDto[] = [];
   selectedDetalleIndex = -1;
   selectedDetalleIndices: number[] = [];
   editingDetalleIndex = -1;
@@ -178,7 +180,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     private ticketsService: TicketsService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef,
-    private fechaUtilService: FechaUtilService
+    private fechaUtilService: FechaUtilService,
+    private reciboPrintService: ReciboPrintService
   ) {}
 
   ngOnInit(): void {
@@ -852,6 +855,26 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       this.ticketProcesado.emit();
       this.metodoPagoActualizado.emit();
     }, 0);
+  }
+
+  /** Debe llamarse antes de cualquier flujo que registre el pago (efectivo u otro método). */
+  private snapshotDetallesAntesDelPago(): void {
+    if (this.detalles?.length) {
+      this.detallesParaImprimir = [...this.detalles];
+    }
+  }
+
+  private cacheRecentReciboForReprint(): void {
+    if (!this.recibo) {
+      return;
+    }
+
+    const detallesFuente = this.detallesParaImprimir?.length ? this.detallesParaImprimir : this.detalles;
+    if (!detallesFuente?.length) {
+      return;
+    }
+
+    this.reciboPrintService.registerRecentRecibo(this.recibo, detallesFuente, this.ticket?.cliente?.nombre);
   }
 
   private performProductSearch(term: string, triggeredAutomatically: boolean): void {
@@ -2289,11 +2312,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     if (metodo.id === 1 && !omitirDialogoEfectivo) {
       const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && !!this.recibo && !!this.detalles?.length;
-      // Guardar detalles antes del pago para poder imprimirlos después
-      if (quiereImprimir && this.detalles?.length) {
-        this.detallesParaImprimir = [...this.detalles];
-        console.log('Detalles guardados para impresión:', this.detallesParaImprimir.length);
-      }
+      this.snapshotDetallesAntesDelPago();
       this.actualizandoMetodoPago = true;
       const dialogRef = this.dialog.open<
         PagoEfectivoCambioComponent,
@@ -2326,12 +2345,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    // Guardar detalles antes del pago para poder imprimirlos después (métodos no efectivo)
     const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
-    if (debeImprimir && this.detalles?.length) {
-      this.detallesParaImprimir = [...this.detalles];
-      console.log('Detalles guardados para impresión (método no efectivo - ejecutarPago):', this.detallesParaImprimir.length);
-    }
+    this.snapshotDetallesAntesDelPago();
 
     const preProceso$: Observable<void> = of(void 0);
 
@@ -2410,6 +2425,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           // Si debe imprimir, hacerlo automáticamente sin mostrar snackbar
           if (debeImprimir) {
             console.log('Pago exitoso (método no efectivo - ejecutarPago), imprimiendo automáticamente...');
+            this.cacheRecentReciboForReprint();
+            this.emitPaymentProcessedEvents();
             setTimeout(() => {
               this.imprimirRecibo();
             }, 300);
@@ -2470,11 +2487,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     if (metodo.id === 1) {
       const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && !!this.recibo && !!this.detalles?.length;
-      // Guardar detalles antes del pago para poder imprimirlos después
-      if (quiereImprimir && this.detalles?.length) {
-        this.detallesParaImprimir = [...this.detalles];
-        console.log('Detalles guardados para impresión:', this.detallesParaImprimir.length);
-      }
+      this.snapshotDetallesAntesDelPago();
       this.actualizandoMetodoPago = true;
       const dialogRef = this.dialog.open<
         PagoEfectivoCambioComponent,
@@ -2507,12 +2520,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    // Guardar detalles antes del pago para poder imprimirlos después (métodos no efectivo)
     const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
-    if (debeImprimir && this.detalles?.length) {
-      this.detallesParaImprimir = [...this.detalles];
-      console.log('Detalles guardados para impresión (método no efectivo - onMetodoPagoSeleccionadoDesdeEdicion):', this.detallesParaImprimir.length);
-    }
+    this.snapshotDetallesAntesDelPago();
 
     const preProceso$: Observable<void> = of(void 0);
 
@@ -2591,6 +2600,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           // Si debe imprimir, hacerlo automáticamente sin mostrar snackbar
           if (debeImprimir) {
             console.log('Pago exitoso (método no efectivo - onMetodoPagoSeleccionadoDesdeEdicion), imprimiendo automáticamente...');
+            this.cacheRecentReciboForReprint();
+            this.emitPaymentProcessedEvents();
             setTimeout(() => {
               this.imprimirRecibo();
             }, 300);
@@ -2720,11 +2731,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     if (metodo.id === 1) {
       const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && !!this.recibo && !!this.detalles?.length;
-      // Guardar detalles antes del pago para poder imprimirlos después
-      if (quiereImprimir && this.detalles?.length) {
-        this.detallesParaImprimir = [...this.detalles];
-        console.log('Detalles guardados para impresión:', this.detallesParaImprimir.length);
-      }
+      this.snapshotDetallesAntesDelPago();
       this.actualizandoMetodoPago = true;
       const dialogRef = this.dialog.open<
         PagoEfectivoCambioComponent,
@@ -2757,12 +2764,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    // Guardar detalles antes del pago para poder imprimirlos después (métodos no efectivo)
     const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
-    if (debeImprimir && this.detalles?.length) {
-      this.detallesParaImprimir = [...this.detalles];
-      console.log('Detalles guardados para impresión (método no efectivo - seleccionarMetodoPago):', this.detallesParaImprimir.length);
-    }
+    this.snapshotDetallesAntesDelPago();
 
     const preProceso$: Observable<void> = of(void 0);
 
@@ -2841,6 +2844,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           // Si debe imprimir, hacerlo automáticamente sin mostrar snackbar
           if (debeImprimir) {
             console.log('Pago exitoso (método no efectivo - seleccionarMetodoPago), imprimiendo automáticamente...');
+            this.cacheRecentReciboForReprint();
+            this.emitPaymentProcessedEvents();
             setTimeout(() => {
               this.imprimirRecibo();
             }, 300);
@@ -2986,6 +2991,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
    * maneja la impresión internamente.
    */
   private mostrarSnackbarPagoExitosoSinImpresion(totalGuardado: number): void {
+    this.cacheRecentReciboForReprint();
     const totalFormateado = this.formatCurrency(totalGuardado);
     this.snackBar.open(
       `Recibo por valor de ${totalFormateado} guardado correctamente`,
@@ -3019,6 +3025,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
    * se dispara al hacer clic en "Imprimir" (gesto directo del usuario) para evitar bloqueos del navegador.
    */
   private mostrarSnackbarPagoExitoso(totalGuardado: number): void {
+    this.cacheRecentReciboForReprint();
     const totalFormateado = this.formatCurrency(totalGuardado);
     const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && this.recibo && this.detalles?.length;
     let limpiarRecibo: (() => void) | null = null;
@@ -3070,7 +3077,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   private prepararReciboParaImpresion(recibo: ReciboDto, detalles: ReciboDetalleDto[]): () => void {
     const idRoot = 'recibo-pos-print-root';
     const idStyles = 'recibo-pos-print-styles';
-    const contenido = this.buildReciboHtmlFragment(detalles);
+    const rawCliente = recibo.cliente?.nombre ?? this.ticket?.cliente?.nombre;
+    const contenido = this.buildReciboHtmlFragment(detalles, rawCliente);
 
     const styleEl = document.createElement('style');
     styleEl.id = idStyles;
@@ -3088,6 +3096,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   #${idRoot} .pos-tabla th { text-align: left; border-bottom: 1px solid #000; padding: 2px 4px; }
   #${idRoot} .pos-tabla td { padding: 2px 4px; }
   #${idRoot} .pos-total { font-weight: bold; text-align: right; margin-top: 4px; }
+  #${idRoot} .pos-cliente { font-size: 11px; margin-top: 8px; text-align: left; }
 }
 `;
 
@@ -3106,7 +3115,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   /** Construye el fragmento HTML del recibo (solo el cuerpo, sin documento completo). */
-  private buildReciboHtmlFragment(detalles: ReciboDetalleDto[]): string {
+  private buildReciboHtmlFragment(detalles: ReciboDetalleDto[], clienteNombreRaw?: string | null): string {
     const fechaHora = new Date();
     const fechaHoraStr = fechaHora.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'medium' });
     const total = detalles.reduce((sum, det) => sum + Number(det.subtotal ?? 0), 0);
@@ -3122,7 +3131,13 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       const unitario = this.getDetalleUnitario(det);
       lineas.push('<tr>', `<td>${this.escapeHtml(nombre)}</td>`, `<td>${this.formatCurrency(unitario)}</td>`, `<td>${det.cantidad}</td>`, `<td>${this.formatCurrency(det.subtotal)}</td>`, '</tr>');
     }
-    lineas.push('</tbody></table>', '<hr class="pos-sep"/>', `<p class="pos-total">TOTAL: ${this.formatCurrency(total)}</p>`, '</div>');
+    lineas.push(
+      '</tbody></table>',
+      '<hr class="pos-sep"/>',
+      `<p class="pos-total">TOTAL: ${this.formatCurrency(total)}</p>`,
+      this.reciboPrintService.lineaClienteTicketHtml(clienteNombreRaw),
+      '</div>'
+    );
     return lineas.join('');
   }
 
@@ -3190,64 +3205,21 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   private ejecutarImpresionConDetalles(detalles: ReciboDetalleDto[]): void {
-    console.log('Generando HTML del recibo...', { detalles: detalles?.length });
-    // Generar el HTML del recibo
-    const cuerpo = this.buildReciboHtmlFragment(detalles);
-    const htmlCompleto = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Imprimir Recibo</title>
-<style>
-@page {
-  size: 80mm auto;
-  margin: 0;
-}
-html{padding:0;margin:0;font-family:'Courier New','Courier',monospace;width:80mm;font-size:12px}
-body{margin:0;padding:8px;width:80mm;background:white}
-p{margin-top:0.25rem;margin-bottom:0.25rem;white-space:pre-wrap}
-.pos-titulo{text-align:center;font-weight:bold;font-size:14px;margin:0 0 4px 0}
-.pos-fecha,.pos-leyenda{text-align:center;margin:2px 0}
-.pos-leyenda{font-size:10px}
-.pos-sep{border:none;border-top:1px dashed #000;margin:6px 0}
-.pos-tabla{width:100%;border-collapse:collapse;font-size:11px}
-.pos-tabla th{text-align:left;border-bottom:1px solid #000;padding:2px 4px}
-.pos-tabla td{padding:2px 4px}
-.pos-total{font-weight:bold;text-align:right;margin-top:4px;font-size:14px}
-</style>
-<script>
-window.onafterprint = function() {
-  setTimeout(function() {
-    window.close();
-  }, 100);
-};
-window.onload = function() {
-  setTimeout(function() {
-    window.print();
-  }, 250);
-};
-</script>
-</head><body>${cuerpo}</body></html>`;
+    console.log('Generando impresión del recibo...', { detalles: detalles?.length });
+    if (this.recibo?.id && detalles?.length) {
+      this.reciboPrintService.registerRecentRecibo(this.recibo, detalles, this.ticket?.cliente?.nombre);
+    }
+    const printed = this.reciboPrintService.printRecibo({
+      fechaCreacion: this.recibo?.fechaCreacion,
+      detalles,
+      clienteNombre: this.recibo?.cliente?.nombre ?? this.ticket?.cliente?.nombre
+    });
 
-    console.log('Abriendo ventana de impresión...');
-    // Abrir ventana de impresión usando window.open() como en el ejemplo
-    const printerWindow = window.open('', '_blank');
-    
-    if (!printerWindow) {
+    if (!printed) {
       console.error('No se pudo abrir la ventana de impresión - ventanas emergentes bloqueadas');
       alert('Por favor, permite ventanas emergentes para imprimir');
       return;
     }
-
-    console.log('Escribiendo HTML en la ventana...');
-    // Escribir el HTML completo en la ventana
-    printerWindow.document.write(htmlCompleto);
-    
-    // Cerrar el documento para que se renderice
-    printerWindow.document.close();
-    
-    // Enfocar la ventana
-    printerWindow.focus();
-    
-    console.log('Ventana de impresión abierta, se imprimirá automáticamente');
-    // La impresión se ejecutará automáticamente cuando la ventana cargue
-    // gracias al window.onload en el script dentro del HTML
     
     // Enfocar el input de búsqueda después de que la ventana de impresión se cierre
     // Usamos un delay más largo para asegurar que la ventana de impresión se haya cerrado completamente
@@ -3272,7 +3244,7 @@ window.onload = function() {
    * Genera el HTML del recibo y lo abre en nueva pestaña (para menú Descargar recibo).
    */
   private abrirReciboEnNuevaPestana(recibo: ReciboDto, detalles: ReciboDetalleDto[]): void {
-    const cuerpo = this.buildReciboHtmlFragment(detalles);
+    const cuerpo = this.buildReciboHtmlFragment(detalles, recibo.cliente?.nombre ?? this.ticket?.cliente?.nombre);
     const htmlCompleto = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Recibo</title>
 <style>body{font-family:'Courier New',monospace;font-size:12px;margin:16px;max-width:280px}.pos-titulo{text-align:center;font-weight:bold;font-size:14px;margin:0 0 4px 0}.pos-fecha,.pos-leyenda{text-align:center;margin:2px 0}.pos-leyenda{font-size:10px}.pos-sep{border:none;border-top:1px dashed #000;margin:6px 0}.pos-tabla{width:100%;border-collapse:collapse;font-size:11px}.pos-tabla th{text-align:left;border-bottom:1px solid #000;padding:2px 4px}.pos-tabla td{padding:2px 4px}.pos-total{font-weight:bold;text-align:right;margin-top:4px}</style></head><body>${cuerpo}</body></html>`;
     const dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(htmlCompleto);

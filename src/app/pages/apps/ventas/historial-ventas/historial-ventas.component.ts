@@ -20,6 +20,7 @@ import { takeUntil } from 'rxjs/operators';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FooterService } from '../../../../layouts/services/footer.service';
 import { FechaUtilService } from '../service/fecha-util.service';
+import { ReciboPrintService } from '../service/recibo-print.service';
 
 @Component({
   selector: 'vex-historial-ventas',
@@ -87,7 +88,8 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private footerService: FooterService,
-    private fechaUtilService: FechaUtilService
+    private fechaUtilService: FechaUtilService,
+    private reciboPrintService: ReciboPrintService
   ) {}
 
   ngOnInit(): void {
@@ -569,44 +571,14 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     this.imprimiendoRecibo = true;
 
     try {
-      // Generar el HTML del recibo usando la misma lógica que el componente recibo
-      const cuerpo = this.buildReciboHtmlFragment(this.detalles);
-      const htmlCompleto = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Imprimir Recibo</title>
-<style>
-@page {
-  size: 80mm auto;
-  margin: 0;
-}
-html{padding:0;margin:0;font-family:'Courier New','Courier',monospace;width:80mm;font-size:12px}
-body{margin:0;padding:8px;width:80mm;background:white}
-p{margin-top:0.25rem;margin-bottom:0.25rem;white-space:pre-wrap}
-.pos-titulo{text-align:center;font-weight:bold;font-size:14px;margin:0 0 4px 0}
-.pos-fecha,.pos-leyenda{text-align:center;margin:2px 0}
-.pos-leyenda{font-size:10px}
-.pos-sep{border:none;border-top:1px dashed #000;margin:6px 0}
-.pos-tabla{width:100%;border-collapse:collapse;font-size:11px}
-.pos-tabla th{text-align:left;border-bottom:1px solid #000;padding:2px 4px}
-.pos-tabla td{padding:2px 4px}
-.pos-total{font-weight:bold;text-align:right;margin-top:4px;font-size:14px}
-</style>
-<script>
-window.onafterprint = function() {
-  setTimeout(function() {
-    window.close();
-  }, 100);
-};
-window.onload = function() {
-  setTimeout(function() {
-    window.print();
-  }, 250);
-};
-</script>
-</head><body>${cuerpo}</body></html>`;
+      this.reciboPrintService.registerRecentRecibo(recibo, this.detalles, this.getClienteNombre(recibo.clienteId));
+      const printed = this.reciboPrintService.printRecibo({
+        fechaCreacion: recibo.fechaCreacion,
+        detalles: this.detalles,
+        clienteNombre: this.getClienteNombre(recibo.clienteId)
+      });
 
-      console.log('Abriendo ventana de impresión...');
-      const printerWindow = window.open('', '_blank');
-      
-      if (!printerWindow) {
+      if (!printed) {
         console.error('No se pudo abrir la ventana de impresión - ventanas emergentes bloqueadas');
         this.snackBar.open('Por favor, permite ventanas emergentes para imprimir', 'Cerrar', {
           duration: 5000,
@@ -616,13 +588,6 @@ window.onload = function() {
         return;
       }
 
-      console.log('Escribiendo HTML en la ventana...');
-      printerWindow.document.write(htmlCompleto);
-      printerWindow.document.close();
-      printerWindow.focus();
-      
-      console.log('Ventana de impresión abierta, se imprimirá automáticamente');
-      
       // Resetear el estado de impresión después de un tiempo
       setTimeout(() => {
         this.imprimiendoRecibo = false;
@@ -638,39 +603,5 @@ window.onload = function() {
     }
   }
 
-  private buildReciboHtmlFragment(detalles: HistorialReciboDetalleDto[]): string {
-    const recibo = this.getSelectedRecibo();
-    const fechaHora = recibo?.fechaCreacion ? new Date(recibo.fechaCreacion) : new Date();
-    const fechaHoraStr = fechaHora.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'medium' });
-    const total = detalles.reduce((sum, det) => sum + Number(det.subtotal ?? 0), 0);
-    const lineas: string[] = [];
-    
-    lineas.push('<div class="pos-recibo">');
-    lineas.push('<p class="pos-titulo">Gestor infinito market</p>');
-    lineas.push(`<p class="pos-fecha">${this.escapeHtml(fechaHoraStr)}</p>`);
-    lineas.push('<p class="pos-leyenda">Recibo no apto como factura</p>');
-    lineas.push('<hr class="pos-sep"/>');
-    lineas.push('<table class="pos-tabla"><thead><tr><th>Producto</th><th>V.Unit</th><th>Cant</th><th>Subtotal</th></tr></thead><tbody>');
-    
-    for (const det of detalles) {
-      const nombre = det.producto?.nombre ?? `Producto ${det.productoId}`;
-      const unitario = det.producto?.precio ?? (det.cantidad ? det.subtotal / det.cantidad : 0);
-      lineas.push('<tr>', 
-        `<td>${this.escapeHtml(nombre)}</td>`, 
-        `<td>${this.formatCurrency(unitario)}</td>`, 
-        `<td>${det.cantidad}</td>`, 
-        `<td>${this.formatCurrency(det.subtotal)}</td>`, 
-        '</tr>');
-    }
-    
-    lineas.push('</tbody></table>', '<hr class="pos-sep"/>', `<p class="pos-total">TOTAL: ${this.formatCurrency(total)}</p>`, '</div>');
-    return lineas.join('');
-  }
-
-  private escapeHtml(text: string): string {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
 }
 

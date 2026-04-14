@@ -26,6 +26,8 @@ import { EditarTabTicketComponent, EditarTabTicketData } from '../editar-tab-tic
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../core/components/confirm-dialog/confirm-dialog.component';
 import { ReciboDetalleService } from '../service/recibo-detalle.service';
 import { firstValueFrom } from 'rxjs';
+import { Subscription } from 'rxjs';
+import { RecentPrintedReciboItem, ReciboPrintService } from '../service/recibo-print.service';
 
 const IMPRIMIR_RECIBO_KEY = 'imprimir-recibo';
 const LAST_TICKET_ID_KEY = 'last-ticket-id';
@@ -78,6 +80,7 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
 
   /** Preferencia de usuario: imprimir recibo tras pago (persistida en localStorage). Por defecto false. */
   imprimirReciboActivo = false;
+  recentPrintedRecibos: RecentPrintedReciboItem[] = [];
 
   /** True cuando los tickets con cliente personalizado (no ANONIMO) están visibles en la barra de tabs. */
   ticketsConClienteVisibles = true;
@@ -87,6 +90,7 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
 
   /** ID del ticket que debe seleccionarse forzosamente después de recargar */
   private forcedSelectionTicketId: number | null = null;
+  private recentPrintedRecibosSubscription?: Subscription;
 
   /** Cantidad de productos movidos acumulados por ticket dividido. */
   private splitTicketProductCounts: Record<number, number> = {};
@@ -103,10 +107,18 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
     private snackBar: MatSnackBar,
     private reciboDetalleService: ReciboDetalleService,
     private appRef: ApplicationRef,
-    private router: Router
+    private router: Router,
+    private reciboPrintService: ReciboPrintService
   ) {}
 
   ngOnInit(): void {
+    this.imprimirReciboActivo = this.getImprimirReciboFromStorage();
+    this.recentPrintedRecibos = this.reciboPrintService.getRecentRecibosSnapshot();
+    this.recentPrintedRecibosSubscription = this.reciboPrintService.recentRecibos$.subscribe((items) => {
+      this.recentPrintedRecibos = items;
+      this.cdr.detectChanges();
+    });
+
     const stored = localStorage.getItem('session-id');
     const parsed = stored ? Number(stored) : NaN;
     if (!parsed || Number.isNaN(parsed)) {
@@ -116,7 +128,6 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
     }
 
     this.sessionId = parsed;
-    this.imprimirReciboActivo = this.getImprimirReciboFromStorage();
     this.lastFetchedTicketId = this.getLastTicketIdFromStorage();
     
     // Recuperar selección forzada del sessionStorage
@@ -192,7 +203,25 @@ export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked
   }
 
   ngOnDestroy(): void {
-    // Limpiar variables
+    this.recentPrintedRecibosSubscription?.unsubscribe();
+  }
+
+  formatRecentReciboTotal(item: RecentPrintedReciboItem): string {
+    return this.reciboPrintService.formatCurrency(item.total);
+  }
+
+  formatRecentReciboFecha(item: RecentPrintedReciboItem): string {
+    return this.reciboPrintService.formatReciboFecha(item.fechaCreacion);
+  }
+
+  printRecentRecibo(item: RecentPrintedReciboItem): void {
+    const printed = this.reciboPrintService.printRecentRecibo(item);
+    if (!printed) {
+      this.snackBar.open('Por favor, permite ventanas emergentes para imprimir', 'Cerrar', {
+        duration: 5000,
+        horizontalPosition: 'right'
+      });
+    }
   }
 
   focusProductSearch(select: boolean = true): void {

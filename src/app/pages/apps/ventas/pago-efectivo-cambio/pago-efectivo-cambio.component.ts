@@ -165,8 +165,11 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
         .subscribe({
           next: (tg) => {
             this.totalGuardado = tg;
-            
-            // Si debe imprimir, hacerlo directamente
+
+            // Snackbar/cache antes de imprimir: imprimirRecibo vacía detallesParaImprimir y el historial
+            // de reimpresión necesita esos detalles en cacheRecentReciboForReprint.
+            this.data.mostrarSnackbarExito?.(tg);
+
             if (debeImprimir && this.data.imprimirRecibo) {
               console.log('Pago exitoso, imprimiendo automáticamente...');
               try {
@@ -175,10 +178,6 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
                 console.error('Error al imprimir recibo', e);
               }
             }
-            
-            // Cerrar modal directamente sin mostrar ventana de confirmación
-            // Solo mostrar snackbar si está configurado
-            this.data.mostrarSnackbarExito?.(tg);
             this.dialogRef.close({
               pagaCon: this.pagaConResultado,
               cambio: this.cambioResultado
@@ -196,12 +195,12 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
   }
 
   onImprimirRecibo(): void {
+    this.data.mostrarSnackbarExito?.(this.totalGuardado);
     try {
       this.data.imprimirRecibo?.();
     } catch (e) {
       console.error('Error al imprimir recibo', e);
     }
-    this.data.mostrarSnackbarExito?.(this.totalGuardado);
     this.dialogRef.close({
       pagaCon: this.pagaConResultado,
       cambio: this.cambioResultado

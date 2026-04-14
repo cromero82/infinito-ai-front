@@ -132,6 +132,10 @@
               <mat-icon class="options-arrow-icon icon-sm" svgIcon="mat:arrow_drop_down"></mat-icon>
             </button>
             <mat-menu #opcionesReciboMenu="matMenu" xPosition="after" yPosition="below" class="opciones-recibo-menu">
+              <button mat-menu-item [matMenuTriggerFor]="ultimosRecibosMenu">
+                <mat-icon svgIcon="mat:print"></mat-icon>
+                <span>Imprimir ultimos 3 recibos</span>
+              </button>
               <button mat-menu-item class="opciones-recibo-menu-item-toggle" (click)="$event.stopPropagation()">
                 <span class="opciones-recibo-label">Imprimir ticket luego de pagar</span>
                 <mat-slide-toggle
@@ -141,6 +145,26 @@
                   (click)="$event.stopPropagation()">
                 </mat-slide-toggle>
               </button>
+            </mat-menu>
+            <mat-menu #ultimosRecibosMenu="matMenu" xPosition="after" yPosition="below" class="ultimos-recibos-menu">
+              <div class="recibos-list-container recent-recibos-list-container" (click)="$event.stopPropagation()">
+                <div class="recibos-list recent-recibos-list" *ngIf="recentPrintedRecibos.length > 0; else noRecentRecibos">
+                  <button
+                    type="button"
+                    class="recibo-item recent-recibo-item"
+                    *ngFor="let recibo of recentPrintedRecibos"
+                    (click)="printRecentRecibo(recibo)">
+                    <span class="recibo-total">{{ formatRecentReciboTotal(recibo) }}</span>
+                    <div class="recibo-fecha-cliente-row">
+                      <span class="recibo-fecha">{{ formatRecentReciboFecha(recibo) }}</span>
+                      <span class="recibo-cliente" *ngIf="recibo.clienteNombre">{{ recibo.clienteNombre }}</span>
+                    </div>
+                  </button>
+                </div>
+                <ng-template #noRecentRecibos>
+                  <div class="empty-message recent-recibos-empty">No hay recibos recientes para imprimir</div>
+                </ng-template>
+              </div>
             </mat-menu>
           </div>
           <div class="ticket-panel" *ngIf="tickets[selectedIndex] as activeTicket; else noTicketSelected">
