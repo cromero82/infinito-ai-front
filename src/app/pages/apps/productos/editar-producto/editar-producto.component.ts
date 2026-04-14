@@ -57,6 +57,7 @@ export class EditarProductoComponent implements OnInit, AfterViewInit {
       nombre: ['', Validators.required],
       barcode: [''],
       precio: ['', Validators.required],
+      precioUnidad: [''],
       buy_price: [''],
       activate: [1] // Default: activo (1)
     });
@@ -89,6 +90,10 @@ export class EditarProductoComponent implements OnInit, AfterViewInit {
       
       if (data.precio !== undefined || data.price !== undefined) {
         patchValue.precio = data.precio || data.price;
+      }
+
+      if (data.precioUnidad !== undefined) {
+        patchValue.precioUnidad = data.precioUnidad;
       }
       
       if (data.precioCompra !== undefined || data.buy_price !== undefined) {
@@ -301,15 +306,16 @@ export class EditarProductoComponent implements OnInit, AfterViewInit {
   save() {
     if (this.form.invalid) return;
     const form = this.form.value;
-    const product: Producto = {
+    const product = {
       nombre: form.nombre,
       barcode: form.barcode,
       precio: form.precio,
+      precioUnidad: form.precioUnidad === '' || form.precioUnidad === undefined ? null : form.precioUnidad,
       precioCompra: form.buy_price || undefined,
       foto: this.data?.foto || '',
       company: this.data?.company,
       activate: form.activate !== undefined ? form.activate : 1
-    };
+    } as Producto;
 
     // Verificar si se está desactivando el producto (solo en modo edición)
     const isDeactivating = this.isEditMode &&

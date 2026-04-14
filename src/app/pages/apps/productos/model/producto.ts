@@ -12,6 +12,7 @@ export interface Producto {
   barcode: string;
   nombre: string;
   precio: number;
+  precioUnidad?: number | null;
   precioCompra?: number;
   foto?: string;
   company?: Company;

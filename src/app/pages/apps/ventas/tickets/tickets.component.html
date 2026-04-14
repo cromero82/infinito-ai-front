@@ -19,14 +19,26 @@
                   (keyup.enter)="triggerProductSearch()"
                   (keydown)="onSearchInputKeydown($event)"
                   placeholder="Ej. código de barras o nombre" />
-                <button
-                  mat-icon-button
-                  matSuffix
-                  *ngIf="recibo.productSearchCtrl.value"
-                  aria-label="Limpiar búsqueda"
-                  (click)="clearProductSearch()">
-                  <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
-                </button>
+                <div matSuffix class="search-suffix-actions">
+                  <button
+                    mat-icon-button
+                    *ngIf="recibo.productSearchCtrl.value"
+                    aria-label="Limpiar búsqueda"
+                    type="button"
+                    (click)="clearProductSearch()">
+                    <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    *ngIf="recibo.canCreateProductFromSearch"
+                    aria-label="Registrar producto"
+                    matTooltip="Nuevo producto"
+                    type="button"
+                    (click)="recibo.openNuevoProductoDesdeBusqueda()">
+                    <mat-icon svgIcon="mat:add"></mat-icon>
+                  </button>
+                </div>
               </mat-form-field>
             </div>
             <div *ngIf="recibo.productSearchError" class="search-error-message">

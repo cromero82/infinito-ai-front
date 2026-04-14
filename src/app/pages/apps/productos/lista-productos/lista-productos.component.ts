@@ -77,7 +77,7 @@ export interface FilterCondition {
 })
 export class ListaProductosComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = [
-    'id', 'nombre', 'precio', 'fechaUltimaActualizacionPrecio', 'totalVentas', 'edit'
+    'id', 'nombre', 'precio', 'precioUnidad', 'fechaUltimaActualizacionPrecio', 'totalVentas', 'edit'
   ];
 
   /** Columnas configurables en el orden de la tabla (clave para verTabla en API) */
@@ -85,6 +85,7 @@ export class ListaProductosComponent implements OnInit, AfterViewInit {
     { key: 'barcode', label: 'Código barras' },
     { key: 'nombre', label: 'Producto' },
     { key: 'precio', label: 'Precio' },
+    { key: 'precioUnidad', label: 'Precio unidad' },
     { key: 'precioCompra', label: 'Precio compra' },
     { key: 'fechaUltimaActualizacionPrecio', label: 'Actualización precio' },
     { key: 'fechaCreacion', label: 'Fecha creacion' },
@@ -217,6 +218,7 @@ export class ListaProductosComponent implements OnInit, AfterViewInit {
     'id': 'barcode',
     'nombre': 'nombre',
     'precio': 'precio',
+    'precioUnidad': 'precioUnidad',
     'precioCompra': 'precioCompra',
     'fechaUltimaActualizacionPrecio': 'fechaUltimaActualizacionPrecio',
     'fechaCreacion': 'fechaCreacion',
@@ -266,6 +268,7 @@ export class ListaProductosComponent implements OnInit, AfterViewInit {
         'id',
         'nombre',
         'precio',
+        'precioUnidad',
         'precioCompra',
         'fechaUltimaActualizacionPrecio',
         'fechaCreacion',
@@ -281,6 +284,7 @@ export class ListaProductosComponent implements OnInit, AfterViewInit {
         'id': 'id',
         'nombre': 'nombre',
         'precio': 'precio',
+        'precioUnidad': 'precioUnidad',
         'fechaUltimaActualizacionPrecio': 'fechaUltimaActualizacionPrecio',
         'fechaCreacion': 'fechaCreacion',
         'totalVentas': 'totalVentas',
@@ -971,11 +975,12 @@ export class ListaProductosComponent implements OnInit, AfterViewInit {
       if (!verTabla || typeof verTabla !== 'string') return;
 
       const requested = verTabla.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
-      const availableDefs = new Set<string>(['id','nombre','precio','precioCompra','fechaUltimaActualizacionPrecio','fechaCreacion','totalVentas','porcentajeGanancia','fechaUltimaVenta','edit']);
+      const availableDefs = new Set<string>(['id','nombre','precio','precioUnidad','precioCompra','fechaUltimaActualizacionPrecio','fechaCreacion','totalVentas','porcentajeGanancia','fechaUltimaVenta','edit']);
+      
 
       for (const req of requested) {
         // map logical to template name
-        const mapping: Record<string,string> = { 'barcode':'id','precioCompra':'precioCompra','fechaCreacion':'fechaCreacion','porcentaje_ganancia':'porcentajeGanancia','fecha_ultima_venta':'fechaUltimaVenta' };
+        const mapping: Record<string,string> = { 'barcode':'id','precioUnidad':'precioUnidad','precioCompra':'precioCompra','fechaCreacion':'fechaCreacion','porcentaje_ganancia':'porcentajeGanancia','fecha_ultima_venta':'fechaUltimaVenta' };
         const col = mapping[req] || req;
         if (!availableDefs.has(col)) continue;
         if (this.displayedColumns.includes(col)) continue;
@@ -1194,6 +1199,22 @@ export class ListaProductosComponent implements OnInit, AfterViewInit {
   onGoogleSearchClicked(event: { type: 'name' | 'barcode'; query: string }): void {
     // Este método se puede usar para tracking o logging si es necesario
     console.log(`Búsqueda en Google desde product-list: ${event.type} - ${event.query}`);
+  }
+
+  searchProductByName(product: Producto): void {
+    const rawName = (product?.nombre || '').trim();
+    if (!rawName) {
+      return;
+    }
+
+    const cleanName = rawName.includes(';') ? rawName.split(';')[0].trim() : rawName;
+    if (!cleanName) {
+      return;
+    }
+
+    const query = `${cleanName} PRECIO medellin`;
+    this.onGoogleSearchClicked({ type: 'name', query });
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
   }
 
   /**

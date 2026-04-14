@@ -95,6 +95,19 @@ form[cdkDrag] {
   }
 }
 
+// Fila: Precio de venta + Precio unidad
+.precio-venta-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+
+  .precio-venta-field {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 140px;
+  }
+}
+
 // Fila: Precio de compra + % Ganancia
 .precio-compra-row {
   display: flex;

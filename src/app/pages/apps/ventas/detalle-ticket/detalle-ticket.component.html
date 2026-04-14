@@ -84,8 +84,18 @@
                     (blur)="onUnitarioInputBlur(i)"
                     (click)="$event.stopPropagation()"
                     (input)="$event.stopPropagation()" />
-                  <span *ngIf="editingUnitarioIndex !== i">
-                    {{ formatCurrency(det.producto?.precio ?? (det.cantidad ? det.subtotal / det.cantidad : 0)) }}
+                  <span *ngIf="editingUnitarioIndex !== i" class="unitario-display">
+                    <button
+                      *ngIf="tienePrecioUnidad(det)"
+                      type="button"
+                      class="unitario-toggle-btn"
+                      [class.unitario-toggle-btn--active]="estaUsandoPrecioUnidad(det)"
+                      [attr.aria-label]="getPrecioUnidadToggleTooltip(det)"
+                      [matTooltip]="getPrecioUnidadToggleTooltip(det)"
+                      (click)="togglePrecioUnidad(det, i, $event)">
+                      <mat-icon svgIcon="mat:sync_alt"></mat-icon>
+                    </button>
+                    <span>{{ formatCurrency(getDetalleUnitario(det)) }}</span>
                   </span>
                 </span>
                 <span class="detalle-col cantidad" (dblclick)="onCantidadDoubleClick(i, $event); $event.stopPropagation()">

@@ -26,6 +26,7 @@ export interface ReciboDetalleDto {
     barcode: string;
     nombre: string;
     precio: number;
+    precioUnidad?: number | null;
     precioCompra: number;
     foto: string | null;
     activate: number;

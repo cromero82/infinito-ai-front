@@ -329,6 +329,14 @@
                 </td>
               </ng-container>
 
+              <!-- Precio Unidad Column (personalizable) -->
+              <ng-container matColumnDef="precioUnidad">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header>Precio unidad</th>
+                <td *matCellDef="let product" mat-cell>
+                  {{ product.precioUnidad != null ? ('$' + (product.precioUnidad | number:'1.2-2')) : '-' }}
+                </td>
+              </ng-container>
+
               <!-- Precio Compra Column (personalizable) -->
               <ng-container matColumnDef="precioCompra">
                 <th *matHeaderCellDef mat-header-cell mat-sort-header>Precio compra</th>
@@ -394,23 +402,37 @@
                 <th *matHeaderCellDef mat-header-cell class="edit-col-header edit-col-sticky"></th>
                 <td *matCellDef="let product" mat-cell class="edit-col-cell">
                   <div class="edit-col-icons">
-                    <button mat-icon-button color="accent" (click)="editProduct(product); $event.stopPropagation()">
+                    <button mat-icon-button color="primary" (click)="editProduct(product); $event.stopPropagation()">
                       <mat-icon svgIcon="mat:edit"></mat-icon>
                     </button>
-                    <button mat-icon-button [color]="isProductActive(product) ? 'warn' : 'primary'"
-                      (click)="toggleProductActivation(product); $event.stopPropagation()"
-                      [matTooltip]="isProductActive(product) ? 'Desactivar producto' : 'Activar producto'">
-                      <mat-icon svgIcon="mat:{{ isProductActive(product) ? 'block' : 'check_circle' }}"></mat-icon>
-                    </button>
-                    <vex-google-search-button searchType="name" [productName]="product.nombre" size="small" color="accent"
-                      (searchClicked)="onGoogleSearchClicked($event)">
-                    </vex-google-search-button>
                     <vex-google-search-button searchType="barcode" [barcode]="product.barcode" size="small" color="accent"
                       (searchClicked)="onGoogleSearchClicked($event)">
                     </vex-google-search-button>
+                    <button
+                      mat-icon-button
+                      type="button"
+                      class="row-actions-more-btn"
+                      [matMenuTriggerFor]="productActionsMenu"
+                      [matMenuTriggerData]="{ product: product }"
+                      (click)="$event.stopPropagation()"
+                      matTooltip="Más acciones">
+                      <mat-icon svgIcon="mat:arrow_drop_down"></mat-icon>
+                    </button>
                   </div>
                 </td>
               </ng-container>
+              <mat-menu #productActionsMenu="matMenu" xPosition="before">
+                <ng-template matMenuContent let-product="product">
+                  <button mat-menu-item type="button" (click)="searchProductByName(product); $event.stopPropagation()">
+                    <mat-icon svgIcon="mat:search"></mat-icon>
+                    <span>Buscar</span>
+                  </button>
+                  <button mat-menu-item type="button" (click)="toggleProductActivation(product); $event.stopPropagation()">
+                    <mat-icon svgIcon="mat:{{ isProductActive(product) ? 'block' : 'check_circle' }}"></mat-icon>
+                    <span>{{ isProductActive(product) ? 'Deshabilitar' : 'Habilitar' }}</span>
+                  </button>
+                </ng-template>
+              </mat-menu>
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
               <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index" (click)="onRowClick(row)"
                 (mousedown)="onRowMouseDown(i, $event)" [class.inactive-row]="!isProductActive(row)"

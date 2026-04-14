@@ -44,6 +44,7 @@ import {
   SelectorProductosComponent,
   SelectorProductosData
 } from '../selector-productos/selector-productos.component';
+import { EditarProductoComponent } from '../../productos/editar-producto/editar-producto.component';
 import {
   PagoEfectivoCambioComponent,
   PagoEfectivoCambioData,
@@ -138,6 +139,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   productSearchCtrl = new FormControl('', { nonNullable: true });
   productSearchError: string | null = null;
   searchingProduct = false;
+  showCreateProductFromSearchButton = false;
   availableTicketMoveOptions: TicketMoveOption[] = [];
   private lastSearchDisabled = false;
   private dialogAbierto = false;
@@ -191,8 +193,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         const term = value?.trim();
         if (!term) {
           this.productSearchError = null;
+          this.showCreateProductFromSearchButton = false;
           return;
         }
+        this.showCreateProductFromSearchButton = false;
         this.performProductSearch(term, true);
       });
     this.focusSearchInputRequest.emit();
@@ -471,7 +475,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   getDescripcionHistoricoAccion(det: ReciboDetalleDto, accion: ReciboDetalleHistoricoAccionDto): string {
-    const tiempo = this.formatearTiempoRelativo(accion.fechaHora);
+    const tiempo = this.fechaUtilService.formatDate(accion.fechaHora);
     if (!this.debeMostrarUsuarioEnHistorico(det)) {
       return tiempo;
     }
@@ -505,83 +509,60 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     return nombre?.trim().toLowerCase() ?? '';
   }
 
-  private formatearTiempoRelativo(fechaHora: string | null | undefined): string {
-    if (!fechaHora) {
-      return 'fecha no disponible';
-    }
-
-    const fecha = this.fechaUtilService.parseDateAsLocal(fechaHora);
-    if (Number.isNaN(fecha.getTime())) {
-      return 'fecha no disponible';
-    }
-
-    const diffMs = Date.now() - fecha.getTime();
-    const diffMinutes = Math.floor(Math.max(diffMs, 0) / 60000);
-
-    if (diffMinutes < 1) {
-      return 'hace unos segundos';
-    }
-    if (diffMinutes === 1) {
-      return 'hace 1 minuto';
-    }
-    if (diffMinutes < 60) {
-      return `hace ${diffMinutes} minutos`;
-    }
-
-    const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours === 1) {
-      return 'hace 1 hora';
-    }
-    if (diffHours < 24) {
-      return `hace ${diffHours} horas`;
-    }
-
-    const diffDays = Math.floor(diffHours / 24);
-    if (diffDays === 1) {
-      return 'hace 1 día';
-    }
-    if (diffDays < 7) {
-      return `hace ${diffDays} días`;
-    }
-
-    const diffWeeks = Math.floor(diffDays / 7);
-    if (diffWeeks === 1) {
-      return 'hace 1 semana';
-    }
-    if (diffWeeks < 5) {
-      return `hace ${diffWeeks} semanas`;
-    }
-
-    const diffMonths = Math.floor(diffDays / 30);
-    if (diffMonths <= 1) {
-      return 'hace 1 mes';
-    }
-    if (diffMonths < 12) {
-      return `hace ${diffMonths} meses`;
-    }
-
-    const diffYears = Math.floor(diffDays / 365);
-    return diffYears <= 1 ? 'hace 1 año' : `hace ${diffYears} años`;
-  }
-
   searchAndAddProduct(): void {
     const searchValue = this.productSearchCtrl.value?.trim();
     if (!this.reciboId) {
       this.productSearchError = 'Seleccione un ticket válido.';
+      this.showCreateProductFromSearchButton = false;
       return;
     }
     if (!searchValue) {
       this.productSearchError = 'Ingrese un código o nombre de producto.';
+      this.showCreateProductFromSearchButton = false;
       return;
     }
 
     this.performProductSearch(searchValue, false);
   }
 
+  get canCreateProductFromSearch(): boolean {
+    return this.showCreateProductFromSearchButton;
+  }
+
+  openNuevoProductoDesdeBusqueda(): void {
+    const searchTerm = this.productSearchCtrl.value?.trim();
+    if (!searchTerm || this.dialogAbierto) {
+      return;
+    }
+
+    this.dialogAbierto = true;
+    this.updateSearchDisabled();
+
+    const dialogRef = this.dialog.open(EditarProductoComponent, {
+      width: '600px',
+      data: { barcode: searchTerm },
+      autoFocus: false
+    });
+
+    dialogRef.afterClosed().subscribe((result: Producto | undefined) => {
+      this.dialogAbierto = false;
+      this.updateSearchDisabled();
+
+      if (result) {
+        this.showCreateProductFromSearchButton = false;
+        this.addProductToRecibo(result);
+        return;
+      }
+
+      this.focusSearchInputRequest.emit();
+    });
+  }
+
   private addProductToRecibo(product: Producto): void {
     if (!this.reciboId) {
       this.productSearchError = 'No hay un recibo seleccionado.';
       this.searchingProduct = false;
+      this.showCreateProductFromSearchButton = false;
       this.updateSearchDisabled();
       return;
     }
@@ -589,6 +570,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     if (!product.id) {
       this.productSearchError = 'El producto no tiene un identificador válido.';
       this.searchingProduct = false;
+      this.showCreateProductFromSearchButton = false;
       this.updateSearchDisabled();
       return;
     }
@@ -603,12 +585,14 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       const existingDetalle = this.detalles[existingDetalleIndex];
       const currentCantidad = Number(existingDetalle.cantidad ?? 0);
       const unitPrice =
-        existingDetalle.producto?.precio ??
-        (currentCantidad > 0 ? Number(existingDetalle.subtotal ?? 0) / currentCantidad : product.precio ?? 0);
+        currentCantidad > 0
+          ? Number(existingDetalle.subtotal ?? 0) / currentCantidad
+          : Number(product.precio ?? 0);
 
       if (!existingDetalle.id || unitPrice <= 0 || !existingDetalle.reciboId || !existingDetalle.productoId) {
         this.productSearchError = 'No se pudo actualizar el producto existente.';
         this.searchingProduct = false;
+        this.showCreateProductFromSearchButton = false;
         this.updateSearchDisabled();
         this.focusSearchInputRequest.emit();
         return;
@@ -638,6 +622,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       this.setSelectedDetalles([existingDetalleIndex], existingDetalleIndex, false);
       this.productSearchCtrl.setValue('');
       this.searchingProduct = false;
+      this.showCreateProductFromSearchButton = false;
       this.updateSearchDisabled();
       this.productSearchError = null;
       this.focusSearchInputRequest.emit();
@@ -685,6 +670,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       next: (detalle) => {
         this.productSearchCtrl.setValue('');
         this.searchingProduct = false;
+        this.showCreateProductFromSearchButton = false;
         this.updateSearchDisabled();
         this.productSearchError = null;
         const detalleConProducto: ReciboDetalleDto = detalle.producto
@@ -696,6 +682,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
                 barcode: product.barcode,
                 nombre: product.nombre,
                 precio: product.precio,
+                precioUnidad: product.precioUnidad ?? null,
                 precioCompra: product.precioCompra ?? 0,
                 foto: product.foto ?? null,
                 activate: (product as any).activate ?? 1
@@ -711,6 +698,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         console.error('Error agregando producto al recibo', err);
         this.productSearchError = 'No se pudo agregar el producto.';
         this.searchingProduct = false;
+        this.showCreateProductFromSearchButton = false;
         this.updateSearchDisabled();
         this.focusSearchInputRequest.emit();
       }
@@ -851,6 +839,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.productSearchCtrl.setValue('');
     this.productSearchError = null;
     this.searchingProduct = false;
+    this.showCreateProductFromSearchButton = false;
     this.dialogAbierto = false;
     this.estaEnEdicion = false;
     this.setSelectedDetalles([], null, false);
@@ -876,12 +865,14 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     this.productSearchError = null;
     this.searchingProduct = true;
+    this.showCreateProductFromSearchButton = false;
     this.updateSearchDisabled();
     this.relationalProductService.getProducts(term, 0, 1, true).subscribe({
       next: (page: ProductPage) => {
         const total = page?.totalElements ?? page?.content?.length ?? 0;
         const products = page?.content ?? [];
         if (total === 1 && products[0]) {
+          this.showCreateProductFromSearchButton = false;
           this.addProductToRecibo(products[0]);
           return;
         }
@@ -890,53 +881,55 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         this.updateSearchDisabled();
 
         if (total === 0) {
-          console.log('No se encontraron productos para:', term);
-          if (!triggeredAutomatically) {
-            console.log('Mostrando alerta de producto no encontrado');
-            this.snackBar.open(`No se encontro ningun registro por codigo de barras o nombre ${term}`, 'Cerrar', {
-              duration: 5000,
-              panelClass: ['alert-danger', 'snackbar-error'],
-              horizontalPosition: 'center',
-              verticalPosition: 'top'
-            });
-          }
-          this.focusSearchInputRequest.emit();
-          return;
-        }
-
-        // total > 1
-        if (this.dialogAbierto) {
-          return;
-        }
-        this.dialogAbierto = true;
-        const dialogRef = this.dialog.open<
-          SelectorProductosComponent,
-          SelectorProductosData,
-          Producto
-        >(SelectorProductosComponent, {
-          width: '800px',
-          data: { term },
-          autoFocus: false
-        });
-
-        dialogRef.afterClosed().subscribe((selected) => {
-          this.dialogAbierto = false;
-          this.searchingProduct = false;
-          this.updateSearchDisabled();
-          if (selected) {
-            this.addProductToRecibo(selected);
-          } else {
+          this.showCreateProductFromSearchButton = term.trim().length > 0;
+          if (triggeredAutomatically) {
             this.focusSearchInputRequest.emit();
+            return;
           }
-        });
+
+          this.openSelectorProductosDialog(term);
+          return;
+        }
+
+        this.openSelectorProductosDialog(term);
       },
       error: (err: unknown) => {
         console.error('Error searching product', err);
         this.searchingProduct = false;
+        this.showCreateProductFromSearchButton = false;
         this.updateSearchDisabled();
         if (!triggeredAutomatically) {
           this.productSearchError = 'Error al buscar el producto.';
         }
+        this.focusSearchInputRequest.emit();
+      }
+    });
+  }
+
+  private openSelectorProductosDialog(term: string): void {
+    if (this.dialogAbierto) {
+      return;
+    }
+
+    this.dialogAbierto = true;
+    const dialogRef = this.dialog.open<
+      SelectorProductosComponent,
+      SelectorProductosData,
+      Producto
+    >(SelectorProductosComponent, {
+      width: '800px',
+      data: { term },
+      autoFocus: false
+    });
+
+    dialogRef.afterClosed().subscribe((selected) => {
+      this.dialogAbierto = false;
+      this.searchingProduct = false;
+      this.showCreateProductFromSearchButton = false;
+      this.updateSearchDisabled();
+      if (selected) {
+        this.addProductToRecibo(selected);
+      } else {
         this.focusSearchInputRequest.emit();
       }
     });
@@ -955,6 +948,122 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       total: sum
     };
     return sum;
+  }
+
+  private sonPreciosEquivalentes(a: number | null | undefined, b: number | null | undefined): boolean {
+    return Math.abs(Number(a ?? 0) - Number(b ?? 0)) < 0.0001;
+  }
+
+  private getPrecioUnidadDetalle(detalle: ReciboDetalleDto): number | null {
+    const precioUnidad = detalle.producto?.precioUnidad;
+    if (precioUnidad === null || precioUnidad === undefined) {
+      return null;
+    }
+
+    const numericValue = Number(precioUnidad);
+    return Number.isFinite(numericValue) ? numericValue : null;
+  }
+
+  getDetalleUnitario(detalle: ReciboDetalleDto): number {
+    const cantidad = Number(detalle?.cantidad ?? 0);
+    const subtotal = Number(detalle?.subtotal ?? 0);
+
+    if (cantidad > 0) {
+      return subtotal / cantidad;
+    }
+
+    return Number(detalle.producto?.precio ?? 0);
+  }
+
+  tienePrecioUnidad(detalle: ReciboDetalleDto): boolean {
+    return this.getPrecioUnidadDetalle(detalle) !== null;
+  }
+
+  estaUsandoPrecioUnidad(detalle: ReciboDetalleDto): boolean {
+    const precioUnidad = this.getPrecioUnidadDetalle(detalle);
+    if (precioUnidad === null) {
+      return false;
+    }
+
+    return this.sonPreciosEquivalentes(this.getDetalleUnitario(detalle), precioUnidad);
+  }
+
+  getPrecioUnidadToggleTooltip(detalle: ReciboDetalleDto): string {
+    return this.estaUsandoPrecioUnidad(detalle) ? 'Usar precio normal' : 'Usar precio por unidad';
+  }
+
+  togglePrecioUnidad(detalle: ReciboDetalleDto, index: number, event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const precioUnidad = this.getPrecioUnidadDetalle(detalle);
+    if (
+      precioUnidad === null ||
+      !detalle.id ||
+      !detalle.reciboId ||
+      !detalle.productoId ||
+      !detalle.cantidad
+    ) {
+      return;
+    }
+
+    const precioBase = Number(detalle.producto?.precio ?? this.getDetalleUnitario(detalle));
+    const unitPrice = this.estaUsandoPrecioUnidad(detalle) ? precioBase : precioUnidad;
+    const newSubtotal = unitPrice * detalle.cantidad;
+
+    if (this.sonPreciosEquivalentes(newSubtotal, Number(detalle.subtotal ?? 0))) {
+      return;
+    }
+
+    const previousDetalle = { ...detalle };
+    const payload: UpdateReciboDetalleRequest = {
+      reciboId: detalle.reciboId,
+      productoId: detalle.productoId,
+      cantidad: detalle.cantidad,
+      subtotal: newSubtotal
+    };
+
+    const optimisticDetalle: ReciboDetalleDto = {
+      ...detalle,
+      subtotal: newSubtotal
+    };
+
+    const updatedList = [...this.detalles];
+    updatedList[index] = optimisticDetalle;
+    this.detalles = updatedList;
+    this.recalculateTotal();
+
+    this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
+      next: async (updatedDetalle) => {
+        const detalleBackend = await this.prepararDetalleActualizado(updatedDetalle);
+        const updatedListFinal = [...this.detalles];
+        updatedListFinal[index] = {
+          ...optimisticDetalle,
+          ...detalleBackend,
+          subtotal: newSubtotal,
+          producto: detalleBackend.producto ?? detalle.producto
+        };
+        this.detalles = updatedListFinal;
+        this.depurarHistoricosExpandidos();
+        const finalTotal = this.recalculateTotal();
+
+        if (this.recibo) {
+          try {
+            this.recibo = await this.updateReciboTotal(this.recibo, finalTotal);
+            this.metodoPagoActualizado.emit();
+          } catch (err) {
+            console.error('Error updating recibo total after unit price toggle', err);
+          }
+        }
+      },
+      error: (err: unknown) => {
+        const revertedList = [...this.detalles];
+        revertedList[index] = previousDetalle;
+        this.detalles = revertedList;
+        this.recalculateTotal();
+        console.error('Error toggling detalle unit price', err);
+      }
+    });
   }
 
   onDetalleRowMouseDown(index: number, event: MouseEvent): void {
@@ -1385,7 +1494,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.isDoubleClickActive = true;
     this.startingEdit = true;
     
-    const currentPrecio = detalle.producto.precio ?? (detalle.cantidad > 0 ? detalle.subtotal / detalle.cantidad : 0);
+    const currentPrecio = this.getDetalleUnitario(detalle);
     this.editingUnitarioIndex = index;
     this.editingUnitarioCtrl.setValue(String(currentPrecio));
     
@@ -1452,9 +1561,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    const unitPrice =
-      detalle.producto?.precio ??
-      (detalle.cantidad > 0 ? Number(detalle.subtotal ?? 0) / detalle.cantidad : 0);
+    const unitPrice = this.getDetalleUnitario(detalle);
 
     if (!detalle.id || unitPrice <= 0 || !detalle.reciboId || !detalle.productoId) {
       this.cancelCantidadEdit();
@@ -1591,7 +1698,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    const currentPrecio = detalle.producto.precio ?? (detalle.cantidad > 0 ? detalle.subtotal / detalle.cantidad : 0);
+    const currentPrecio = this.getDetalleUnitario(detalle);
     if (newPrecio === currentPrecio) {
       this.cancelUnitarioEdit();
       return;
@@ -1908,9 +2015,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     const detalle = this.detalles[this.selectedDetalleIndex];
     const currentCantidad = Number(detalle.cantidad ?? 0);
-    const unitPrice =
-      detalle.producto?.precio ??
-      (currentCantidad > 0 ? Number(detalle.subtotal ?? 0) / currentCantidad : 0);
+    const unitPrice = this.getDetalleUnitario(detalle);
 
     if (!detalle.id || unitPrice <= 0 || !detalle.reciboId || !detalle.productoId) {
       return;
@@ -1978,9 +2083,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    const unitPrice =
-      detalle.producto?.precio ??
-      (currentCantidad > 0 ? Number(detalle.subtotal ?? 0) / currentCantidad : 0);
+    const unitPrice = this.getDetalleUnitario(detalle);
 
     if (!detalle.id || unitPrice <= 0 || !detalle.reciboId || !detalle.productoId) {
       return;
@@ -3016,7 +3119,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     lineas.push('<table class="pos-tabla"><thead><tr><th>Producto</th><th>V.Unit</th><th>Cant</th><th>Subtotal</th></tr></thead><tbody>');
     for (const det of detalles) {
       const nombre = det.producto?.nombre ?? `Producto ${det.productoId}`;
-      const unitario = det.producto?.precio ?? (det.cantidad ? det.subtotal / det.cantidad : 0);
+      const unitario = this.getDetalleUnitario(det);
       lineas.push('<tr>', `<td>${this.escapeHtml(nombre)}</td>`, `<td>${this.formatCurrency(unitario)}</td>`, `<td>${det.cantidad}</td>`, `<td>${this.formatCurrency(det.subtotal)}</td>`, '</tr>');
     }
     lineas.push('</tbody></table>', '<hr class="pos-sep"/>', `<p class="pos-total">TOTAL: ${this.formatCurrency(total)}</p>`, '</div>');

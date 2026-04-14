@@ -81,6 +81,12 @@ vex-page-layout-header .container {
     }
   }
 
+  .search-suffix-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
   .search-error-message {
     color: #d32f2f;
     font-size: 12px;

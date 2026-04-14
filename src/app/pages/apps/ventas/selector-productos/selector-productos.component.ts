@@ -109,6 +109,10 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
     this.totalPages = 0;
   }
 
+  get canCreateProduct(): boolean {
+    return this.searchCtrl.value.trim().length > 0;
+  }
+
   editProduct(product: Producto, event: Event): void {
     event.stopPropagation();
     const editDialogRef = this.dialog.open(EditarProductoComponent, {
@@ -118,6 +122,7 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
         nombre: product.nombre,
         barcode: product.barcode,
         precio: product.precio,
+        precioUnidad: product.precioUnidad,
         precioCompra: product.precioCompra,
         foto: product.foto,
         company: (product as any).company
@@ -133,6 +138,31 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
           this.fetchProducts(currentTerm, true);
         }
       }
+    });
+  }
+
+  openNuevoProducto(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+      (event as KeyboardEvent)?.preventDefault?.();
+    }
+
+    const searchTerm = this.searchCtrl.value.trim();
+    const createDialogRef = this.dialog.open(EditarProductoComponent, {
+      width: '600px',
+      data: searchTerm ? { barcode: searchTerm } : null,
+      autoFocus: false
+    });
+
+    createDialogRef.afterClosed().subscribe((result: Producto | undefined) => {
+      if (result) {
+        this.selectProduct(result);
+        return;
+      }
+
+      setTimeout(() => {
+        this.searchInput?.nativeElement?.focus();
+      }, 0);
     });
   }
 

@@ -19,11 +19,18 @@
       <input #nombreInput formControlName="nombre" matInput />
       <mat-icon matIconPrefix svgIcon="mat:label"></mat-icon>
     </mat-form-field>
-    <mat-form-field>
-      <mat-label>Precio (Venta)</mat-label>
-      <input #precioInput formControlName="precio" matInput type="number" (focus)="onPrecioFocus()" />
-      <mat-icon matIconPrefix svgIcon="mat:attach_money"></mat-icon>
-    </mat-form-field>
+    <div class="precio-venta-row">
+      <mat-form-field class="precio-venta-field">
+        <mat-label>Precio (Venta)</mat-label>
+        <input #precioInput formControlName="precio" matInput type="number" (focus)="onPrecioFocus()" />
+        <mat-icon matIconPrefix svgIcon="mat:attach_money"></mat-icon>
+      </mat-form-field>
+      <mat-form-field class="precio-venta-field">
+        <mat-label>Precio unidad (Venta)</mat-label>
+        <input formControlName="precioUnidad" matInput type="number" />
+        <mat-icon matIconPrefix svgIcon="mat:attach_money"></mat-icon>
+      </mat-form-field>
+    </div>
     <div class="precio-compra-row">
       <mat-form-field class="precio-compra-field">
         <mat-label>Precio de compra</mat-label>

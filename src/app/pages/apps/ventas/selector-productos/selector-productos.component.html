@@ -11,14 +11,26 @@
         [formControl]="searchCtrl"
         placeholder="Ej. código de barras o nombre"
         autocomplete="off" />
-      <button
-        mat-icon-button
-        matSuffix
-        *ngIf="searchCtrl.value"
-        aria-label="Limpiar búsqueda"
-        (click)="clearSearch()">
-        <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
-      </button>
+      <div matSuffix class="search-suffix-actions">
+        <button
+          mat-icon-button
+          *ngIf="searchCtrl.value"
+          aria-label="Limpiar búsqueda"
+          type="button"
+          (click)="clearSearch()">
+          <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          *ngIf="canCreateProduct"
+          color="primary"
+          aria-label="Registrar producto"
+          matTooltip="Nuevo producto"
+          type="button"
+          (click)="openNuevoProducto($event)">
+          <mat-icon svgIcon="mat:add"></mat-icon>
+        </button>
+      </div>
     </mat-form-field>
   </div>
 
@@ -38,8 +50,15 @@
     </ng-container>
 
     <ng-container matColumnDef="precio">
-      <th mat-header-cell *matHeaderCellDef>Precio</th>
-      <td mat-cell *matCellDef="let product">{{ product.precio | currency:'USD':'symbol':'1.2-2' }}</td>
+      <th mat-header-cell *matHeaderCellDef class="col-precio">Precio</th>
+      <td mat-cell *matCellDef="let product" class="col-precio">
+        <div class="precio-cell">
+          <span class="precio-principal">{{ product.precio | currency:'USD':'symbol':'1.2-2' }}</span>
+          <span class="precio-unidad" *ngIf="product.precioUnidad != null">
+            {{ product.precioUnidad | currency:'USD':'symbol':'1.2-2' }}
+          </span>
+        </div>
+      </td>
     </ng-container>
 
     <ng-container matColumnDef="acciones">
