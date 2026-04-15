@@ -571,11 +571,27 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     this.imprimiendoRecibo = true;
 
     try {
-      this.reciboPrintService.registerRecentRecibo(recibo, this.detalles, this.getClienteNombre(recibo.clienteId));
+      const printable = this.reciboPrintService.toPrintableDetalles(this.detalles);
+      const total = Number(recibo.total ?? 0);
+      const montoRec = recibo.montoRecibido != null ? Number(recibo.montoRecibido) : total;
+      const esEfectivo = this.isMetodoPagoEfectivo(recibo.metodoPagoId);
+      const cambioVal = esEfectivo ? Math.max(0, montoRec - total) : 0;
+      const impExtra = {
+        metodoPagoLabel: this.getMetodoPagoNombre(recibo.metodoPagoId),
+        montoRecibido: montoRec,
+        cambio: esEfectivo && cambioVal > 0 ? cambioVal : null
+      };
+      this.reciboPrintService.registerRecentRecibo(
+        recibo,
+        printable,
+        this.getClienteNombre(recibo.clienteId),
+        impExtra
+      );
       const printed = this.reciboPrintService.printRecibo({
         fechaCreacion: recibo.fechaCreacion,
-        detalles: this.detalles,
-        clienteNombre: this.getClienteNombre(recibo.clienteId)
+        detalles: printable,
+        clienteNombre: this.getClienteNombre(recibo.clienteId),
+        ...impExtra
       });
 
       if (!printed) {

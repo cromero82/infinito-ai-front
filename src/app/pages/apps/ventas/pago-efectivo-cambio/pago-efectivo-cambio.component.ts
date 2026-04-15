@@ -19,6 +19,8 @@ export interface PagoEfectivoCambioData {
   imprimirRecibo?: () => void;
   /** Se llama al cerrar tras éxito (para snackbar). */
   mostrarSnackbarExito?: (totalGuardado: number) => void;
+  /** Antes de snackbar / impresión: guarda monto recibido y cambio en el componente padre para la tirilla. */
+  registrarDatosImpresion?: (d: { montoRecibido: number; cambio: number }) => void;
 }
 
 export interface PagoEfectivoCambioResultado {
@@ -248,6 +250,7 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
     const cambio = Math.max(0, pagaCon - this.total);
     this.pagaConResultado = pagaCon;
     this.cambioResultado = cambio;
+    this.data.registrarDatosImpresion?.({ montoRecibido: this.pagaConResultado, cambio: this.cambioResultado });
 
     if (this.data.ejecutarPago) {
       this.estado = 'procesando';
@@ -292,6 +295,7 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
   }
 
   onImprimirRecibo(): void {
+    this.data.registrarDatosImpresion?.({ montoRecibido: this.pagaConResultado, cambio: this.cambioResultado });
     this.data.mostrarSnackbarExito?.(this.totalGuardado);
     try {
       this.data.imprimirRecibo?.();
@@ -313,6 +317,7 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
     console.log('debeImprimir:', debeImprimir);
     
     // Cerrar el modal primero
+    this.data.registrarDatosImpresion?.({ montoRecibido: this.pagaConResultado, cambio: this.cambioResultado });
     this.data.mostrarSnackbarExito?.(this.totalGuardado);
     this.dialogRef.close({
       pagaCon: this.pagaConResultado,

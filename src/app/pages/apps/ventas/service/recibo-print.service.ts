@@ -8,7 +8,17 @@ export interface PrintableReciboDetalle {
   producto?: {
     nombre: string;
     precio?: number | null;
+    precioUnidad?: number | null;
   } | null;
+}
+
+/** Datos extra para la tirilla (pago, cambio, cajero). */
+export interface ReciboTicketImpresionExtra {
+  metodoPagoLabel?: string | null;
+  montoRecibido?: number | null;
+  cambio?: number | null;
+  /** Si no se envía, se usa `localStorage` key `user-nombre`. */
+  atendidoNombre?: string | null;
 }
 
 export interface RecentPrintedReciboItem {
@@ -18,14 +28,27 @@ export interface RecentPrintedReciboItem {
   /** Nombre para mostrar si el ticket/recibo tiene cliente (no ANONIMO). */
   clienteNombre?: string | null;
   detalles: PrintableReciboDetalle[];
+  metodoPagoLabel?: string | null;
+  montoRecibido?: number | null;
+  cambio?: number | null;
 }
 
-interface PrintReciboOptions {
+export interface ReciboImpresionOpciones extends ReciboTicketImpresionExtra {
   fechaCreacion?: string | Date | null;
+  /** Si se indica, tiene prioridad sobre `fechaCreacion` para la hora en el ticket. */
+  fechaEmision?: Date | null;
   detalles: PrintableReciboDetalle[];
-  /** Nombre tal cual viene del recibo/ticket; vacío o ANONIMO → "Cliente: Anonimo". */
+  /** Nombre tal cual viene del recibo/ticket; vacío o ANONIMO → "Anonimo" en CLIENTE. */
   clienteNombre?: string | null;
 }
+
+/**
+ * Ancho de ticket para CSS/@page. Las impresoras POS 58 mm (p. ej. 58ENG) deben coincidir aquí;
+ * si se usa 80 mm, configurar el mismo ancho en el diálogo de impresión o cambiar este valor.
+ */
+export const RECIBO_TICKET_WIDTH_MM = 58;
+
+const LS_USER_NOMBRE = 'user-nombre';
 
 @Injectable({
   providedIn: 'root'
@@ -50,7 +73,8 @@ export class ReciboPrintService {
     },
     detalles: PrintableReciboDetalle[],
     /** Si el recibo no trae `cliente` anidado (p. ej. historial), o como respaldo del tab del ticket. */
-    clienteNombreAlternativo?: string | null
+    clienteNombreAlternativo?: string | null,
+    impresionExtra?: ReciboTicketImpresionExtra | null
   ): void {
     if (!recibo?.id || !detalles?.length) {
       return;
@@ -74,10 +98,14 @@ export class ReciboPrintService {
         producto: detalle.producto
           ? {
               nombre: detalle.producto.nombre,
-              precio: detalle.producto.precio ?? null
+              precio: detalle.producto.precio ?? null,
+              precioUnidad: detalle.producto.precioUnidad ?? null
             }
           : null
-      }))
+      })),
+      metodoPagoLabel: impresionExtra?.metodoPagoLabel ?? undefined,
+      montoRecibido: impresionExtra?.montoRecibido ?? undefined,
+      cambio: impresionExtra?.cambio ?? undefined
     };
 
     const nextItems = [
@@ -96,38 +124,22 @@ export class ReciboPrintService {
     return this.printRecibo({
       fechaCreacion: item.fechaCreacion,
       detalles: item.detalles,
-      clienteNombre: item.clienteNombre ?? null
+      clienteNombre: item.clienteNombre ?? null,
+      metodoPagoLabel: item.metodoPagoLabel ?? null,
+      montoRecibido: item.montoRecibido ?? null,
+      cambio: item.cambio ?? null
     });
   }
 
-  printRecibo(options: PrintReciboOptions): boolean {
+  printRecibo(options: ReciboImpresionOpciones): boolean {
     if (!options.detalles?.length) {
       return false;
     }
 
-    const cuerpo = this.buildReciboHtmlFragment(
-      options.detalles,
-      options.fechaCreacion,
-      options.clienteNombre
-    );
+    const cuerpo = this.buildReciboHtmlFragment(options);
     const htmlCompleto = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Imprimir Recibo</title>
 <style>
-@page {
-  size: 80mm auto;
-  margin: 0;
-}
-html{padding:0;margin:0;font-family:'Courier New','Courier',monospace;width:80mm;font-size:12px}
-body{margin:0;padding:8px;width:80mm;background:white}
-p{margin-top:0.25rem;margin-bottom:0.25rem;white-space:pre-wrap}
-.pos-titulo{text-align:center;font-weight:bold;font-size:14px;margin:0 0 4px 0}
-.pos-fecha,.pos-leyenda{text-align:center;margin:2px 0}
-.pos-leyenda{font-size:10px}
-.pos-sep{border:none;border-top:1px dashed #000;margin:6px 0}
-.pos-tabla{width:100%;border-collapse:collapse;font-size:11px}
-.pos-tabla th{text-align:left;border-bottom:1px solid #000;padding:2px 4px}
-.pos-tabla td{padding:2px 4px}
-.pos-total{font-weight:bold;text-align:right;margin-top:4px;font-size:14px}
-.pos-cliente{font-size:11px;margin-top:8px;text-align:left}
+${ReciboPrintService.standalonePrintCss()}
 </style>
 <script>
 window.onafterprint = function() {
@@ -154,6 +166,191 @@ window.onload = function() {
     return true;
   }
 
+  /**
+   * Convierte detalles de API a formato imprimible (incluye `precioUnidad` si existe).
+   */
+  toPrintableDetalles(
+    detalles: Array<{
+      productoId: number;
+      cantidad: number;
+      subtotal: number;
+      producto?: {
+        nombre: string;
+        precio?: number | null;
+        precioUnidad?: number | null;
+      } | null;
+    }>
+  ): PrintableReciboDetalle[] {
+    return detalles.map((d) => ({
+      productoId: d.productoId,
+      cantidad: Number(d.cantidad ?? 0),
+      subtotal: this.subtotalFromLine(d),
+      producto: d.producto
+        ? {
+            nombre: d.producto.nombre,
+            precio: d.producto.precio ?? null,
+            precioUnidad: d.producto.precioUnidad ?? null
+          }
+        : null
+    }));
+  }
+
+  /**
+   * HTML del cuerpo del recibo (misma marca que {@link printRecibo}).
+   */
+  buildReciboHtmlFromOpciones(options: ReciboImpresionOpciones): string {
+    return this.buildReciboHtmlFragment(options);
+  }
+
+  /**
+   * CSS para documento de impresión en ventana propia (ancho térmico 58 mm por defecto).
+   * Debe coincidir con {@link ReciboPrintService.injectedPrintCss} para el mismo aspecto.
+   */
+  static standalonePrintCss(): string {
+    const w = RECIBO_TICKET_WIDTH_MM;
+    return `
+@page { size: ${w}mm auto; margin: 0; }
+/* Tirilla térmica: trazos más gruesos y menos “gris” que Courier suavizado; líneas sólidas mejor que punteado. */
+html, body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  width: ${w}mm;
+  max-width: ${w}mm;
+  background: #fff;
+  color: #000;
+  color-scheme: only light;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+html {
+  font-family: Consolas, 'Lucida Console', 'DejaVu Sans Mono', 'Courier New', Courier, monospace;
+  font-size: 14px;
+  font-weight: 600;
+  text-rendering: optimizeSpeed;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+  text-shadow: none;
+}
+body { padding: 6px 4px; }
+p, div, span { color: #000; text-shadow: none; }
+.pos-titulo { text-align: center; font-weight: 700; font-size: 17px; margin: 0 0 4px 0; }
+.pos-fecha, .pos-leyenda { text-align: center; margin: 2px 0; }
+.pos-leyenda { font-size: 11px; font-weight: 600; }
+.pos-sep-linea {
+  border: none;
+  border-top: 1px solid #000;
+  margin: 8px 0;
+  opacity: 1;
+}
+.pos-item { margin-bottom: 8px; }
+.pos-item-linea1 { font-weight: 700; line-height: 1.25; }
+.pos-item-linea2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 2px;
+  padding-left: 2px;
+  font-weight: 600;
+}
+.pos-fila-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-weight: 700;
+  margin-top: 6px;
+}
+.pos-total-monto { font-size: 18px; font-weight: 800; }
+.pos-fila-pago, .pos-fila-devolver {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 4px;
+  font-weight: 600;
+}
+.pos-fila-pago-metodo { flex: 1; text-align: center; font-weight: 700; }
+.pos-pie-linea { margin-top: 6px; font-weight: 600; }
+@media print {
+  html, body, .pos-recibo { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+`.trim();
+  }
+
+  /**
+   * CSS para recibo oculto en pantalla e impreso con el diálogo del documento principal.
+   */
+  static injectedPrintCss(printRootId: string): string {
+    const w = RECIBO_TICKET_WIDTH_MM;
+    return `
+@page { size: ${w}mm auto; margin: 0; }
+@media screen { #${printRootId} { display: none !important; } }
+@media print {
+  body * { visibility: hidden; }
+  #${printRootId}, #${printRootId} * {
+    visibility: visible !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  #${printRootId} {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: ${w}mm !important;
+    max-width: ${w}mm !important;
+    display: block !important;
+    box-sizing: border-box !important;
+    font-family: Consolas, 'Lucida Console', 'DejaVu Sans Mono', 'Courier New', Courier, monospace !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    text-rendering: optimizeSpeed !important;
+    -webkit-font-smoothing: none !important;
+    text-shadow: none !important;
+    color-scheme: only light !important;
+    margin: 4px !important;
+    padding: 0 !important;
+  }
+  #${printRootId} p, #${printRootId} div, #${printRootId} span { text-shadow: none !important; color: #000 !important; }
+  #${printRootId} p { margin: 0.2rem 0 !important; }
+  #${printRootId} .pos-titulo { text-align: center !important; font-weight: 700 !important; font-size: 17px !important; margin: 0 0 4px 0 !important; }
+  #${printRootId} .pos-fecha, #${printRootId} .pos-leyenda { text-align: center !important; margin: 2px 0 !important; }
+  #${printRootId} .pos-leyenda { font-size: 11px !important; font-weight: 600 !important; }
+  #${printRootId} .pos-sep-linea { border: none !important; border-top: 1px solid #000 !important; margin: 8px 0 !important; opacity: 1 !important; }
+  #${printRootId} .pos-item { margin-bottom: 8px !important; }
+  #${printRootId} .pos-item-linea1 { font-weight: 700 !important; line-height: 1.25 !important; }
+  #${printRootId} .pos-item-linea2 {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: baseline !important;
+    gap: 8px !important;
+    margin-top: 2px !important;
+    padding-left: 2px !important;
+    font-weight: 600 !important;
+  }
+  #${printRootId} .pos-fila-total {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: baseline !important;
+    font-weight: 700 !important;
+    margin-top: 6px !important;
+  }
+  #${printRootId} .pos-total-monto { font-size: 18px !important; font-weight: 800 !important; }
+  #${printRootId} .pos-fila-pago, #${printRootId} .pos-fila-devolver {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: baseline !important;
+    gap: 6px !important;
+    margin-top: 4px !important;
+    font-weight: 600 !important;
+  }
+  #${printRootId} .pos-fila-pago-metodo { flex: 1 !important; text-align: center !important; font-weight: 700 !important; }
+  #${printRootId} .pos-pie-linea { margin-top: 6px !important; font-weight: 600 !important; }
+}
+`.trim();
+  }
+
   formatCurrency(value: number | null | undefined): string {
     const formatter = new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -177,64 +374,105 @@ window.onload = function() {
     });
   }
 
-  /**
-   * Línea final del ticket impreso: `Cliente: Anonimo` o `Cliente: Nombre...` (truncado).
-   */
-  lineaClienteTicketHtml(clienteNombreRaw?: string | null): string {
-    const etiqueta = this.formatNombreEtiquetaTicket(clienteNombreRaw);
-    return `<p class="pos-cliente">Cliente: ${this.escapeHtml(etiqueta)}</p>`;
-  }
-
-  private formatNombreEtiquetaTicket(raw?: string | null): string {
-    const t = raw?.trim();
-    if (!t || t.toUpperCase() === 'ANONIMO') {
-      return 'Anonimo';
-    }
-    const max = 40;
-    if (t.length <= max) {
+  private readAtendidoNombre(explicit?: string | null): string | null {
+    const t = explicit?.trim();
+    if (t) {
       return t;
     }
-    return `${t.slice(0, max - 3)}...`;
+    try {
+      return localStorage.getItem(LS_USER_NOMBRE)?.trim() || null;
+    } catch {
+      return null;
+    }
   }
 
-  private buildReciboHtmlFragment(
-    detalles: PrintableReciboDetalle[],
-    fechaCreacion?: string | Date | null,
-    clienteNombreRaw?: string | null
-  ): string {
-    const fechaHoraStr = this.formatReciboFecha(fechaCreacion);
-    const total = this.calculateTotal(detalles);
-    const lineas: string[] = [];
+  private buildReciboHtmlFragment(opts: ReciboImpresionOpciones): string {
+    const fechaHoraStr = opts.fechaEmision
+      ? opts.fechaEmision.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'medium' })
+      : this.formatReciboFecha(opts.fechaCreacion);
+    const total = this.calculateTotal(opts.detalles);
+    const atendido = this.readAtendidoNombre(opts.atendidoNombre);
+    const clienteEtiqueta = this.formatNombreEtiquetaTicket(opts.clienteNombre);
 
+    const lineas: string[] = [];
     lineas.push('<div class="pos-recibo">');
     lineas.push('<p class="pos-titulo">Gestor infinito market</p>');
     lineas.push(`<p class="pos-fecha">${this.escapeHtml(fechaHoraStr)}</p>`);
     lineas.push('<p class="pos-leyenda">Recibo no apto como factura</p>');
-    lineas.push('<hr class="pos-sep"/>');
-    lineas.push('<table class="pos-tabla"><thead><tr><th>Producto</th><th>V.Unit</th><th>Cant</th><th>Subtotal</th></tr></thead><tbody>');
+    lineas.push('<hr class="pos-sep-linea"/>');
 
-    for (const det of detalles) {
+    for (const det of opts.detalles) {
       const st = this.subtotalFromLine(det);
       const nombre = det.producto?.nombre ?? `Producto ${det.productoId}`;
-      const unitario = det.cantidad ? st / Number(det.cantidad) : Number(det.producto?.precio ?? 0);
+      const cant = Number(det.cantidad ?? 0);
+      const cantTxt = Number.isInteger(cant) ? String(cant) : String(cant);
+      const unitario = cant ? st / cant : Number(det.producto?.precio ?? 0);
+      const sufijoUnidad = this.esVentaPorUnidadDetalle(det) ? ' (unidad)' : '';
+      lineas.push('<div class="pos-item">');
       lineas.push(
-        '<tr>',
-        `<td>${this.escapeHtml(nombre)}</td>`,
-        `<td>${this.formatCurrency(unitario)}</td>`,
-        `<td>${det.cantidad}</td>`,
-        `<td>${this.formatCurrency(st)}</td>`,
-        '</tr>'
+        `<div class="pos-item-linea1">* ${this.escapeHtml(cantTxt)} x ${this.escapeHtml(nombre)}${sufijoUnidad}</div>`
+      );
+      lineas.push(
+        '<div class="pos-item-linea2">',
+        `<span>${this.formatCurrency(unitario)}</span>`,
+        `<span>${this.formatCurrency(st)}</span>`,
+        '</div>',
+        '</div>'
       );
     }
 
+    lineas.push('<hr class="pos-sep-linea"/>');
     lineas.push(
-      '</tbody></table>',
-      '<hr class="pos-sep"/>',
-      `<p class="pos-total">TOTAL: ${this.formatCurrency(total)}</p>`,
-      this.lineaClienteTicketHtml(clienteNombreRaw),
+      '<div class="pos-fila-total">',
+      '<span>TOTAL:</span>',
+      `<span class="pos-total-monto">${this.formatCurrency(total)}</span>`,
       '</div>'
     );
+
+    const labelMetodo = (opts.metodoPagoLabel ?? '').trim();
+    const tieneMontoPago = opts.montoRecibido != null && Number.isFinite(Number(opts.montoRecibido));
+    if (labelMetodo || tieneMontoPago) {
+      const metodoHtml = this.escapeHtml(labelMetodo || '—');
+      const montoPagoStr = tieneMontoPago ? this.formatCurrency(opts.montoRecibido) : '';
+      lineas.push(
+        '<div class="pos-fila-pago">',
+        '<span>PAGO:</span>',
+        `<span class="pos-fila-pago-metodo">${metodoHtml}</span>`,
+        `<span>${montoPagoStr}</span>`,
+        '</div>'
+      );
+    }
+
+    const cambioVal = opts.cambio != null ? Number(opts.cambio) : null;
+    if (cambioVal != null && Number.isFinite(cambioVal) && cambioVal > 0) {
+      lineas.push(
+        '<div class="pos-fila-devolver">',
+        '<span>CAMBIO:</span>',
+        `<span>${this.formatCurrency(cambioVal)}</span>`,
+        '</div>'
+      );
+    }
+
+    lineas.push('<hr class="pos-sep-linea"/>');
+    lineas.push(`<p class="pos-pie-linea">CLIENTE: ${this.escapeHtml(clienteEtiqueta)}</p>`);
+    if (atendido) {
+      lineas.push(`<p class="pos-pie-linea">ATENDIO: ${this.escapeHtml(atendido)}</p>`);
+    }
+    lineas.push('</div>');
     return lineas.join('');
+  }
+
+  private esVentaPorUnidadDetalle(det: PrintableReciboDetalle): boolean {
+    const pu = det.producto?.precioUnidad;
+    if (pu === null || pu === undefined || !Number.isFinite(Number(pu))) {
+      return false;
+    }
+    const cant = Number(det.cantidad ?? 0);
+    if (cant <= 0) {
+      return false;
+    }
+    const unit = this.subtotalFromLine(det) / cant;
+    return Math.abs(unit - Number(pu)) < 0.0001;
   }
 
   private calculateTotal(detalles: PrintableReciboDetalle[]): number {
@@ -266,6 +504,18 @@ window.onload = function() {
       return null;
     }
     return t;
+  }
+
+  private formatNombreEtiquetaTicket(raw?: string | null): string {
+    const t = raw?.trim();
+    if (!t || t.toUpperCase() === 'ANONIMO') {
+      return 'Anonimo';
+    }
+    const max = 40;
+    if (t.length <= max) {
+      return t;
+    }
+    return `${t.slice(0, max - 3)}...`;
   }
 
   private resolveTotalRegistro(

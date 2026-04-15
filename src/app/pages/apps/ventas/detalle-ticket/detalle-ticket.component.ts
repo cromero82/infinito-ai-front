@@ -40,7 +40,7 @@ import { EstadoRecibosService, EstadoReciboDto } from '../service/estado-recibos
 import { FechaUtilService } from '../service/fecha-util.service';
 import { TicketsService } from '../service/tickets.service';
 import { AuthService } from '../../../../auth/service/auth.service';
-import { ReciboPrintService } from '../service/recibo-print.service';
+import { ReciboPrintService, ReciboTicketImpresionExtra, ReciboImpresionOpciones } from '../service/recibo-print.service';
 import { ModoPrecioLista } from '../service/producto-desde-lista-ventas.service';
 import {
   SelectorProductosComponent,
@@ -120,6 +120,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   detalles: ReciboDetalleDto[] = [];
   /** Copia de líneas tomada antes de iniciar el pago (lista de 3 últimos + impresión). */
   detallesParaImprimir: ReciboDetalleDto[] = [];
+  /** Datos de pago/cambio para la tirilla (efectivo u otro método). */
+  private ticketImpresionExtras: ReciboTicketImpresionExtra | null = null;
   selectedDetalleIndex = -1;
   selectedDetalleIndices: number[] = [];
   editingDetalleIndex = -1;
@@ -855,6 +857,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.productSearchError = null;
     this.searchingProduct = false;
     this.showCreateProductFromSearchButton = false;
+    this.ticketImpresionExtras = null;
     this.dialogAbierto = false;
     this.estaEnEdicion = false;
     this.setSelectedDetalles([], null, false);
@@ -886,7 +889,30 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    this.reciboPrintService.registerRecentRecibo(this.recibo, detallesFuente, this.ticket?.cliente?.nombre);
+    this.reciboPrintService.registerRecentRecibo(
+      this.recibo,
+      this.reciboPrintService.toPrintableDetalles(detallesFuente),
+      this.ticket?.cliente?.nombre,
+      this.ticketImpresionExtras
+    );
+  }
+
+  private opcionesImpresionRecibo(detalles: ReciboDetalleDto[], fechaEmision?: Date | null): ReciboImpresionOpciones {
+    return {
+      detalles: this.reciboPrintService.toPrintableDetalles(detalles),
+      fechaCreacion: this.recibo?.fechaCreacion,
+      fechaEmision: fechaEmision ?? undefined,
+      clienteNombre: this.recibo?.cliente?.nombre ?? this.ticket?.cliente?.nombre,
+      ...this.ticketImpresionExtras
+    };
+  }
+
+  private aplicarExtrasImpresionMetodoDirecto(metodo: MetodoPagoDto, totalARegistrar: number): void {
+    this.ticketImpresionExtras = {
+      metodoPagoLabel: metodo.descripcion ?? null,
+      montoRecibido: totalARegistrar,
+      cambio: 0
+    };
   }
 
   private performProductSearch(term: string, triggeredAutomatically: boolean): void {
@@ -2336,7 +2362,14 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           total: totalARegistrar,
           ejecutarPago: (montoRecibido: number) => this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
           imprimirRecibo: quiereImprimir ? () => this.imprimirRecibo() : undefined,
-          mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg)
+          mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg),
+          registrarDatosImpresion: (d) => {
+            this.ticketImpresionExtras = {
+              metodoPagoLabel: metodo.descripcion ?? 'EFECTIVO',
+              montoRecibido: d.montoRecibido,
+              cambio: d.cambio
+            };
+          }
         },
         autoFocus: false,
         disableClose: true
@@ -2437,12 +2470,14 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           // Si debe imprimir, hacerlo automáticamente sin mostrar snackbar
           if (debeImprimir) {
             console.log('Pago exitoso (método no efectivo - ejecutarPago), imprimiendo automáticamente...');
+            this.aplicarExtrasImpresionMetodoDirecto(metodo, totalARegistrar);
             this.cacheRecentReciboForReprint();
             this.emitPaymentProcessedEvents();
             setTimeout(() => {
               this.imprimirRecibo();
             }, 300);
           } else {
+            this.aplicarExtrasImpresionMetodoDirecto(metodo, totalARegistrar);
             this.mostrarSnackbarPagoExitoso(totalGuardado);
             // Enfocar el input de búsqueda después del pago cuando no se imprime
             // Usamos un delay más largo para asegurar que el snackbar se haya mostrado completamente
@@ -2511,7 +2546,14 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           total: valorParaDialogo,
           ejecutarPago: (montoRecibido: number) => this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
           imprimirRecibo: quiereImprimir ? () => this.imprimirRecibo() : undefined,
-          mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg)
+          mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg),
+          registrarDatosImpresion: (d) => {
+            this.ticketImpresionExtras = {
+              metodoPagoLabel: metodo.descripcion ?? 'EFECTIVO',
+              montoRecibido: d.montoRecibido,
+              cambio: d.cambio
+            };
+          }
         },
         autoFocus: false,
         disableClose: true
@@ -2612,12 +2654,14 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           // Si debe imprimir, hacerlo automáticamente sin mostrar snackbar
           if (debeImprimir) {
             console.log('Pago exitoso (método no efectivo - onMetodoPagoSeleccionadoDesdeEdicion), imprimiendo automáticamente...');
+            this.aplicarExtrasImpresionMetodoDirecto(metodo, totalARegistrar);
             this.cacheRecentReciboForReprint();
             this.emitPaymentProcessedEvents();
             setTimeout(() => {
               this.imprimirRecibo();
             }, 300);
           } else {
+            this.aplicarExtrasImpresionMetodoDirecto(metodo, totalARegistrar);
             this.mostrarSnackbarPagoExitoso(totalGuardado);
             // Enfocar el input de búsqueda después del pago cuando no se imprime
             // Usamos un delay más largo para asegurar que el snackbar se haya mostrado completamente
@@ -2755,7 +2799,14 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           total: totalARegistrar,
           ejecutarPago: (montoRecibido: number) => this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
           imprimirRecibo: quiereImprimir ? () => this.imprimirRecibo() : undefined,
-          mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg)
+          mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg),
+          registrarDatosImpresion: (d) => {
+            this.ticketImpresionExtras = {
+              metodoPagoLabel: metodo.descripcion ?? 'EFECTIVO',
+              montoRecibido: d.montoRecibido,
+              cambio: d.cambio
+            };
+          }
         },
         autoFocus: false,
         disableClose: true
@@ -2856,12 +2907,14 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           // Si debe imprimir, hacerlo automáticamente sin mostrar snackbar
           if (debeImprimir) {
             console.log('Pago exitoso (método no efectivo - seleccionarMetodoPago), imprimiendo automáticamente...');
+            this.aplicarExtrasImpresionMetodoDirecto(metodo, totalARegistrar);
             this.cacheRecentReciboForReprint();
             this.emitPaymentProcessedEvents();
             setTimeout(() => {
               this.imprimirRecibo();
             }, 300);
           } else {
+            this.aplicarExtrasImpresionMetodoDirecto(metodo, totalARegistrar);
             this.mostrarSnackbarPagoExitoso(totalGuardado);
             // Enfocar el input de búsqueda después del pago cuando no se imprime
             // Usamos un delay más largo para asegurar que el snackbar se haya mostrado completamente
@@ -3089,28 +3142,13 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   private prepararReciboParaImpresion(recibo: ReciboDto, detalles: ReciboDetalleDto[]): () => void {
     const idRoot = 'recibo-pos-print-root';
     const idStyles = 'recibo-pos-print-styles';
-    const rawCliente = recibo.cliente?.nombre ?? this.ticket?.cliente?.nombre;
-    const contenido = this.buildReciboHtmlFragment(detalles, rawCliente);
+    const contenido = this.reciboPrintService.buildReciboHtmlFromOpciones(
+      this.opcionesImpresionRecibo(detalles, new Date())
+    );
 
     const styleEl = document.createElement('style');
     styleEl.id = idStyles;
-    styleEl.textContent = `
-@media screen { #${idRoot} { display: none !important; } }
-@media print {
-  body * { visibility: hidden; }
-  #${idRoot}, #${idRoot} * { visibility: visible !important; }
-  #${idRoot} { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; display: block !important; font-family: 'Courier New', monospace !important; font-size: 12px !important; margin: 8px !important; max-width: 280px !important; }
-  #${idRoot} .pos-titulo { text-align: center; font-weight: bold; font-size: 14px; margin: 0 0 4px 0; }
-  #${idRoot} .pos-fecha, #${idRoot} .pos-leyenda { text-align: center; margin: 2px 0; }
-  #${idRoot} .pos-leyenda { font-size: 10px; }
-  #${idRoot} .pos-sep { border: none; border-top: 1px dashed #000; margin: 6px 0; }
-  #${idRoot} .pos-tabla { width: 100%; border-collapse: collapse; font-size: 11px; }
-  #${idRoot} .pos-tabla th { text-align: left; border-bottom: 1px solid #000; padding: 2px 4px; }
-  #${idRoot} .pos-tabla td { padding: 2px 4px; }
-  #${idRoot} .pos-total { font-weight: bold; text-align: right; margin-top: 4px; }
-  #${idRoot} .pos-cliente { font-size: 11px; margin-top: 8px; text-align: left; }
-}
-`;
+    styleEl.textContent = ReciboPrintService.injectedPrintCss(idRoot);
 
     const wrap = document.createElement('div');
     wrap.id = idRoot;
@@ -3124,33 +3162,6 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       if (s?.parentNode) s.parentNode.removeChild(s);
       if (r?.parentNode) r.parentNode.removeChild(r);
     };
-  }
-
-  /** Construye el fragmento HTML del recibo (solo el cuerpo, sin documento completo). */
-  private buildReciboHtmlFragment(detalles: ReciboDetalleDto[], clienteNombreRaw?: string | null): string {
-    const fechaHora = new Date();
-    const fechaHoraStr = fechaHora.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'medium' });
-    const total = detalles.reduce((sum, det) => sum + Number(det.subtotal ?? 0), 0);
-    const lineas: string[] = [];
-    lineas.push('<div class="pos-recibo">');
-    lineas.push('<p class="pos-titulo">Gestor infinito market</p>');
-    lineas.push(`<p class="pos-fecha">${this.escapeHtml(fechaHoraStr)}</p>`);
-    lineas.push('<p class="pos-leyenda">Recibo no apto como factura</p>');
-    lineas.push('<hr class="pos-sep"/>');
-    lineas.push('<table class="pos-tabla"><thead><tr><th>Producto</th><th>V.Unit</th><th>Cant</th><th>Subtotal</th></tr></thead><tbody>');
-    for (const det of detalles) {
-      const nombre = det.producto?.nombre ?? `Producto ${det.productoId}`;
-      const unitario = this.getDetalleUnitario(det);
-      lineas.push('<tr>', `<td>${this.escapeHtml(nombre)}</td>`, `<td>${this.formatCurrency(unitario)}</td>`, `<td>${det.cantidad}</td>`, `<td>${this.formatCurrency(det.subtotal)}</td>`, '</tr>');
-    }
-    lineas.push(
-      '</tbody></table>',
-      '<hr class="pos-sep"/>',
-      `<p class="pos-total">TOTAL: ${this.formatCurrency(total)}</p>`,
-      this.reciboPrintService.lineaClienteTicketHtml(clienteNombreRaw),
-      '</div>'
-    );
-    return lineas.join('');
   }
 
   /**
@@ -3219,13 +3230,14 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   private ejecutarImpresionConDetalles(detalles: ReciboDetalleDto[]): void {
     console.log('Generando impresión del recibo...', { detalles: detalles?.length });
     if (this.recibo?.id && detalles?.length) {
-      this.reciboPrintService.registerRecentRecibo(this.recibo, detalles, this.ticket?.cliente?.nombre);
+      this.reciboPrintService.registerRecentRecibo(
+        this.recibo,
+        this.reciboPrintService.toPrintableDetalles(detalles),
+        this.ticket?.cliente?.nombre,
+        this.ticketImpresionExtras
+      );
     }
-    const printed = this.reciboPrintService.printRecibo({
-      fechaCreacion: this.recibo?.fechaCreacion,
-      detalles,
-      clienteNombre: this.recibo?.cliente?.nombre ?? this.ticket?.cliente?.nombre
-    });
+    const printed = this.reciboPrintService.printRecibo(this.opcionesImpresionRecibo(detalles));
 
     if (!printed) {
       console.error('No se pudo abrir la ventana de impresión - ventanas emergentes bloqueadas');
@@ -3256,9 +3268,14 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
    * Genera el HTML del recibo y lo abre en nueva pestaña (para menú Descargar recibo).
    */
   private abrirReciboEnNuevaPestana(recibo: ReciboDto, detalles: ReciboDetalleDto[]): void {
-    const cuerpo = this.buildReciboHtmlFragment(detalles, recibo.cliente?.nombre ?? this.ticket?.cliente?.nombre);
+    const cuerpo = this.reciboPrintService.buildReciboHtmlFromOpciones({
+      detalles: this.reciboPrintService.toPrintableDetalles(detalles),
+      fechaCreacion: recibo.fechaCreacion,
+      clienteNombre: recibo.cliente?.nombre ?? this.ticket?.cliente?.nombre,
+      ...this.ticketImpresionExtras
+    });
     const htmlCompleto = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Recibo</title>
-<style>body{font-family:'Courier New',monospace;font-size:12px;margin:16px;max-width:280px}.pos-titulo{text-align:center;font-weight:bold;font-size:14px;margin:0 0 4px 0}.pos-fecha,.pos-leyenda{text-align:center;margin:2px 0}.pos-leyenda{font-size:10px}.pos-sep{border:none;border-top:1px dashed #000;margin:6px 0}.pos-tabla{width:100%;border-collapse:collapse;font-size:11px}.pos-tabla th{text-align:left;border-bottom:1px solid #000;padding:2px 4px}.pos-tabla td{padding:2px 4px}.pos-total{font-weight:bold;text-align:right;margin-top:4px}</style></head><body>${cuerpo}</body></html>`;
+<style>${ReciboPrintService.standalonePrintCss()}</style></head><body>${cuerpo}</body></html>`;
     const dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(htmlCompleto);
     const link = document.createElement('a');
     link.href = dataUri;
