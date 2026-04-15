@@ -1,0 +1,94 @@
+---
+description: Mapa de la app POS (Infinito) — dominios, rutas, estilos y recursos para onboarding
+alwaysApply: false
+---
+
+# Mapa de la aplicación (POS sobre Vex / Angular 17)
+
+## Qué es este proyecto
+
+- **Stack:** Angular 17, Angular Material, template **Vex** (UI, layouts, temas).
+- **Producto:** aplicación tipo **POS** (tickets de venta, catálogo, finanzas, usuarios).
+- **Arranque:** `src/main.ts` → `AppComponent` con `appConfig` en `src/app/app.config.ts`.
+- **Rutas globales:** `src/app/app.routes.ts` (auth con `loadComponent`, área autenticada bajo `LayoutComponent`).
+
+## Navegación “oficial” del POS
+
+El menú lateral visible para el usuario se define en `NavigationLoaderService` (`src/app/core/navigation/navigation-loader.service.ts`): **Tickets**, **Productos**, **Historial Tickets**, **Financiero**. Úsalo como guía de qué pantallas son núcleo del producto.
+
+La **barra superior / usuario** está en `ToolbarUserDropdownComponent` (`src/app/layouts/components/toolbar/toolbar-user/toolbar-user-dropdown/`), integrada con auth, tickets, recibos y utilidades de sesión.
+
+## Rutas principales (`app.routes.ts`)
+
+| Área | Ruta URL | Componente / notas |
+|------|-----------|-------------------|
+| **Tickets (venta)** | `/apps/tickets` | `ventas/tickets/tickets.component` |
+| **Historial** | `/apps/tickets/historial` | `ventas/historial-ventas/historial-ventas.component` |
+| **Productos** | `/apps/productos/admin-productos` | `productos/admin-productos/admin-productos.component` |
+| **Financiero** | `/apps/financiero` → redirige a `ingresos` | `financiero/financiero.component` + hijos |
+| Finanzas: ingresos | `/apps/financiero/ingresos` | `financiero/ingresos/ingresos.component` |
+| Finanzas: egresos | `/apps/financiero/egresos` | `financiero/egresos/egreso-list/egreso-list.component` |
+| Finanzas: proveedores | `/apps/financiero/proveedores` | `financiero/proveedores/proveedor-list/proveedor-list.component` |
+| Finanzas: resumen | `/apps/financiero/resumen-economico` | `financiero/resumen-economico/resumen-economico-list/...` |
+| **Perfil** | `/apps/user-profile` | `usuario/usuario.component` + hijos (perfil, actividad, preferencias) |
+| **Gestión usuarios** | `/apps/gestion-usuarios` | lazy `gestion-usuarios.routes` |
+| **Clientes** | `/apps/clientes/list` | `clientes/cliente-list/cliente-list.component` |
+| **Cargue productos** | `/apps/cargue-productos` | `cargue-productos/cargue-productos.component` |
+| **Tipos (catálogos)** | `/apps/tipos` | `tipos/tipos.routes` |
+
+La ruta por defecto tras login es **`/apps/tickets`**.
+
+## Dónde vive cada dominio (carpetas)
+
+### Ventas / tickets — `src/app/pages/apps/ventas/`
+
+- **Pantallas:** `tickets/`, `historial-ventas/`, piezas de flujo como `detalle-ticket/`, `edicion-ticket/`, `selector-productos/`, `metodos-pago/`, `pago-efectivo-cambio/`, `cliente-selector/`, etc.
+- **Lógica API y dominio:** `ventas/service/` (`tickets.service`, `ticket-recibo.service`, `recibo-detalle.service`, `sesiones.service`, `cliente.service`, …).
+
+### Productos — `src/app/pages/apps/productos/`
+
+- **Entrada principal de catálogo:** `admin-productos/`.
+- **Edición y listas:** `lista-productos/`, `editar-producto/`, `comparador-precio-producto/`.
+- **Servicios:** `productos/service/` (`products-service`, estrategias de info de producto, dominio relacional, etc.).
+
+### Financiero — `src/app/pages/apps/financiero/`
+
+- **Shell con tabs/subrutas:** `financiero.component` + carpetas `ingresos/`, `egresos/`, `proveedores/`, `resumen-economico/`.
+
+### Otros módulos POS frecuentes
+
+- **Usuarios y perfil:** `src/app/pages/apps/usuario/`.
+- **Clientes:** `src/app/pages/apps/clientes/`.
+- **Importación masiva:** `src/app/pages/apps/cargue-productos/`.
+- **Tipos / tablas maestras:** `src/app/pages/apps/tipos/`.
+
+### Transversal — `src/app/core/`
+
+- Navegación (`navigation-loader.service`, `navigation.service`), **HTTP** `auth.interceptor.ts`, diálogos reutilizables (`confirm-dialog`), utilidades de tabla/viewport, iconos, Luxon.
+
+## Estilos (dónde tocar qué)
+
+| Qué | Ruta |
+|-----|------|
+| **Estilos globales de la app** | `src/styles.scss` (imports de Simplebar, Highlight, **Vex core**, overrides de variables CSS, snackbars globales, ajustes Material) |
+| **Core del tema Vex** | `src/@vex/styles/core.scss` → partials (fuentes Inter, temas claro/oscuro, Material, layouts Apollo/Hermes/etc.) |
+| **Tailwind (Vex)** | `src/@vex/styles/tailwind.scss` (referenciado en `angular.json`) |
+| **Estilos por componente** | Coexisten `.scss` junto a cada `.ts` en `layouts/`, `pages/apps/`, `@vex/components/` |
+
+Variables y tokens Vex: inspeccionar `--vex-*` en DevTools o revisar `src/@vex/styles/partials/_css-vars.scss` y temas en `_themes.scss` / `_generated-themes.scss`.
+
+## Recursos estáticos y Angular (`angular.json`)
+
+- **Assets declarados:** `src/favicon.ico`, `src/assets`, redirects, y copia de **iconos SVG** de Material Design desde `node_modules` hacia `assets/img/icons/material-design-icons/`.
+- **Estilos de build:** `src/styles.scss` + `src/@vex/styles/tailwind.scss`.
+- **Carpeta habitual de imágenes y fuentes:** `src/assets/` (por ejemplo `assets/img/cash/` billetes, `assets/img/icons/payments/`, `assets/fonts/Inter-*.woff2`, logos en `assets/img/logo/`).
+
+## Autenticación
+
+- Pantallas: `src/app/auth/` (`login`, `register`, `forgot-password`).
+- Servicios de sesión/token según el patrón del proyecto (p. ej. integración con `AuthService` e interceptor en `core`).
+
+## Cómo usar este documento en Cursor
+
+- Está en **`.cursor/rules/pos-app-map.mdc`** con `alwaysApply: false`: sirve como **mapa de onboarding** sin inyectarse en cada chat.
+- Para límites de qué es “app real POS” vs. herencia Vex, ver también **`pos-app-boundaries.mdc`**.

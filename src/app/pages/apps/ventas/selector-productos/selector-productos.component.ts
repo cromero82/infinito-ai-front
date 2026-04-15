@@ -17,6 +17,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { DragDropModule, CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { RelationalProductService } from '../../productos/service/relational-product.service';
 import { Producto, ProductPage } from '../../productos/model/producto';
 import { EditarProductoComponent } from '../../productos/editar-producto/editar-producto.component';
@@ -46,7 +47,10 @@ export interface SelectorProductosResult {
     MatButtonModule,
     MatTableModule,
     MatIconModule,
-    MatTooltipModule
+    MatTooltipModule,
+    DragDropModule,
+    CdkDrag,
+    CdkDragHandle
   ],
   templateUrl: './selector-productos.component.html',
   styleUrls: ['./selector-productos.component.scss']

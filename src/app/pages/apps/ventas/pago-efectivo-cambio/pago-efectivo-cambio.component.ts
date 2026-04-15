@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { DragDropModule, CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
@@ -44,7 +45,10 @@ interface BilleteOption {
     MatFormFieldModule,
     MatInputModule,
     MatProgressSpinnerModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    DragDropModule,
+    CdkDrag,
+    CdkDragHandle
   ],
   templateUrl: './pago-efectivo-cambio.component.html',
   styleUrls: ['./pago-efectivo-cambio.component.scss']
@@ -76,7 +80,17 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   });
-  private selectedBilleteValor: number | null = null;
+  /**
+   * Cuántas "unidades" de cada denominación forman el monto (sumar ↑ / restar ↓ en billetes).
+   * Varios valores > 0 ⇒ varios billetes con estilo seleccionado a la vez.
+   */
+  private conteosPorDenominacion: Record<number, number> = {};
+
+  /**
+   * Tras elegir un billete al menos una vez, cada billete se divide en dos zonas:
+   * mitad superior suma esa denominación a "Paga con"; mitad inferior la resta.
+   */
+  modoSumaRestaBilletes = false;
 
   readonly data: PagoEfectivoCambioData;
 
@@ -87,9 +101,9 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
   ) {
     this.data = data;
     this.total = data.total ?? 0;
+    this.conteosPorDenominacion = this.descomponerGreedy(this.total);
     const formattedTotal = this.formatCurrency(this.total);
     this.pagaConCtrl.setValue(formattedTotal);
-    this.selectedBilleteValor = this.billetes.some((b) => b.valor === this.total) ? this.total : null;
   }
 
   ngOnInit(): void {
@@ -99,8 +113,13 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
       this.cambio = Math.max(0, diferencia);
       this.pagoInsuficiente = diferencia < 0;
       this.cambioNegativo = diferencia < 0 ? Math.abs(diferencia) : 0;
-      const coincide = this.billetes.some((billete) => billete.valor === pagaCon);
-      this.selectedBilleteValor = coincide ? pagaCon : null;
+      const sumaConteos = this.sumaConteos();
+      if (pagaCon !== sumaConteos) {
+        this.conteosPorDenominacion = this.descomponerGreedy(pagaCon);
+      }
+      if (pagaCon === 0) {
+        this.modoSumaRestaBilletes = false;
+      }
     });
   }
 
@@ -116,8 +135,86 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
   }
 
   seleccionarBillete(valor: number): void {
-    this.selectedBilleteValor = valor;
+    this.modoSumaRestaBilletes = true;
+    this.conteosPorDenominacion = { [valor]: 1 };
     this.pagaConCtrl.setValue(this.formatCurrency(valor));
+    const inputEl = this.pagaConInputRef?.nativeElement;
+    if (!inputEl) {
+      return;
+    }
+    requestAnimationFrame(() => {
+      inputEl.focus();
+      inputEl.select();
+    });
+  }
+
+  onBilleteButtonClick(event: MouseEvent, valor: number): void {
+    if (this.modoSumaRestaBilletes) {
+      return;
+    }
+    event.preventDefault();
+    this.seleccionarBillete(valor);
+  }
+
+  onZonaSumarBillete(event: Event, valor: number): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const actual = this.parseCurrency(this.pagaConCtrl.value);
+    this.ajustarConteo(valor, +1);
+    this.pagaConCtrl.setValue(this.formatCurrency(actual + valor));
+    this.enfocarPagaCon();
+  }
+
+  onZonaRestarBillete(event: Event, valor: number): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const actual = this.parseCurrency(this.pagaConCtrl.value);
+    const nuevo = Math.max(0, actual - valor);
+    if ((this.conteosPorDenominacion[valor] ?? 0) > 0) {
+      this.ajustarConteo(valor, -1);
+    } else {
+      this.conteosPorDenominacion = this.descomponerGreedy(nuevo);
+    }
+    this.pagaConCtrl.setValue(this.formatCurrency(nuevo));
+    this.enfocarPagaCon();
+  }
+
+  private sumaConteos(): number {
+    return Object.entries(this.conteosPorDenominacion).reduce(
+      (acc, [denom, n]) => acc + Number(denom) * n,
+      0
+    );
+  }
+
+  private ajustarConteo(valor: number, delta: number): void {
+    const siguiente = (this.conteosPorDenominacion[valor] ?? 0) + delta;
+    if (siguiente <= 0) {
+      delete this.conteosPorDenominacion[valor];
+    } else {
+      this.conteosPorDenominacion[valor] = siguiente;
+    }
+  }
+
+  /**
+   * Descomposición voraz (mayor denominación primero). Si el monto no se agota sin resto, no hay selección.
+   */
+  private descomponerGreedy(monto: number): Record<number, number> {
+    if (monto <= 0) {
+      return {};
+    }
+    let resto = monto;
+    const out: Record<number, number> = {};
+    for (const b of this.billetes) {
+      const n = Math.floor(resto / b.valor);
+      if (n > 0) {
+        out[b.valor] = n;
+        resto -= n * b.valor;
+      }
+    }
+    return resto === 0 ? out : {};
+  }
+
+  private enfocarPagaCon(): void {
     const inputEl = this.pagaConInputRef?.nativeElement;
     if (!inputEl) {
       return;
@@ -255,7 +352,7 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
   }
 
   esBilleteSeleccionado(valor: number): boolean {
-    return this.selectedBilleteValor === valor;
+    return (this.conteosPorDenominacion[valor] ?? 0) > 0;
   }
 
   private parseCurrency(value: string | null | undefined): number {

@@ -1,8 +1,55 @@
+:host {
+  display: block;
+}
+
+/* Arrastre del diálogo (mismo patrón que editar-producto / pago-efectivo-cambio) */
+.selector-productos-dialog-shell[cdkDrag] {
+  cursor: move;
+  display: flex;
+  flex-direction: column;
+  max-height: min(88vh, 900px);
+  min-height: 0;
+  overflow: hidden;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  .dialog-actions {
+    cursor: default;
+    flex-shrink: 0;
+  }
+}
+
+.selector-productos-dialog-header[cdkDragHandle] {
+  cursor: grab;
+  flex-shrink: 0;
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+}
+
+.selector-productos-dialog-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+/* Un solo scroll: la lista (.table-container). mat-mdc-dialog-content trae overflow:auto y duplicaba barra. */
 .dialog-content {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-height: 500px;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none !important;
+  overflow: hidden !important;
 }
 
 .search-field-wrapper {
@@ -10,6 +57,7 @@
   align-items: center;
   gap: 12px;
   width: 100%;
+  flex-shrink: 0;
   margin-bottom: 8px;
   margin-top: 5px;
 }
@@ -26,8 +74,9 @@
 }
 
 .table-container {
-  min-height: 400px;
-  max-height: 500px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: auto;
   overflow-y: auto;
   display: flex;
   flex-direction: column;

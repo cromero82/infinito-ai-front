@@ -1,4 +1,7 @@
-<h2 mat-dialog-title>Seleccionar Producto</h2>
+<div class="selector-productos-dialog-shell" cdkDrag cdkDragRootElement=".cdk-overlay-pane">
+  <div class="selector-productos-dialog-header" mat-dialog-title cdkDragHandle>
+    <h2 class="selector-productos-dialog-title">Seleccionar Producto</h2>
+  </div>
 
 <div mat-dialog-content class="dialog-content">
   <div class="search-field-wrapper">
@@ -121,8 +124,10 @@
   </div>
 </div>
 
-<div mat-dialog-actions align="end">
+<div mat-dialog-actions align="end" class="dialog-actions">
   <button mat-button (click)="close()">Cerrar</button>
+</div>
+
 </div>
 
 

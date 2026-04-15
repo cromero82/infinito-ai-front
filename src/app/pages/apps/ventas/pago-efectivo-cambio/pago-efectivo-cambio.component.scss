@@ -1,7 +1,33 @@
+/* Arrastre del diálogo (mismo patrón que editar-producto) */
+.pago-efectivo-dialog-shell[cdkDrag] {
+  cursor: move;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  .dialog-actions {
+    cursor: default;
+  }
+}
+
+.pago-efectivo-dialog-header[cdkDragHandle] {
+  cursor: grab;
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+}
+
 .dialog-title {
   font-size: 20px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin: 0 0 8px;
 }
 
 .dialog-content {
@@ -83,7 +109,13 @@
   justify-items: center;
 }
 
+/* Botón nativo (sin mat-stroked-button): MatButton proyectaba mat-icon fuera del label y rompía top/bottom */
 .billete {
+  appearance: none;
+  margin: 0;
+  font: inherit;
+  font-family: inherit;
+  line-height: normal;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -99,13 +131,110 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   min-height: 116px;
   width: 148px;
+  -webkit-tap-highlight-color: transparent;
 
-  img {
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mdc-theme-primary, #673ab7);
+    outline-offset: 2px;
+  }
+
+  .billete-contenido {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
     width: 100%;
-    height: auto;
-    object-fit: contain;
+    position: relative;
+    z-index: 0;
+  }
+
+  .billete-visual {
+    width: 100%;
+
+    img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      pointer-events: none;
+      display: block;
+      border-radius: 8px;
+    }
+  }
+
+  &.billete-modo-dual {
+    position: relative;
+    /* translateY en flechas sobresale unos px; sin esto overflow:hidden las recorta */
+    overflow: visible;
+
+    .billete-contenido {
+      pointer-events: none;
+    }
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  .billete-zona {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    cursor: pointer;
+    box-sizing: border-box;
+    background: transparent;
+  }
+
+  /* Mitades exactas sin depender de height: % (más estable dentro de mat-button) */
+  .billete-zona-sumar {
+    top: 0;
+    bottom: 50%;
+  }
+
+  .billete-zona-restar {
+    top: 50%;
+    bottom: 0;
+  }
+
+  /* Referencia: caja de padding del botón .billete (borde interior), no la imagen */
+  .billete-flecha {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
     pointer-events: none;
-    display: block;
+    width: 28px;
+    height: 28px;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.9;
+    color: rgba(0, 0, 0, 0.82);
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 1))
+      drop-shadow(0 1px 2px rgba(0, 0, 0, 0.28));
+
+    ::ng-deep svg {
+      width: 24px;
+      height: 24px;
+      display: block;
+    }
+  }
+
+  /* Más cerca del borde: el SVG trae aire interno; empujamos el trazo hacia arriba/abajo */
+  &.billete-modo-dual .billete-flecha--sup {
+    top: 0;
+    transform: translate(-50%, -5px);
+  }
+
+  &.billete-modo-dual .billete-flecha--inf {
+    bottom: 0;
+    transform: translate(-50%, 5px);
   }
 
   .billete-label {

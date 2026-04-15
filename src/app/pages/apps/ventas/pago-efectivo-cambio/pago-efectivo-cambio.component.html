@@ -1,4 +1,7 @@
-<h2 mat-dialog-title class="dialog-title">Pago en efectivo</h2>
+<div class="pago-efectivo-dialog-shell" cdkDrag cdkDragRootElement=".cdk-overlay-pane">
+  <div class="pago-efectivo-dialog-header" mat-dialog-title cdkDragHandle>
+    <h2 class="dialog-title">Pago en efectivo</h2>
+  </div>
 
 <div mat-dialog-content class="dialog-content extra-spacing">
   <ng-container *ngIf="estado === 'entrada' || estado === 'procesando'">
@@ -23,13 +26,37 @@
     <div class="billetes-grid" *ngIf="estado === 'entrada'">
       <button
         type="button"
-        mat-stroked-button
         class="billete"
         *ngFor="let billete of billetes"
         [class.selected]="esBilleteSeleccionado(billete.valor)"
-        (click)="seleccionarBillete(billete.valor)">
-        <img [src]="billete.imagen" [alt]="billete.label" />
-        <span class="billete-label">{{ billete.label }}</span>
+        [class.billete-modo-dual]="modoSumaRestaBilletes"
+        (click)="onBilleteButtonClick($event, billete.valor)">
+        <div class="billete-contenido">
+          <div class="billete-visual">
+            <img [src]="billete.imagen" [alt]="billete.label" />
+          </div>
+          <span class="billete-label">{{ billete.label }}</span>
+        </div>
+        <ng-container *ngIf="modoSumaRestaBilletes">
+          <div
+            class="billete-zona billete-zona-sumar"
+            role="button"
+            [attr.aria-label]="'Sumar ' + billete.label + ' a Paga con'"
+            (click)="onZonaSumarBillete($event, billete.valor)"></div>
+          <div
+            class="billete-zona billete-zona-restar"
+            role="button"
+            [attr.aria-label]="'Restar ' + billete.label + ' de Paga con'"
+            (click)="onZonaRestarBillete($event, billete.valor)"></div>
+          <mat-icon
+            class="billete-flecha billete-flecha--sup"
+            svgIcon="mat:keyboard_arrow_up"
+            aria-hidden="true"></mat-icon>
+          <mat-icon
+            class="billete-flecha billete-flecha--inf"
+            svgIcon="mat:keyboard_arrow_down"
+            aria-hidden="true"></mat-icon>
+        </ng-container>
       </button>
     </div>
 
@@ -79,6 +106,8 @@
     <button mat-stroked-button type="button" (click)="cancelar()">Cerrar</button>
     <button mat-flat-button color="primary" type="button" (click)="onReintentar()">Reintentar</button>
   </ng-container>
+</div>
+
 </div>
 
 
