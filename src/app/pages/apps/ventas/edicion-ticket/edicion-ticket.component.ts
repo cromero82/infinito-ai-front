@@ -20,11 +20,10 @@ export interface CambioDetalle {
 }
 
 @Component({
-  selector: 'edicion-ticket',
-  standalone: true,
-  imports: [CommonModule, MetodosPagoComponent, MatButtonModule],
-  templateUrl: './edicion-ticket.component.html',
-  styleUrls: ['./edicion-ticket.component.scss']
+    selector: 'edicion-ticket',
+    imports: [CommonModule, MetodosPagoComponent, MatButtonModule],
+    templateUrl: './edicion-ticket.component.html',
+    styleUrls: ['./edicion-ticket.component.scss']
 })
 export class EdicionTicketComponent implements OnInit, OnChanges, OnDestroy {
   @Input() reciboId: number | null = null;

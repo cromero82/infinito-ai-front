@@ -10,16 +10,15 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'metodos-pago',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule
-  ],
-  templateUrl: './metodos-pago.component.html',
-  styleUrls: ['./metodos-pago.component.scss']
+    selector: 'metodos-pago',
+    imports: [
+        CommonModule,
+        MatButtonModule,
+        MatIconModule,
+        MatTooltipModule
+    ],
+    templateUrl: './metodos-pago.component.html',
+    styleUrls: ['./metodos-pago.component.scss']
 })
 export class MetodosPagoComponent implements OnInit, OnDestroy {
   @Input() recibo: ReciboDto | null = null;

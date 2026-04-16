@@ -6,11 +6,10 @@ import { Observable } from 'rxjs';
 import { NavigationItem } from '../../../core/navigation/navigation-item.interface';
 
 @Component({
-  selector: 'vex-navigation',
-  templateUrl: './navigation.component.html',
-  styleUrls: ['./navigation.component.scss'],
-  standalone: true,
-  imports: [NgFor, NavigationItemComponent, AsyncPipe]
+    selector: 'vex-navigation',
+    templateUrl: './navigation.component.html',
+    styleUrls: ['./navigation.component.scss'],
+    imports: [NgFor, NavigationItemComponent, AsyncPipe]
 })
 export class NavigationComponent {
   items$: Observable<NavigationItem[]> = this.navigationService.items$;

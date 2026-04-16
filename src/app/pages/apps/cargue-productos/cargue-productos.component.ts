@@ -27,24 +27,23 @@ import { MatInputModule } from '@angular/material/input';
 import { GoogleSearchButtonComponent } from '../../../@vex/components/google-search-button';
 
 @Component({
-  selector: 'vex-cargue-productos',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule,
-    MatSlideToggleModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatProgressSpinnerModule,
-    MatFormFieldModule,
-    MatInputModule,
-    GoogleSearchButtonComponent
-  ],
-  templateUrl: './cargue-productos.component.html',
-  styleUrls: ['./cargue-productos.component.scss']
+    selector: 'vex-cargue-productos',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatButtonModule,
+        MatIconModule,
+        MatTooltipModule,
+        MatSlideToggleModule,
+        MatDialogModule,
+        MatSnackBarModule,
+        MatProgressSpinnerModule,
+        MatFormFieldModule,
+        MatInputModule,
+        GoogleSearchButtonComponent
+    ],
+    templateUrl: './cargue-productos.component.html',
+    styleUrls: ['./cargue-productos.component.scss']
 })
 export class CargueProductosComponent implements OnInit, OnDestroy {
   cargueProductos: CargueProductoDto[] = [];

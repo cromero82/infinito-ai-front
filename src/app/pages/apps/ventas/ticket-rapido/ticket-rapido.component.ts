@@ -20,22 +20,21 @@ export interface TicketRapidoData {
 }
 
 @Component({
-  selector: 'ticket-rapido',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatTooltipModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    ClienteSelectorComponent
-  ],
-  templateUrl: './ticket-rapido.component.html',
-  styleUrls: ['./ticket-rapido.component.scss']
+    selector: 'ticket-rapido',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatDialogModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatTooltipModule,
+        MatIconModule,
+        MatProgressSpinnerModule,
+        ClienteSelectorComponent
+    ],
+    templateUrl: './ticket-rapido.component.html',
+    styleUrls: ['./ticket-rapido.component.scss']
 })
 export class TicketRapidoComponent implements OnInit, OnDestroy {
   @ViewChild('totalInput') totalInputRef?: ElementRef<HTMLInputElement>;

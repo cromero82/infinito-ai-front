@@ -48,43 +48,42 @@ class DateAdapterDDMMYYYY extends NativeDateAdapter {
 }
 
 @Component({
-  selector: 'gm-egreso-list',
-  standalone: true,
-  providers: [
-    { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
-    { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
-    {
-      provide: MAT_DATE_FORMATS,
-      useValue: {
-        parse: { dateInput: 'dd/MM/yyyy' },
-        display: {
-          dateInput: 'dd/MM/yyyy',
-          monthYearLabel: 'MMM yyyy',
-          dateA11yLabel: 'dd/MM/yyyy',
-          monthYearA11yLabel: 'MMMM yyyy'
+    selector: 'gm-egreso-list',
+    providers: [
+        { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
+        { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
+        {
+            provide: MAT_DATE_FORMATS,
+            useValue: {
+                parse: { dateInput: 'dd/MM/yyyy' },
+                display: {
+                    dateInput: 'dd/MM/yyyy',
+                    monthYearLabel: 'MMM yyyy',
+                    dateA11yLabel: 'dd/MM/yyyy',
+                    monthYearA11yLabel: 'MMMM yyyy'
+                }
+            }
         }
-      }
-    }
-  ],
-  imports: [
-    MatButtonModule,
-    MatTooltipModule,
-    MatTableModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatMenuModule,
-    MatChipsModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    ReactiveFormsModule,
-    FormsModule,
-    NgFor,
-    NgIf
-  ],
-  templateUrl: './egreso-list.component.html',
-  styleUrl: './egreso-list.component.scss'
+    ],
+    imports: [
+        MatButtonModule,
+        MatTooltipModule,
+        MatTableModule,
+        MatIconModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatSelectModule,
+        MatMenuModule,
+        MatChipsModule,
+        MatDatepickerModule,
+        MatNativeDateModule,
+        ReactiveFormsModule,
+        FormsModule,
+        NgFor,
+        NgIf
+    ],
+    templateUrl: './egreso-list.component.html',
+    styleUrl: './egreso-list.component.scss'
 })
 export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   displayedColumns: string[] = [

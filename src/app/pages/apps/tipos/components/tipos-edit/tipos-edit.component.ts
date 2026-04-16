@@ -10,19 +10,18 @@ import { Tipo } from '../../interfaces/tipo.interface';
 import { TiposService } from '../../service/tipos-service';
 
 @Component({
-  selector: 'vex-tipos-edit',
-  templateUrl: './tipos-edit.component.html',
-  styleUrls: ['./tipos-edit.component.scss'],
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule
-  ]
+    selector: 'vex-tipos-edit',
+    templateUrl: './tipos-edit.component.html',
+    styleUrls: ['./tipos-edit.component.scss'],
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatDialogModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatIconModule
+    ]
 })
 export class TiposEditComponent implements OnInit {
   form: FormGroup;

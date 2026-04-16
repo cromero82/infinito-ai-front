@@ -17,17 +17,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'vex-search',
-  templateUrl: './search.component.html',
-  styleUrls: ['./search.component.scss'],
-  standalone: true,
-  imports: [
-    MatButtonModule,
-    MatIconModule,
-    ReactiveFormsModule,
-    NgIf,
-    AsyncPipe
-  ]
+    selector: 'vex-search',
+    templateUrl: './search.component.html',
+    styleUrls: ['./search.component.scss'],
+    imports: [
+        MatButtonModule,
+        MatIconModule,
+        ReactiveFormsModule,
+        NgIf,
+        AsyncPipe
+    ]
 })
 export class SearchComponent implements OnInit, OnDestroy {
   show$ = this.layoutService.searchOpen$;

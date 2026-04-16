@@ -12,24 +12,23 @@ import { DragDropModule, CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { ClienteService, ClienteDto, CreateClienteRequest } from '../../ventas/service/cliente.service';
 
 @Component({
-  selector: 'vex-cliente-edit',
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    FormsModule,
-    MatDialogModule,
-    NgIf,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDividerModule,
-    DragDropModule,
-    CdkDrag,
-    CdkDragHandle
-  ],
-  templateUrl: './cliente-edit.component.html',
-  styleUrl: './cliente-edit.component.scss'
+    selector: 'vex-cliente-edit',
+    imports: [
+        ReactiveFormsModule,
+        FormsModule,
+        MatDialogModule,
+        NgIf,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatIconModule,
+        MatDividerModule,
+        DragDropModule,
+        CdkDrag,
+        CdkDragHandle
+    ],
+    templateUrl: './cliente-edit.component.html',
+    styleUrl: './cliente-edit.component.scss'
 })
 export class ClienteEditComponent implements OnInit, AfterViewInit {
   form: FormGroup;

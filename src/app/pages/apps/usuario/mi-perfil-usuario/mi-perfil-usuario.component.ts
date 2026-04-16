@@ -15,23 +15,22 @@ import { catchError, finalize } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 
 @Component({
-  selector: 'gm-mi-perfil-usuario',
-  templateUrl: './mi-perfil-usuario.component.html',
-  styleUrls: ['./mi-perfil-usuario.component.scss'],
-  animations: [fadeInUp400ms, fadeInRight400ms, scaleIn400ms],
-  standalone: true,
-  imports: [
-    MatIconModule, 
-    NgFor, 
-    NgIf, 
-    MatButtonModule, 
-    CommonModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatTooltipModule,
-    FormsModule,
-    MatSnackBarModule
-  ]
+    selector: 'gm-mi-perfil-usuario',
+    templateUrl: './mi-perfil-usuario.component.html',
+    styleUrls: ['./mi-perfil-usuario.component.scss'],
+    animations: [fadeInUp400ms, fadeInRight400ms, scaleIn400ms],
+    imports: [
+        MatIconModule,
+        NgFor,
+        NgIf,
+        MatButtonModule,
+        CommonModule,
+        MatInputModule,
+        MatFormFieldModule,
+        MatTooltipModule,
+        FormsModule,
+        MatSnackBarModule
+    ]
 })
 export class MiPerfilUsuarioComponent implements OnInit, AfterViewInit {
   nombreUsuario: string | null = null;

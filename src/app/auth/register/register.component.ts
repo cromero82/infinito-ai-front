@@ -22,24 +22,23 @@ import { AuthService } from '../service/auth.service';
 import { finalize } from 'rxjs/operators';
 
 @Component({
-  selector: 'vex-register',
-  templateUrl: './register.component.html',
-  styleUrls: ['./register.component.scss'],
-  animations: [fadeInUp400ms],
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatTooltipModule,
-    NgIf,
-    MatIconModule,
-    MatCheckboxModule,
-    RouterLink,
-    MatSnackBarModule,
-    MatProgressSpinnerModule
-  ]
+    selector: 'vex-register',
+    templateUrl: './register.component.html',
+    styleUrls: ['./register.component.scss'],
+    animations: [fadeInUp400ms],
+    imports: [
+        ReactiveFormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatTooltipModule,
+        NgIf,
+        MatIconModule,
+        MatCheckboxModule,
+        RouterLink,
+        MatSnackBarModule,
+        MatProgressSpinnerModule
+    ]
 })
 export class RegisterComponent {
   form: FormGroup = this.fb.group({

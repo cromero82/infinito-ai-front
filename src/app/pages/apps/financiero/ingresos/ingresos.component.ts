@@ -29,24 +29,23 @@ interface VentasPorFecha {
 }
 
 @Component({
-  selector: 'vex-ingresos',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatButtonModule,
-    MatButtonToggleModule,
-    MatIconModule,
-    MatTooltipModule,
-    MatDialogModule,
-    VexChartComponent
-  ],
-  templateUrl: './ingresos.component.html',
-  styleUrls: ['./ingresos.component.scss']
+    selector: 'vex-ingresos',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatDatepickerModule,
+        MatNativeDateModule,
+        MatButtonModule,
+        MatButtonToggleModule,
+        MatIconModule,
+        MatTooltipModule,
+        MatDialogModule,
+        VexChartComponent
+    ],
+    templateUrl: './ingresos.component.html',
+    styleUrls: ['./ingresos.component.scss']
 })
 export class IngresosComponent implements OnInit, OnDestroy {
   fechaInicioCtrl = new FormControl<Date | null>(null);

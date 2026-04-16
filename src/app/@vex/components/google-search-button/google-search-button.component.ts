@@ -8,17 +8,16 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 export type GoogleSearchType = 'name' | 'barcode';
 
 @Component({
-  selector: 'vex-google-search-button',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule,
-    MatSnackBarModule
-  ],
-  templateUrl: './google-search-button.component.html',
-  styleUrls: ['./google-search-button.component.scss']
+    selector: 'vex-google-search-button',
+    imports: [
+        CommonModule,
+        MatButtonModule,
+        MatIconModule,
+        MatTooltipModule,
+        MatSnackBarModule
+    ],
+    templateUrl: './google-search-button.component.html',
+    styleUrls: ['./google-search-button.component.scss']
 })
 export class GoogleSearchButtonComponent {
   @Input() searchType: GoogleSearchType = 'name';

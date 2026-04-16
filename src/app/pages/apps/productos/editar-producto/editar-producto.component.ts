@@ -16,26 +16,25 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../core/comp
 import { ConfigurationService } from '../../../../auth/service/configuration.service';
 
 @Component({
-  selector: 'editar-producto',
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    FormsModule,
-    MatDialogModule,
-    NgIf,
-    NgFor,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDividerModule,
-    MatSlideToggleModule,
-    DragDropModule,
-    CdkDrag,
-    CdkDragHandle
-  ],
-  templateUrl: './editar-producto.component.html',
-  styleUrl: './editar-producto.component.scss'
+    selector: 'editar-producto',
+    imports: [
+        ReactiveFormsModule,
+        FormsModule,
+        MatDialogModule,
+        NgIf,
+        NgFor,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatIconModule,
+        MatDividerModule,
+        MatSlideToggleModule,
+        DragDropModule,
+        CdkDrag,
+        CdkDragHandle
+    ],
+    templateUrl: './editar-producto.component.html',
+    styleUrl: './editar-producto.component.scss'
 })
 export class EditarProductoComponent implements OnInit, AfterViewInit {
   form: FormGroup;

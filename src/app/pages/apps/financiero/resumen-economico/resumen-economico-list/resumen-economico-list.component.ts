@@ -67,46 +67,45 @@ class DateAdapterDDMMYYYY extends NativeDateAdapter {
 }
 
 @Component({
-  selector: 'gm-resumen-economico-list',
-  standalone: true,
-  providers: [
-    { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
-    { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
-    {
-      provide: MAT_DATE_FORMATS,
-      useValue: {
-        parse: { dateInput: 'dd/MM/yyyy' },
-        display: {
-          dateInput: 'dd/MM/yyyy',
-          monthYearLabel: 'MMM yyyy',
-          dateA11yLabel: 'dd/MM/yyyy',
-          monthYearA11yLabel: 'MMMM yyyy'
+    selector: 'gm-resumen-economico-list',
+    providers: [
+        { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
+        { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
+        {
+            provide: MAT_DATE_FORMATS,
+            useValue: {
+                parse: { dateInput: 'dd/MM/yyyy' },
+                display: {
+                    dateInput: 'dd/MM/yyyy',
+                    monthYearLabel: 'MMM yyyy',
+                    dateA11yLabel: 'dd/MM/yyyy',
+                    monthYearA11yLabel: 'MMMM yyyy'
+                }
+            }
         }
-      }
-    }
-  ],
-  imports: [
-    MatTableModule,
-    MatIconModule,
-    MatButtonModule,
-    MatButtonToggleModule,
-    MatTooltipModule,
-    MatSnackBarModule,
-    MatMenuModule,
-    MatChipsModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MonthYearPickerComponent,
-    ReactiveFormsModule,
-    NgFor,
-    NgIf,
-    NgSwitch,
-    NgSwitchCase
-  ],
-  templateUrl: './resumen-economico-list.component.html',
-  styleUrl: './resumen-economico-list.component.scss'
+    ],
+    imports: [
+        MatTableModule,
+        MatIconModule,
+        MatButtonModule,
+        MatButtonToggleModule,
+        MatTooltipModule,
+        MatSnackBarModule,
+        MatMenuModule,
+        MatChipsModule,
+        MatDatepickerModule,
+        MatNativeDateModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MonthYearPickerComponent,
+        ReactiveFormsModule,
+        NgFor,
+        NgIf,
+        NgSwitch,
+        NgSwitchCase
+    ],
+    templateUrl: './resumen-economico-list.component.html',
+    styleUrl: './resumen-economico-list.component.scss'
 })
 export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnDestroy {
   vista: VistaEstadistica = 'diaria';

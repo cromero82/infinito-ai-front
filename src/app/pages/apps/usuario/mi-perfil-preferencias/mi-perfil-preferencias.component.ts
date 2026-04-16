@@ -13,21 +13,20 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs/operators';
 
 @Component({
-  selector: 'gm-mi-perfil-preferencias',
-  templateUrl: './mi-perfil-preferencias.component.html',
-  styleUrls: ['./mi-perfil-preferencias.component.scss'],
-  animations: [fadeInUp400ms, fadeInRight400ms, scaleIn400ms],
-  standalone: true,
-  imports: [
-    MatIconModule,
-    NgIf,
-    MatButtonModule,
-    CommonModule,
-    MatFormFieldModule,
-    MatInputModule,
-    FormsModule,
-    MatSnackBarModule
-  ]
+    selector: 'gm-mi-perfil-preferencias',
+    templateUrl: './mi-perfil-preferencias.component.html',
+    styleUrls: ['./mi-perfil-preferencias.component.scss'],
+    animations: [fadeInUp400ms, fadeInRight400ms, scaleIn400ms],
+    imports: [
+        MatIconModule,
+        NgIf,
+        MatButtonModule,
+        CommonModule,
+        MatFormFieldModule,
+        MatInputModule,
+        FormsModule,
+        MatSnackBarModule
+    ]
 })
 export class MiPerfilPreferenciasComponent implements OnInit {
   guardando = false;

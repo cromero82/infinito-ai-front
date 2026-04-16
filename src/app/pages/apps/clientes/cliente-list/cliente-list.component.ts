@@ -16,25 +16,24 @@ import { ClienteService, ClienteDto } from '../../ventas/service/cliente.service
 import { ClienteEditComponent } from '../cliente-edit/cliente-edit.component';
 
 @Component({
-  selector: 'vex-cliente-list',
-  standalone: true,
-  imports: [
-    VexPageLayoutComponent,
-    VexPageLayoutHeaderDirective,
-    VexPageLayoutContentDirective,
-    MatButtonModule,
-    MatTooltipModule,
-    MatTableModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    ReactiveFormsModule,
-    FormsModule,
-    NgFor,
-    NgIf
-  ],
-  templateUrl: './cliente-list.component.html',
-  styleUrl: './cliente-list.component.scss'
+    selector: 'vex-cliente-list',
+    imports: [
+        VexPageLayoutComponent,
+        VexPageLayoutHeaderDirective,
+        VexPageLayoutContentDirective,
+        MatButtonModule,
+        MatTooltipModule,
+        MatTableModule,
+        MatIconModule,
+        MatFormFieldModule,
+        MatInputModule,
+        ReactiveFormsModule,
+        FormsModule,
+        NgFor,
+        NgIf
+    ],
+    templateUrl: './cliente-list.component.html',
+    styleUrl: './cliente-list.component.scss'
 })
 export class ClienteListComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = [

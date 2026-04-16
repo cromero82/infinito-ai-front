@@ -30,23 +30,22 @@ import { MatIconModule } from '@angular/material/icon';
 import { VEX_THEMES } from '@vex/config/config.token';
 
 @Component({
-  selector: 'vex-config-panel',
-  templateUrl: './config-panel.component.html',
-  styleUrls: ['./config-panel.component.scss'],
-  standalone: true,
-  imports: [
-    NgIf,
-    MatIconModule,
-    MatRippleModule,
-    NgFor,
-    MatButtonModule,
-    NgClass,
-    MatSlideToggleModule,
-    MatRadioModule,
-    AsyncPipe,
-    UpperCasePipe,
-    KeyValuePipe
-  ]
+    selector: 'vex-config-panel',
+    templateUrl: './config-panel.component.html',
+    styleUrls: ['./config-panel.component.scss'],
+    imports: [
+        NgIf,
+        MatIconModule,
+        MatRippleModule,
+        NgFor,
+        MatButtonModule,
+        NgClass,
+        MatSlideToggleModule,
+        MatRadioModule,
+        AsyncPipe,
+        UpperCasePipe,
+        KeyValuePipe
+    ]
 })
 export class ConfigPanelComponent {
   configs: VexConfig[] = this.configService.configs;

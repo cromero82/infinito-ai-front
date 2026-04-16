@@ -26,23 +26,22 @@ import { checkRouterChildsData } from '@vex/utils/check-router-childs-data';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'vex-toolbar',
-  templateUrl: './toolbar.component.html',
-  styleUrls: ['./toolbar.component.scss'],
-  standalone: true,
-  imports: [
-    MatButtonModule,
-    MatIconModule,
-    NgIf,
-    RouterLink,
-    MatMenuModule,
-    NgClass,
-    NgFor,
-    NavigationItemComponent,
-    ToolbarUserComponent,
-    NavigationComponent,
-    AsyncPipe
-  ]
+    selector: 'vex-toolbar',
+    templateUrl: './toolbar.component.html',
+    styleUrls: ['./toolbar.component.scss'],
+    imports: [
+        MatButtonModule,
+        MatIconModule,
+        NgIf,
+        RouterLink,
+        MatMenuModule,
+        NgClass,
+        NgFor,
+        NavigationItemComponent,
+        ToolbarUserComponent,
+        NavigationComponent,
+        AsyncPipe
+    ]
 })
 export class ToolbarComponent implements OnInit {
   @HostBinding('class.shadow-b')

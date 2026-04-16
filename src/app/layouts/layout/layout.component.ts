@@ -22,28 +22,27 @@ import { VexConfig } from '@vex/config/vex-config.interface';
 import { FooterService } from '../services/footer.service';
 
 @Component({
-  selector: 'vex-layout',
-  templateUrl: './layout.component.html',
-  styleUrls: ['./layout.component.scss'],
-  imports: [
-    BaseLayoutComponent,
-    NgIf,
-    AsyncPipe,
-    SidenavComponent,
-    ToolbarComponent,
-    FooterComponent,
-    QuickpanelComponent,
-    ConfigPanelToggleComponent,
-    VexSidebarComponent,
-    ConfigPanelComponent,
-    MatDialogModule,
-    MatSidenavModule,
-    NgTemplateOutlet,
-    RouterOutlet,
-    SearchComponent,
-    VexProgressBarComponent
-  ],
-  standalone: true
+    selector: 'vex-layout',
+    templateUrl: './layout.component.html',
+    styleUrls: ['./layout.component.scss'],
+    imports: [
+        BaseLayoutComponent,
+        NgIf,
+        AsyncPipe,
+        SidenavComponent,
+        ToolbarComponent,
+        FooterComponent,
+        QuickpanelComponent,
+        ConfigPanelToggleComponent,
+        VexSidebarComponent,
+        ConfigPanelComponent,
+        MatDialogModule,
+        MatSidenavModule,
+        NgTemplateOutlet,
+        RouterOutlet,
+        SearchComponent,
+        VexProgressBarComponent
+    ]
 })
 export class LayoutComponent {
   config$: Observable<VexConfig> = this.configService.config$;

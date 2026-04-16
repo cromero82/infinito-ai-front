@@ -37,23 +37,22 @@ interface BilleteOption {
 }
 
 @Component({
-  selector: 'vex-pago-efectivo-cambio',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatProgressSpinnerModule,
-    ReactiveFormsModule,
-    DragDropModule,
-    CdkDrag,
-    CdkDragHandle
-  ],
-  templateUrl: './pago-efectivo-cambio.component.html',
-  styleUrls: ['./pago-efectivo-cambio.component.scss']
+    selector: 'vex-pago-efectivo-cambio',
+    imports: [
+        CommonModule,
+        MatDialogModule,
+        MatButtonModule,
+        MatIconModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatProgressSpinnerModule,
+        ReactiveFormsModule,
+        DragDropModule,
+        CdkDrag,
+        CdkDragHandle
+    ],
+    templateUrl: './pago-efectivo-cambio.component.html',
+    styleUrls: ['./pago-efectivo-cambio.component.scss']
 })
 export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
   @ViewChild('pagaConInput') pagaConInputRef?: ElementRef<HTMLInputElement>;

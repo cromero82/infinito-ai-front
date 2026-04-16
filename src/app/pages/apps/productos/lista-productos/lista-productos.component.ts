@@ -43,37 +43,36 @@ export interface FilterCondition {
 
 
 @Component({
-  selector: 'lista-productos',
-  standalone: true,
-  imports: [
-    VexPageLayoutComponent,
-    VexPageLayoutHeaderDirective,
-    VexPageLayoutContentDirective,
-    MatButtonModule,
-    MatTooltipModule,
-    MatTableModule,
-    MatSortModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatPaginatorModule,
-    ReactiveFormsModule,
-    FormsModule,
-    NgFor,
-    NgIf,
-    DecimalPipe,
-    DatePipe,
-    CommonModule,
-    GoogleSearchButtonComponent,
-    MatSelectModule,
-    MatMenuModule,
-    MatChipsModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatCheckboxModule
-  ],
-  templateUrl: './lista-productos.component.html',
-  styleUrls: ['./lista-productos.component.scss']
+    selector: 'lista-productos',
+    imports: [
+        VexPageLayoutComponent,
+        VexPageLayoutHeaderDirective,
+        VexPageLayoutContentDirective,
+        MatButtonModule,
+        MatTooltipModule,
+        MatTableModule,
+        MatSortModule,
+        MatIconModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatPaginatorModule,
+        ReactiveFormsModule,
+        FormsModule,
+        NgFor,
+        NgIf,
+        DecimalPipe,
+        DatePipe,
+        CommonModule,
+        GoogleSearchButtonComponent,
+        MatSelectModule,
+        MatMenuModule,
+        MatChipsModule,
+        MatDatepickerModule,
+        MatNativeDateModule,
+        MatCheckboxModule
+    ],
+    templateUrl: './lista-productos.component.html',
+    styleUrls: ['./lista-productos.component.scss']
 })
 export class ListaProductosComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = [

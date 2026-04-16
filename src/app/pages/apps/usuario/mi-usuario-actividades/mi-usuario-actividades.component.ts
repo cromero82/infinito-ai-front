@@ -9,12 +9,11 @@ import { MatTableModule } from '@angular/material/table';
 import { SesionesService, SesionDto } from '../../ventas/service/sesiones.service';
 
 @Component({
-  selector: 'gm-mi-usuario-actividades',
-  templateUrl: './mi-usuario-actividades.component.html',
-  styleUrls: ['./mi-usuario-actividades.component.scss'],
-  animations: [fadeInUp400ms, fadeInRight400ms, scaleIn400ms],
-  standalone: true,
-  imports: [MatIconModule, NgFor, NgIf, MatButtonModule, MatTableModule, CommonModule]
+    selector: 'gm-mi-usuario-actividades',
+    templateUrl: './mi-usuario-actividades.component.html',
+    styleUrls: ['./mi-usuario-actividades.component.scss'],
+    animations: [fadeInUp400ms, fadeInRight400ms, scaleIn400ms],
+    imports: [MatIconModule, NgFor, NgIf, MatButtonModule, MatTableModule, CommonModule]
 })
 export class MiUsuarioActividadesComponent implements OnInit {
   displayedColumns: string[] = ['tipoActividad', 'fechaInicio', 'fechaFin'];

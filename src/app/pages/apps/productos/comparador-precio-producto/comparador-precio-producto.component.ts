@@ -13,15 +13,14 @@ import { MatDialog } from '@angular/material/dialog';
 import { GapAnalysisDialogComponent } from './gap-analysis-dialog.component';
 
 @Component({
-  selector: 'comparador-precio-producto',
-  standalone: true,
-  imports: [
-    MatDialogModule, MatButtonModule, MatIconModule, NgIf, NgClass, NgFor, FormsModule, DecimalPipe, CurrencyPipe, MatTooltipModule,
-    GapAnalysisDialogComponent
-  ],
-  providers: [CurrencyPipe, DecimalPipe],
-  templateUrl: './comparador-precio-producto.component.html',
-  styleUrls: ['./comparador-precio-producto.component.scss']
+    selector: 'comparador-precio-producto',
+    imports: [
+        MatDialogModule, MatButtonModule, MatIconModule, NgIf, NgClass, NgFor, FormsModule, DecimalPipe, CurrencyPipe, MatTooltipModule,
+        GapAnalysisDialogComponent
+    ],
+    providers: [CurrencyPipe, DecimalPipe],
+    templateUrl: './comparador-precio-producto.component.html',
+    styleUrls: ['./comparador-precio-producto.component.scss']
 })
 export class ComparadorPrecioProductoComponent implements OnInit {
   openFoodProduct: any;

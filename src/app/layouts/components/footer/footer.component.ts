@@ -10,11 +10,10 @@ export interface FooterItemDto {
 }
 
 @Component({
-  selector: 'vex-footer',
-  templateUrl: './footer.component.html',
-  styleUrls: ['./footer.component.scss'],
-  standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule]
+    selector: 'vex-footer',
+    templateUrl: './footer.component.html',
+    styleUrls: ['./footer.component.scss'],
+    imports: [CommonModule, MatButtonModule, MatIconModule]
 })
 export class FooterComponent implements OnInit, OnDestroy {
   @Input() footerItems: FooterItemDto[] = [];

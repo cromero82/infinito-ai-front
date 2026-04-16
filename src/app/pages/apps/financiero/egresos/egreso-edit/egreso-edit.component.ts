@@ -22,30 +22,29 @@ import { ProveedorEditComponent } from '../../proveedores/proveedor-edit/proveed
 import { FechaUtilService } from '../../../ventas/service/fecha-util.service';
 
 @Component({
-  selector: 'gm-egreso-edit',
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    FormsModule,
-    MatDialogModule,
-    NgIf,
-    NgFor,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDividerModule,
-    MatAutocompleteModule,
-    MatTooltipModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    AsyncPipe,
-    DragDropModule,
-    CdkDrag,
-    CdkDragHandle
-  ],
-  templateUrl: './egreso-edit.component.html',
-  styleUrl: './egreso-edit.component.scss'
+    selector: 'gm-egreso-edit',
+    imports: [
+        ReactiveFormsModule,
+        FormsModule,
+        MatDialogModule,
+        NgIf,
+        NgFor,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatIconModule,
+        MatDividerModule,
+        MatAutocompleteModule,
+        MatTooltipModule,
+        MatDatepickerModule,
+        MatNativeDateModule,
+        AsyncPipe,
+        DragDropModule,
+        CdkDrag,
+        CdkDragHandle
+    ],
+    templateUrl: './egreso-edit.component.html',
+    styleUrl: './egreso-edit.component.scss'
 })
 export class EgresoEditComponent implements OnInit, AfterViewInit {
   form: FormGroup;

@@ -15,12 +15,11 @@ export interface FriendSuggestion {
 }
 
 @Component({
-  selector: 'gm-usuario',
-  templateUrl: './usuario.component.html',
-  styleUrls: ['./usuario.component.scss'],
-  animations: [scaleIn400ms, fadeInRight400ms],
-  standalone: true,
-  imports: [MatTabsModule, NgFor, NgIf, RouterLinkActive, RouterLink, RouterOutlet]
+    selector: 'gm-usuario',
+    templateUrl: './usuario.component.html',
+    styleUrls: ['./usuario.component.scss'],
+    animations: [scaleIn400ms, fadeInRight400ms],
+    imports: [MatTabsModule, NgFor, NgIf, RouterLinkActive, RouterLink, RouterOutlet]
 })
 export class UsuarioComponent implements OnInit {
   links: Link[] = [

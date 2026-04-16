@@ -7,17 +7,16 @@ import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 
 @Component({
-  selector: 'vex-quickpanel',
-  templateUrl: './quickpanel.component.html',
-  styleUrls: ['./quickpanel.component.scss'],
-  standalone: true,
-  imports: [
-    MatDividerModule,
-    MatListModule,
-    RouterLink,
-    MatRippleModule,
-    MatProgressBarModule
-  ]
+    selector: 'vex-quickpanel',
+    templateUrl: './quickpanel.component.html',
+    styleUrls: ['./quickpanel.component.scss'],
+    imports: [
+        MatDividerModule,
+        MatListModule,
+        RouterLink,
+        MatRippleModule,
+        MatProgressBarModule
+    ]
 })
 export class QuickpanelComponent implements OnInit {
   date = DateTime.local().toFormat('DD');

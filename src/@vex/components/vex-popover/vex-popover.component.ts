@@ -9,12 +9,11 @@ import {
 } from '@angular/common';
 
 @Component({
-  selector: 'vex-popover',
-  templateUrl: './vex-popover.component.html',
-  styleUrls: ['./vex-popover.component.scss'],
-  animations: [popoverAnimation],
-  standalone: true,
-  imports: [NgSwitch, NgSwitchCase, NgTemplateOutlet, NgComponentOutlet]
+    selector: 'vex-popover',
+    templateUrl: './vex-popover.component.html',
+    styleUrls: ['./vex-popover.component.scss'],
+    animations: [popoverAnimation],
+    imports: [NgSwitch, NgSwitchCase, NgTemplateOutlet, NgComponentOutlet]
 })
 export class VexPopoverComponent implements OnInit {
   renderMethod: 'template' | 'component' | 'text' = 'component';

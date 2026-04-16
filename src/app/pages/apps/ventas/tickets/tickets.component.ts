@@ -34,32 +34,31 @@ const LAST_TICKET_ID_KEY = 'last-ticket-id';
 const FORCED_SELECTION_TICKET_ID_KEY = 'forced-selection-ticket-id';
 
 @Component({
-  selector: 'tickets',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.Default,
-  imports: [
-    VexPageLayoutComponent,
-    VexPageLayoutHeaderDirective,
-    VexPageLayoutContentDirective,
-    VexBreadcrumbsComponent,
-    MatTabsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatMenuModule,
-    MatSlideToggleModule,
-    MatSnackBarModule,
-    MatTooltipModule,
-    NgIf,
-    NgFor,
-    DragDropModule,
-    DetalleTicketComponent
-  ],
-  templateUrl: './tickets.component.html',
-  styleUrls: ['./tickets.component.scss']
+    selector: 'tickets',
+    changeDetection: ChangeDetectionStrategy.Default,
+    imports: [
+        VexPageLayoutComponent,
+        VexPageLayoutHeaderDirective,
+        VexPageLayoutContentDirective,
+        VexBreadcrumbsComponent,
+        MatTabsModule,
+        MatButtonModule,
+        MatIconModule,
+        MatFormFieldModule,
+        MatInputModule,
+        ReactiveFormsModule,
+        MatDialogModule,
+        MatMenuModule,
+        MatSlideToggleModule,
+        MatSnackBarModule,
+        MatTooltipModule,
+        NgIf,
+        NgFor,
+        DragDropModule,
+        DetalleTicketComponent
+    ],
+    templateUrl: './tickets.component.html',
+    styleUrls: ['./tickets.component.scss']
 })
 export class TicketsComponent implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy {
   tickets: TicketDto[] = [];

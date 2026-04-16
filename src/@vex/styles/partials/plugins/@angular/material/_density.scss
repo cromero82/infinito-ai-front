@@ -2,7 +2,7 @@
 
 .vex-mat-dense-default {
   $density: -2;
-  @include mat.private-form-field-density($density);
+  @include mat.form-field-density($density);
   @include mat.autocomplete-density($density);
   @include mat.select-density($density);
   @include mat.input-density($density);

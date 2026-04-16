@@ -31,19 +31,18 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { VexConfig } from '@vex/config/vex-config.interface';
 
 @Component({
-  selector: 'vex-base-layout',
-  templateUrl: './base-layout.component.html',
-  styleUrls: ['./base-layout.component.scss'],
-  standalone: true,
-  imports: [
-    VexProgressBarComponent,
-    SearchComponent,
-    MatSidenavModule,
-    NgTemplateOutlet,
-    RouterOutlet,
-    AsyncPipe,
-    NgIf
-  ]
+    selector: 'vex-base-layout',
+    templateUrl: './base-layout.component.html',
+    styleUrls: ['./base-layout.component.scss'],
+    imports: [
+        VexProgressBarComponent,
+        SearchComponent,
+        MatSidenavModule,
+        NgTemplateOutlet,
+        RouterOutlet,
+        AsyncPipe,
+        NgIf
+    ]
 })
 export class BaseLayoutComponent implements OnInit, AfterViewInit {
   config$: Observable<VexConfig> = this.configService.config$;

@@ -31,21 +31,20 @@ import { NgClass, NgFor, NgIf } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'vex-sidenav-item',
-  templateUrl: './sidenav-item.component.html',
-  styleUrls: ['./sidenav-item.component.scss'],
-  animations: [dropdownAnimation],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
-  imports: [
-    NgIf,
-    MatRippleModule,
-    RouterLinkActive,
-    RouterLink,
-    MatIconModule,
-    NgClass,
-    NgFor
-  ]
+    selector: 'vex-sidenav-item',
+    templateUrl: './sidenav-item.component.html',
+    styleUrls: ['./sidenav-item.component.scss'],
+    animations: [dropdownAnimation],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    imports: [
+        NgIf,
+        MatRippleModule,
+        RouterLinkActive,
+        RouterLink,
+        MatIconModule,
+        NgClass,
+        NgFor
+    ]
 })
 export class SidenavItemComponent implements OnInit, OnChanges {
   @Input({ required: true }) item!: NavigationItem;

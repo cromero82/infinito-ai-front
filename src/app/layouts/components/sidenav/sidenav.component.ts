@@ -17,20 +17,19 @@ import { MatButtonModule } from '@angular/material/button';
 import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 
 @Component({
-  selector: 'vex-sidenav',
-  templateUrl: './sidenav.component.html',
-  styleUrls: ['./sidenav.component.scss'],
-  standalone: true,
-  imports: [
-    NgIf,
-    MatButtonModule,
-    MatIconModule,
-    MatRippleModule,
-    VexScrollbarComponent,
-    NgFor,
-    SidenavItemComponent,
-    AsyncPipe
-  ]
+    selector: 'vex-sidenav',
+    templateUrl: './sidenav.component.html',
+    styleUrls: ['./sidenav.component.scss'],
+    imports: [
+        NgIf,
+        MatButtonModule,
+        MatIconModule,
+        MatRippleModule,
+        VexScrollbarComponent,
+        NgFor,
+        SidenavItemComponent,
+        AsyncPipe
+    ]
 })
 export class SidenavComponent implements OnInit {
   @Input() collapsed: boolean = false;

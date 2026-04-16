@@ -13,21 +13,20 @@ import { AuthService } from '../service/auth.service';
 import { finalize } from 'rxjs/operators';
 
 @Component({
-  selector: 'vex-forgot-password',
-  templateUrl: './forgot-password.component.html',
-  styleUrls: ['./forgot-password.component.scss'],
-  animations: [fadeInUp400ms],
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    NgIf,
-    MatButtonModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule
-  ]
+    selector: 'vex-forgot-password',
+    templateUrl: './forgot-password.component.html',
+    styleUrls: ['./forgot-password.component.scss'],
+    animations: [fadeInUp400ms],
+    imports: [
+        ReactiveFormsModule,
+        MatFormFieldModule,
+        MatIconModule,
+        MatInputModule,
+        NgIf,
+        MatButtonModule,
+        MatProgressSpinnerModule,
+        MatSnackBarModule
+    ]
 })
 export class ForgotPasswordComponent implements OnInit {
   form = this.fb.group({

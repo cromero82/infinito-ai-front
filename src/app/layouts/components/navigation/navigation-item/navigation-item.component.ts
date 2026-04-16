@@ -19,21 +19,20 @@ import {
 } from '@angular/common';
 
 @Component({
-  selector: 'vex-navigation-item',
-  templateUrl: './navigation-item.component.html',
-  styleUrls: ['./navigation-item.component.scss'],
-  standalone: true,
-  imports: [
-    NgIf,
-    MatRippleModule,
-    NgClass,
-    RouterLink,
-    MatMenuModule,
-    NgFor,
-    MatIconModule,
-    NgTemplateOutlet,
-    AsyncPipe
-  ]
+    selector: 'vex-navigation-item',
+    templateUrl: './navigation-item.component.html',
+    styleUrls: ['./navigation-item.component.scss'],
+    imports: [
+        NgIf,
+        MatRippleModule,
+        NgClass,
+        RouterLink,
+        MatMenuModule,
+        NgFor,
+        MatIconModule,
+        NgTemplateOutlet,
+        AsyncPipe
+    ]
 })
 export class NavigationItemComponent implements OnInit {
   @Input({ required: true }) item!: NavigationItem;

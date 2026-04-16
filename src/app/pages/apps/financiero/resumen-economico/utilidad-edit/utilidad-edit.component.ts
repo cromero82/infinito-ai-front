@@ -47,41 +47,40 @@ class DateAdapterDDMMYYYY extends NativeDateAdapter {
 }
 
 @Component({
-  selector: 'gm-utilidad-edit',
-  standalone: true,
-  providers: [
-    { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
-    { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
-    {
-      provide: MAT_DATE_FORMATS,
-      useValue: {
-        parse: { dateInput: 'dd/MM/yyyy' },
-        display: {
-          dateInput: 'dd/MM/yyyy',
-          monthYearLabel: 'MMM yyyy',
-          dateA11yLabel: 'dd/MM/yyyy',
-          monthYearA11yLabel: 'MMMM yyyy'
+    selector: 'gm-utilidad-edit',
+    providers: [
+        { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
+        { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
+        {
+            provide: MAT_DATE_FORMATS,
+            useValue: {
+                parse: { dateInput: 'dd/MM/yyyy' },
+                display: {
+                    dateInput: 'dd/MM/yyyy',
+                    monthYearLabel: 'MMM yyyy',
+                    dateA11yLabel: 'dd/MM/yyyy',
+                    monthYearA11yLabel: 'MMMM yyyy'
+                }
+            }
         }
-      }
-    }
-  ],
-  imports: [
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatDividerModule,
-    MatIconModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MonthYearPickerComponent,
-    NgIf,
-    NgSwitch,
-    NgSwitchCase
-  ],
-  templateUrl: './utilidad-edit.component.html',
-  styleUrl: './utilidad-edit.component.scss'
+    ],
+    imports: [
+        ReactiveFormsModule,
+        MatDialogModule,
+        MatButtonModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatDividerModule,
+        MatIconModule,
+        MatDatepickerModule,
+        MatNativeDateModule,
+        MonthYearPickerComponent,
+        NgIf,
+        NgSwitch,
+        NgSwitchCase
+    ],
+    templateUrl: './utilidad-edit.component.html',
+    styleUrl: './utilidad-edit.component.scss'
 })
 export class UtilidadEditComponent implements OnInit {
   form: FormGroup;

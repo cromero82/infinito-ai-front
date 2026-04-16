@@ -30,22 +30,21 @@ export interface UsuarioDto {
 }
 
 @Component({
-  selector: 'gm-usuario-monitoreo',
-  templateUrl: './usuario-monitoreo.component.html',
-  styleUrls: ['./usuario-monitoreo.component.scss'],
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatIconModule,
-    MatButtonModule,
-    MatTooltipModule
-  ],
-  encapsulation: ViewEncapsulation.None
+    selector: 'gm-usuario-monitoreo',
+    templateUrl: './usuario-monitoreo.component.html',
+    styleUrls: ['./usuario-monitoreo.component.scss'],
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatDatepickerModule,
+        MatNativeDateModule,
+        MatIconModule,
+        MatButtonModule,
+        MatTooltipModule
+    ],
+    encapsulation: ViewEncapsulation.None
 })
 export class UsuarioMonitoreoComponent implements OnInit, OnDestroy {
   usuarios: UsuarioDto[] = [];

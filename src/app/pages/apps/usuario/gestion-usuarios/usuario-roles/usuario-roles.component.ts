@@ -33,20 +33,19 @@ export interface UsuarioConRolesEditados extends Usuario {
 }
 
 @Component({
-  selector: 'gm-usuario-roles',
-  templateUrl: './usuario-roles.component.html',
-  styleUrls: ['./usuario-roles.component.scss'],
-  animations: [fadeInUp400ms, fadeInRight400ms, scaleIn400ms],
-  standalone: true,
-  imports: [
-    MatIconModule, 
-    NgFor, 
-    NgIf, 
-    MatButtonModule, 
-    CommonModule,
-    MatTableModule,
-    MatSnackBarModule
-  ]
+    selector: 'gm-usuario-roles',
+    templateUrl: './usuario-roles.component.html',
+    styleUrls: ['./usuario-roles.component.scss'],
+    animations: [fadeInUp400ms, fadeInRight400ms, scaleIn400ms],
+    imports: [
+        MatIconModule,
+        NgFor,
+        NgIf,
+        MatButtonModule,
+        CommonModule,
+        MatTableModule,
+        MatSnackBarModule
+    ]
 })
 export class UsuarioRolesComponent implements OnInit, OnDestroy {
   usuarios: UsuarioConRolesEditados[] = [];

@@ -14,22 +14,21 @@ import { ProveedorEditComponent } from '../proveedor-edit/proveedor-edit.compone
 import { TableViewportService } from '../../../../../core/table-viewport/table-viewport.service';
 
 @Component({
-  selector: 'vex-proveedor-list',
-  standalone: true,
-  imports: [
-    MatButtonModule,
-    MatTooltipModule,
-    MatTableModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    ReactiveFormsModule,
-    FormsModule,
-    NgFor,
-    NgIf
-  ],
-  templateUrl: './proveedor-list.component.html',
-  styleUrl: './proveedor-list.component.scss'
+    selector: 'vex-proveedor-list',
+    imports: [
+        MatButtonModule,
+        MatTooltipModule,
+        MatTableModule,
+        MatIconModule,
+        MatFormFieldModule,
+        MatInputModule,
+        ReactiveFormsModule,
+        FormsModule,
+        NgFor,
+        NgIf
+    ],
+    templateUrl: './proveedor-list.component.html',
+    styleUrl: './proveedor-list.component.scss'
 })
 export class ProveedorListComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = [

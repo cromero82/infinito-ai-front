@@ -6,11 +6,10 @@ import { NgFor, NgClass } from '@angular/common';
 import { TiposService } from '../../service/tipos-service';
 
 @Component({
-  selector: 'vex-tipos-table-menu',
-  templateUrl: './tipos-table-menu.component.html',
-  styleUrls: ['./tipos-table-menu.component.scss'],
-  standalone: true,
-  imports: [MatButtonModule, MatIconModule, NgFor, NgClass]
+    selector: 'vex-tipos-table-menu',
+    templateUrl: './tipos-table-menu.component.html',
+    styleUrls: ['./tipos-table-menu.component.scss'],
+    imports: [MatButtonModule, MatIconModule, NgFor, NgClass]
 })
 export class TiposTableMenuComponent implements OnInit {
   @Output() filterChange = new EventEmitter<Tipo[]>();

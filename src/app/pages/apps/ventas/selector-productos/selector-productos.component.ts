@@ -36,24 +36,23 @@ export interface SelectorProductosResult {
 }
 
 @Component({
-  selector: 'selector-productos',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatTableModule,
-    MatIconModule,
-    MatTooltipModule,
-    DragDropModule,
-    CdkDrag,
-    CdkDragHandle
-  ],
-  templateUrl: './selector-productos.component.html',
-  styleUrls: ['./selector-productos.component.scss']
+    selector: 'selector-productos',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatDialogModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatTableModule,
+        MatIconModule,
+        MatTooltipModule,
+        DragDropModule,
+        CdkDrag,
+        CdkDragHandle
+    ],
+    templateUrl: './selector-productos.component.html',
+    styleUrls: ['./selector-productos.component.scss']
 })
 export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDestroy {
   searchCtrl = new FormControl('', { nonNullable: true });

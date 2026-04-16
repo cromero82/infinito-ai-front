@@ -82,26 +82,25 @@ interface TargetDetalleRollback {
 }
 
 @Component({
-  selector: 'detalle-ticket',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatDialogModule,
-    MatIconModule,
-    MatMenuModule,
-    MatTooltipModule,
-    MatSnackBarModule,
-    CurrencyPipe,
-    DatePipe,
-    EdicionTicketComponent,
-    MetodosPagoComponent
-  ],
-  templateUrl: './detalle-ticket.component.html',
-  styleUrls: ['./detalle-ticket.component.scss']
+    selector: 'detalle-ticket',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatDialogModule,
+        MatIconModule,
+        MatMenuModule,
+        MatTooltipModule,
+        MatSnackBarModule,
+        CurrencyPipe,
+        DatePipe,
+        EdicionTicketComponent,
+        MetodosPagoComponent
+    ],
+    templateUrl: './detalle-ticket.component.html',
+    styleUrls: ['./detalle-ticket.component.scss']
 })
 export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   @Input() ticket: any;

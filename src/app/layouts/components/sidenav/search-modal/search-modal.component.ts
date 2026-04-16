@@ -5,10 +5,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
 
 @Component({
-  standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatRippleModule],
-  selector: 'vex-search-modal',
-  template: `
+    imports: [CommonModule, MatIconModule, MatButtonModule, MatRippleModule],
+    selector: 'vex-search-modal',
+    template: `
     <div>
       <div class="flex items-center gap-4 px-6 py-3 border-b border-divider">
         <mat-icon
@@ -153,7 +152,7 @@ import { MatRippleModule } from '@angular/material/core';
       </div>
     </div>
   `,
-  styles: [``]
+    styles: [``]
 })
 export class SearchModalComponent implements OnInit {
   constructor() {}

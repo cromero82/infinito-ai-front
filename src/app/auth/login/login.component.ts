@@ -24,25 +24,24 @@ import { finalize, switchMap, map, catchError } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
 
 @Component({
-  selector: 'vex-login',
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [fadeInUp400ms],
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    NgIf,
-    MatButtonModule,
-    MatTooltipModule,
-    MatIconModule,
-    MatCheckboxModule,
-    RouterLink,
-    MatSnackBarModule,
-    MatProgressSpinnerModule
-  ]
+    selector: 'vex-login',
+    templateUrl: './login.component.html',
+    styleUrls: ['./login.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    animations: [fadeInUp400ms],
+    imports: [
+        ReactiveFormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        NgIf,
+        MatButtonModule,
+        MatTooltipModule,
+        MatIconModule,
+        MatCheckboxModule,
+        RouterLink,
+        MatSnackBarModule,
+        MatProgressSpinnerModule
+    ]
 })
 export class LoginComponent {
   private readonly defaultRedirectUrl = '/apps/tickets';

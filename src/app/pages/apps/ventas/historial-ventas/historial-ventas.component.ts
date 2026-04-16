@@ -23,22 +23,21 @@ import { FechaUtilService } from '../service/fecha-util.service';
 import { ReciboPrintService } from '../service/recibo-print.service';
 
 @Component({
-  selector: 'vex-historial-ventas',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatButtonToggleModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatSnackBarModule,
-    MatIconModule
-  ],
-  templateUrl: './historial-ventas.component.html',
-  styleUrls: ['./historial-ventas.component.scss']
+    selector: 'vex-historial-ventas',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatButtonModule,
+        MatButtonToggleModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatDatepickerModule,
+        MatNativeDateModule,
+        MatSnackBarModule,
+        MatIconModule
+    ],
+    templateUrl: './historial-ventas.component.html',
+    styleUrls: ['./historial-ventas.component.scss']
 })
 export class HistorialVentasComponent implements OnInit, OnDestroy {
   selectedFilter = 'pagado'; // Por defecto "pagado"

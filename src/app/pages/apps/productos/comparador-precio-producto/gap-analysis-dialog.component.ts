@@ -5,12 +5,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'gap-analysis-dialog',
-  standalone: true,
-  imports: [NgIf, NgClass, DecimalPipe, CurrencyPipe, MatDialogModule, MatButtonModule, FormsModule],
-  providers: [CurrencyPipe, DecimalPipe],
-  templateUrl: './gap-analysis-dialog.component.html',
-  styleUrls: ['./gap-analysis-dialog.component.scss']
+    selector: 'gap-analysis-dialog',
+    imports: [NgIf, NgClass, DecimalPipe, CurrencyPipe, MatDialogModule, MatButtonModule, FormsModule],
+    providers: [CurrencyPipe, DecimalPipe],
+    templateUrl: './gap-analysis-dialog.component.html',
+    styleUrls: ['./gap-analysis-dialog.component.scss']
 })
 export class GapAnalysisDialogComponent implements OnInit {
   selectedItemToGap: any;

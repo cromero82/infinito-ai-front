@@ -10,16 +10,15 @@ export interface ConfirmDialogData {
 }
 
 @Component({
-  selector: 'vex-confirm-dialog',
-  templateUrl: './confirm-dialog.component.html',
-  styleUrls: ['./confirm-dialog.component.scss'],
-  standalone: true,
-  imports: [
-    MatDialogModule,
-    MatButtonModule,
-    MatIconModule,
-    NgIf
-  ]
+    selector: 'vex-confirm-dialog',
+    templateUrl: './confirm-dialog.component.html',
+    styleUrls: ['./confirm-dialog.component.scss'],
+    imports: [
+        MatDialogModule,
+        MatButtonModule,
+        MatIconModule,
+        NgIf
+    ]
 })
 export class ConfirmDialogComponent {
   constructor(

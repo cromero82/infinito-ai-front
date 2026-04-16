@@ -17,27 +17,26 @@ import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { stagger40ms } from '@vex/animations/stagger.animation';
 
 @Component({
-  selector: 'vex-tipos-table',
-  templateUrl: './tipos-table.component.html',
-  styleUrls: ['./tipos-table.component.scss'],
-  animations: [stagger40ms, scaleIn400ms, fadeInRight400ms],
-  styles: [
-    `
+    selector: 'vex-tipos-table',
+    templateUrl: './tipos-table.component.html',
+    styleUrls: ['./tipos-table.component.scss'],
+    animations: [stagger40ms, scaleIn400ms, fadeInRight400ms],
+    styles: [
+        `
       .mat-drawer-container {
         background: transparent !important;
       }
     `
-  ],
-  standalone: true,
-  imports: [
-    MatButtonModule,
-    MatIconModule,
-    ReactiveFormsModule,
-    MatSidenavModule,
-    TiposTableMenuComponent,
-    TiposDataTableComponent,
-    AsyncPipe
-  ]
+    ],
+    imports: [
+        MatButtonModule,
+        MatIconModule,
+        ReactiveFormsModule,
+        MatSidenavModule,
+        TiposTableMenuComponent,
+        TiposDataTableComponent,
+        AsyncPipe
+    ]
 })
 export class TiposTableComponent implements OnInit {
   searchCtrl = new FormControl();

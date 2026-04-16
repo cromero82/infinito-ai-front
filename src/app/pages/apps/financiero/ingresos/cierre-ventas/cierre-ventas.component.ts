@@ -51,41 +51,40 @@ class DateAdapterDDMMYYYY extends NativeDateAdapter {
 }
 
 @Component({
-  selector: 'vex-cierre-ventas',
-  standalone: true,
-  providers: [
-    { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
-    { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
-    {
-      provide: MAT_DATE_FORMATS,
-      useValue: {
-        parse: { dateInput: 'dd/MM/yyyy' },
-        display: {
-          dateInput: 'dd/MM/yyyy',
-          monthYearLabel: 'MMM yyyy',
-          dateA11yLabel: 'dd/MM/yyyy',
-          monthYearA11yLabel: 'MMMM yyyy'
+    selector: 'vex-cierre-ventas',
+    providers: [
+        { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
+        { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
+        {
+            provide: MAT_DATE_FORMATS,
+            useValue: {
+                parse: { dateInput: 'dd/MM/yyyy' },
+                display: {
+                    dateInput: 'dd/MM/yyyy',
+                    monthYearLabel: 'MMM yyyy',
+                    dateA11yLabel: 'dd/MM/yyyy',
+                    monthYearA11yLabel: 'MMMM yyyy'
+                }
+            }
         }
-      }
-    }
-  ],
-  imports: [
-    CommonModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatIconModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatTableModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule,
-    MatCheckboxModule,
-    ReactiveFormsModule
-  ],
-  templateUrl: './cierre-ventas.component.html',
-  styleUrls: ['./cierre-ventas.component.scss']
+    ],
+    imports: [
+        CommonModule,
+        MatDialogModule,
+        MatButtonModule,
+        MatIconModule,
+        MatInputModule,
+        MatFormFieldModule,
+        MatDatepickerModule,
+        MatNativeDateModule,
+        MatTableModule,
+        MatProgressSpinnerModule,
+        MatSnackBarModule,
+        MatCheckboxModule,
+        ReactiveFormsModule
+    ],
+    templateUrl: './cierre-ventas.component.html',
+    styleUrls: ['./cierre-ventas.component.scss']
 })
 export class CierreVentasComponent implements OnInit, OnDestroy {
   fechaInicioCtrl = new FormControl<Date | null>(new Date(), [Validators.required]);

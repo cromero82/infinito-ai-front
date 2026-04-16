@@ -5,8 +5,8 @@ import { Observable } from 'rxjs';
 import { AsyncPipe, NgClass, NgIf } from '@angular/common';
 
 @Component({
-  selector: 'vex-secondary-toolbar',
-  template: `
+    selector: 'vex-secondary-toolbar',
+    template: `
     <div class="secondary-toolbar-placeholder">&nbsp;</div>
 
     <div
@@ -25,9 +25,8 @@ import { AsyncPipe, NgClass, NgIf } from '@angular/common';
       </div>
     </div>
   `,
-  styleUrls: ['./vex-secondary-toolbar.component.scss'],
-  standalone: true,
-  imports: [NgClass, NgIf, AsyncPipe]
+    styleUrls: ['./vex-secondary-toolbar.component.scss'],
+    imports: [NgClass, NgIf, AsyncPipe]
 })
 export class VexSecondaryToolbarComponent {
   @Input() current?: string;

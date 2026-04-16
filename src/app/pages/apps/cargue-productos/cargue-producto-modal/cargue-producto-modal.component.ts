@@ -11,21 +11,20 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CargueProductosService, CargueProductoDto } from '../service/cargue-productos.service';
 
 @Component({
-  selector: 'vex-cargue-producto-modal',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatProgressSpinnerModule,
-    MatIconModule,
-    MatTooltipModule
-  ],
-  templateUrl: './cargue-producto-modal.component.html',
-  styleUrls: ['./cargue-producto-modal.component.scss']
+    selector: 'vex-cargue-producto-modal',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatDialogModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatProgressSpinnerModule,
+        MatIconModule,
+        MatTooltipModule
+    ],
+    templateUrl: './cargue-producto-modal.component.html',
+    styleUrls: ['./cargue-producto-modal.component.scss']
 })
 export class CargueProductoModalComponent implements OnInit {
   form: FormGroup;

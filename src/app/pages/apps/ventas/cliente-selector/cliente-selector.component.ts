@@ -15,21 +15,20 @@ import { Subject, Observable, combineLatest } from 'rxjs';
 import { takeUntil, map, startWith, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
-  selector: 'cliente-selector',
-  standalone: true,
-  imports: [
-    CommonModule,
-    AsyncPipe,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatAutocompleteModule,
-    MatIconModule,
-    MatProgressSpinnerModule
-  ],
-  templateUrl: './cliente-selector.component.html',
-  styleUrls: ['./cliente-selector.component.scss']
+    selector: 'cliente-selector',
+    imports: [
+        CommonModule,
+        AsyncPipe,
+        ReactiveFormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatAutocompleteModule,
+        MatIconModule,
+        MatProgressSpinnerModule
+    ],
+    templateUrl: './cliente-selector.component.html',
+    styleUrls: ['./cliente-selector.component.scss']
 })
 export class ClienteSelectorComponent implements OnInit, AfterViewInit, OnDestroy {
   /** ID del cliente inicialmente seleccionado (opcional). */

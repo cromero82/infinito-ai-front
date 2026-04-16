@@ -22,27 +22,26 @@ export interface ProveedorErrorItem {
 }
 
 @Component({
-  selector: 'vex-proveedor-edit',
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    FormsModule,
-    MatDialogModule,
-    NgIf,
-    NgFor,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDividerModule,
-    MatAutocompleteModule,
-    AsyncPipe,
-    DragDropModule,
-    CdkDrag,
-    CdkDragHandle
-  ],
-  templateUrl: './proveedor-edit.component.html',
-  styleUrl: './proveedor-edit.component.scss'
+    selector: 'vex-proveedor-edit',
+    imports: [
+        ReactiveFormsModule,
+        FormsModule,
+        MatDialogModule,
+        NgIf,
+        NgFor,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatIconModule,
+        MatDividerModule,
+        MatAutocompleteModule,
+        AsyncPipe,
+        DragDropModule,
+        CdkDrag,
+        CdkDragHandle
+    ],
+    templateUrl: './proveedor-edit.component.html',
+    styleUrl: './proveedor-edit.component.scss'
 })
 export class ProveedorEditComponent implements OnInit, AfterViewInit {
   form: FormGroup;

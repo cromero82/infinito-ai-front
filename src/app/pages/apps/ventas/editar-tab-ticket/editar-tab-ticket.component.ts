@@ -12,17 +12,16 @@ export interface EditarTabTicketData {
 }
 
 @Component({
-  selector: 'editar-tab-ticket',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatProgressSpinnerModule,
-    ClienteSelectorComponent
-  ],
-  templateUrl: './editar-tab-ticket.component.html',
-  styleUrls: ['./editar-tab-ticket.component.scss']
+    selector: 'editar-tab-ticket',
+    imports: [
+        CommonModule,
+        MatDialogModule,
+        MatButtonModule,
+        MatProgressSpinnerModule,
+        ClienteSelectorComponent
+    ],
+    templateUrl: './editar-tab-ticket.component.html',
+    styleUrls: ['./editar-tab-ticket.component.scss']
 })
 export class EditarTabTicketComponent {
   selectedClienteId: number | null = null;

@@ -7,18 +7,17 @@ import { MatInputModule } from '@angular/material/input';
 import { MatNativeDateModule } from '@angular/material/core';
 
 @Component({
-  selector: 'app-month-year-picker',
-  standalone: true,
-  imports: [CommonModule, MatFormFieldModule, MatInputModule, MatDatepickerModule, MatNativeDateModule],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => MonthYearPickerComponent),
-      multi: true
-    }
-  ],
-  templateUrl: './month-year-picker.component.html',
-  styleUrl: './month-year-picker.component.scss'
+    selector: 'app-month-year-picker',
+    imports: [CommonModule, MatFormFieldModule, MatInputModule, MatDatepickerModule, MatNativeDateModule],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => MonthYearPickerComponent),
+            multi: true
+        }
+    ],
+    templateUrl: './month-year-picker.component.html',
+    styleUrl: './month-year-picker.component.scss'
 })
 export class MonthYearPickerComponent implements ControlValueAccessor {
   @Input() label = 'Mes';

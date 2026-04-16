@@ -11,25 +11,24 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { LoadingBarRouterModule } from '@ngx-loading-bar/router';
 
 @Component({
-  selector: 'vex-progress-bar',
-  templateUrl: './vex-progress-bar.component.html',
-  styleUrls: ['./vex-progress-bar.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
-  imports: [
-    MatProgressBarModule,
-    LoadingBarModule,
-    LoadingBarRouterModule,
-    AsyncPipe
-  ],
-  providers: [
-    {
-      provide: LOADING_BAR_CONFIG,
-      useValue: {
-        latencyThreshold: 80
-      } as LoadingBarConfig
-    }
-  ]
+    selector: 'vex-progress-bar',
+    templateUrl: './vex-progress-bar.component.html',
+    styleUrls: ['./vex-progress-bar.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    imports: [
+        MatProgressBarModule,
+        LoadingBarModule,
+        LoadingBarRouterModule,
+        AsyncPipe
+    ],
+    providers: [
+        {
+            provide: LOADING_BAR_CONFIG,
+            useValue: {
+                latencyThreshold: 80
+            } as LoadingBarConfig
+        }
+    ]
 })
 export class VexProgressBarComponent {
   value$: Observable<number> = this.loader
