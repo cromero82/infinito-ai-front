@@ -1,146 +1,247 @@
 <div class="recibo-container">
-  <ng-container *ngIf="reciboId !== null; else noReciboSeleccionado">
-    <div *ngIf="loading" class="text-secondary">Cargando recibo...</div>
-    <div
-      *ngIf="!loading && recibo; else reciboNoDisponible"
-      class="detalle-container">
-      <div class="detalle-wrapper">
-        <div *ngIf="detallesLoading" class="text-secondary">Cargando detalles...</div>
-        <div *ngIf="!detallesLoading && detallesError" class="text-warn">
-          {{ detallesError }}
-        </div>
-        <div *ngIf="!detallesLoading && !detallesError" class="detalle-content">
-          <div *ngIf="detalles.length > 0; else sinDetalles" class="detalle-list-wrapper">
-            <div class="detalle-header" [class.has-atendido]="mostrarColumnaAtendido">
-              <span class="detalle-col producto">Producto</span>
-              <span class="detalle-col atendido" *ngIf="mostrarColumnaAtendido">Atendido</span>
-              <span class="detalle-col unitario">Valor unitario</span>
-              <span class="detalle-col cantidad">Cantidad</span>
-              <span class="detalle-col subtotal">Subtotal</span>
+  @if (reciboId !== null) {
+    @if (loading) {
+      <div class="text-secondary">Cargando recibo...</div>
+    }
+    @if (!loading && recibo) {
+      <div class="detalle-container">
+        <div class="detalle-wrapper">
+          @if (detallesLoading) {
+            <div class="text-secondary">Cargando detalles...</div>
+          }
+          @if (!detallesLoading && detallesError) {
+            <div class="text-warn">
+              {{ detallesError }}
             </div>
-            <!-- La lista usa flex para adaptarse al espacio disponible y permitir scroll -->
-            <div class="detalle-list" #detalleList (contextmenu)="onDetalleListContextMenu($event)">
-              <div
-                class="detalle-row"
-                *ngFor="let det of detalles; let i = index"
-                [class.selected-detalle]="isDetalleSelected(i)"
-                [class.has-atendido]="mostrarColumnaAtendido"
-                (click)="onDetalleRowClick(i, $event)"
-                (dblclick)="onDetalleDoubleClick(i, $event)"
-                (mousedown)="onDetalleRowMouseDown(i, $event)"
-                (contextmenu)="onDetalleContextMenu(i, $event)">
-                <div class="detalle-col producto" (dblclick)="onProductoDoubleClick(i, $event); $event.stopPropagation()">
-                  <input
-                    *ngIf="editingProductoIndex === i"
-                    class="producto-input producto-input-{{ i }}"
-                    type="text"
-                    [formControl]="editingProductoCtrl"
-                    (keydown.enter)="onProductoInputKeydown($event, i)"
-                    (keydown.escape)="cancelProductoEdit()"
-                    (blur)="onProductoInputBlur(i)"
-                    (click)="$event.stopPropagation()"
-                    (input)="$event.stopPropagation()" />
-                  <ng-container *ngIf="editingProductoIndex !== i">
-                    <div class="producto-main-line">
-                      <button
-                        *ngIf="hasHistoricoAcciones(det)"
-                        class="historico-toggle"
-                        type="button"
-                        [attr.aria-label]="isHistoricoExpandido(det) ? 'Contraer historico de acciones' : 'Expandir historico de acciones'"
-                        (click)="toggleHistoricoAcciones(det, $event)">
-                        <mat-icon
-                          class="historico-toggle-icon"
-                          [svgIcon]="isHistoricoExpandido(det) ? 'mat:expand_more' : 'mat:chevron_right'"></mat-icon>
-                      </button>
-                      <span class="producto-nombre">
-                        {{ det.producto ? det.producto.nombre : ('Producto ' + det.productoId) }}
-                      </span>
-                    </div>
-                    <div
-                      *ngIf="hasHistoricoAcciones(det) && isHistoricoExpandido(det)"
-                      class="historico-acciones"
-                      (click)="$event.stopPropagation()">
-                      <div class="historico-accion" *ngFor="let accion of getHistoricoAccionesOrdenadas(det)">
-                        {{ getDescripcionHistoricoAccion(det, accion) }}
+          }
+          @if (!detallesLoading && !detallesError) {
+            <div class="detalle-content">
+              @if (detalles.length > 0) {
+                <div class="detalle-list-wrapper">
+                  <div
+                    class="detalle-header"
+                    [class.has-atendido]="mostrarColumnaAtendido">
+                    <span class="detalle-col producto">Producto</span>
+                    @if (mostrarColumnaAtendido) {
+                      <span class="detalle-col atendido">Atendido</span>
+                    }
+                    <span class="detalle-col unitario">Valor unitario</span>
+                    <span class="detalle-col cantidad">Cantidad</span>
+                    <span class="detalle-col subtotal">Subtotal</span>
+                  </div>
+                  <!-- La lista usa flex para adaptarse al espacio disponible y permitir scroll -->
+                  <div
+                    class="detalle-list"
+                    #detalleList
+                    (contextmenu)="onDetalleListContextMenu($event)">
+                    @for (det of detalles; track det; let i = $index) {
+                      <div
+                        class="detalle-row"
+                        [class.selected-detalle]="isDetalleSelected(i)"
+                        [class.has-atendido]="mostrarColumnaAtendido"
+                        (click)="onDetalleRowClick(i, $event)"
+                        (dblclick)="onDetalleDoubleClick(i, $event)"
+                        (mousedown)="onDetalleRowMouseDown(i, $event)"
+                        (contextmenu)="onDetalleContextMenu(i, $event)">
+                        <div
+                          class="detalle-col producto"
+                          (dblclick)="
+                            onProductoDoubleClick(i, $event);
+                            $event.stopPropagation()
+                          ">
+                          @if (editingProductoIndex === i) {
+                            <input
+                              class="producto-input producto-input-{{ i }}"
+                              type="text"
+                              [formControl]="editingProductoCtrl"
+                              (keydown.enter)="
+                                onProductoInputKeydown($event, i)
+                              "
+                              (keydown.escape)="cancelProductoEdit()"
+                              (blur)="onProductoInputBlur(i)"
+                              (click)="$event.stopPropagation()"
+                              (input)="$event.stopPropagation()" />
+                          }
+                          @if (editingProductoIndex !== i) {
+                            <div class="producto-main-line">
+                              @if (hasHistoricoAcciones(det)) {
+                                <button
+                                  class="historico-toggle"
+                                  type="button"
+                                  [attr.aria-label]="
+                                    isHistoricoExpandido(det)
+                                      ? 'Contraer historico de acciones'
+                                      : 'Expandir historico de acciones'
+                                  "
+                                  (click)="
+                                    toggleHistoricoAcciones(det, $event)
+                                  ">
+                                  <mat-icon
+                                    class="historico-toggle-icon"
+                                    [svgIcon]="
+                                      isHistoricoExpandido(det)
+                                        ? 'mat:expand_more'
+                                        : 'mat:chevron_right'
+                                    "></mat-icon>
+                                </button>
+                              }
+                              <span class="producto-nombre">
+                                {{
+                                  det.producto
+                                    ? det.producto.nombre
+                                    : "Producto " + det.productoId
+                                }}
+                              </span>
+                            </div>
+                            @if (
+                              hasHistoricoAcciones(det) &&
+                              isHistoricoExpandido(det)
+                            ) {
+                              <div
+                                class="historico-acciones"
+                                (click)="$event.stopPropagation()">
+                                @for (
+                                  accion of getHistoricoAccionesOrdenadas(det);
+                                  track accion
+                                ) {
+                                  <div class="historico-accion">
+                                    {{
+                                      getDescripcionHistoricoAccion(det, accion)
+                                    }}
+                                  </div>
+                                }
+                              </div>
+                            }
+                          }
+                        </div>
+                        @if (mostrarColumnaAtendido) {
+                          <span class="detalle-col atendido">
+                            @if (det.nombreUsuarioAtendio) {
+                              <span class="atendido-text">
+                                {{ formatAtendidoPor(det) }}
+                              </span>
+                            }
+                          </span>
+                        }
+                        <span
+                          class="detalle-col unitario"
+                          (dblclick)="
+                            onUnitarioDoubleClick(i, $event);
+                            $event.stopPropagation()
+                          ">
+                          @if (editingUnitarioIndex === i) {
+                            <input
+                              class="valor-unitario-input valor-unitario-input-{{
+                                i
+                              }}"
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              [formControl]="editingUnitarioCtrl"
+                              (keydown.enter)="
+                                onUnitarioInputKeydown($event, i)
+                              "
+                              (keydown.escape)="cancelUnitarioEdit()"
+                              (blur)="onUnitarioInputBlur(i)"
+                              (click)="$event.stopPropagation()"
+                              (input)="$event.stopPropagation()" />
+                          }
+                          @if (editingUnitarioIndex !== i) {
+                            <span class="unitario-display">
+                              @if (tienePrecioUnidad(det)) {
+                                <button
+                                  type="button"
+                                  class="unitario-toggle-btn"
+                                  [class.unitario-toggle-btn--active]="
+                                    estaUsandoPrecioUnidad(det)
+                                  "
+                                  [attr.aria-label]="
+                                    getPrecioUnidadToggleTooltip(det)
+                                  "
+                                  [matTooltip]="
+                                    getPrecioUnidadToggleTooltip(det)
+                                  "
+                                  (click)="togglePrecioUnidad(det, i, $event)">
+                                  <mat-icon svgIcon="mat:sync_alt"></mat-icon>
+                                </button>
+                              }
+                              <span>{{
+                                formatCurrency(getDetalleUnitario(det))
+                              }}</span>
+                            </span>
+                          }
+                        </span>
+                        <span
+                          class="detalle-col cantidad"
+                          (dblclick)="
+                            onCantidadDoubleClick(i, $event);
+                            $event.stopPropagation()
+                          ">
+                          @if (editingDetalleIndex === i) {
+                            <input
+                              class="cantidad-input cantidad-input-{{ i }}"
+                              type="number"
+                              min="1"
+                              [formControl]="editingCantidadCtrl"
+                              (keydown.enter)="
+                                onCantidadInputKeydown($event, i)
+                              "
+                              (keydown.escape)="cancelCantidadEdit()"
+                              (blur)="onCantidadInputBlur(i)"
+                              (click)="$event.stopPropagation()"
+                              (input)="$event.stopPropagation()" />
+                          }
+                          @if (editingDetalleIndex !== i) {
+                            <span>{{ det.cantidad }}</span>
+                          }
+                        </span>
+                        <span class="detalle-col subtotal">
+                          {{ formatCurrency(det.subtotal) }}
+                        </span>
                       </div>
-                    </div>
-                  </ng-container>
+                    }
+                  </div>
                 </div>
-                <span class="detalle-col atendido" *ngIf="mostrarColumnaAtendido">
-                  <span *ngIf="det.nombreUsuarioAtendio" class="atendido-text">
-                    {{ formatAtendidoPor(det) }}
-                  </span>
-                </span>
-                <span class="detalle-col unitario" (dblclick)="onUnitarioDoubleClick(i, $event); $event.stopPropagation()">
-                  <input
-                    *ngIf="editingUnitarioIndex === i"
-                    class="valor-unitario-input valor-unitario-input-{{ i }}"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    [formControl]="editingUnitarioCtrl"
-                    (keydown.enter)="onUnitarioInputKeydown($event, i)"
-                    (keydown.escape)="cancelUnitarioEdit()"
-                    (blur)="onUnitarioInputBlur(i)"
-                    (click)="$event.stopPropagation()"
-                    (input)="$event.stopPropagation()" />
-                  <span *ngIf="editingUnitarioIndex !== i" class="unitario-display">
-                    <button
-                      *ngIf="tienePrecioUnidad(det)"
-                      type="button"
-                      class="unitario-toggle-btn"
-                      [class.unitario-toggle-btn--active]="estaUsandoPrecioUnidad(det)"
-                      [attr.aria-label]="getPrecioUnidadToggleTooltip(det)"
-                      [matTooltip]="getPrecioUnidadToggleTooltip(det)"
-                      (click)="togglePrecioUnidad(det, i, $event)">
-                      <mat-icon svgIcon="mat:sync_alt"></mat-icon>
-                    </button>
-                    <span>{{ formatCurrency(getDetalleUnitario(det)) }}</span>
-                  </span>
-                </span>
-                <span class="detalle-col cantidad" (dblclick)="onCantidadDoubleClick(i, $event); $event.stopPropagation()">
-                  <input
-                    *ngIf="editingDetalleIndex === i"
-                    class="cantidad-input cantidad-input-{{ i }}"
-                    type="number"
-                    min="1"
-                    [formControl]="editingCantidadCtrl"
-                    (keydown.enter)="onCantidadInputKeydown($event, i)"
-                    (keydown.escape)="cancelCantidadEdit()"
-                    (blur)="onCantidadInputBlur(i)"
-                    (click)="$event.stopPropagation()"
-                    (input)="$event.stopPropagation()" />
-                  <span *ngIf="editingDetalleIndex !== i">{{ det.cantidad }}</span>
-                </span>
-                <span class="detalle-col subtotal">
-                  {{ formatCurrency(det.subtotal) }}
-                </span>
-              </div>
+              } @else {
+                <div class="text-secondary">
+                  Este recibo no tiene detalles registrados.
+                </div>
+              }
             </div>
-          </div>
-          <ng-template #sinDetalles>
-            <div class="text-secondary">Este recibo no tiene detalles registrados.</div>
-          </ng-template>
+          }
         </div>
       </div>
-    </div>
-  </ng-container>
+    } @else {
+      <div class="text-secondary">
+        {{ error || "No se encontró información del recibo." }}
+      </div>
+    }
+  } @else {
+    <p class="text-secondary">
+      Seleccione un ticket con recibo asociado para ver detalles.
+    </p>
+  }
 
-  <div class="detalle-footer-wrapper" *ngIf="!loading && recibo">
-    <!-- Info de atención original (cuando el ticket pertenece a otra sesión) -->
-    <div class="atendido-por-info" *ngIf="ticketDeOtraSesion && ticket?.atendidoPor">
-      <span class="atendido-por-label">
-        Inicialmente atendido por
-        <strong>{{ ticket.atendidoPor.nombre }}</strong>
-        a las {{ formatFechaCreacion(ticket.fechaCreacion) }}
-      </span>
-    </div>
-    <div class="split-ticket-info" *ngIf="splitComment">
-      <span class="split-ticket-label">
-        {{ splitComment }}
-      </span>
-    </div>
-    <div class="detalle-footer" [class.has-atendido]="mostrarColumnaAtendido">
+  @if (!loading && recibo) {
+    <div class="detalle-footer-wrapper">
+      <!-- Info de atención original (cuando el ticket pertenece a otra sesión) -->
+      @if (ticketDeOtraSesion && ticket?.atendidoPor) {
+        <div class="atendido-por-info">
+          <span class="atendido-por-label">
+            Inicialmente atendido por
+            <strong>{{ ticket.atendidoPor.nombre }}</strong>
+            a las {{ formatFechaCreacion(ticket.fechaCreacion) }}
+          </span>
+        </div>
+      }
+      @if (splitComment) {
+        <div class="split-ticket-info">
+          <span class="split-ticket-label">
+            {{ splitComment }}
+          </span>
+        </div>
+      }
+      <div class="detalle-footer" [class.has-atendido]="mostrarColumnaAtendido">
         <div class="metodos-pago-container">
           <metodos-pago
             [recibo]="recibo"
@@ -149,7 +250,9 @@
             (metodoPagoSeleccionado)="onMetodoPagoSeleccionado($event)">
           </metodos-pago>
         </div>
-        <div *ngIf="mostrarColumnaAtendido"></div>
+        @if (mostrarColumnaAtendido) {
+          <div></div>
+        }
         <div></div>
         <div></div>
         <div class="total-externo">
@@ -158,28 +261,20 @@
             {{ formatCurrency(recibo ? recibo.total : 0) }}
           </span>
         </div>
+      </div>
     </div>
-  </div>
-
-  <ng-template #noReciboSeleccionado>
-    <p class="text-secondary">Seleccione un ticket con recibo asociado para ver detalles.</p>
-  </ng-template>
-
-  <ng-template #reciboNoDisponible>
-    <div class="text-secondary">
-      {{ error || 'No se encontró información del recibo.' }}
-    </div>
-  </ng-template>
+  }
 
   <!-- Componente de Edición Recibo -->
-  <edicion-ticket
-    *ngIf="estaEnEdicion && reciboId"
-    [reciboId]="reciboId"
-    [detalles]="detalles"
-    [recibo]="recibo"
-    (metodoPagoSeleccionado)="onMetodoPagoSeleccionadoDesdeEdicion($event)"
-    (finalizar)="onFinalizarEdicion()">
-  </edicion-ticket>
+  @if (estaEnEdicion && reciboId) {
+    <edicion-ticket
+      [reciboId]="reciboId"
+      [detalles]="detalles"
+      [recibo]="recibo"
+      (metodoPagoSeleccionado)="onMetodoPagoSeleccionadoDesdeEdicion($event)"
+      (finalizar)="onFinalizarEdicion()">
+    </edicion-ticket>
+  }
 
   <div
     class="detalle-context-menu-anchor"
@@ -189,8 +284,7 @@
       #detalleContextMenuTrigger="matMenuTrigger"
       class="detalle-context-menu-trigger"
       [matMenuTriggerFor]="detalleContextMenu"
-      type="button">
-    </button>
+      type="button"></button>
   </div>
 
   <mat-menu #detalleContextMenu="matMenu" class="detalle-context-menu">
@@ -200,15 +294,19 @@
   </mat-menu>
 
   <mat-menu #moverDetalleMenu="matMenu" class="detalle-context-menu">
-    <button mat-menu-item type="button" (click)="requestMoveSelectedDetallesToNewTicket()">
-      Nuevo ticket
-    </button>
     <button
-      *ngFor="let option of availableTicketMoveOptions"
       mat-menu-item
       type="button"
-      (click)="requestMoveSelectedDetallesToExistingTicket(option.id)">
-      {{ option.label }}
+      (click)="requestMoveSelectedDetallesToNewTicket()">
+      Nuevo ticket
     </button>
+    @for (option of availableTicketMoveOptions; track option) {
+      <button
+        mat-menu-item
+        type="button"
+        (click)="requestMoveSelectedDetallesToExistingTicket(option.id)">
+        {{ option.label }}
+      </button>
+    }
   </mat-menu>
 </div>

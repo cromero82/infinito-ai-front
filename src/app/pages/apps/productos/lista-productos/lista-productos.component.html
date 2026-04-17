@@ -348,14 +348,14 @@
               <ng-container matColumnDef="fechaUltimaActualizacionPrecio">
                 <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-fecha-wide">Actualización precio</th>
                 <td *matCellDef="let product" mat-cell class="col-fecha-wide">
-                  <ng-container *ngIf="getFechaRelativa(product.fechaUltimaActualizacionPrecio) as f; else fechaEmpty">
+                  <ng-container *ngIf="getFechaRelativa(product.fechaUltimaActualizacionPrecio) as f; else fechaEmptyPrecio">
                     <span *ngIf="!f.hasTwoLines">{{ f.line1 }}</span>
                     <div *ngIf="f.hasTwoLines" class="fecha-relativa-cell">
                       <span>{{ f.line1 }}</span>
                       <span>{{ f.line2 }}</span>
                     </div>
                   </ng-container>
-                  <ng-template #fechaEmpty>-</ng-template>
+                  <ng-template #fechaEmptyPrecio>-</ng-template>
                 </td>
               </ng-container>
 
@@ -363,14 +363,14 @@
               <ng-container matColumnDef="fechaCreacion">
                 <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-fecha">Fecha creacion</th>
                 <td *matCellDef="let product" mat-cell class="col-fecha">
-                  <ng-container *ngIf="getFechaRelativa(product.fechaCreacion) as f; else fechaEmpty">
+                  <ng-container *ngIf="getFechaRelativa(product.fechaCreacion) as f; else fechaEmptyCreacion">
                     <span *ngIf="!f.hasTwoLines">{{ f.line1 }}</span>
                     <div *ngIf="f.hasTwoLines" class="fecha-relativa-cell">
                       <span>{{ f.line1 }}</span>
                       <span>{{ f.line2 }}</span>
                     </div>
                   </ng-container>
-                  <ng-template #fechaEmpty>-</ng-template>
+                  <ng-template #fechaEmptyCreacion>-</ng-template>
                 </td>
               </ng-container>
               <!-- Total Ventas Column -->
@@ -387,14 +387,14 @@
               <ng-container matColumnDef="fechaUltimaVenta">
                 <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-fecha-wide">Última venta</th>
                 <td *matCellDef="let product" mat-cell class="col-fecha-wide">
-                  <ng-container *ngIf="getFechaRelativa(product.fecha_ultima_venta ?? product.fechaUltimaVenta) as f; else fechaEmpty">
+                  <ng-container *ngIf="getFechaRelativa(product.fecha_ultima_venta ?? product.fechaUltimaVenta) as f; else fechaEmptyVenta">
                     <span *ngIf="!f.hasTwoLines">{{ f.line1 }}</span>
                     <div *ngIf="f.hasTwoLines" class="fecha-relativa-cell">
                       <span>{{ f.line1 }}</span>
                       <span>{{ f.line2 }}</span>
                     </div>
                   </ng-container>
-                  <ng-template #fechaEmpty>-</ng-template>
+                  <ng-template #fechaEmptyVenta>-</ng-template>
                 </td>
               </ng-container>
               <!-- Edit Column -->

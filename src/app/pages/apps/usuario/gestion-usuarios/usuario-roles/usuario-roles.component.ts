@@ -5,7 +5,7 @@ import { scaleIn400ms } from '@vex/animations/scale-in.animation';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { NgFor, NgIf, CommonModule } from '@angular/common';
+
 import { MatIconModule } from '@angular/material/icon';
 import { Subject, forkJoin } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -33,27 +33,25 @@ export interface UsuarioConRolesEditados extends Usuario {
 }
 
 @Component({
-    selector: 'gm-usuario-roles',
-    templateUrl: './usuario-roles.component.html',
-    styleUrls: ['./usuario-roles.component.scss'],
-    animations: [fadeInUp400ms, fadeInRight400ms, scaleIn400ms],
-    imports: [
-        MatIconModule,
-        NgFor,
-        NgIf,
-        MatButtonModule,
-        CommonModule,
-        MatTableModule,
-        MatSnackBarModule
-    ]
+  selector: 'gm-usuario-roles',
+  templateUrl: './usuario-roles.component.html',
+  styleUrls: ['./usuario-roles.component.scss'],
+  animations: [fadeInUp400ms, fadeInRight400ms, scaleIn400ms],
+  imports: [MatIconModule, MatButtonModule, MatTableModule, MatSnackBarModule]
 })
 export class UsuarioRolesComponent implements OnInit, OnDestroy {
   usuarios: UsuarioConRolesEditados[] = [];
   roles: Rol[] = [];
   loading = false;
   error: string | null = null;
-  displayedColumns: string[] = ['nombre', 'correoElectronico', 'telefono', 'roles', 'acciones'];
-  
+  displayedColumns: string[] = [
+    'nombre',
+    'correoElectronico',
+    'telefono',
+    'roles',
+    'acciones'
+  ];
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -77,38 +75,43 @@ export class UsuarioRolesComponent implements OnInit, OnDestroy {
     forkJoin({
       usuarios: this.authService.obtenerUsuarios(),
       roles: this.authService.obtenerRoles()
-    }).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: ({ usuarios, roles }: { usuarios: any[], roles: Rol[] }) => {
-        this.roles = roles;
-        this.usuarios = usuarios.map((usuario: Usuario) => ({
-          ...usuario,
-          rolesEditados: usuario.roles.map((r: Rol) => r.sigla), // Inicializar con roles actuales
-          tieneCambios: false
-        }));
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error loading data', err);
-        this.error = 'Error al cargar los datos.';
-        this.loading = false;
-      }
-    });
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ({ usuarios, roles }: { usuarios: any[]; roles: Rol[] }) => {
+          this.roles = roles;
+          this.usuarios = usuarios.map((usuario: Usuario) => ({
+            ...usuario,
+            rolesEditados: usuario.roles.map((r: Rol) => r.sigla), // Inicializar con roles actuales
+            tieneCambios: false
+          }));
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Error loading data', err);
+          this.error = 'Error al cargar los datos.';
+          this.loading = false;
+        }
+      });
   }
 
   toggleRol(usuario: UsuarioConRolesEditados, rolSigla: string): void {
     const index = usuario.rolesEditados.indexOf(rolSigla);
     if (index > -1) {
       // Remover rol
-      usuario.rolesEditados = usuario.rolesEditados.filter(s => s !== rolSigla);
+      usuario.rolesEditados = usuario.rolesEditados.filter(
+        (s) => s !== rolSigla
+      );
     } else {
       // Agregar rol
       usuario.rolesEditados.push(rolSigla);
     }
-    
+
     // Verificar si hay cambios comparando con los roles originales
-    const rolesOriginales = usuario.roles.map(r => r.sigla).sort().join(',');
+    const rolesOriginales = usuario.roles
+      .map((r) => r.sigla)
+      .sort()
+      .join(',');
     const rolesEditadosSorted = [...usuario.rolesEditados].sort().join(',');
     usuario.tieneCambios = rolesOriginales !== rolesEditadosSorted;
   }
@@ -127,12 +130,15 @@ export class UsuarioRolesComponent implements OnInit, OnDestroy {
     }
 
     this.loading = true;
-    this.authService.actualizarRolesUsuario(usuario.correoElectronico, usuario.rolesEditados)
+    this.authService
+      .actualizarRolesUsuario(usuario.correoElectronico, usuario.rolesEditados)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           // Actualizar los roles originales con los editados
-          usuario.roles = this.roles.filter(r => usuario.rolesEditados.includes(r.sigla));
+          usuario.roles = this.roles.filter((r) =>
+            usuario.rolesEditados.includes(r.sigla)
+          );
           usuario.tieneCambios = false;
           this.loading = false;
           this.snackBar.open('Roles actualizados correctamente', 'Cerrar', {
@@ -149,6 +155,3 @@ export class UsuarioRolesComponent implements OnInit, OnDestroy {
       });
   }
 }
-
-
-

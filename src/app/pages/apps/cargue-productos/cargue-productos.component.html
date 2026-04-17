@@ -4,21 +4,21 @@
     <div class="header-section">
       <h2 class="title mt-0 mb-4">Cargues de Productos</h2>
       <div class="header-buttons">
-        <button 
-          mat-flat-button 
+        <button
+          mat-flat-button
           color="primary"
-          type="button" 
-          (click)="abrirModalRegistrarCargue()" 
+          type="button"
+          (click)="abrirModalRegistrarCargue()"
           matTooltip="Registrar nuevo cargue de productos"
           class="add-button">
           <mat-icon svgIcon="mat:add"></mat-icon>
           <span class="ml-1">Registrar</span>
         </button>
-        <button 
-          mat-icon-button 
+        <button
+          mat-icon-button
           color="primary"
-          type="button" 
-          (click)="loadCargueProductos()" 
+          type="button"
+          (click)="loadCargueProductos()"
           matTooltip="Refrescar lista"
           [disabled]="loading">
           <mat-icon svgIcon="mat:refresh"></mat-icon>
@@ -27,69 +27,92 @@
     </div>
 
     <!-- Filtro de conflictos no resueltos -->
-    <div class="filter-section" *ngIf="selectedCargueProductoId">
-      <div class="filter-toggle-container">
-        <mat-slide-toggle
-          [formControl]="unicamenteNoResueltosCtrl"
-          (change)="onUnicamenteNoResueltosChange()"
-          matTooltip="Incluir conflictos NO resueltos"
-          matTooltipPosition="right">
-          <span class="filter-label">Solo no resueltos</span>
-        </mat-slide-toggle>
+    @if (selectedCargueProductoId) {
+      <div class="filter-section">
+        <div class="filter-toggle-container">
+          <mat-slide-toggle
+            [formControl]="unicamenteNoResueltosCtrl"
+            (change)="onUnicamenteNoResueltosChange()"
+            matTooltip="Incluir conflictos NO resueltos"
+            matTooltipPosition="right">
+            <span class="filter-label">Solo no resueltos</span>
+          </mat-slide-toggle>
+        </div>
       </div>
-    </div>
+    }
 
     <div class="cargues-list-container">
-      <div class="loading" *ngIf="loading">Cargando...</div>
-      <div class="error" *ngIf="!loading && error">{{ error }}</div>
-      
-      <div 
-        class="cargues-list" 
-        *ngIf="!loading && !error">
-        <div
-          *ngFor="let cargue of cargueProductos"
-          class="cargue-item"
-          [class.selected]="selectedCargueProductoId === cargue.id"
-          (click)="selectCargueProducto(cargue)">
-          <div class="cargue-content-wrapper">
-            <div class="cargue-content">
-              <div class="cargue-header">
-                <span class="cargue-nombre">{{ cargue.nombre }}</span>
-              </div>
-              <div class="cargue-info">
-                <span class="cargue-fecha">{{ formatDate(cargue.fechaCreacion) }}</span>
-              </div>
-              <div class="cargue-stats">
-                <span class="stat-item">
-                  <mat-icon svgIcon="mat:check_circle" class="stat-icon success"></mat-icon>
-                  <span>{{ cargue.totalMigrados }} migrados</span>
-                </span>
-                <span class="stat-item">
-                  <mat-icon svgIcon="mat:error" class="stat-icon warning"></mat-icon>
-                  <span>{{ cargue.totalConflictos }} conflictos</span>
-                </span>
-                <span class="stat-item" *ngIf="cargue.totalConflictosResultos > 0">
-                  <mat-icon svgIcon="mat:check" class="stat-icon resolved"></mat-icon>
-                  <span>{{ cargue.totalConflictosResultos }} resueltos</span>
-                </span>
+      @if (loading) {
+        <div class="loading">Cargando...</div>
+      }
+      @if (!loading && error) {
+        <div class="error">{{ error }}</div>
+      }
+
+      @if (!loading && !error) {
+        <div class="cargues-list">
+          @for (cargue of cargueProductos; track cargue) {
+            <div
+              class="cargue-item"
+              [class.selected]="selectedCargueProductoId === cargue.id"
+              (click)="selectCargueProducto(cargue)">
+              <div class="cargue-content-wrapper">
+                <div class="cargue-content">
+                  <div class="cargue-header">
+                    <span class="cargue-nombre">{{ cargue.nombre }}</span>
+                  </div>
+                  <div class="cargue-info">
+                    <span class="cargue-fecha">{{
+                      formatDate(cargue.fechaCreacion)
+                    }}</span>
+                  </div>
+                  <div class="cargue-stats">
+                    <span class="stat-item">
+                      <mat-icon
+                        svgIcon="mat:check_circle"
+                        class="stat-icon success"></mat-icon>
+                      <span>{{ cargue.totalMigrados }} migrados</span>
+                    </span>
+                    <span class="stat-item">
+                      <mat-icon
+                        svgIcon="mat:error"
+                        class="stat-icon warning"></mat-icon>
+                      <span>{{ cargue.totalConflictos }} conflictos</span>
+                    </span>
+                    @if (cargue.totalConflictosResultos > 0) {
+                      <span class="stat-item">
+                        <mat-icon
+                          svgIcon="mat:check"
+                          class="stat-icon resolved"></mat-icon>
+                        <span
+                          >{{ cargue.totalConflictosResultos }} resueltos</span
+                        >
+                      </span>
+                    }
+                  </div>
+                </div>
+                @if (tieneConflictosResueltos(cargue)) {
+                  <div class="cargue-progress">
+                    <mat-progress-spinner
+                      mode="determinate"
+                      [value]="getPorcentajeResueltos(cargue)"
+                      diameter="50"
+                      strokeWidth="4"
+                      color="accent">
+                    </mat-progress-spinner>
+                    <span class="progress-text"
+                      >{{ getPorcentajeResueltos(cargue) }}%</span
+                    >
+                  </div>
+                }
               </div>
             </div>
-            <div class="cargue-progress" *ngIf="tieneConflictosResueltos(cargue)">
-              <mat-progress-spinner
-                mode="determinate"
-                [value]="getPorcentajeResueltos(cargue)"
-                diameter="50"
-                strokeWidth="4"
-                color="accent">
-              </mat-progress-spinner>
-              <span class="progress-text">{{ getPorcentajeResueltos(cargue) }}%</span>
-            </div>
-          </div>
+          }
+          @if (cargueProductos.length === 0) {
+            <div class="empty-message">No hay cargues disponibles</div>
+          }
         </div>
-        <div class="empty-message" *ngIf="cargueProductos.length === 0">
-          No hay cargues disponibles
-        </div>
-      </div>
+      }
     </div>
   </div>
 
@@ -98,252 +121,622 @@
     <div class="p-6">
       <div class="right-header">
         <h2 class="title mt-0 mb-4">Conflictos</h2>
-        <div *ngIf="selectedCargueProductoId && !conflictosLoading && !conflictosError" class="search-container">
-          <mat-form-field appearance="outline" class="search-field">
-            <mat-label>Buscar o filtrar</mat-label>
-            <input matInput [formControl]="searchTermCtrl" placeholder="Buscar en cualquier campo..." />
-            <mat-icon matPrefix svgIcon="mat:search"></mat-icon>
-            <button
-              *ngIf="searchTermCtrl.value"
-              mat-icon-button
-              matSuffix
-              (click)="searchTermCtrl.setValue('')"
-              type="button"
-              matTooltip="Limpiar búsqueda">
-              <mat-icon svgIcon="mat:clear"></mat-icon>
-            </button>
-          </mat-form-field>
+        @if (
+          selectedCargueProductoId && !conflictosLoading && !conflictosError
+        ) {
+          <div class="search-container">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Buscar o filtrar</mat-label>
+              <input
+                matInput
+                [formControl]="searchTermCtrl"
+                placeholder="Buscar en cualquier campo..." />
+              <mat-icon matPrefix svgIcon="mat:search"></mat-icon>
+              @if (searchTermCtrl.value) {
+                <button
+                  mat-icon-button
+                  matSuffix
+                  (click)="searchTermCtrl.setValue('')"
+                  type="button"
+                  matTooltip="Limpiar búsqueda">
+                  <mat-icon svgIcon="mat:clear"></mat-icon>
+                </button>
+              }
+            </mat-form-field>
+          </div>
+        }
+      </div>
+
+      @if (!selectedCargueProductoId) {
+        <div class="text-secondary">
+          Seleccione un cargue de productos para ver los conflictos
         </div>
-      </div>
-      
-      <div *ngIf="!selectedCargueProductoId" class="text-secondary">
-        Seleccione un cargue de productos para ver los conflictos
-      </div>
+      }
 
-      <div *ngIf="selectedCargueProductoId && conflictosLoading" class="loading">
-        Cargando conflictos...
-      </div>
+      @if (selectedCargueProductoId && conflictosLoading) {
+        <div class="loading">Cargando conflictos...</div>
+      }
 
-      <div *ngIf="selectedCargueProductoId && conflictosError" class="error">
-        {{ conflictosError }}
-      </div>
+      @if (selectedCargueProductoId && conflictosError) {
+        <div class="error">
+          {{ conflictosError }}
+        </div>
+      }
 
-      <div *ngIf="selectedCargueProductoId && !conflictosLoading && !conflictosError" class="conflictos-content">
-        <div class="conflictos-container">
-          <div class="conflictos-wrapper">
-            <div class="conflictos-header">
-              <span class="conflicto-col tipo sortable" (click)="sortBy('tipo')">
-                <span>Tipo Conflicto</span>
-                <mat-icon [svgIcon]="getSortIcon('tipo')" class="sort-icon" [class.active]="isSortedBy('tipo')"></mat-icon>
-              </span>
-              <span class="conflicto-col producto sortable" (click)="sortBy('producto')">
-                <span>Nombre Producto</span>
-                <mat-icon [svgIcon]="getSortIcon('producto')" class="sort-icon" [class.active]="isSortedBy('producto')"></mat-icon>
-              </span>
-              <span class="conflicto-col datos sortable" (click)="sortBy('datos')">
-                <span>Datos Conflicto</span>
-                <mat-icon [svgIcon]="getSortIcon('datos')" class="sort-icon" [class.active]="isSortedBy('datos')"></mat-icon>
-              </span>
-              <span class="conflicto-col acciones">Acciones</span>
-            </div>
-            <div class="conflictos-list">
-              <div
-                class="conflicto-row"
-                *ngFor="let conflictoParsed of filteredConflictosParsed; let i = index"
-                [class.resuelto]="conflictoParsed.conflicto.resuelto">
-                <span class="conflicto-col tipo">
-                  {{ getTipoConflictoLabel(conflictoParsed.conflicto.tipoConflictoId) }}
+      @if (selectedCargueProductoId && !conflictosLoading && !conflictosError) {
+        <div class="conflictos-content">
+          <div class="conflictos-container">
+            <div class="conflictos-wrapper">
+              <div class="conflictos-header">
+                <span
+                  class="conflicto-col tipo sortable"
+                  (click)="sortBy('tipo')">
+                  <span>Tipo Conflicto</span>
+                  <mat-icon
+                    [svgIcon]="getSortIcon('tipo')"
+                    class="sort-icon"
+                    [class.active]="isSortedBy('tipo')"></mat-icon>
                 </span>
-                <span class="conflicto-col producto" [innerHTML]="getNombreProductoFormateado(conflictoParsed)"></span>
-                <span class="conflicto-col datos">
-                  <div class="conflicto-items-container">
-                    <div 
-                      class="conflicto-item"
-                      *ngFor="let item of conflictoParsed.items; let j = index">
-                      <div class="conflicto-item-content" *ngIf="j > 0">
-                        <hr class="conflicto-separator">
+                <span
+                  class="conflicto-col producto sortable"
+                  (click)="sortBy('producto')">
+                  <span>Nombre Producto</span>
+                  <mat-icon
+                    [svgIcon]="getSortIcon('producto')"
+                    class="sort-icon"
+                    [class.active]="isSortedBy('producto')"></mat-icon>
+                </span>
+                <span
+                  class="conflicto-col datos sortable"
+                  (click)="sortBy('datos')">
+                  <span>Datos Conflicto</span>
+                  <mat-icon
+                    [svgIcon]="getSortIcon('datos')"
+                    class="sort-icon"
+                    [class.active]="isSortedBy('datos')"></mat-icon>
+                </span>
+                <span class="conflicto-col acciones">Acciones</span>
+              </div>
+              <div class="conflictos-list">
+                @for (
+                  conflictoParsed of filteredConflictosParsed;
+                  track conflictoParsed;
+                  let i = $index
+                ) {
+                  <div
+                    class="conflicto-row"
+                    [class.resuelto]="conflictoParsed.conflicto.resuelto">
+                    <span class="conflicto-col tipo">
+                      {{
+                        getTipoConflictoLabel(
+                          conflictoParsed.conflicto.tipoConflictoId
+                        )
+                      }}
+                    </span>
+                    <span
+                      class="conflicto-col producto"
+                      [innerHTML]="
+                        getNombreProductoFormateado(conflictoParsed)
+                      "></span>
+                    <span class="conflicto-col datos">
+                      <div class="conflicto-items-container">
+                        @for (
+                          item of conflictoParsed.items;
+                          track item;
+                          let j = $index
+                        ) {
+                          <div class="conflicto-item">
+                            @if (j > 0) {
+                              <div class="conflicto-item-content">
+                                <hr class="conflicto-separator" />
+                              </div>
+                            }
+                            <div class="conflicto-item-fields">
+                              <!-- Para IGUAL_NOMBRE_Y_CODIGO_BARRAS, mostrar solo el nombre -->
+                              @if (
+                                esTipoIgualNombreYCodigoBarras(
+                                  conflictoParsed
+                                ) && item.nombre
+                              ) {
+                                <div class="conflicto-field">
+                                  <span class="field-label">nombre:</span>
+                                  <span class="field-value">{{
+                                    item.nombre
+                                  }}</span>
+                                </div>
+                              }
+                              <!-- Para otros tipos, mostrar todos los campos -->
+                              @if (
+                                !esTipoIgualNombreYCodigoBarras(conflictoParsed)
+                              ) {
+                                @if (item.codigoBarras || item["codigo"]) {
+                                  <div class="conflicto-field">
+                                    <span class="field-label"
+                                      >codigo barras:</span
+                                    >
+                                    <span class="field-value">{{
+                                      item.codigoBarras || item["codigo"]
+                                    }}</span>
+                                  </div>
+                                }
+                                @if (item.precio) {
+                                  <div class="conflicto-field">
+                                    <span class="field-label">precio:</span>
+                                    <span class="field-value"
+                                      >${{
+                                        item.precio | number: "1.0-0"
+                                      }}</span
+                                    >
+                                  </div>
+                                }
+                                @if (item["codigoBarras2nd"]) {
+                                  <div class="conflicto-field">
+                                    <span class="field-label"
+                                      >codigo barras 2nd:</span
+                                    >
+                                    <span class="field-value">{{
+                                      item["codigoBarras2nd"]
+                                    }}</span>
+                                  </div>
+                                }
+                                @if (item["precio2nd"]) {
+                                  <div class="conflicto-field">
+                                    <span class="field-label">precio 2nd:</span>
+                                    <span class="field-value"
+                                      >${{
+                                        item["precio2nd"] | number: "1.0-0"
+                                      }}</span
+                                    >
+                                  </div>
+                                }
+                                @if (
+                                  item.nombre && !conflictoParsed.nombreExtraido
+                                ) {
+                                  <div class="conflicto-field">
+                                    <span class="field-label">nombre:</span>
+                                    <span class="field-value">{{
+                                      item.nombre
+                                    }}</span>
+                                  </div>
+                                }
+                              }
+                            </div>
+                            <div class="conflicto-item-actions">
+                              <!-- Botón Buscar por código de barras: mostrar para todos los tipos excepto IGUAL_NOMBRE_Y_CODIGO_BARRAS -->
+                              @if (
+                                !esTipoIgualNombreYCodigoBarras(conflictoParsed)
+                              ) {
+                                <vex-google-search-button
+                                  searchType="barcode"
+                                  [barcode]="
+                                    getBarcodeForSearch(
+                                      conflictoParsed.conflicto.id,
+                                      j
+                                    )
+                                  "
+                                  [disabled]="
+                                    !tieneCodigoBarras(
+                                      conflictoParsed.conflicto.id,
+                                      j
+                                    )
+                                  "
+                                  size="small"
+                                  color="accent"
+                                  class="buscar-button buscar-barcode-button"
+                                  (searchClicked)="
+                                    onGoogleSearchClicked($event)
+                                  ">
+                                </vex-google-search-button>
+                              }
+                              <!-- Botón Buscar por nombre: mostrar para todos los tipos excepto IGUAL_NOMBRE_Y_CODIGO_BARRAS -->
+                              @if (
+                                !esTipoIgualNombreYCodigoBarras(conflictoParsed)
+                              ) {
+                                <vex-google-search-button
+                                  searchType="name"
+                                  [productName]="
+                                    getProductNameForSearch(
+                                      conflictoParsed.conflicto.id,
+                                      j
+                                    )
+                                  "
+                                  size="small"
+                                  color="accent"
+                                  class="buscar-button buscar-nombre-button"
+                                  (searchClicked)="
+                                    onGoogleSearchClicked($event)
+                                  ">
+                                </vex-google-search-button>
+                              }
+                              <!-- Para NO_TIENE_PRECIO: mostrar Editar si existe, Registrar si no existe -->
+                              @if (esTipoNoTienePrecio(conflictoParsed)) {
+                                <!-- Botón Editar: mostrar solo si el producto existe -->
+                                @if (
+                                  productoExiste(
+                                    conflictoParsed.conflicto.id,
+                                    j
+                                  )
+                                ) {
+                                  <button
+                                    mat-flat-button
+                                    color="accent"
+                                    size="small"
+                                    type="button"
+                                    (click)="
+                                      editarProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    "
+                                    [disabled]="
+                                      estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    "
+                                    class="editar-button">
+                                    @if (
+                                      estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    ) {
+                                      <mat-spinner
+                                        diameter="16"
+                                        class="spinner-inline"></mat-spinner>
+                                    }
+                                    @if (
+                                      !estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    ) {
+                                      <mat-icon
+                                        svgIcon="mat:edit"
+                                        class="button-icon"></mat-icon>
+                                    }
+                                    @if (
+                                      !estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    ) {
+                                      <span>Editar</span>
+                                    }
+                                    @if (
+                                      estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    ) {
+                                      <span>Buscando...</span>
+                                    }
+                                  </button>
+                                }
+                                <!-- Botón Registrar: mostrar si el producto NO existe -->
+                                @if (
+                                  !productoExiste(
+                                    conflictoParsed.conflicto.id,
+                                    j
+                                  )
+                                ) {
+                                  <button
+                                    mat-flat-button
+                                    color="primary"
+                                    size="small"
+                                    type="button"
+                                    (click)="
+                                      registrarProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    "
+                                    [disabled]="
+                                      isRegistrando(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      ) ||
+                                      estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    "
+                                    class="registrar-button">
+                                    @if (
+                                      isRegistrando(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      ) ||
+                                      estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    ) {
+                                      <mat-spinner
+                                        diameter="16"
+                                        class="spinner-inline"></mat-spinner>
+                                    }
+                                    @if (
+                                      !isRegistrando(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      ) &&
+                                      !estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    ) {
+                                      <span>Registrar</span>
+                                    }
+                                    @if (
+                                      isRegistrando(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    ) {
+                                      <span>Registrando...</span>
+                                    }
+                                    @if (
+                                      estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      ) &&
+                                      !isRegistrando(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    ) {
+                                      <span>Verificando...</span>
+                                    }
+                                  </button>
+                                }
+                              }
+                              <!-- Para otros tipos: mostrar Editar o Registrar según corresponda -->
+                              @if (!esTipoNoTienePrecio(conflictoParsed)) {
+                                <!-- Botón Editar: mostrar solo si el producto existe y es tipo DOS_PRODUCTOS_NOMBRES_IGUALES -->
+                                @if (
+                                  !esTipoIgualNombreYCodigoBarras(
+                                    conflictoParsed
+                                  ) &&
+                                  productoExiste(
+                                    conflictoParsed.conflicto.id,
+                                    j
+                                  )
+                                ) {
+                                  <button
+                                    mat-flat-button
+                                    color="accent"
+                                    size="small"
+                                    type="button"
+                                    (click)="
+                                      editarProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    "
+                                    [disabled]="
+                                      estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    "
+                                    class="editar-button">
+                                    @if (
+                                      estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    ) {
+                                      <mat-spinner
+                                        diameter="16"
+                                        class="spinner-inline"></mat-spinner>
+                                    }
+                                    @if (
+                                      !estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    ) {
+                                      <mat-icon
+                                        svgIcon="mat:edit"
+                                        class="button-icon"></mat-icon>
+                                    }
+                                    @if (
+                                      !estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    ) {
+                                      <span>Editar</span>
+                                    }
+                                    @if (
+                                      estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    ) {
+                                      <span>Buscando...</span>
+                                    }
+                                  </button>
+                                }
+                                <!-- Botón Registrar: mostrar si el producto NO existe o es tipo IGUAL_NOMBRE_Y_CODIGO_BARRAS -->
+                                <!-- Para DOS_PRODUCTOS_NOMBRES_IGUALES, este botón verificará si existe antes de abrir el modal -->
+                                @if (
+                                  esTipoIgualNombreYCodigoBarras(
+                                    conflictoParsed
+                                  ) ||
+                                  !productoExiste(
+                                    conflictoParsed.conflicto.id,
+                                    j
+                                  )
+                                ) {
+                                  <button
+                                    mat-flat-button
+                                    color="primary"
+                                    size="small"
+                                    type="button"
+                                    (click)="
+                                      registrarProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    "
+                                    [disabled]="
+                                      isRegistrando(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      ) ||
+                                      estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    "
+                                    class="registrar-button">
+                                    @if (
+                                      isRegistrando(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      ) ||
+                                      estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    ) {
+                                      <mat-spinner
+                                        diameter="16"
+                                        class="spinner-inline"></mat-spinner>
+                                    }
+                                    @if (
+                                      !isRegistrando(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      ) &&
+                                      !estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    ) {
+                                      <span>Registrar</span>
+                                    }
+                                    @if (
+                                      isRegistrando(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    ) {
+                                      <span>Registrando...</span>
+                                    }
+                                    @if (
+                                      estaVerificandoProducto(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      ) &&
+                                      !isRegistrando(
+                                        conflictoParsed.conflicto.id,
+                                        j
+                                      )
+                                    ) {
+                                      <span>Verificando...</span>
+                                    }
+                                  </button>
+                                }
+                              }
+                            </div>
+                          </div>
+                        }
                       </div>
-                      <div class="conflicto-item-fields">
-                        <!-- Para IGUAL_NOMBRE_Y_CODIGO_BARRAS, mostrar solo el nombre -->
-                        <div class="conflicto-field" *ngIf="esTipoIgualNombreYCodigoBarras(conflictoParsed) && item.nombre">
-                          <span class="field-label">nombre:</span>
-                          <span class="field-value">{{ item.nombre }}</span>
-                        </div>
-                        
-                        <!-- Para otros tipos, mostrar todos los campos -->
-                        <ng-container *ngIf="!esTipoIgualNombreYCodigoBarras(conflictoParsed)">
-                          <div class="conflicto-field" *ngIf="item.codigoBarras || item['codigo']">
-                            <span class="field-label">codigo barras:</span>
-                            <span class="field-value">{{ item.codigoBarras || item['codigo'] }}</span>
-                          </div>
-                          <div class="conflicto-field" *ngIf="item.precio">
-                            <span class="field-label">precio:</span>
-                            <span class="field-value">${{ item.precio | number:'1.0-0' }}</span>
-                          </div>
-                          <div class="conflicto-field" *ngIf="item['codigoBarras2nd']">
-                            <span class="field-label">codigo barras 2nd:</span>
-                            <span class="field-value">{{ item['codigoBarras2nd'] }}</span>
-                          </div>
-                          <div class="conflicto-field" *ngIf="item['precio2nd']">
-                            <span class="field-label">precio 2nd:</span>
-                            <span class="field-value">${{ item['precio2nd'] | number:'1.0-0' }}</span>
-                          </div>
-                          <div class="conflicto-field" *ngIf="item.nombre && !conflictoParsed.nombreExtraido">
-                            <span class="field-label">nombre:</span>
-                            <span class="field-value">{{ item.nombre }}</span>
-                          </div>
-                        </ng-container>
-                      </div>
-                      <div class="conflicto-item-actions">
-                        <!-- Botón Buscar por código de barras: mostrar para todos los tipos excepto IGUAL_NOMBRE_Y_CODIGO_BARRAS -->
-                        <vex-google-search-button
-                          *ngIf="!esTipoIgualNombreYCodigoBarras(conflictoParsed)"
-                          searchType="barcode"
-                          [barcode]="getBarcodeForSearch(conflictoParsed.conflicto.id, j)"
-                          [disabled]="!tieneCodigoBarras(conflictoParsed.conflicto.id, j)"
+                    </span>
+                    <span class="conflicto-col acciones">
+                      <!-- Botón para DOS_PRODUCTOS_NOMBRES_IGUALES -->
+                      @if (
+                        esTipoDosProductosNombresIguales(conflictoParsed) &&
+                        !conflictoParsed.conflicto.resuelto
+                      ) {
+                        <button
+                          mat-stroked-button
+                          color="primary"
                           size="small"
+                          type="button"
+                          (click)="
+                            resolverConflicto(conflictoParsed.conflicto.id)
+                          "
+                          [disabled]="
+                            isResolviendoConflicto(conflictoParsed.conflicto.id)
+                          "
+                          class="resolver-button">
+                          <mat-icon
+                            svgIcon="mat:check_circle"
+                            class="button-icon-small"></mat-icon>
+                          <span>Marcar resuelto</span>
+                        </button>
+                      }
+                      <!-- Botón para IGUAL_NOMBRE_Y_CODIGO_BARRAS con estilo secondary -->
+                      @if (
+                        esTipoIgualNombreYCodigoBarras(conflictoParsed) &&
+                        !conflictoParsed.conflicto.resuelto
+                      ) {
+                        <button
+                          mat-stroked-button
                           color="accent"
-                          class="buscar-button buscar-barcode-button"
-                          (searchClicked)="onGoogleSearchClicked($event)">
-                        </vex-google-search-button>
-                        
-                        <!-- Botón Buscar por nombre: mostrar para todos los tipos excepto IGUAL_NOMBRE_Y_CODIGO_BARRAS -->
-                        <vex-google-search-button
-                          *ngIf="!esTipoIgualNombreYCodigoBarras(conflictoParsed)"
-                          searchType="name"
-                          [productName]="getProductNameForSearch(conflictoParsed.conflicto.id, j)"
                           size="small"
-                          color="accent"
-                          class="buscar-button buscar-nombre-button"
-                          (searchClicked)="onGoogleSearchClicked($event)">
-                        </vex-google-search-button>
-                        <!-- Para NO_TIENE_PRECIO: mostrar Editar si existe, Registrar si no existe -->
-                        <ng-container *ngIf="esTipoNoTienePrecio(conflictoParsed)">
-                          <!-- Botón Editar: mostrar solo si el producto existe -->
-                          <button
-                            *ngIf="productoExiste(conflictoParsed.conflicto.id, j)"
-                            mat-flat-button
-                            color="accent"
-                            size="small"
-                            type="button"
-                            (click)="editarProducto(conflictoParsed.conflicto.id, j)"
-                            [disabled]="estaVerificandoProducto(conflictoParsed.conflicto.id, j)"
-                            class="editar-button">
-                            <mat-spinner *ngIf="estaVerificandoProducto(conflictoParsed.conflicto.id, j)" diameter="16" class="spinner-inline"></mat-spinner>
-                            <mat-icon *ngIf="!estaVerificandoProducto(conflictoParsed.conflicto.id, j)" svgIcon="mat:edit" class="button-icon"></mat-icon>
-                            <span *ngIf="!estaVerificandoProducto(conflictoParsed.conflicto.id, j)">Editar</span>
-                            <span *ngIf="estaVerificandoProducto(conflictoParsed.conflicto.id, j)">Buscando...</span>
-                          </button>
-                          <!-- Botón Registrar: mostrar si el producto NO existe -->
-                          <button
-                            *ngIf="!productoExiste(conflictoParsed.conflicto.id, j)"
-                            mat-flat-button
-                            color="primary"
-                            size="small"
-                            type="button"
-                            (click)="registrarProducto(conflictoParsed.conflicto.id, j)"
-                            [disabled]="isRegistrando(conflictoParsed.conflicto.id, j) || estaVerificandoProducto(conflictoParsed.conflicto.id, j)"
-                            class="registrar-button">
-                            <mat-spinner *ngIf="isRegistrando(conflictoParsed.conflicto.id, j) || estaVerificandoProducto(conflictoParsed.conflicto.id, j)" diameter="16" class="spinner-inline"></mat-spinner>
-                            <span *ngIf="!isRegistrando(conflictoParsed.conflicto.id, j) && !estaVerificandoProducto(conflictoParsed.conflicto.id, j)">Registrar</span>
-                            <span *ngIf="isRegistrando(conflictoParsed.conflicto.id, j)">Registrando...</span>
-                            <span *ngIf="estaVerificandoProducto(conflictoParsed.conflicto.id, j) && !isRegistrando(conflictoParsed.conflicto.id, j)">Verificando...</span>
-                          </button>
-                        </ng-container>
-                        <!-- Para otros tipos: mostrar Editar o Registrar según corresponda -->
-                        <ng-container *ngIf="!esTipoNoTienePrecio(conflictoParsed)">
-                          <!-- Botón Editar: mostrar solo si el producto existe y es tipo DOS_PRODUCTOS_NOMBRES_IGUALES -->
-                          <button
-                            *ngIf="!esTipoIgualNombreYCodigoBarras(conflictoParsed) && productoExiste(conflictoParsed.conflicto.id, j)"
-                            mat-flat-button
-                            color="accent"
-                            size="small"
-                            type="button"
-                            (click)="editarProducto(conflictoParsed.conflicto.id, j)"
-                            [disabled]="estaVerificandoProducto(conflictoParsed.conflicto.id, j)"
-                            class="editar-button">
-                            <mat-spinner *ngIf="estaVerificandoProducto(conflictoParsed.conflicto.id, j)" diameter="16" class="spinner-inline"></mat-spinner>
-                            <mat-icon *ngIf="!estaVerificandoProducto(conflictoParsed.conflicto.id, j)" svgIcon="mat:edit" class="button-icon"></mat-icon>
-                            <span *ngIf="!estaVerificandoProducto(conflictoParsed.conflicto.id, j)">Editar</span>
-                            <span *ngIf="estaVerificandoProducto(conflictoParsed.conflicto.id, j)">Buscando...</span>
-                          </button>
-                          <!-- Botón Registrar: mostrar si el producto NO existe o es tipo IGUAL_NOMBRE_Y_CODIGO_BARRAS -->
-                          <!-- Para DOS_PRODUCTOS_NOMBRES_IGUALES, este botón verificará si existe antes de abrir el modal -->
-                          <button
-                            *ngIf="esTipoIgualNombreYCodigoBarras(conflictoParsed) || !productoExiste(conflictoParsed.conflicto.id, j)"
-                            mat-flat-button
-                            color="primary"
-                            size="small"
-                            type="button"
-                            (click)="registrarProducto(conflictoParsed.conflicto.id, j)"
-                            [disabled]="isRegistrando(conflictoParsed.conflicto.id, j) || estaVerificandoProducto(conflictoParsed.conflicto.id, j)"
-                            class="registrar-button">
-                            <mat-spinner *ngIf="isRegistrando(conflictoParsed.conflicto.id, j) || estaVerificandoProducto(conflictoParsed.conflicto.id, j)" diameter="16" class="spinner-inline"></mat-spinner>
-                            <span *ngIf="!isRegistrando(conflictoParsed.conflicto.id, j) && !estaVerificandoProducto(conflictoParsed.conflicto.id, j)">Registrar</span>
-                            <span *ngIf="isRegistrando(conflictoParsed.conflicto.id, j)">Registrando...</span>
-                            <span *ngIf="estaVerificandoProducto(conflictoParsed.conflicto.id, j) && !isRegistrando(conflictoParsed.conflicto.id, j)">Verificando...</span>
-                          </button>
-                        </ng-container>
-                      </div>
-                    </div>
+                          type="button"
+                          (click)="
+                            resolverConflicto(conflictoParsed.conflicto.id)
+                          "
+                          [disabled]="
+                            isResolviendoConflicto(conflictoParsed.conflicto.id)
+                          "
+                          matTooltip="Marcar como resuelto pero NO se registrará"
+                          class="resolver-button resolver-button-secondary">
+                          <mat-icon
+                            svgIcon="mat:check_circle"
+                            class="button-icon-small"></mat-icon>
+                          <span>Marcar resuelto</span>
+                        </button>
+                      }
+                      <!-- Botón para NO_TIENE_PRECIO -->
+                      @if (
+                        esTipoNoTienePrecio(conflictoParsed) &&
+                        !conflictoParsed.conflicto.resuelto
+                      ) {
+                        <button
+                          mat-stroked-button
+                          color="primary"
+                          size="small"
+                          type="button"
+                          (click)="
+                            resolverConflicto(conflictoParsed.conflicto.id)
+                          "
+                          [disabled]="
+                            isResolviendoConflicto(conflictoParsed.conflicto.id)
+                          "
+                          class="resolver-button">
+                          <mat-icon
+                            svgIcon="mat:check_circle"
+                            class="button-icon-small"></mat-icon>
+                          <span>Marcar resuelto</span>
+                        </button>
+                      }
+                    </span>
                   </div>
-                </span>
-                <span class="conflicto-col acciones">
-                  <!-- Botón para DOS_PRODUCTOS_NOMBRES_IGUALES -->
-                  <button
-                    *ngIf="esTipoDosProductosNombresIguales(conflictoParsed) && !conflictoParsed.conflicto.resuelto"
-                    mat-stroked-button
-                    color="primary"
-                    size="small"
-                    type="button"
-                    (click)="resolverConflicto(conflictoParsed.conflicto.id)"
-                    [disabled]="isResolviendoConflicto(conflictoParsed.conflicto.id)"
-                    class="resolver-button">
-                    <mat-icon svgIcon="mat:check_circle" class="button-icon-small"></mat-icon>
-                    <span>Marcar resuelto</span>
-                  </button>
-                  <!-- Botón para IGUAL_NOMBRE_Y_CODIGO_BARRAS con estilo secondary -->
-                  <button
-                    *ngIf="esTipoIgualNombreYCodigoBarras(conflictoParsed) && !conflictoParsed.conflicto.resuelto"
-                    mat-stroked-button
-                    color="accent"
-                    size="small"
-                    type="button"
-                    (click)="resolverConflicto(conflictoParsed.conflicto.id)"
-                    [disabled]="isResolviendoConflicto(conflictoParsed.conflicto.id)"
-                    matTooltip="Marcar como resuelto pero NO se registrará"
-                    class="resolver-button resolver-button-secondary">
-                    <mat-icon svgIcon="mat:check_circle" class="button-icon-small"></mat-icon>
-                    <span>Marcar resuelto</span>
-                  </button>
-                  <!-- Botón para NO_TIENE_PRECIO -->
-                  <button
-                    *ngIf="esTipoNoTienePrecio(conflictoParsed) && !conflictoParsed.conflicto.resuelto"
-                    mat-stroked-button
-                    color="primary"
-                    size="small"
-                    type="button"
-                    (click)="resolverConflicto(conflictoParsed.conflicto.id)"
-                    [disabled]="isResolviendoConflicto(conflictoParsed.conflicto.id)"
-                    class="resolver-button">
-                    <mat-icon svgIcon="mat:check_circle" class="button-icon-small"></mat-icon>
-                    <span>Marcar resuelto</span>
-                  </button>
-                </span>
+                }
               </div>
             </div>
           </div>
+          @if (conflictos.length > 0) {
+            <div class="conflictos-footer">
+              <span class="conflicto-col tipo"></span>
+              <span class="conflicto-col producto"
+                >Total: {{ conflictos.length }}</span
+              >
+              <span class="conflicto-col datos">
+                Resueltos: {{ getConflictosResueltos() }} / Pendientes:
+                {{ getConflictosPendientes() }}
+              </span>
+            </div>
+          }
         </div>
-        <div class="conflictos-footer" *ngIf="conflictos.length > 0">
-          <span class="conflicto-col tipo"></span>
-          <span class="conflicto-col producto">Total: {{ conflictos.length }}</span>
-          <span class="conflicto-col datos">
-            Resueltos: {{ getConflictosResueltos() }} / 
-            Pendientes: {{ getConflictosPendientes() }}
-          </span>
-        </div>
-      </div>
+      }
     </div>
   </div>
 </div>
-

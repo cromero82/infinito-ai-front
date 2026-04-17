@@ -1,10 +1,27 @@
-import { Component, Inject, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  Component,
+  Inject,
+  OnInit,
+  AfterViewInit,
+  ViewChild,
+  ElementRef
+} from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule, MatDialogRef, MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import {
+  MatDialogModule,
+  MatDialogRef,
+  MatDialog,
+  MAT_DIALOG_DATA
+} from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { NgIf, NgFor } from '@angular/common';
+
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { FormsModule } from '@angular/forms';
@@ -16,35 +33,40 @@ import { AsyncPipe } from '@angular/common';
 import { Observable } from 'rxjs';
 import { map, startWith, combineLatestWith } from 'rxjs/operators';
 import { DragDropModule, CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
-import { EgresosService, EgresoDto, CreateEgresoRequest } from '../service/egresos.service';
-import { ProveedorService, ProveedorDto } from '../../proveedores/service/proveedor.service';
+import {
+  EgresosService,
+  EgresoDto,
+  CreateEgresoRequest
+} from '../service/egresos.service';
+import {
+  ProveedorService,
+  ProveedorDto
+} from '../../proveedores/service/proveedor.service';
 import { ProveedorEditComponent } from '../../proveedores/proveedor-edit/proveedor-edit.component';
 import { FechaUtilService } from '../../../ventas/service/fecha-util.service';
 
 @Component({
-    selector: 'gm-egreso-edit',
-    imports: [
-        ReactiveFormsModule,
-        FormsModule,
-        MatDialogModule,
-        NgIf,
-        NgFor,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        MatIconModule,
-        MatDividerModule,
-        MatAutocompleteModule,
-        MatTooltipModule,
-        MatDatepickerModule,
-        MatNativeDateModule,
-        AsyncPipe,
-        DragDropModule,
-        CdkDrag,
-        CdkDragHandle
-    ],
-    templateUrl: './egreso-edit.component.html',
-    styleUrl: './egreso-edit.component.scss'
+  selector: 'gm-egreso-edit',
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatDividerModule,
+    MatAutocompleteModule,
+    MatTooltipModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    AsyncPipe,
+    DragDropModule,
+    CdkDrag,
+    CdkDragHandle
+  ],
+  templateUrl: './egreso-edit.component.html',
+  styleUrl: './egreso-edit.component.scss'
 })
 export class EgresoEditComponent implements OnInit, AfterViewInit {
   form: FormGroup;
@@ -81,9 +103,14 @@ export class EgresoEditComponent implements OnInit, AfterViewInit {
     );
 
     this.showAddProveedor$ = this.filteredProveedores$.pipe(
-      combineLatestWith(this.form.get('proveedor')!.valueChanges.pipe(startWith(this.form.get('proveedor')!.value))),
+      combineLatestWith(
+        this.form
+          .get('proveedor')!
+          .valueChanges.pipe(startWith(this.form.get('proveedor')!.value))
+      ),
       map(([filtered, value]) => {
-        const isFiltering = typeof value === 'string' && (value || '').trim().length > 0;
+        const isFiltering =
+          typeof value === 'string' && (value || '').trim().length > 0;
         return isFiltering && filtered.length === 0;
       })
     );
@@ -91,10 +118,14 @@ export class EgresoEditComponent implements OnInit, AfterViewInit {
     if (this.data) {
       const prov = this.data.proveedor;
       this.form.patchValue({
-        fecha: this.data.fecha ? this.fechaUtilService.parseDateAsLocal(this.data.fecha) : null,
+        fecha: this.data.fecha
+          ? this.fechaUtilService.parseDateAsLocal(this.data.fecha)
+          : null,
         valor: this.data.valor ?? 0,
         descripcion: this.data.descripcion || '',
-        proveedor: prov ? { id: prov.id, nombre: prov.nombre, tipoEgreso: prov.tipoEgreso } : null
+        proveedor: prov
+          ? { id: prov.id, nombre: prov.nombre, tipoEgreso: prov.tipoEgreso }
+          : null
       });
       this.patchProveedorAfterLoad();
     }
@@ -111,15 +142,21 @@ export class EgresoEditComponent implements OnInit, AfterViewInit {
 
   private patchProveedorAfterLoad() {
     if (!this.data) return;
-    const prov = this.proveedores.find(p => p.id === this.data!.proveedor?.id);
+    const prov = this.proveedores.find(
+      (p) => p.id === this.data!.proveedor?.id
+    );
     if (prov) this.form.patchValue({ proveedor: prov }, { emitEvent: false });
   }
 
-  private filterProveedores(value: ProveedorDto | string | null): ProveedorDto[] {
-    if (typeof value === 'object' && value !== null) return [...this.proveedores];
-    const filterValue = typeof value === 'string' ? value.toLowerCase().trim() : '';
+  private filterProveedores(
+    value: ProveedorDto | string | null
+  ): ProveedorDto[] {
+    if (typeof value === 'object' && value !== null)
+      return [...this.proveedores];
+    const filterValue =
+      typeof value === 'string' ? value.toLowerCase().trim() : '';
     if (!filterValue) return [...this.proveedores];
-    return this.proveedores.filter(p =>
+    return this.proveedores.filter((p) =>
       p.nombre.toLowerCase().includes(filterValue)
     );
   }
@@ -133,7 +170,10 @@ export class EgresoEditComponent implements OnInit, AfterViewInit {
     if (ke.key !== 'Enter') return;
     const value = this.form.get('proveedor')?.value;
     const filtered = this.filterProveedores(value);
-    const showAdd = typeof value === 'string' && (value || '').trim().length > 0 && filtered.length === 0;
+    const showAdd =
+      typeof value === 'string' &&
+      (value || '').trim().length > 0 &&
+      filtered.length === 0;
     if (showAdd) {
       ke.preventDefault();
       ke.stopPropagation();
@@ -147,17 +187,20 @@ export class EgresoEditComponent implements OnInit, AfterViewInit {
       (event as KeyboardEvent)?.preventDefault?.();
     }
     const valor = this.form.get('proveedor')?.value;
-    const initialNombre = typeof valor === 'string' && valor?.trim() ? valor.trim() : undefined;
+    const initialNombre =
+      typeof valor === 'string' && valor?.trim() ? valor.trim() : undefined;
     const proveedorDialogRef = this.dialog.open(ProveedorEditComponent, {
       width: '500px',
       data: initialNombre ? { initialNombre } : null
     });
-    proveedorDialogRef.afterClosed().subscribe((result: ProveedorDto | undefined) => {
-      if (result) {
-        this.proveedores = [...this.proveedores, result];
-        this.form.patchValue({ proveedor: result });
-      }
-    });
+    proveedorDialogRef
+      .afterClosed()
+      .subscribe((result: ProveedorDto | undefined) => {
+        if (result) {
+          this.proveedores = [...this.proveedores, result];
+          this.form.patchValue({ proveedor: result });
+        }
+      });
   }
 
   ngAfterViewInit() {
@@ -221,12 +264,19 @@ export class EgresoEditComponent implements OnInit, AfterViewInit {
     if (this.isEditMode) {
       this.egresosService.updateEgreso(this.data!.id, request).subscribe({
         next: (result) => this.dialogRef.close({ ...result, _edit: true }),
-        error: (err) => alert('Error al actualizar: ' + (err?.error?.message || err.message || err))
+        error: (err) =>
+          alert(
+            'Error al actualizar: ' +
+              (err?.error?.message || err.message || err)
+          )
       });
     } else {
       this.egresosService.createEgreso(request).subscribe({
         next: (result) => this.dialogRef.close(result),
-        error: (err) => alert('Error al guardar: ' + (err?.error?.message || err.message || err))
+        error: (err) =>
+          alert(
+            'Error al guardar: ' + (err?.error?.message || err.message || err)
+          )
       });
     }
   }

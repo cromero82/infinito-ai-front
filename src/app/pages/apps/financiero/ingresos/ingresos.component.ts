@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -10,10 +10,19 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { ApexOptions, VexChartComponent } from '@vex/components/vex-chart/vex-chart.component';
+import {
+  ApexOptions,
+  VexChartComponent
+} from '@vex/components/vex-chart/vex-chart.component';
 import { defaultChartOptions } from '@vex/utils/default-chart-options';
-import { MetodoPagoService, MetodoPagoDto } from '../../ventas/service/metodo-pago.service';
-import { CorteVentaService, CorteVentaSearchItemDto } from '../../ventas/service/corte-venta.service';
+import {
+  MetodoPagoService,
+  MetodoPagoDto
+} from '../../ventas/service/metodo-pago.service';
+import {
+  CorteVentaService,
+  CorteVentaSearchItemDto
+} from '../../ventas/service/corte-venta.service';
 import { Subject, Observable } from 'rxjs';
 import { takeUntil, switchMap } from 'rxjs/operators';
 import { CierreVentasComponent } from './cierre-ventas/cierre-ventas.component';
@@ -29,23 +38,22 @@ interface VentasPorFecha {
 }
 
 @Component({
-    selector: 'vex-ingresos',
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatDatepickerModule,
-        MatNativeDateModule,
-        MatButtonModule,
-        MatButtonToggleModule,
-        MatIconModule,
-        MatTooltipModule,
-        MatDialogModule,
-        VexChartComponent
-    ],
-    templateUrl: './ingresos.component.html',
-    styleUrls: ['./ingresos.component.scss']
+  selector: 'vex-ingresos',
+  imports: [
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatButtonModule,
+    MatButtonToggleModule,
+    MatIconModule,
+    MatTooltipModule,
+    MatDialogModule,
+    VexChartComponent
+  ],
+  templateUrl: './ingresos.component.html',
+  styleUrls: ['./ingresos.component.scss']
 })
 export class IngresosComponent implements OnInit, OnDestroy {
   fechaInicioCtrl = new FormControl<Date | null>(null);
@@ -182,7 +190,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
 
     this.periodoCtrl.valueChanges
       .pipe(takeUntil(this.destroy$))
-      .subscribe(periodo => {
+      .subscribe((periodo) => {
         if (periodo) {
           this.diasVisibles = this.obtenerDiasPorPeriodo(periodo);
           this.cargarVentasUltimos7Dias();
@@ -209,7 +217,8 @@ export class IngresosComponent implements OnInit, OnDestroy {
   }
 
   private cargarMetodosPagoYVentas(): void {
-    this.metodoPagoService.obtenerMetodosPago()
+    this.metodoPagoService
+      .obtenerMetodosPago()
       .pipe(
         takeUntil(this.destroy$),
         switchMap((metodos) => {
@@ -293,17 +302,21 @@ export class IngresosComponent implements OnInit, OnDestroy {
   }
 
   private actualizarNombresYColoresMetodosPago(): void {
-    this.ventasPorFecha.forEach(ventaPorFecha => {
-      ventaPorFecha.detalles.forEach(detalle => {
-        const metodoPago = this.metodosPago.find(m => m.id === detalle.metodoPagoId);
+    this.ventasPorFecha.forEach((ventaPorFecha) => {
+      ventaPorFecha.detalles.forEach((detalle) => {
+        const metodoPago = this.metodosPago.find(
+          (m) => m.id === detalle.metodoPagoId
+        );
         if (metodoPago) {
           detalle.metodoPagoNombre = metodoPago.descripcion;
         }
       });
     });
-    this.ventasPorFechaVisibles.forEach(ventaPorFecha => {
-      ventaPorFecha.detalles.forEach(detalle => {
-        const metodoPago = this.metodosPago.find(m => m.id === detalle.metodoPagoId);
+    this.ventasPorFechaVisibles.forEach((ventaPorFecha) => {
+      ventaPorFecha.detalles.forEach((detalle) => {
+        const metodoPago = this.metodosPago.find(
+          (m) => m.id === detalle.metodoPagoId
+        );
         if (metodoPago) {
           detalle.metodoPagoNombre = metodoPago.descripcion;
         }
@@ -336,25 +349,29 @@ export class IngresosComponent implements OnInit, OnDestroy {
   }
 
   abrirModalCierreVentas(): void {
-    this.dialog.open(CierreVentasComponent, {
-      width: '950px',
-      disableClose: false,
-      maxWidth: '95vw'
-    }).afterClosed().subscribe(result => {
-      if (result?.success) {
-        this.cargarVentasUltimos7Dias();
-      }
-    });
+    this.dialog
+      .open(CierreVentasComponent, {
+        width: '950px',
+        disableClose: false,
+        maxWidth: '95vw'
+      })
+      .afterClosed()
+      .subscribe((result) => {
+        if (result?.success) {
+          this.cargarVentasUltimos7Dias();
+        }
+      });
   }
 
   private cargarVentasPorRango(fechaInicio: Date, fechaFin: Date): void {
     this.loading = true;
     this.error = null;
 
-    this.corteVentaService.search(
-      this.construirFechaHoraISO(fechaInicio, '00:00:00'),
-      this.construirFechaHoraISO(fechaFin, '23:59:59')
-    )
+    this.corteVentaService
+      .search(
+        this.construirFechaHoraISO(fechaInicio, '00:00:00'),
+        this.construirFechaHoraISO(fechaFin, '23:59:59')
+      )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (cortes) => {
@@ -382,10 +399,11 @@ export class IngresosComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    this.corteVentaService.search(
-      this.construirFechaHoraISO(fechaInicio, '00:00:00'),
-      this.construirFechaHoraISO(fechaFin, '23:59:59')
-    )
+    this.corteVentaService
+      .search(
+        this.construirFechaHoraISO(fechaInicio, '00:00:00'),
+        this.construirFechaHoraISO(fechaFin, '23:59:59')
+      )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (cortes) => {
@@ -401,13 +419,16 @@ export class IngresosComponent implements OnInit, OnDestroy {
   }
 
   private procesarRespuestaSearch(cortes: CorteVentaSearchItemDto[]): void {
-    this.ventasPorFecha = (cortes || []).map(item => {
+    this.ventasPorFecha = (cortes || []).map((item) => {
       const fechaLabel = this.formatearFechaParaLabel(item.fechaIni);
-      const detalles = (item.ventasTipo || []).map(vt => {
-        const metodoPago = this.metodosPago.find(m => m.id === vt.metodoPagoId);
+      const detalles = (item.ventasTipo || []).map((vt) => {
+        const metodoPago = this.metodosPago.find(
+          (m) => m.id === vt.metodoPagoId
+        );
         return {
           metodoPagoId: vt.metodoPagoId,
-          metodoPagoNombre: metodoPago?.descripcion || `Método ${vt.metodoPagoId}`,
+          metodoPagoNombre:
+            metodoPago?.descripcion || `Método ${vt.metodoPagoId}`,
           total: Number(vt.total) || 0
         };
       });
@@ -418,7 +439,10 @@ export class IngresosComponent implements OnInit, OnDestroy {
       };
     });
 
-    this.totalGeneral = this.ventasPorFecha.reduce((sum, v) => sum + (Number(v.total) || 0), 0);
+    this.totalGeneral = this.ventasPorFecha.reduce(
+      (sum, v) => sum + (Number(v.total) || 0),
+      0
+    );
     this.ventasDiaActual = this.totalGeneral;
 
     const numItems = (cortes || []).length;
@@ -435,7 +459,11 @@ export class IngresosComponent implements OnInit, OnDestroy {
 
   private formatearFechaParaLabel(fechaIso: string): string {
     const d = new Date(fechaIso);
-    return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+    return d.toLocaleDateString('es-CO', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
   }
 
   navegarIzquierda(): void {
@@ -450,7 +478,11 @@ export class IngresosComponent implements OnInit, OnDestroy {
       nuevaFechaFin.setDate(0);
       nuevaFechaFin.setHours(23, 59, 59, 999);
 
-      nuevaFechaInicio = new Date(nuevaFechaFin.getFullYear(), nuevaFechaFin.getMonth(), 1);
+      nuevaFechaInicio = new Date(
+        nuevaFechaFin.getFullYear(),
+        nuevaFechaFin.getMonth(),
+        1
+      );
       nuevaFechaInicio.setHours(0, 0, 0, 0);
     } else if (periodo === 'quincenal') {
       const diaInicio = this.fechaInicioActual.getDate();
@@ -460,13 +492,25 @@ export class IngresosComponent implements OnInit, OnDestroy {
         nuevaFechaFin.setDate(0);
         nuevaFechaFin.setHours(23, 59, 59, 999);
 
-        nuevaFechaInicio = new Date(nuevaFechaFin.getFullYear(), nuevaFechaFin.getMonth(), 16);
+        nuevaFechaInicio = new Date(
+          nuevaFechaFin.getFullYear(),
+          nuevaFechaFin.getMonth(),
+          16
+        );
         nuevaFechaInicio.setHours(0, 0, 0, 0);
       } else {
-        nuevaFechaInicio = new Date(this.fechaInicioActual.getFullYear(), this.fechaInicioActual.getMonth(), 1);
+        nuevaFechaInicio = new Date(
+          this.fechaInicioActual.getFullYear(),
+          this.fechaInicioActual.getMonth(),
+          1
+        );
         nuevaFechaInicio.setHours(0, 0, 0, 0);
 
-        nuevaFechaFin = new Date(this.fechaInicioActual.getFullYear(), this.fechaInicioActual.getMonth(), 15);
+        nuevaFechaFin = new Date(
+          this.fechaInicioActual.getFullYear(),
+          this.fechaInicioActual.getMonth(),
+          15
+        );
         nuevaFechaFin.setHours(23, 59, 59, 999);
       }
     } else {
@@ -475,7 +519,9 @@ export class IngresosComponent implements OnInit, OnDestroy {
       nuevaFechaFin.setHours(23, 59, 59, 999);
 
       nuevaFechaInicio = new Date(nuevaFechaFin);
-      nuevaFechaInicio.setDate(nuevaFechaInicio.getDate() - (this.diasVisibles - 1));
+      nuevaFechaInicio.setDate(
+        nuevaFechaInicio.getDate() - (this.diasVisibles - 1)
+      );
       nuevaFechaInicio.setHours(0, 0, 0, 0);
     }
 
@@ -503,7 +549,11 @@ export class IngresosComponent implements OnInit, OnDestroy {
       nuevaFechaInicio.setMonth(nuevaFechaInicio.getMonth() + 1, 1);
       nuevaFechaInicio.setHours(0, 0, 0, 0);
 
-      nuevaFechaFin = new Date(nuevaFechaInicio.getFullYear(), nuevaFechaInicio.getMonth() + 1, 0);
+      nuevaFechaFin = new Date(
+        nuevaFechaInicio.getFullYear(),
+        nuevaFechaInicio.getMonth() + 1,
+        0
+      );
       nuevaFechaFin.setHours(23, 59, 59, 999);
 
       if (nuevaFechaFin > hoy) {
@@ -570,7 +620,8 @@ export class IngresosComponent implements OnInit, OnDestroy {
       this.leftPanelWidthAnterior = this.leftPanelWidth;
       this.leftPanelWidth = 0;
     } else {
-      this.leftPanelWidth = this.leftPanelWidthAnterior > 0 ? this.leftPanelWidthAnterior : 220;
+      this.leftPanelWidth =
+        this.leftPanelWidthAnterior > 0 ? this.leftPanelWidthAnterior : 220;
     }
   }
 
@@ -580,14 +631,22 @@ export class IngresosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const fechasFormateadas = this.ventasPorFechaVisibles.map(v => v.fecha);
-    const seriesMap = new Map<number, { name: string; data: number[]; color: string }>();
+    const fechasFormateadas = this.ventasPorFechaVisibles.map((v) => v.fecha);
+    const seriesMap = new Map<
+      number,
+      { name: string; data: number[]; color: string }
+    >();
 
-    this.ventasPorFechaVisibles.forEach(ventaPorFecha => {
-      ventaPorFecha.detalles.forEach(detalle => {
+    this.ventasPorFechaVisibles.forEach((ventaPorFecha) => {
+      ventaPorFecha.detalles.forEach((detalle) => {
         if (!seriesMap.has(detalle.metodoPagoId)) {
-          const metodoPago = this.metodosPago.find(m => m.id === detalle.metodoPagoId);
-          const nombre = metodoPago?.descripcion || detalle.metodoPagoNombre || `Método ${detalle.metodoPagoId}`;
+          const metodoPago = this.metodosPago.find(
+            (m) => m.id === detalle.metodoPagoId
+          );
+          const nombre =
+            metodoPago?.descripcion ||
+            detalle.metodoPagoNombre ||
+            `Método ${detalle.metodoPagoId}`;
           const color = metodoPago?.color || '#000000';
 
           seriesMap.set(detalle.metodoPagoId, {
@@ -600,7 +659,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
     });
 
     this.ventasPorFechaVisibles.forEach((ventaPorFecha, fechaIndex) => {
-      ventaPorFecha.detalles.forEach(detalle => {
+      ventaPorFecha.detalles.forEach((detalle) => {
         const serie = seriesMap.get(detalle.metodoPagoId);
         if (serie) {
           serie.data[fechaIndex] = Number(detalle.total) || 0;
@@ -612,7 +671,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
       .sort(([idA], [idB]) => idA - idB)
       .map(([, serie]) => serie);
 
-    const colores = seriesArray.map(s => s.color);
+    const colores = seriesArray.map((s) => s.color);
     this.chartSeries = seriesArray.map(({ color, ...serie }) => serie);
 
     this.chartOptions = {
@@ -643,13 +702,18 @@ export class IngresosComponent implements OnInit, OnDestroy {
       currency: 'COP',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(value).replace('COP', '$').trim();
+    })
+      .format(value)
+      .replace('COP', '$')
+      .trim();
   }
 
   formatCurrencyEnMillones(value: number): string {
     const valorEnMiles = value / 1000;
     const valorRedondeado = Math.round(valorEnMiles);
-    const valorFormateado = valorRedondeado.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+    const valorFormateado = valorRedondeado
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, "'");
     return `$${valorFormateado}`;
   }
 
@@ -666,7 +730,12 @@ export class IngresosComponent implements OnInit, OnDestroy {
     const millonesReversos = millones.split('').reverse();
     const gruposMillones: string[] = [];
     for (let i = 0; i < millonesReversos.length; i += 3) {
-      gruposMillones.push(millonesReversos.slice(i, i + 3).reverse().join(''));
+      gruposMillones.push(
+        millonesReversos
+          .slice(i, i + 3)
+          .reverse()
+          .join('')
+      );
     }
     const millonesFormateados = gruposMillones.reverse().join("'");
 
@@ -674,7 +743,12 @@ export class IngresosComponent implements OnInit, OnDestroy {
   }
 
   formatDateRange(fechaInicio: Date | null, fechaFin: Date | null): string {
-    if (!fechaInicio || !fechaFin || !Number.isFinite(fechaInicio.getTime()) || !Number.isFinite(fechaFin.getTime())) {
+    if (
+      !fechaInicio ||
+      !fechaFin ||
+      !Number.isFinite(fechaInicio.getTime()) ||
+      !Number.isFinite(fechaFin.getTime())
+    ) {
       return '—';
     }
     const inicioStr = fechaInicio.toLocaleDateString('es-CO', {
@@ -684,7 +758,10 @@ export class IngresosComponent implements OnInit, OnDestroy {
     const finStr = fechaFin.toLocaleDateString('es-CO', {
       day: 'numeric',
       month: 'short',
-      year: fechaInicio.getFullYear() !== fechaFin.getFullYear() ? 'numeric' : undefined
+      year:
+        fechaInicio.getFullYear() !== fechaFin.getFullYear()
+          ? 'numeric'
+          : undefined
     });
     return `${inicioStr} - ${finStr}`;
   }

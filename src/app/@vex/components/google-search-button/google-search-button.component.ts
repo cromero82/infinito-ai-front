@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -8,16 +8,15 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 export type GoogleSearchType = 'name' | 'barcode';
 
 @Component({
-    selector: 'vex-google-search-button',
-    imports: [
-        CommonModule,
-        MatButtonModule,
-        MatIconModule,
-        MatTooltipModule,
-        MatSnackBarModule
-    ],
-    templateUrl: './google-search-button.component.html',
-    styleUrls: ['./google-search-button.component.scss']
+  selector: 'vex-google-search-button',
+  imports: [
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    MatSnackBarModule
+  ],
+  templateUrl: './google-search-button.component.html',
+  styleUrls: ['./google-search-button.component.scss']
 })
 export class GoogleSearchButtonComponent {
   @Input() searchType: GoogleSearchType = 'name';
@@ -29,7 +28,10 @@ export class GoogleSearchButtonComponent {
   @Input() showIcon: boolean = true;
   @Input() customTooltip?: string;
 
-  @Output() searchClicked = new EventEmitter<{ type: GoogleSearchType; query: string }>();
+  @Output() searchClicked = new EventEmitter<{
+    type: GoogleSearchType;
+    query: string;
+  }>();
 
   constructor(private snackBar: MatSnackBar) {}
 
@@ -37,7 +39,7 @@ export class GoogleSearchButtonComponent {
     if (this.customTooltip) {
       return this.customTooltip;
     }
-    
+
     if (this.searchType === 'barcode') {
       return 'Buscar código de barras en Google';
     } else {
@@ -72,10 +74,10 @@ export class GoogleSearchButtonComponent {
     if (this.searchType === 'barcode') {
       const barcodeLimpio = this.barcode.trim();
       query = `${barcodeLimpio} PRECIO medellin`;
-      
+
       // Validar que sea un código de barras válido (solo números, típicamente 8, 12 o 13 dígitos)
       const esCodigoValido = /^\d{8,13}$/.test(barcodeLimpio);
-      
+
       if (!esCodigoValido) {
         validationError = 'El código de barras no tiene un formato válido';
       }
@@ -85,9 +87,9 @@ export class GoogleSearchButtonComponent {
       if (nombreLimpio.includes(';')) {
         nombreLimpio = nombreLimpio.split(';')[0].trim();
       }
-      
+
       query = `${nombreLimpio} PRECIO medellin`;
-      
+
       if (!nombreLimpio || nombreLimpio.trim().length === 0) {
         validationError = 'No hay nombre de producto para buscar';
       }
@@ -97,7 +99,8 @@ export class GoogleSearchButtonComponent {
       this.snackBar.open(validationError, 'Cerrar', {
         duration: 3000,
         horizontalPosition: 'right',
-        panelClass: this.searchType === 'barcode' ? ['error-snackbar'] : undefined
+        panelClass:
+          this.searchType === 'barcode' ? ['error-snackbar'] : undefined
       });
       return;
     }

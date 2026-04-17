@@ -1,7 +1,16 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
+import {
+  MatDialogRef,
+  MAT_DIALOG_DATA,
+  MatDialogModule
+} from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,18 +19,17 @@ import { Tipo } from '../../interfaces/tipo.interface';
 import { TiposService } from '../../service/tipos-service';
 
 @Component({
-    selector: 'vex-tipos-edit',
-    templateUrl: './tipos-edit.component.html',
-    styleUrls: ['./tipos-edit.component.scss'],
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        MatDialogModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        MatIconModule
-    ]
+  selector: 'vex-tipos-edit',
+  templateUrl: './tipos-edit.component.html',
+  styleUrls: ['./tipos-edit.component.scss'],
+  imports: [
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule
+  ]
 })
 export class TiposEditComponent implements OnInit {
   form: FormGroup;
@@ -36,19 +44,25 @@ export class TiposEditComponent implements OnInit {
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
-      percentProfit: [0, [Validators.required, Validators.min(0), Validators.max(100)]]
+      percentProfit: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(100)]
+      ]
     });
   }
 
   ngOnInit() {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
-      percentProfit: [0, [Validators.required, Validators.min(0), Validators.max(100)]]
+      percentProfit: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(100)]
+      ]
     });
 
     if (this.data) {
       // Edit mode
-      this.tiposService.getTipo(this.data).subscribe(tipo => {
+      this.tiposService.getTipo(this.data).subscribe((tipo) => {
         this.form.patchValue(tipo);
         this.isEditMode = true;
       });
@@ -87,4 +101,4 @@ export class TiposEditComponent implements OnInit {
   onCancel() {
     this.dialogRef.close();
   }
-} 
+}

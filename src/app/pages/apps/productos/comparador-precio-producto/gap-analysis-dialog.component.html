@@ -1,78 +1,144 @@
 <div class="p-4">
-  <div *ngIf="data">
-    <!-- Toolbar/Menu for itemToGap selection -->
-    <div class="toolbar-row bg-[#F8F9FA] rounded-lg shadow p-4 mb-4">
-      <button mat-stroked-button color="primary" class="tab-btn" [ngClass]="{'selected-tab': selectedItemToGap?.label === 'Vendedor'}" (click)="changeItemToGap('Vendedor')">
-        <img src="assets/img/icons/stores/icon-vendor.png" class="w-6 h-6 inline-block align-middle" />
-        <span class="tab-title">Vendedor</span>
-      </button>
-      <button mat-stroked-button color="primary" class="tab-btn" [ngClass]="{'selected-tab': selectedItemToGap?.label === 'Olimpica'}" (click)="changeItemToGap('Olimpica')">
-        <img src="assets/img/icons/stores/olimpica-store-icon.png" class="w-6 h-6 inline-block align-middle" />
-        <span class="tab-title">Olimpica</span>
-      </button>
-      <button mat-stroked-button color="primary" class="tab-btn" [ngClass]="{'selected-tab': selectedItemToGap?.label === 'Exito'}" (click)="changeItemToGap('Exito')">
-        <img src="assets/img/icons/stores/exito-store-icon.png" class="w-6 h-6 inline-block align-middle" />
-        <span class="tab-title">Exito</span>
-      </button>
+  @if (data) {
+    <div>
+      <!-- Toolbar/Menu for itemToGap selection -->
+      <div class="toolbar-row bg-[#F8F9FA] rounded-lg shadow p-4 mb-4">
+        <button
+          mat-stroked-button
+          color="primary"
+          class="tab-btn"
+          [ngClass]="{
+            'selected-tab': selectedItemToGap?.label === 'Vendedor'
+          }"
+          (click)="changeItemToGap('Vendedor')">
+          <img
+            src="assets/img/icons/stores/icon-vendor.png"
+            class="w-6 h-6 inline-block align-middle" />
+          <span class="tab-title">Vendedor</span>
+        </button>
+        <button
+          mat-stroked-button
+          color="primary"
+          class="tab-btn"
+          [ngClass]="{
+            'selected-tab': selectedItemToGap?.label === 'Olimpica'
+          }"
+          (click)="changeItemToGap('Olimpica')">
+          <img
+            src="assets/img/icons/stores/olimpica-store-icon.png"
+            class="w-6 h-6 inline-block align-middle" />
+          <span class="tab-title">Olimpica</span>
+        </button>
+        <button
+          mat-stroked-button
+          color="primary"
+          class="tab-btn"
+          [ngClass]="{ 'selected-tab': selectedItemToGap?.label === 'Exito' }"
+          (click)="changeItemToGap('Exito')">
+          <img
+            src="assets/img/icons/stores/exito-store-icon.png"
+            class="w-6 h-6 inline-block align-middle" />
+          <span class="tab-title">Exito</span>
+        </button>
+      </div>
+      <!-- Price row -->
+      <div class="flex items-center justify-between mb-2">
+        <span class="font-semibold text-lg flex items-center gap-2">
+          Precio:
+          @if (selectedItemToGap?.label === "Vendedor") {
+            <div class="flex items-center gap-1 ml-2">
+              <button
+                type="button"
+                class="border rounded px-2 py-1 text-lg"
+                (click)="changeVendedorPrice(-50)">
+                -
+              </button>
+              <input
+                #vendedorInput
+                type="text"
+                pattern="[0-9]*"
+                inputmode="numeric"
+                [(ngModel)]="vendedorInputValue"
+                (input)="onVendedorInputChange()"
+                class="border rounded px-2 py-1 w-20 text-lg text-center" />
+              <button
+                type="button"
+                class="border rounded px-2 py-1 text-lg"
+                (click)="changeVendedorPrice(50)">
+                +
+              </button>
+            </div>
+          }
+        </span>
+        <span class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          @if (selectedItemToGap?.price != null) {
+            $ {{ selectedItemToGap.price | number: "1.0-0" }}
+          } @else {
+            <span class="text-gray-400">No disponible</span>
+          }
+        </span>
+      </div>
+      <!-- Gap analysis content -->
+      <div class="flex flex-col gap-2 mb-2">
+        @if (comparator1) {
+          <div class="flex items-center">
+            <div
+              [ngClass]="comparator1.percentClass"
+              class="rounded px-2 py-1 text-white font-bold text-lg mr-2 min-w-[60px] text-center">
+              {{ comparator1.percent > 0 ? "+" : ""
+              }}{{ comparator1.percent | number: "1.0-0" }} %
+            </div>
+            <div
+              class="rounded px-2 py-1 bg-gray-100 font-bold text-lg mr-2 min-w-[60px] text-center">
+              $ {{ comparator1.amount | number: "1.0-0" }}
+            </div>
+            @if (comparator1.icon) {
+              <img [src]="comparator1.icon" class="w-8 h-8 ml-2" />
+            }
+            <span class="text-base text-gray-500 ml-2">
+              <!-- Show comparator label and price -->
+              {{ comparator1.label }}: $
+              {{
+                comparator1.price !== undefined && comparator1.price !== null
+                  ? comparator1.price
+                  : (0 | number: "1.0-0")
+              }}
+            </span>
+          </div>
+        }
+        @if (comparator2) {
+          <div class="flex items-center">
+            <div
+              [ngClass]="comparator2.percentClass"
+              class="rounded px-2 py-1 text-white font-bold text-lg mr-2 min-w-[60px] text-center">
+              {{ comparator2.percent > 0 ? "+" : ""
+              }}{{ comparator2.percent | number: "1.0-0" }} %
+            </div>
+            <div
+              class="rounded px-2 py-1 bg-gray-100 font-bold text-lg mr-2 min-w-[60px] text-center">
+              $ {{ comparator2.amount | number: "1.0-0" }}
+            </div>
+            @if (comparator2.icon) {
+              <img [src]="comparator2.icon" class="w-8 h-8 ml-2" />
+            }
+            <span class="text-base text-gray-500 ml-2">
+              {{ comparator2.label }}: ${{
+                comparator2.price !== undefined && comparator2.price !== null
+                  ? (comparator2.price | number: "1.0-0")
+                  : (0 | number: "1.0-0")
+              }}
+            </span>
+          </div>
+        }
+      </div>
+      <div class="flex justify-end mt-4 gap-2">
+        <button mat-stroked-button color="primary" (click)="close()">
+          Cerrar
+        </button>
+        <button mat-flat-button color="accent" (click)="selectCurrentOption()">
+          Seleccionar: precio {{ selectedItemToGap?.label }}
+        </button>
+      </div>
     </div>
-    <!-- Price row -->
-    <div class="flex items-center justify-between mb-2">
-      <span class="font-semibold text-lg flex items-center gap-2">
-        Precio:
-        <ng-container *ngIf="selectedItemToGap?.label === 'Vendedor'">
-          <div class="flex items-center gap-1 ml-2">
-            <button type="button" class="border rounded px-2 py-1 text-lg" (click)="changeVendedorPrice(-50)">-</button>
-            <input #vendedorInput type="text" pattern="[0-9]*" inputmode="numeric" [(ngModel)]="vendedorInputValue" (input)="onVendedorInputChange()" class="border rounded px-2 py-1 w-20 text-lg text-center" />
-            <button type="button" class="border rounded px-2 py-1 text-lg" (click)="changeVendedorPrice(50)">+</button>
-          </div>
-        </ng-container>
-      </span>
-      <span class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-        <ng-container *ngIf="selectedItemToGap?.price != null; else noPrice">
-          $ {{ selectedItemToGap.price | number:'1.0-0' }}
-        </ng-container>
-        <ng-template #noPrice>
-          <span class="text-gray-400">No disponible</span>
-        </ng-template>
-      </span>
-    </div>
-    <!-- Gap analysis content -->
-    <div class="flex flex-col gap-2 mb-2">
-      <ng-container *ngIf="comparator1">
-        <div class="flex items-center">
-          <div [ngClass]="comparator1.percentClass" class="rounded px-2 py-1 text-white font-bold text-lg mr-2 min-w-[60px] text-center">
-            {{ comparator1.percent > 0 ? '+' : '' }}{{ comparator1.percent | number:'1.0-0' }} %
-          </div>
-          <div class="rounded px-2 py-1 bg-gray-100 font-bold text-lg mr-2 min-w-[60px] text-center">
-            $ {{ comparator1.amount | number:'1.0-0' }}
-          </div>
-          <img [src]="comparator1.icon" class="w-8 h-8 ml-2" *ngIf="comparator1.icon" />
-          <span class="text-base text-gray-500 ml-2">
-            <!-- Show comparator label and price -->
-            {{ comparator1.label }}: $ {{ comparator1.price !== undefined && comparator1.price !== null ? comparator1.price : 0 | number:'1.0-0' }}
-          </span>
-        </div>
-      </ng-container>
-      <ng-container *ngIf="comparator2">
-        <div class="flex items-center">
-          <div [ngClass]="comparator2.percentClass" class="rounded px-2 py-1 text-white font-bold text-lg mr-2 min-w-[60px] text-center">
-            {{ comparator2.percent > 0 ? '+' : '' }}{{ comparator2.percent | number:'1.0-0' }} %
-          </div>
-          <div class="rounded px-2 py-1 bg-gray-100 font-bold text-lg mr-2 min-w-[60px] text-center">
-            $ {{ comparator2.amount | number:'1.0-0' }}
-          </div>
-          <img [src]="comparator2.icon" class="w-8 h-8 ml-2" *ngIf="comparator2.icon" />
-          <span class="text-base text-gray-500 ml-2">
-            {{ comparator2.label }}: ${{ comparator2.price !== undefined && comparator2.price !== null ? (comparator2.price | number:'1.0-0') : (0 | number:'1.0-0') }}
-          </span>
-        </div>
-      </ng-container>
-    </div>
-    <div class="flex justify-end mt-4 gap-2">
-      <button mat-stroked-button color="primary" (click)="close()">Cerrar</button>
-      <button mat-flat-button color="accent" (click)="selectCurrentOption()">
-        Seleccionar: precio {{ selectedItemToGap?.label }}
-      </button>
-    </div>
-  </div>
+  }
 </div>

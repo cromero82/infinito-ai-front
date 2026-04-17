@@ -1,76 +1,107 @@
 <vex-page-layout>
   <vex-page-layout-header class="pb-4 flex flex-col items-start justify-center">
-    <div [class.container]="true" class="w-full flex flex-col sm:flex-row justify-between">
-    </div>
+    <div
+      [class.container]="true"
+      class="w-full flex flex-col sm:flex-row justify-between"></div>
   </vex-page-layout-header>
 
   <vex-page-layout-content [class.container]="true" class="-mt-6 pb-0">
     <div class="card clientes-card">
       <div class="bg-app-bar px-6 border-b sticky left-0 flex items-center">
-        <h2 class="title my-0 ltr:pr-4 rtl:pl-4 ltr:mr-4 rtl:ml-4 ltr:border-r rtl:border-l hidden sm:block flex-none">
+        <h2
+          class="title my-0 ltr:pr-4 rtl:pl-4 ltr:mr-4 rtl:ml-4 ltr:border-r rtl:border-l hidden sm:block flex-none">
           Clientes
         </h2>
-        <div class="flex items-center" style="height: 48px;">
+        <div class="flex items-center" style="height: 48px">
           <mat-form-field appearance="outline" class="search-input my-auto">
             <mat-label>Buscar cliente</mat-label>
-            <input #searchInput matInput [formControl]="searchCtrl" placeholder="Nombre, teléfono, documento o ID" />
-            <button mat-icon-button matSuffix *ngIf="searchCtrl.value" aria-label="Limpiar búsqueda" (click)="searchCtrl.setValue('')">
-              <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
-            </button>
+            <input
+              #searchInput
+              matInput
+              [formControl]="searchCtrl"
+              placeholder="Nombre, teléfono, documento o ID" />
+            @if (searchCtrl.value) {
+              <button
+                mat-icon-button
+                matSuffix
+                aria-label="Limpiar búsqueda"
+                (click)="searchCtrl.setValue('')">
+                <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+              </button>
+            }
           </mat-form-field>
           <button
-          (click)="createCliente()"
-          class="ml-4 flex-none"
-          color="primary"
-          mat-mini-fab
-          matTooltip="Agregar cliente"
-          type="button">
-          <mat-icon svgIcon="mat:add" class="icon-sm"></mat-icon>
-          <span class="flex-1"></span>
-        </button>
+            (click)="createCliente()"
+            class="ml-4 flex-none"
+            color="primary"
+            mat-mini-fab
+            matTooltip="Agregar cliente"
+            type="button">
+            <mat-icon svgIcon="mat:add" class="icon-sm"></mat-icon>
+            <span class="flex-1"></span>
+          </button>
         </div>
       </div>
       <div class="px-4 clientes-panel">
-        <div class="clientes-container" [style.min-height.px]="getMinHeightValue()">
+        <div
+          class="clientes-container"
+          [style.min-height.px]="getMinHeightValue()">
           <div class="clientes-list">
-      <table class="w-full" mat-table [dataSource]="filteredDataSource">
-        <!-- ID Column -->
-        <ng-container matColumnDef="id">
-          <th *matHeaderCellDef mat-header-cell mat-sort-header>ID</th>
-          <td *matCellDef="let cliente" mat-cell>{{ cliente.id }}</td>
-        </ng-container>
-        <!-- Name Column -->
-        <ng-container matColumnDef="nombre">
-          <th *matHeaderCellDef mat-header-cell mat-sort-header>Nombre</th>
-          <td *matCellDef="let cliente" mat-cell>{{ cliente.nombre }}</td>
-        </ng-container>
-        <!-- Phone Column -->
-        <ng-container matColumnDef="telefono">
-          <th *matHeaderCellDef mat-header-cell mat-sort-header>Teléfono</th>
-          <td *matCellDef="let cliente" mat-cell>{{ cliente.telefono || '-' }}</td>
-        </ng-container>
-        <!-- Document Column -->
-        <ng-container matColumnDef="documento">
-          <th *matHeaderCellDef mat-header-cell mat-sort-header>Documento</th>
-          <td *matCellDef="let cliente" mat-cell>{{ cliente.documento || '-' }}</td>
-        </ng-container>
-        <!-- Edit Column -->
-        <ng-container matColumnDef="edit">
-          <th *matHeaderCellDef mat-header-cell></th>
-          <td *matCellDef="let cliente" mat-cell class="flex items-center gap-2">
-            <button mat-icon-button color="accent" (click)="editCliente(cliente); $event.stopPropagation()">
-              <mat-icon svgIcon="mat:edit"></mat-icon>
-            </button>
-          </td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row 
-            *matRowDef="let row; columns: displayedColumns"></tr>
-      </table>
-            <div class="loading" *ngIf="loading">Cargando clientes...</div>
-            <div class="no-data" *ngIf="!loading && filteredDataSource.length === 0">
-              No se encontraron clientes
-            </div>
+            <table class="w-full" mat-table [dataSource]="filteredDataSource">
+              <!-- ID Column -->
+              <ng-container matColumnDef="id">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header>ID</th>
+                <td *matCellDef="let cliente" mat-cell>{{ cliente.id }}</td>
+              </ng-container>
+              <!-- Name Column -->
+              <ng-container matColumnDef="nombre">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header>
+                  Nombre
+                </th>
+                <td *matCellDef="let cliente" mat-cell>{{ cliente.nombre }}</td>
+              </ng-container>
+              <!-- Phone Column -->
+              <ng-container matColumnDef="telefono">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header>
+                  Teléfono
+                </th>
+                <td *matCellDef="let cliente" mat-cell>
+                  {{ cliente.telefono || "-" }}
+                </td>
+              </ng-container>
+              <!-- Document Column -->
+              <ng-container matColumnDef="documento">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header>
+                  Documento
+                </th>
+                <td *matCellDef="let cliente" mat-cell>
+                  {{ cliente.documento || "-" }}
+                </td>
+              </ng-container>
+              <!-- Edit Column -->
+              <ng-container matColumnDef="edit">
+                <th *matHeaderCellDef mat-header-cell></th>
+                <td
+                  *matCellDef="let cliente"
+                  mat-cell
+                  class="flex items-center gap-2">
+                  <button
+                    mat-icon-button
+                    color="accent"
+                    (click)="editCliente(cliente); $event.stopPropagation()">
+                    <mat-icon svgIcon="mat:edit"></mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+            @if (loading) {
+              <div class="loading">Cargando clientes...</div>
+            }
+            @if (!loading && filteredDataSource.length === 0) {
+              <div class="no-data">No se encontraron clientes</div>
+            }
           </div>
         </div>
       </div>

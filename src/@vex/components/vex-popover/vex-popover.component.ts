@@ -1,19 +1,14 @@
 import { Component, OnInit, TemplateRef } from '@angular/core';
 import { VexPopoverContent, VexPopoverRef } from './vex-popover-ref';
 import { popoverAnimation } from '../../animations/popover.animation';
-import {
-  NgComponentOutlet,
-  NgSwitch,
-  NgSwitchCase,
-  NgTemplateOutlet
-} from '@angular/common';
+import { NgComponentOutlet, NgTemplateOutlet } from '@angular/common';
 
 @Component({
-    selector: 'vex-popover',
-    templateUrl: './vex-popover.component.html',
-    styleUrls: ['./vex-popover.component.scss'],
-    animations: [popoverAnimation],
-    imports: [NgSwitch, NgSwitchCase, NgTemplateOutlet, NgComponentOutlet]
+  selector: 'vex-popover',
+  templateUrl: './vex-popover.component.html',
+  styleUrls: ['./vex-popover.component.scss'],
+  animations: [popoverAnimation],
+  imports: [NgTemplateOutlet, NgComponentOutlet]
 })
 export class VexPopoverComponent implements OnInit {
   renderMethod: 'template' | 'component' | 'text' = 'component';

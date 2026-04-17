@@ -21,77 +21,91 @@
         placeholder="Ej. 100000"
         type="text"
         [disabled]="loading" />
-      <mat-hint *ngIf="totalTieneFocus && getTotalFormateado()" class="total-formateado-hint">
-        {{ getTotalFormateado() }}
-      </mat-hint>
+      @if (totalTieneFocus && getTotalFormateado()) {
+        <mat-hint class="total-formateado-hint">
+          {{ getTotalFormateado() }}
+        </mat-hint>
+      }
     </mat-form-field>
 
     <!-- Campos de efectivo: solo se muestran cuando se selecciona método de pago efectivo (id: 1) -->
-    <div *ngIf="selectedMetodoPagoId === 1" class="efectivo-fields">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Cliente paga con</mat-label>
-        <input
-          #pagaConInput
-          matInput
-          [formControl]="pagaConCtrl"
-          (input)="onPagaConInput($event)"
-          (blur)="onPagaConBlur()"
-          placeholder="Ej. 100000"
-          type="text"
-          [disabled]="loading" />
-        <button
-          *ngIf="pagaConCtrl.value && !loading"
-          mat-icon-button
-          matSuffix
-          type="button"
-          (click)="limpiarPagaCon()"
-          aria-label="Limpiar paga con">
-          <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
-        </button>
-        <mat-hint *ngIf="pagoInsuficiente" class="error-hint">
-          Pago insuficiente. Falta {{ getFaltaFormateado() }}
-        </mat-hint>
-      </mat-form-field>
+    @if (selectedMetodoPagoId === 1) {
+      <div class="efectivo-fields">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Cliente paga con</mat-label>
+          <input
+            #pagaConInput
+            matInput
+            [formControl]="pagaConCtrl"
+            (input)="onPagaConInput($event)"
+            (blur)="onPagaConBlur()"
+            placeholder="Ej. 100000"
+            type="text"
+            [disabled]="loading" />
+          @if (pagaConCtrl.value && !loading) {
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              (click)="limpiarPagaCon()"
+              aria-label="Limpiar paga con">
+              <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+            </button>
+          }
+          @if (pagoInsuficiente) {
+            <mat-hint class="error-hint">
+              Pago insuficiente. Falta {{ getFaltaFormateado() }}
+            </mat-hint>
+          }
+        </mat-form-field>
+        @if (cambio > 0) {
+          <mat-form-field appearance="outline" class="full-width campo-cambio">
+            <mat-label>Cambio</mat-label>
+            <input
+              matInput
+              [value]="getCambioFormateado()"
+              readonly
+              [disabled]="true" />
+          </mat-form-field>
+        }
+      </div>
+    }
+  </div>
 
-      <mat-form-field appearance="outline" class="full-width campo-cambio" *ngIf="cambio > 0">
-        <mat-label>Cambio</mat-label>
-        <input
-          matInput
-          [value]="getCambioFormateado()"
-          readonly
-          [disabled]="true" />
-      </mat-form-field>
+  @if (error) {
+    <div class="error-message">
+      {{ error }}
     </div>
-  </div>
-
-  <div class="error-message" *ngIf="error">
-    {{ error }}
-  </div>
+  }
 
   <div class="metodos-pago-section">
-    <div class="metodos-pago" *ngIf="!loadingMetodos && metodosPago.length > 0">
-      <ng-container *ngFor="let metodo of metodosPago">
-        <button
-          *ngIf="metodo.estado !== 'inactivo'"
-          type="button"
-          class="metodo-pago-btn"
-          mat-icon-button
-          [matTooltip]="metodo.descripcion"
-          (click)="seleccionarMetodoPago(metodo)"
-          [disabled]="loading"
-          [class.metodo-pago-seleccionado]="selectedMetodoPagoId === metodo.id">
-          <img
-            [src]="'assets/img/icons/payments/' + metodo.file"
-            [alt]="metodo.descripcion"
-            class="metodo-pago-icon" />
-          <mat-icon
-            *ngIf="metodo.estado !== 'activo'"
-            class="metodo-pago-warning"
-            svgIcon="mat:warning">
-          </mat-icon>
-        </button>
-      </ng-container>
-    </div>
+    @if (!loadingMetodos && metodosPago.length > 0) {
+      <div class="metodos-pago">
+        @for (metodo of metodosPago; track metodo) {
+          @if (metodo.estado !== "inactivo") {
+            <button
+              type="button"
+              class="metodo-pago-btn"
+              mat-icon-button
+              [matTooltip]="metodo.descripcion"
+              (click)="seleccionarMetodoPago(metodo)"
+              [disabled]="loading"
+              [class.metodo-pago-seleccionado]="
+                selectedMetodoPagoId === metodo.id
+              ">
+              <img
+                [src]="'assets/img/icons/payments/' + metodo.file"
+                [alt]="metodo.descripcion"
+                class="metodo-pago-icon" />
+              @if (metodo.estado !== "activo") {
+                <mat-icon class="metodo-pago-warning" svgIcon="mat:warning">
+                </mat-icon>
+              }
+            </button>
+          }
+        }
+      </div>
+    }
   </div>
 </div>
 
@@ -105,4 +119,3 @@
     Pagar
   </button>
 </div>
-

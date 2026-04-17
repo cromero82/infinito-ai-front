@@ -1,5 +1,7 @@
 <div mat-dialog-title class="flex items-center justify-between">
-  <h2 class="text-lg font-semibold">Analisis fijación de Precio - nuevo producto</h2>
+  <h2 class="text-lg font-semibold">
+    Analisis fijación de Precio - nuevo producto
+  </h2>
   <button mat-icon-button (click)="close()">
     <mat-icon svgIcon="mat:close"></mat-icon>
   </button>
@@ -12,103 +14,156 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <!-- Left: Name selection -->
       <div>
-        <div class="text-base font-semibold text-[#008cff] mb-2">Selecciona el nombre del producto</div>
+        <div class="text-base font-semibold text-[#008cff] mb-2">
+          Selecciona el nombre del producto
+        </div>
         <div class="flex flex-col gap-2">
-          <ng-container *ngFor="let name of availableNames">
+          @for (name of availableNames; track name) {
             <div class="flex flex-col items-start">
               <div
                 class="px-4 py-2 border rounded cursor-pointer transition-all duration-200 w-full text-left"
-                [ngClass]="{'ring-4 ring-blue-500 border-blue-500': selectedNameSource === name.source, 'border-gray-300': selectedNameSource !== name.source}"
+                [ngClass]="{
+                  'ring-4 ring-blue-500 border-blue-500':
+                    selectedNameSource === name.source,
+                  'border-gray-300': selectedNameSource !== name.source
+                }"
                 (click)="selectName(name.source)">
                 <span class="font-semibold">{{ name.value }}</span>
               </div>
-              <span class="text-xs text-gray-500 mt-1 ml-2">{{ name.label }}</span>
+              <span class="text-xs text-gray-500 mt-1 ml-2">{{
+                name.label
+              }}</span>
             </div>
-          </ng-container>
+          }
         </div>
       </div>
       <!-- Right: Images -->
       <div class="flex flex-col items-center gap-4">
         <div class="flex flex-col items-center">
-          <ng-container *ngIf="olimpicaProduct?.product?.image_url as olimpicaImg">
-            <img [src]="olimpicaImg"
-                 alt="Olimpica"
-                 class="w-40 h-32 object-contain border rounded mb-2 cursor-pointer transition-all duration-200"
-                 [ngClass]="{'ring-4 ring-blue-500': selectedSource === 'olimpica'}"
-                 (click)="selectedSource = 'olimpica'" />
-          </ng-container>
+          @if (olimpicaProduct?.product?.image_url; as olimpicaImg) {
+            <img
+              [src]="olimpicaImg"
+              alt="Olimpica"
+              class="w-40 h-32 object-contain border rounded mb-2 cursor-pointer transition-all duration-200"
+              [ngClass]="{
+                'ring-4 ring-blue-500': selectedSource === 'olimpica'
+              }"
+              (click)="selectedSource = 'olimpica'" />
+          }
           <span class="text-xs text-gray-500">Imagen Olimpica</span>
         </div>
         <div class="flex flex-col items-center">
-          <ng-container *ngIf="exitoProduct?.product?.image_url as exitoImg">
-            <img [src]="exitoImg"
-                 alt="Exito"
-                 class="w-40 h-32 object-contain border rounded mb-2 cursor-pointer transition-all duration-200"
-                 [ngClass]="{'ring-4 ring-blue-500': selectedSource === 'exito'}"
-                 (click)="selectedSource = 'exito'" />
-          </ng-container>
+          @if (exitoProduct?.product?.image_url; as exitoImg) {
+            <img
+              [src]="exitoImg"
+              alt="Exito"
+              class="w-40 h-32 object-contain border rounded mb-2 cursor-pointer transition-all duration-200"
+              [ngClass]="{ 'ring-4 ring-blue-500': selectedSource === 'exito' }"
+              (click)="selectedSource = 'exito'" />
+          }
           <span class="text-xs text-gray-500">Imagen Exito</span>
         </div>
       </div>
     </div>
   </div>
   <div class="bg-[#f9f7ed] rounded p-4 mb-4">
-    <div class="text-base font-semibold text-[#008cff] mb-2">Precio Otras tiendas</div>
+    <div class="text-base font-semibold text-[#008cff] mb-2">
+      Precio Otras tiendas
+    </div>
     <div class="flex flex-row items-center justify-between mb-2">
       <div class="flex items-center gap-2">
-        <img src="assets/img/icons/stores/olimpica-store-icon.png" alt="Olimpica Logo" class="w-10 h-10 object-contain bg-white rounded" />
+        <img
+          src="assets/img/icons/stores/olimpica-store-icon.png"
+          alt="Olimpica Logo"
+          class="w-10 h-10 object-contain bg-white rounded" />
         <span class="font-semibold">Olimpica</span>
       </div>
       <div class="flex flex-col items-end">
-        <ng-container *ngIf="olimpicaProduct?.product as olimpica">
+        @if (olimpicaProduct?.product; as olimpica) {
           <span class="text-2xl font-bold text-gray-800">
-            $ {{ olimpica.price | number:'1.0-0' }}
+            $ {{ olimpica.price | number: "1.0-0" }}
           </span>
-          <ng-container *ngIf="olimpica.percentDiscount && olimpica.percentDiscount > 0">
-            <span class="text-sm text-green-700 font-bold">- {{ olimpica.percentDiscount }} %</span>
-            <span class="text-base text-gray-500 line-through" *ngIf="olimpica.priceWithoutDiscount != null">$ {{ olimpica.priceWithoutDiscount | number:'1.0-0' }}</span>
-          </ng-container>
-        </ng-container>
+          @if (olimpica.percentDiscount && olimpica.percentDiscount > 0) {
+            <span class="text-sm text-green-700 font-bold"
+              >- {{ olimpica.percentDiscount }} %</span
+            >
+            @if (olimpica.priceWithoutDiscount != null) {
+              <span class="text-base text-gray-500 line-through"
+                >$ {{ olimpica.priceWithoutDiscount | number: "1.0-0" }}</span
+              >
+            }
+          }
+        }
       </div>
       <div class="flex flex-col gap-2 ml-4">
-        <button mat-stroked-button color="primary" (click)="openGapDialog('olimpica')">
+        <button
+          mat-stroked-button
+          color="primary"
+          (click)="openGapDialog('olimpica')">
           Analisis GAP
         </button>
-        <button mat-flat-button color="accent" (click)="onSelect('olimpica')">Seleccionar</button>
+        <button mat-flat-button color="accent" (click)="onSelect('olimpica')">
+          Seleccionar
+        </button>
       </div>
     </div>
     <div class="flex flex-row items-center justify-between mb-2">
       <div class="flex items-center gap-2">
-        <img src="assets/img/icons/stores/exito-store-icon.png" alt="Exito Logo" class="w-10 h-10 object-contain bg-white rounded" />
+        <img
+          src="assets/img/icons/stores/exito-store-icon.png"
+          alt="Exito Logo"
+          class="w-10 h-10 object-contain bg-white rounded" />
         <span class="font-semibold">Exito</span>
       </div>
       <div class="flex flex-col items-end">
-        <ng-container *ngIf="exitoProduct?.product as exito">
+        @if (exitoProduct?.product; as exito) {
           <span class="text-2xl font-bold text-gray-800">
-            $ {{ exito.price | number:'1.0-0' }}
+            $ {{ exito.price | number: "1.0-0" }}
           </span>
-          <ng-container *ngIf="exito.percentDiscount && exito.percentDiscount > 0">
-            <span class="text-sm text-green-700 font-bold">- {{ exito.percentDiscount }} %</span>
-            <span class="text-base text-gray-500 line-through">$ {{ exito.priceWithoutDiscount | number:'1.0-0' }}</span>
-          </ng-container>
-        </ng-container>
+          @if (exito.percentDiscount && exito.percentDiscount > 0) {
+            <span class="text-sm text-green-700 font-bold"
+              >- {{ exito.percentDiscount }} %</span
+            >
+            <span class="text-base text-gray-500 line-through"
+              >$ {{ exito.priceWithoutDiscount | number: "1.0-0" }}</span
+            >
+          }
+        }
       </div>
       <div class="flex flex-col gap-2 ml-4">
-        <button mat-stroked-button color="primary" (click)="openGapDialog('exito')">
+        <button
+          mat-stroked-button
+          color="primary"
+          (click)="openGapDialog('exito')">
           Analisis GAP
         </button>
-        <button mat-flat-button color="accent" (click)="onSelect('exito')">Seleccionar</button>
+        <button mat-flat-button color="accent" (click)="onSelect('exito')">
+          Seleccionar
+        </button>
       </div>
     </div>
   </div>
   <div class="bg-[#f9f7ed] rounded p-4 mt-4">
-    <div class="text-base font-semibold text-[#008cff] mb-2">Precio sugerido vendedor / Marca</div>
+    <div class="text-base font-semibold text-[#008cff] mb-2">
+      Precio sugerido vendedor / Marca
+    </div>
     <div class="flex items-center gap-4">
-      <input type="text" pattern="[0-9]*" inputmode="numeric" [(ngModel)]="suggestedPrice" class="border rounded px-2 py-1 w-32 text-lg" placeholder="Ingrese precio" />
-      <button mat-stroked-button color="primary" (click)="openGapDialog('suggested')">
+      <input
+        type="text"
+        pattern="[0-9]*"
+        inputmode="numeric"
+        [(ngModel)]="suggestedPrice"
+        class="border rounded px-2 py-1 w-32 text-lg"
+        placeholder="Ingrese precio" />
+      <button
+        mat-stroked-button
+        color="primary"
+        (click)="openGapDialog('suggested')">
         Analisis GAP
       </button>
-      <button mat-flat-button color="accent" (click)="onSelect('suggested')">Seleccionar</button>
+      <button mat-flat-button color="accent" (click)="onSelect('suggested')">
+        Seleccionar
+      </button>
     </div>
   </div>
 </div>

@@ -8,7 +8,7 @@ import { RelationalProductService } from '../service/relational-product.service'
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { NgFor, NgIf, DecimalPipe, DatePipe, CommonModule } from '@angular/common';
+import { NgFor, NgIf, DecimalPipe, CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { HttpClient } from '@angular/common/http';
@@ -61,7 +61,6 @@ export interface FilterCondition {
         NgFor,
         NgIf,
         DecimalPipe,
-        DatePipe,
         CommonModule,
         GoogleSearchButtonComponent,
         MatSelectModule,

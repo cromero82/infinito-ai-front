@@ -17,4 +17,6 @@
   <div class="search-hint">Hit enter to search</div>
 </div>
 
-<div (click)="close()" *ngIf="show$ | async" class="search-overlay"></div>
+@if (show$ | async) {
+  <div (click)="close()" class="search-overlay"></div>
+}

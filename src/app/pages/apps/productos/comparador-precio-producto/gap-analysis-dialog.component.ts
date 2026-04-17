@@ -1,15 +1,31 @@
-import { Component, Inject, OnInit, ElementRef, ViewChild } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
-import { NgIf, NgClass, DecimalPipe, CurrencyPipe } from '@angular/common';
+import {
+  Component,
+  Inject,
+  OnInit,
+  ElementRef,
+  ViewChild
+} from '@angular/core';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogRef,
+  MatDialogModule
+} from '@angular/material/dialog';
+import { NgClass, DecimalPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-    selector: 'gap-analysis-dialog',
-    imports: [NgIf, NgClass, DecimalPipe, CurrencyPipe, MatDialogModule, MatButtonModule, FormsModule],
-    providers: [CurrencyPipe, DecimalPipe],
-    templateUrl: './gap-analysis-dialog.component.html',
-    styleUrls: ['./gap-analysis-dialog.component.scss']
+  selector: 'gap-analysis-dialog',
+  imports: [
+    NgClass,
+    DecimalPipe,
+    MatDialogModule,
+    MatButtonModule,
+    FormsModule
+  ],
+  providers: [DecimalPipe],
+  templateUrl: './gap-analysis-dialog.component.html',
+  styleUrls: ['./gap-analysis-dialog.component.scss']
 })
 export class GapAnalysisDialogComponent implements OnInit {
   selectedItemToGap: any;
@@ -29,11 +45,18 @@ export class GapAnalysisDialogComponent implements OnInit {
     if (this.data.itemToGap && typeof this.data.itemToGap.price === 'number') {
       this.selectedItemToGap = this.data.itemToGap;
     } else {
-      const candidates = [this.data.vendedor, this.data.olimpica, this.data.exito].filter(item => item && typeof item.price === 'number');
+      const candidates = [
+        this.data.vendedor,
+        this.data.olimpica,
+        this.data.exito
+      ].filter((item) => item && typeof item.price === 'number');
       this.selectedItemToGap = candidates.length ? candidates[0] : null;
     }
     if (this.selectedItemToGap?.label === 'Vendedor') {
-      this.vendedorInputValue = this.selectedItemToGap.price != null ? String(this.selectedItemToGap.price) : '';
+      this.vendedorInputValue =
+        this.selectedItemToGap.price != null
+          ? String(this.selectedItemToGap.price)
+          : '';
     }
     this.calculateComparators();
   }
@@ -43,12 +66,17 @@ export class GapAnalysisDialogComponent implements OnInit {
   }
 
   changeItemToGap(label: string) {
-    const candidates = [this.data.vendedor, this.data.olimpica, this.data.exito].filter(Boolean);
-    const found = candidates.find(item => item.label === label);
+    const candidates = [
+      this.data.vendedor,
+      this.data.olimpica,
+      this.data.exito
+    ].filter(Boolean);
+    const found = candidates.find((item) => item.label === label);
     if (found) {
       this.selectedItemToGap = found;
       if (found.label === 'Vendedor') {
-        this.vendedorInputValue = found.price != null ? String(found.price) : '';
+        this.vendedorInputValue =
+          found.price != null ? String(found.price) : '';
         setTimeout(() => {
           if (this.vendedorInputRef) {
             this.vendedorInputRef.nativeElement.focus();
@@ -62,7 +90,11 @@ export class GapAnalysisDialogComponent implements OnInit {
 
   calculateComparators() {
     // Get all items except the selected one
-    const items = [this.data.vendedor, this.data.olimpica, this.data.exito].filter(item => item && item !== this.selectedItemToGap);
+    const items = [
+      this.data.vendedor,
+      this.data.olimpica,
+      this.data.exito
+    ].filter((item) => item && item !== this.selectedItemToGap);
     // Calculate gap for each comparator
     const getPercentClass = (percent: number) => {
       if (percent >= 15) return 'bg-green-600';
@@ -74,7 +106,7 @@ export class GapAnalysisDialogComponent implements OnInit {
     if (items.length > 0) {
       const comp1 = items[0];
       const amount1 = (this.selectedItemToGap.price ?? 0) - (comp1.price ?? 0);
-      const percent1 = comp1.price ? ((amount1) / comp1.price) * 100 : 0;
+      const percent1 = comp1.price ? (amount1 / comp1.price) * 100 : 0;
       this.comparator1 = {
         label: comp1.label,
         icon: comp1.icon,
@@ -89,7 +121,7 @@ export class GapAnalysisDialogComponent implements OnInit {
     if (items.length > 1) {
       const comp2 = items[1];
       const amount2 = (this.selectedItemToGap.price ?? 0) - (comp2.price ?? 0);
-      const percent2 = comp2.price ? ((amount2) / comp2.price) * 100 : 0;
+      const percent2 = comp2.price ? (amount2 / comp2.price) * 100 : 0;
       this.comparator2 = {
         label: comp2.label,
         icon: comp2.icon,

@@ -5,70 +5,74 @@
     </div>
 
     <div class="px-6 py-4">
-      <div class="loading" *ngIf="loading">Cargando...</div>
-      <div class="error" *ngIf="!loading && error">{{ error }}</div>
+      @if (loading) {
+        <div class="loading">Cargando...</div>
+      }
+      @if (!loading && error) {
+        <div class="error">{{ error }}</div>
+      }
 
-      <div *ngIf="!loading && !error">
-        <table mat-table [dataSource]="usuarios" class="roles-table">
-          <!-- Nombre Column -->
-          <ng-container matColumnDef="nombre">
-            <th mat-header-cell *matHeaderCellDef>Nombre</th>
-            <td mat-cell *matCellDef="let usuario">{{ usuario.nombre }}</td>
-          </ng-container>
-
-          <!-- Correo Electrónico Column -->
-          <ng-container matColumnDef="correoElectronico">
-            <th mat-header-cell *matHeaderCellDef>Correo Electrónico</th>
-            <td mat-cell *matCellDef="let usuario">{{ usuario.correoElectronico }}</td>
-          </ng-container>
-
-          <!-- Teléfono Column -->
-          <ng-container matColumnDef="telefono">
-            <th mat-header-cell *matHeaderCellDef>Teléfono</th>
-            <td mat-cell *matCellDef="let usuario">{{ usuario.telefono }}</td>
-          </ng-container>
-
-          <!-- Roles Column -->
-          <ng-container matColumnDef="roles">
-            <th mat-header-cell *matHeaderCellDef>Roles</th>
-            <td mat-cell *matCellDef="let usuario">
-              <div class="roles-container">
-                <button
-                  *ngFor="let rol of roles"
-                  mat-button
-                  type="button"
-                  [class.rol-activo]="tieneRol(usuario, rol.sigla)"
-                  [class.rol-inactivo]="!tieneRol(usuario, rol.sigla)"
-                  (click)="toggleRol(usuario, rol.sigla)">
-                  {{ rol.nombre }}
-                </button>
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Acciones Column -->
-          <ng-container matColumnDef="acciones">
-            <th mat-header-cell *matHeaderCellDef>Aplicar Cambios</th>
-            <td mat-cell *matCellDef="let usuario">
-              <button
-                *ngIf="tieneCambios(usuario)"
-                mat-raised-button
-                color="primary"
-                type="button"
-                (click)="aplicarCambios(usuario)">
-                Aplicar Cambios
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
-
-        <div class="empty-message" *ngIf="usuarios.length === 0">
-          No hay usuarios disponibles
+      @if (!loading && !error) {
+        <div>
+          <table mat-table [dataSource]="usuarios" class="roles-table">
+            <!-- Nombre Column -->
+            <ng-container matColumnDef="nombre">
+              <th mat-header-cell *matHeaderCellDef>Nombre</th>
+              <td mat-cell *matCellDef="let usuario">{{ usuario.nombre }}</td>
+            </ng-container>
+            <!-- Correo Electrónico Column -->
+            <ng-container matColumnDef="correoElectronico">
+              <th mat-header-cell *matHeaderCellDef>Correo Electrónico</th>
+              <td mat-cell *matCellDef="let usuario">
+                {{ usuario.correoElectronico }}
+              </td>
+            </ng-container>
+            <!-- Teléfono Column -->
+            <ng-container matColumnDef="telefono">
+              <th mat-header-cell *matHeaderCellDef>Teléfono</th>
+              <td mat-cell *matCellDef="let usuario">{{ usuario.telefono }}</td>
+            </ng-container>
+            <!-- Roles Column -->
+            <ng-container matColumnDef="roles">
+              <th mat-header-cell *matHeaderCellDef>Roles</th>
+              <td mat-cell *matCellDef="let usuario">
+                <div class="roles-container">
+                  @for (rol of roles; track rol) {
+                    <button
+                      mat-button
+                      type="button"
+                      [class.rol-activo]="tieneRol(usuario, rol.sigla)"
+                      [class.rol-inactivo]="!tieneRol(usuario, rol.sigla)"
+                      (click)="toggleRol(usuario, rol.sigla)">
+                      {{ rol.nombre }}
+                    </button>
+                  }
+                </div>
+              </td>
+            </ng-container>
+            <!-- Acciones Column -->
+            <ng-container matColumnDef="acciones">
+              <th mat-header-cell *matHeaderCellDef>Aplicar Cambios</th>
+              <td mat-cell *matCellDef="let usuario">
+                @if (tieneCambios(usuario)) {
+                  <button
+                    mat-raised-button
+                    color="primary"
+                    type="button"
+                    (click)="aplicarCambios(usuario)">
+                    Aplicar Cambios
+                  </button>
+                }
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+          @if (usuarios.length === 0) {
+            <div class="empty-message">No hay usuarios disponibles</div>
+          }
         </div>
-      </div>
+      }
     </div>
   </div>
 </div>

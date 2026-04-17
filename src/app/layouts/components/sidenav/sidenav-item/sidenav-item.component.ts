@@ -27,24 +27,22 @@ import { NavigationService } from '../../../../core/navigation/navigation.servic
 
 import { MatIconModule } from '@angular/material/icon';
 import { MatRippleModule } from '@angular/material/core';
-import { NgClass, NgFor, NgIf } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-    selector: 'vex-sidenav-item',
-    templateUrl: './sidenav-item.component.html',
-    styleUrls: ['./sidenav-item.component.scss'],
-    animations: [dropdownAnimation],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [
-        NgIf,
-        MatRippleModule,
-        RouterLinkActive,
-        RouterLink,
-        MatIconModule,
-        NgClass,
-        NgFor
-    ]
+  selector: 'vex-sidenav-item',
+  templateUrl: './sidenav-item.component.html',
+  styleUrls: ['./sidenav-item.component.scss'],
+  animations: [dropdownAnimation],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    MatRippleModule,
+    RouterLinkActive,
+    RouterLink,
+    MatIconModule,
+    NgClass
+  ]
 })
 export class SidenavItemComponent implements OnInit, OnChanges {
   @Input({ required: true }) item!: NavigationItem;

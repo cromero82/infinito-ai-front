@@ -6,7 +6,7 @@ import { RouterOutlet } from '@angular/router';
 import { VexConfigService } from '@vex/config/vex-config.service';
 import { VexSidebarComponent } from '@vex/components/vex-sidebar/vex-sidebar.component';
 
-import { AsyncPipe, NgIf, NgTemplateOutlet } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { SidenavComponent } from '../components/sidenav/sidenav.component';
 import { ToolbarComponent } from '../components/toolbar/toolbar.component';
 import { FooterComponent } from '../components/footer/footer.component';
@@ -22,27 +22,25 @@ import { VexConfig } from '@vex/config/vex-config.interface';
 import { FooterService } from '../services/footer.service';
 
 @Component({
-    selector: 'vex-layout',
-    templateUrl: './layout.component.html',
-    styleUrls: ['./layout.component.scss'],
-    imports: [
-        BaseLayoutComponent,
-        NgIf,
-        AsyncPipe,
-        SidenavComponent,
-        ToolbarComponent,
-        FooterComponent,
-        QuickpanelComponent,
-        ConfigPanelToggleComponent,
-        VexSidebarComponent,
-        ConfigPanelComponent,
-        MatDialogModule,
-        MatSidenavModule,
-        NgTemplateOutlet,
-        RouterOutlet,
-        SearchComponent,
-        VexProgressBarComponent
-    ]
+  selector: 'vex-layout',
+  templateUrl: './layout.component.html',
+  styleUrls: ['./layout.component.scss'],
+  imports: [
+    BaseLayoutComponent,
+    AsyncPipe,
+    SidenavComponent,
+    ToolbarComponent,
+    FooterComponent,
+    QuickpanelComponent,
+    ConfigPanelToggleComponent,
+    VexSidebarComponent,
+    ConfigPanelComponent,
+    MatDialogModule,
+    MatSidenavModule,
+    RouterOutlet,
+    SearchComponent,
+    VexProgressBarComponent
+  ]
 })
 export class LayoutComponent {
   config$: Observable<VexConfig> = this.configService.config$;

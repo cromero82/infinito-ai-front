@@ -3,7 +3,7 @@ import { Link } from '@vex/interfaces/link.interface';
 import { scaleIn400ms } from '@vex/animations/scale-in.animation';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { NgFor, NgIf } from '@angular/common';
+
 import { MatTabsModule } from '@angular/material/tabs';
 import { AuthService } from '../../../auth/service/auth.service';
 
@@ -15,11 +15,11 @@ export interface FriendSuggestion {
 }
 
 @Component({
-    selector: 'gm-usuario',
-    templateUrl: './usuario.component.html',
-    styleUrls: ['./usuario.component.scss'],
-    animations: [scaleIn400ms, fadeInRight400ms],
-    imports: [MatTabsModule, NgFor, NgIf, RouterLinkActive, RouterLink, RouterOutlet]
+  selector: 'gm-usuario',
+  templateUrl: './usuario.component.html',
+  styleUrls: ['./usuario.component.scss'],
+  animations: [scaleIn400ms, fadeInRight400ms],
+  imports: [MatTabsModule, RouterLinkActive, RouterLink, RouterOutlet]
 })
 export class UsuarioComponent implements OnInit {
   links: Link[] = [
@@ -53,4 +53,3 @@ export class UsuarioComponent implements OnInit {
     }
   }
 }
-

@@ -2,24 +2,29 @@
   <div class="flex flex-col flex-none">
     <div class="flex items-center justify-between p-6">
       <h3 class="headline m-0">Filtros</h3>
-      <button (click)="addNew()" class="bg-primary text-on-primary rounded-full p-2" mat-icon-button type="button">
+      <button
+        (click)="addNew()"
+        class="bg-primary text-on-primary rounded-full p-2"
+        mat-icon-button
+        type="button">
         <mat-icon svgIcon="mat:add"></mat-icon>
       </button>
     </div>
 
     <div class="flex flex-col">
-      <ng-container *ngFor="let category of categories">
-        <button 
-          (click)="setFilter(category.value)" 
+      @for (category of categories; track category) {
+        <button
+          (click)="setFilter(category.value)"
           [ngClass]="{
-            'bg-primary-600/10 text-primary-600': activeCategory === category.value,
+            'bg-primary-600/10 text-primary-600':
+              activeCategory === category.value,
             'text-secondary': activeCategory !== category.value
           }"
           class="flex items-center justify-between px-6 py-3 text-left hover:bg-hover cursor-pointer">
           <span class="font-medium">{{ category.label }}</span>
           <span class="text-secondary">{{ category.count }}</span>
         </button>
-      </ng-container>
+      }
     </div>
   </div>
-</div> 
+</div>

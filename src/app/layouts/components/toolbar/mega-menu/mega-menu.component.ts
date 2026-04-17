@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { VexPopoverRef } from '@vex/components/vex-popover/vex-popover-ref';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
-import { NgFor } from '@angular/common';
+
 import { MatButtonModule } from '@angular/material/button';
 
 export interface MegaMenuFeature {
@@ -17,9 +17,9 @@ export interface MegaMenuPage {
 }
 
 @Component({
-    selector: 'vex-mega-menu',
-    templateUrl: './mega-menu.component.html',
-    imports: [MatButtonModule, NgFor, RouterLink, MatIconModule]
+  selector: 'vex-mega-menu',
+  templateUrl: './mega-menu.component.html',
+  imports: [MatButtonModule, RouterLink, MatIconModule]
 })
 export class MegaMenuComponent implements OnInit {
   features: MegaMenuFeature[] = [

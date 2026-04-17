@@ -1,146 +1,165 @@
 <div class="edicion-recibo-container">
   <h3 class="title">Cambios en Edición</h3>
 
-  <div *ngIf="loading" class="loading-message">
-    Cargando detalles de edición...
-  </div>
+  @if (loading) {
+    <div class="loading-message">Cargando detalles de edición...</div>
+  }
 
-  <div *ngIf="error" class="error-message">
-    {{ error }}
-  </div>
-
-  <div *ngIf="!loading && !error" class="content">
-    <!-- Productos Agregados -->
-    <div *ngIf="getCambiosAgregados().length > 0" class="cambios-section">
-      <h4 class="section-title agregado">Productos Agregados</h4>
-      <table class="cambios-table">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th>Cantidad</th>
-            <th>Subtotal</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let cambio of getCambiosAgregados()">
-            <td>{{ cambio.productoNombre }}</td>
-            <td>{{ cambio.cantidadNueva }}</td>
-            <td>{{ formatCurrency(cambio.subtotalNuevo ?? 0) }}</td>
-            <td><span class="badge agregado">Agregado</span></td>
-          </tr>
-        </tbody>
-      </table>
+  @if (error) {
+    <div class="error-message">
+      {{ error }}
     </div>
+  }
 
-    <!-- Productos Eliminados -->
-    <div *ngIf="getCambiosEliminados().length > 0" class="cambios-section">
-      <h4 class="section-title eliminado">Productos Eliminados</h4>
-      <table class="cambios-table">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th>Cantidad</th>
-            <th>Subtotal</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let cambio of getCambiosEliminados()">
-            <td>{{ cambio.productoNombre }}</td>
-            <td>{{ cambio.cantidadAnterior }}</td>
-            <td>{{ formatCurrency(cambio.subtotalAnterior ?? 0) }}</td>
-            <td><span class="badge eliminado">Eliminado</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Productos Modificados -->
-    <div *ngIf="getCambiosModificados().length > 0" class="cambios-section">
-      <h4 class="section-title modificado">Productos Modificados</h4>
-      <table class="cambios-table">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th>Cantidad Anterior</th>
-            <th>Cantidad Nueva</th>
-            <th>Subtotal Anterior</th>
-            <th>Subtotal Nuevo</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let cambio of getCambiosModificados()">
-            <td>{{ cambio.productoNombre }}</td>
-            <td>{{ cambio.cantidadAnterior }}</td>
-            <td>{{ cambio.cantidadNueva }}</td>
-            <td>{{ formatCurrency(cambio.subtotalAnterior ?? 0) }}</td>
-            <td>{{ formatCurrency(cambio.subtotalNuevo ?? 0) }}</td>
-            <td><span class="badge modificado">Modificado</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Sin cambios -->
-    <div *ngIf="cambios.length === 0" class="no-cambios">
-      No hay cambios detectados.
-    </div>
-
-    <!-- Totales -->
-    <div class="totales-section">
-      <div class="total-row">
-        <span class="total-label">Total este recibo:</span>
-        <span class="total-value">{{ formatCurrency(totalRecibo) }}</span>
+  @if (!loading && !error) {
+    <div class="content">
+      <!-- Productos Agregados -->
+      @if (getCambiosAgregados().length > 0) {
+        <div class="cambios-section">
+          <h4 class="section-title agregado">Productos Agregados</h4>
+          <table class="cambios-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cambio of getCambiosAgregados(); track cambio) {
+                <tr>
+                  <td>{{ cambio.productoNombre }}</td>
+                  <td>{{ cambio.cantidadNueva }}</td>
+                  <td>{{ formatCurrency(cambio.subtotalNuevo ?? 0) }}</td>
+                  <td><span class="badge agregado">Agregado</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <!-- Productos Eliminados -->
+      @if (getCambiosEliminados().length > 0) {
+        <div class="cambios-section">
+          <h4 class="section-title eliminado">Productos Eliminados</h4>
+          <table class="cambios-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cambio of getCambiosEliminados(); track cambio) {
+                <tr>
+                  <td>{{ cambio.productoNombre }}</td>
+                  <td>{{ cambio.cantidadAnterior }}</td>
+                  <td>{{ formatCurrency(cambio.subtotalAnterior ?? 0) }}</td>
+                  <td><span class="badge eliminado">Eliminado</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <!-- Productos Modificados -->
+      @if (getCambiosModificados().length > 0) {
+        <div class="cambios-section">
+          <h4 class="section-title modificado">Productos Modificados</h4>
+          <table class="cambios-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Cantidad Anterior</th>
+                <th>Cantidad Nueva</th>
+                <th>Subtotal Anterior</th>
+                <th>Subtotal Nuevo</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cambio of getCambiosModificados(); track cambio) {
+                <tr>
+                  <td>{{ cambio.productoNombre }}</td>
+                  <td>{{ cambio.cantidadAnterior }}</td>
+                  <td>{{ cambio.cantidadNueva }}</td>
+                  <td>{{ formatCurrency(cambio.subtotalAnterior ?? 0) }}</td>
+                  <td>{{ formatCurrency(cambio.subtotalNuevo ?? 0) }}</td>
+                  <td><span class="badge modificado">Modificado</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <!-- Sin cambios -->
+      @if (cambios.length === 0) {
+        <div class="no-cambios">No hay cambios detectados.</div>
+      }
+      <!-- Totales -->
+      <div class="totales-section">
+        <div class="total-row">
+          <span class="total-label">Total este recibo:</span>
+          <span class="total-value">{{ formatCurrency(totalRecibo) }}</span>
+        </div>
+        <div class="total-row">
+          <span class="total-label">Total anterior:</span>
+          <span class="total-value">{{
+            formatCurrency(totalEdicionRecibo)
+          }}</span>
+        </div>
+        <div class="total-row diferencia">
+          <span class="total-label">Diferencia:</span>
+          <span class="total-value" [class.negativa]="diferencia < 0">
+            {{ formatCurrency(diferencia) }}
+          </span>
+        </div>
       </div>
-      <div class="total-row">
-        <span class="total-label">Total anterior:</span>
-        <span class="total-value">{{ formatCurrency(totalEdicionRecibo) }}</span>
-      </div>
-      <div class="total-row diferencia">
-        <span class="total-label">Diferencia:</span>
-        <span class="total-value" [class.negativa]="diferencia < 0">
+      <!-- Mensaje de devolución -->
+      @if (diferencia < 0) {
+        <div class="devolucion-section">
+          <div class="devolucion-message">
+            Devolver al usuario: {{ formatCurrency(getDiferenciaAbsoluta()) }}
+          </div>
+          <div class="finalizar-button-container">
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              class="finalizar-button"
+              (click)="
+                onFinalizar(); $event.stopPropagation(); $event.preventDefault()
+              "
+              [disabled]="false"
+              style="pointer-events: auto; z-index: 1000">
+              Finalizar
+            </button>
+          </div>
+        </div>
+      }
+      <!-- Mensaje de pago adicional -->
+      @if (diferencia > 0) {
+        <div class="pago-adicional-message">
+          El usuario debe pagar un valor adicional de:
           {{ formatCurrency(diferencia) }}
-        </span>
-      </div>
+        </div>
+      }
+      <!-- Métodos de pago (solo si diferencia > 0) -->
+      @if (diferencia > 0) {
+        <div class="metodos-pago-section">
+          <metodos-pago
+            [recibo]="recibo"
+            [detalles]="detalles"
+            [disabled]="false"
+            [valorReferencia]="diferencia"
+            [permitirReSeleccionar]="true"
+            (metodoPagoSeleccionado)="onMetodoPagoSeleccionado($event)">
+          </metodos-pago>
+        </div>
+      }
     </div>
-
-    <!-- Mensaje de devolución -->
-    <div *ngIf="diferencia < 0" class="devolucion-section">
-      <div class="devolucion-message">
-        Devolver al usuario: {{ formatCurrency(getDiferenciaAbsoluta()) }}
-      </div>
-      <div class="finalizar-button-container">
-        <button
-          mat-flat-button
-          color="primary"
-          type="button"
-          class="finalizar-button"
-          (click)="onFinalizar(); $event.stopPropagation(); $event.preventDefault()"
-          [disabled]="false"
-          style="pointer-events: auto; z-index: 1000;">
-          Finalizar
-        </button>
-      </div>
-    </div>
-
-    <!-- Mensaje de pago adicional -->
-    <div *ngIf="diferencia > 0" class="pago-adicional-message">
-      El usuario debe pagar un valor adicional de: {{ formatCurrency(diferencia) }}
-    </div>
-
-    <!-- Métodos de pago (solo si diferencia > 0) -->
-    <div *ngIf="diferencia > 0" class="metodos-pago-section">
-      <metodos-pago
-        [recibo]="recibo"
-        [detalles]="detalles"
-        [disabled]="false"
-        [valorReferencia]="diferencia"
-        [permitirReSeleccionar]="true"
-        (metodoPagoSeleccionado)="onMetodoPagoSeleccionado($event)">
-      </metodos-pago>
-    </div>
-  </div>
+  }
 </div>
-

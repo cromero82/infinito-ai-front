@@ -1,196 +1,271 @@
 <vex-page-layout>
   <vex-page-layout-header class="pb-4 flex flex-col items-start justify-center">
-    <div [class.container]="true" class="w-full flex flex-col sm:flex-row justify-between">
-    </div>
+    <div
+      [class.container]="true"
+      class="w-full flex flex-col sm:flex-row justify-between"></div>
   </vex-page-layout-header>
   <vex-page-layout-content [class.container]="true" class="-mt-6 pb-0">
     <div class="card tickets-card">
       <div class="bg-app-bar px-6 border-b sticky left-0 flex items-center">
         <div class="header-row">
           <h2 class="title my-0">Tickets</h2>
-          <div class="search-controls" *ngIf="reciboForSearch as recibo">
-            <div class="flex items-center search-wrapper">
-              <mat-form-field appearance="outline" class="search-input my-auto">
-                <mat-label>Buscar producto</mat-label>
-                <input
-                  #productSearchInput
-                  matInput
-                  [formControl]="recibo.productSearchCtrl"
-                  (keyup.enter)="triggerProductSearch()"
-                  (keydown)="onSearchInputKeydown($event)"
-                  placeholder="Ej. código de barras o nombre" />
-                <div matSuffix class="search-suffix-actions">
-                  <button
-                    mat-icon-button
-                    *ngIf="recibo.productSearchCtrl.value"
-                    aria-label="Limpiar búsqueda"
-                    type="button"
-                    (click)="clearProductSearch()">
-                    <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
-                  </button>
-                  <button
-                    mat-icon-button
-                    color="primary"
-                    *ngIf="recibo.canCreateProductFromSearch"
-                    aria-label="Registrar producto"
-                    matTooltip="Nuevo producto"
-                    type="button"
-                    (click)="recibo.openNuevoProductoDesdeBusqueda()">
-                    <mat-icon svgIcon="mat:add"></mat-icon>
-                  </button>
+          @if (reciboForSearch; as recibo) {
+            <div class="search-controls">
+              <div class="flex items-center search-wrapper">
+                <mat-form-field
+                  appearance="outline"
+                  class="search-input my-auto">
+                  <mat-label>Buscar producto</mat-label>
+                  <input
+                    #productSearchInput
+                    matInput
+                    [formControl]="recibo.productSearchCtrl"
+                    (keyup.enter)="triggerProductSearch()"
+                    (keydown)="onSearchInputKeydown($event)"
+                    placeholder="Ej. código de barras o nombre" />
+                  <div matSuffix class="search-suffix-actions">
+                    @if (recibo.productSearchCtrl.value) {
+                      <button
+                        mat-icon-button
+                        aria-label="Limpiar búsqueda"
+                        type="button"
+                        (click)="clearProductSearch()">
+                        <mat-icon
+                          class="icon-sm"
+                          svgIcon="mat:close"></mat-icon>
+                      </button>
+                    }
+                    @if (recibo.canCreateProductFromSearch) {
+                      <button
+                        mat-icon-button
+                        color="primary"
+                        aria-label="Registrar producto"
+                        matTooltip="Nuevo producto"
+                        type="button"
+                        (click)="recibo.openNuevoProductoDesdeBusqueda()">
+                        <mat-icon svgIcon="mat:add"></mat-icon>
+                      </button>
+                    }
+                  </div>
+                </mat-form-field>
+              </div>
+              @if (recibo.productSearchError) {
+                <div class="search-error-message">
+                  {{ recibo.productSearchError }}
                 </div>
-              </mat-form-field>
+              }
             </div>
-            <div *ngIf="recibo.productSearchError" class="search-error-message">
-              {{ recibo.productSearchError }}
-            </div>
-          </div>
+          }
         </div>
       </div>
       <div class="px-4 content-area">
-        <div class="tabs-container" *ngIf="tickets?.length; else noTickets">
-          <div class="tabs-row">
-            <button
-              *ngIf="tieneTicketsConCliente"
-              mat-icon-button
-              type="button"
-              class="toggle-clientes-btn"
-              [class.activo]="!ticketsConClienteVisibles"
-              [matTooltip]="ticketsConClienteVisibles
-                ? 'Ocultar cuentas de clientes (' + cantidadTicketsConCliente + ')'
-                : 'Mostrar cuentas de clientes (' + cantidadTicketsConCliente + ')'"
-              matTooltipPosition="above"
-              (click)="toggleTicketsConCliente(); focusProductSearch(false)">
-              <mat-icon [svgIcon]="ticketsConClienteVisibles ? 'mat:people' : 'mat:people_outline'"></mat-icon>
-              <span class="toggle-clientes-badge">{{ cantidadTicketsConCliente }}</span>
-            </button>
-            <nav
-              mat-tab-nav-bar
-              class="ticket-tab-nav border-0 flex-auto"
-              [tabPanel]="tabPanel"
-              cdkDropList
-              cdkDropListOrientation="horizontal"
-              [cdkDropListDisabled]="ticketTabsDisabled"
-              (cdkDropListDropped)="onTicketDrop($event)">
-              <div
-                class="tab-item"
-                *ngFor="let t of tickets; let i = index; trackBy: trackByTicketId"
-                [class.ticket-con-cliente]="isTicketConCliente(t)"
-                [class.tab-collapsed]="!ticketsConClienteVisibles && isTicketConCliente(t)"
-                cdkDrag>
-                <a
-                  mat-tab-link
-                  [active]="selectedIndex === i"
-                  (click)="selectTicket(i); focusProductSearch(false)"
-                  (dblclick)="editTicket(t, $event)"
-                  class="tab-link">
-                  {{ getTicketLabel(t) }}
-                </a>
+        @if (tickets.length) {
+          <div class="tabs-container">
+            <div class="tabs-row">
+              @if (tieneTicketsConCliente) {
                 <button
                   mat-icon-button
                   type="button"
-                  class="tab-close"
-                  [disabled]="ticketTabsDisabled"
-                  (click)="deleteTicket(t, i, $event)">
-                  <mat-icon svgIcon="mat:close"></mat-icon>
+                  class="toggle-clientes-btn"
+                  [class.activo]="!ticketsConClienteVisibles"
+                  [matTooltip]="
+                    ticketsConClienteVisibles
+                      ? 'Ocultar cuentas de clientes (' +
+                        cantidadTicketsConCliente +
+                        ')'
+                      : 'Mostrar cuentas de clientes (' +
+                        cantidadTicketsConCliente +
+                        ')'
+                  "
+                  matTooltipPosition="above"
+                  (click)="
+                    toggleTicketsConCliente(); focusProductSearch(false)
+                  ">
+                  <mat-icon
+                    [svgIcon]="
+                      ticketsConClienteVisibles
+                        ? 'mat:people'
+                        : 'mat:people_outline'
+                    "></mat-icon>
+                  <span class="toggle-clientes-badge">{{
+                    cantidadTicketsConCliente
+                  }}</span>
                 </button>
-                <!-- Placeholder visible mientras se arrastra -->
-                <div class="tab-drag-placeholder" *cdkDragPlaceholder></div>
-              </div>
-            </nav>
-            <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
-            <button
-              mat-flat-button
-              color="primary"
-              class="header-action-btn new-ticket-btn flex-none"
-              type="button"
-              [disabled]="headerActionsDisabled"
-              (click)="newTicket()">
-              <mat-icon class="header-action-icon icon-sm" svgIcon="mat:add"></mat-icon>
-              <span>Nuevo ticket</span>
-            </button>
-            <button
-              mat-flat-button
-              color="accent"
-              class="header-action-btn quick-recibo-btn flex-none"
-              type="button"
-              [disabled]="headerActionsDisabled"
-              (click)="openQuickRecibo()">
-              <mat-icon class="header-action-icon icon-sm" svgIcon="mat:bolt"></mat-icon>
-              <span>Ticket rápido</span>
-            </button>
-            <button
-              mat-flat-button
-              class="opciones-recibo-btn flex-none"
-              type="button"
-              [matMenuTriggerFor]="opcionesReciboMenu"
-              [disabled]="headerActionsDisabled"
-              [matTooltip]="'Mas opciones de este ticket'"
-              matTooltipPosition="above">
-              <mat-icon class="header-action-icon icon-sm" svgIcon="mat:more_vert"></mat-icon>
-              <span></span>
-              <mat-icon class="options-arrow-icon icon-sm" svgIcon="mat:arrow_drop_down"></mat-icon>
-            </button>
-            <mat-menu #opcionesReciboMenu="matMenu" xPosition="after" yPosition="below" class="opciones-recibo-menu">
-              <button mat-menu-item [matMenuTriggerFor]="ultimosRecibosMenu">
-                <mat-icon svgIcon="mat:print"></mat-icon>
-                <span>Imprimir ultimos 3 recibos</span>
+              }
+              <nav
+                mat-tab-nav-bar
+                class="ticket-tab-nav border-0 flex-auto"
+                [tabPanel]="tabPanel"
+                cdkDropList
+                cdkDropListOrientation="horizontal"
+                [cdkDropListDisabled]="ticketTabsDisabled"
+                (cdkDropListDropped)="onTicketDrop($event)">
+                @for (
+                  t of tickets;
+                  track trackByTicketId(i, t);
+                  let i = $index
+                ) {
+                  <div
+                    class="tab-item"
+                    [class.ticket-con-cliente]="isTicketConCliente(t)"
+                    [class.tab-collapsed]="
+                      !ticketsConClienteVisibles && isTicketConCliente(t)
+                    "
+                    cdkDrag>
+                    <a
+                      mat-tab-link
+                      [active]="selectedIndex === i"
+                      (click)="selectTicket(i); focusProductSearch(false)"
+                      (dblclick)="editTicket(t, $event)"
+                      class="tab-link">
+                      {{ getTicketLabel(t) }}
+                    </a>
+                    <button
+                      mat-icon-button
+                      type="button"
+                      class="tab-close"
+                      [disabled]="ticketTabsDisabled"
+                      (click)="deleteTicket(t, i, $event)">
+                      <mat-icon svgIcon="mat:close"></mat-icon>
+                    </button>
+                    <!-- Placeholder visible mientras se arrastra -->
+                    <div class="tab-drag-placeholder" *cdkDragPlaceholder></div>
+                  </div>
+                }
+              </nav>
+              <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
+              <button
+                mat-flat-button
+                color="primary"
+                class="header-action-btn new-ticket-btn flex-none"
+                type="button"
+                [disabled]="headerActionsDisabled"
+                (click)="newTicket()">
+                <mat-icon
+                  class="header-action-icon icon-sm"
+                  svgIcon="mat:add"></mat-icon>
+                <span>Nuevo ticket</span>
               </button>
-              <button mat-menu-item class="opciones-recibo-menu-item-toggle" (click)="$event.stopPropagation()">
-                <span class="opciones-recibo-label">Imprimir ticket luego de pagar</span>
-                <mat-slide-toggle
-                  class="opciones-recibo-toggle"
-                  [checked]="imprimirReciboActivo"
-                  (change)="toggleImprimirRecibo($event)"
+              <button
+                mat-flat-button
+                color="accent"
+                class="header-action-btn quick-recibo-btn flex-none"
+                type="button"
+                [disabled]="headerActionsDisabled"
+                (click)="openQuickRecibo()">
+                <mat-icon
+                  class="header-action-icon icon-sm"
+                  svgIcon="mat:bolt"></mat-icon>
+                <span>Ticket rápido</span>
+              </button>
+              <button
+                mat-flat-button
+                class="opciones-recibo-btn flex-none"
+                type="button"
+                [matMenuTriggerFor]="opcionesReciboMenu"
+                [disabled]="headerActionsDisabled"
+                [matTooltip]="'Mas opciones de este ticket'"
+                matTooltipPosition="above">
+                <mat-icon
+                  class="header-action-icon icon-sm"
+                  svgIcon="mat:more_vert"></mat-icon>
+                <span></span>
+                <mat-icon
+                  class="options-arrow-icon icon-sm"
+                  svgIcon="mat:arrow_drop_down"></mat-icon>
+              </button>
+              <mat-menu
+                #opcionesReciboMenu="matMenu"
+                xPosition="after"
+                yPosition="below"
+                class="opciones-recibo-menu">
+                <button mat-menu-item [matMenuTriggerFor]="ultimosRecibosMenu">
+                  <mat-icon svgIcon="mat:print"></mat-icon>
+                  <span>Imprimir ultimos 3 recibos</span>
+                </button>
+                <button
+                  mat-menu-item
+                  class="opciones-recibo-menu-item-toggle"
                   (click)="$event.stopPropagation()">
-                </mat-slide-toggle>
-              </button>
-            </mat-menu>
-            <mat-menu #ultimosRecibosMenu="matMenu" xPosition="after" yPosition="below" class="ultimos-recibos-menu">
-              <div class="recibos-list-container recent-recibos-list-container" (click)="$event.stopPropagation()">
-                <div class="recibos-list recent-recibos-list" *ngIf="recentPrintedRecibos.length > 0; else noRecentRecibos">
-                  <button
-                    type="button"
-                    class="recibo-item recent-recibo-item"
-                    *ngFor="let recibo of recentPrintedRecibos"
-                    (click)="printRecentRecibo(recibo)">
-                    <span class="recibo-total">{{ formatRecentReciboTotal(recibo) }}</span>
-                    <div class="recibo-fecha-cliente-row">
-                      <span class="recibo-fecha">{{ formatRecentReciboFecha(recibo) }}</span>
-                      <span class="recibo-cliente" *ngIf="recibo.clienteNombre">{{ recibo.clienteNombre }}</span>
+                  <span class="opciones-recibo-label"
+                    >Imprimir ticket luego de pagar</span
+                  >
+                  <mat-slide-toggle
+                    class="opciones-recibo-toggle"
+                    [checked]="imprimirReciboActivo"
+                    (change)="toggleImprimirRecibo($event)"
+                    (click)="$event.stopPropagation()">
+                  </mat-slide-toggle>
+                </button>
+              </mat-menu>
+              <mat-menu
+                #ultimosRecibosMenu="matMenu"
+                xPosition="after"
+                yPosition="below"
+                class="ultimos-recibos-menu">
+                <div
+                  class="recibos-list-container recent-recibos-list-container"
+                  (click)="$event.stopPropagation()">
+                  @if (recentPrintedRecibos.length > 0) {
+                    <div class="recibos-list recent-recibos-list">
+                      @for (recibo of recentPrintedRecibos; track recibo) {
+                        <button
+                          type="button"
+                          class="recibo-item recent-recibo-item"
+                          (click)="printRecentRecibo(recibo)">
+                          <span class="recibo-total">{{
+                            formatRecentReciboTotal(recibo)
+                          }}</span>
+                          <div class="recibo-fecha-cliente-row">
+                            <span class="recibo-fecha">{{
+                              formatRecentReciboFecha(recibo)
+                            }}</span>
+                            @if (recibo.clienteNombre) {
+                              <span class="recibo-cliente">{{
+                                recibo.clienteNombre
+                              }}</span>
+                            }
+                          </div>
+                        </button>
+                      }
                     </div>
-                  </button>
+                  } @else {
+                    <div class="empty-message recent-recibos-empty">
+                      No hay recibos recientes para imprimir
+                    </div>
+                  }
                 </div>
-                <ng-template #noRecentRecibos>
-                  <div class="empty-message recent-recibos-empty">No hay recibos recientes para imprimir</div>
-                </ng-template>
-              </div>
-            </mat-menu>
-          </div>
-          <div class="ticket-panel" *ngIf="tickets[selectedIndex] as activeTicket; else noTicketSelected">
-            <div class="detalle-wrapper">
-              <detalle-ticket
-                #reciboCmp
-                [ticket]="activeTicket"
-                [reciboId]="currentReciboId"
-                [sessionId]="sessionId"
-                [ticketMoveOptions]="ticketMoveOptions"
-                [splitComment]="activeSplitComment"
-                [searchInputElement]="productSearchInput?.nativeElement || null"
-                (focusSearchInputRequest)="focusProductSearch()"
-                (ticketProcesado)="onTicketProcesado()"
-                (moveToNewTicketRequested)="onMoveToNewTicketRequested()"
-                (moveToExistingTicketRequested)="onMoveToExistingTicketRequested($event)"
-                (metodoPagoActualizado)="recargarRecibo()"></detalle-ticket>
+              </mat-menu>
             </div>
+            @if (tickets[selectedIndex]; as activeTicket) {
+              <div class="ticket-panel">
+                <div class="detalle-wrapper">
+                  <detalle-ticket
+                    #reciboCmp
+                    [ticket]="activeTicket"
+                    [reciboId]="currentReciboId"
+                    [sessionId]="sessionId"
+                    [ticketMoveOptions]="ticketMoveOptions"
+                    [splitComment]="activeSplitComment"
+                    [searchInputElement]="
+                      productSearchInput?.nativeElement || null
+                    "
+                    (focusSearchInputRequest)="focusProductSearch()"
+                    (ticketProcesado)="onTicketProcesado()"
+                    (moveToNewTicketRequested)="onMoveToNewTicketRequested()"
+                    (moveToExistingTicketRequested)="
+                      onMoveToExistingTicketRequested($event)
+                    "
+                    (metodoPagoActualizado)="recargarRecibo()"></detalle-ticket>
+                </div>
+              </div>
+            } @else {
+              <div class="ticket-panel-empty"></div>
+            }
           </div>
-          <ng-template #noTicketSelected>
-            <div class="ticket-panel-empty"></div>
-          </ng-template>
-        </div>
-        <ng-template #noTickets>
+        } @else {
           <div class="text-secondary">No hay tickets para esta sesión.</div>
-        </ng-template>
+        }
       </div>
     </div>
   </vex-page-layout-content>

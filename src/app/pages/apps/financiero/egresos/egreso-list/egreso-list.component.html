@@ -2,7 +2,8 @@
   <div class="flex flex-col flex-1 min-h-0 w-full">
     <div class="card egresos-card flex flex-col flex-1 min-h-0 overflow-hidden">
       <div class="px-6 py-4 border-b flex flex-col gap-4">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div class="flex items-center gap-2 min-w-0 sm:flex-nowrap">
             <h2 class="title m-0">Egresos</h2>
             <button
@@ -15,44 +16,76 @@
               matTooltip="Filtrar por fechas">
               <mat-icon svgIcon="mat:filter_list"></mat-icon>
             </button>
-            <mat-chip-set *ngIf="activeFilters.length > 0" class="egresos-active-filters">
-              <mat-chip
-                *ngFor="let filter of activeFilters"
-                [removable]="true"
-                color="primary"
-                selected
-                (removed)="clearActiveFilter()">
-                <span class="filter-chip-label">{{ filter.label }}</span>
-                <span class="filter-chip-value">{{ filter.value }}</span>
-                <button matChipRemove aria-label="Quitar filtro">
-                  <mat-icon svgIcon="mat:close" class="icon-sm"></mat-icon>
-                </button>
-              </mat-chip>
-            </mat-chip-set>
+            @if (activeFilters.length > 0) {
+              <mat-chip-set class="egresos-active-filters">
+                @for (filter of activeFilters; track filter) {
+                  <mat-chip
+                    [removable]="true"
+                    color="primary"
+                    selected
+                    (removed)="clearActiveFilter()">
+                    <span class="filter-chip-label">{{ filter.label }}</span>
+                    <span class="filter-chip-value">{{ filter.value }}</span>
+                    <button matChipRemove aria-label="Quitar filtro">
+                      <mat-icon svgIcon="mat:close" class="icon-sm"></mat-icon>
+                    </button>
+                  </mat-chip>
+                }
+              </mat-chip-set>
+            }
           </div>
           <div class="flex items-center gap-2 flex-wrap">
-            <mat-form-field appearance="outline" class="search-input" subscriptSizing="dynamic">
+            <mat-form-field
+              appearance="outline"
+              class="search-input"
+              subscriptSizing="dynamic">
               <mat-label>Observación</mat-label>
-              <input #searchInput matInput [formControl]="descripcionCtrl" placeholder="Buscar por observación" />
-              <button mat-icon-button matSuffix *ngIf="descripcionCtrl.value" aria-label="Limpiar" (click)="descripcionCtrl.setValue('')">
-                <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
-              </button>
+              <input
+                #searchInput
+                matInput
+                [formControl]="descripcionCtrl"
+                placeholder="Buscar por observación" />
+              @if (descripcionCtrl.value) {
+                <button
+                  mat-icon-button
+                  matSuffix
+                  aria-label="Limpiar"
+                  (click)="descripcionCtrl.setValue('')">
+                  <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+                </button>
+              }
             </mat-form-field>
-            <mat-form-field appearance="outline" class="filter-select" subscriptSizing="dynamic">
+            <mat-form-field
+              appearance="outline"
+              class="filter-select"
+              subscriptSizing="dynamic">
               <mat-label>Tipo</mat-label>
               <mat-select [formControl]="tipoEgresoIdCtrl">
                 <mat-option [value]="">Todos</mat-option>
-                <mat-option *ngFor="let t of tiposEgreso" [value]="t.id">{{ t.nombre }}</mat-option>
+                @for (t of tiposEgreso; track t) {
+                  <mat-option [value]="t.id">{{ t.nombre }}</mat-option>
+                }
               </mat-select>
             </mat-form-field>
-            <mat-form-field appearance="outline" class="filter-select" subscriptSizing="dynamic">
+            <mat-form-field
+              appearance="outline"
+              class="filter-select"
+              subscriptSizing="dynamic">
               <mat-label>Proveedor</mat-label>
               <mat-select [formControl]="proveedorIdCtrl">
                 <mat-option [value]="">Todos</mat-option>
-                <mat-option *ngFor="let p of proveedores" [value]="p.id">{{ p.nombre }}</mat-option>
+                @for (p of proveedores; track p) {
+                  <mat-option [value]="p.id">{{ p.nombre }}</mat-option>
+                }
               </mat-select>
             </mat-form-field>
-            <button mat-stroked-button type="button" class="btn-filter-compact" (click)="limpiarFiltros()">Limpiar</button>
+            <button
+              mat-stroked-button
+              type="button"
+              class="btn-filter-compact"
+              (click)="limpiarFiltros()">
+              Limpiar
+            </button>
             <button
               (click)="createEgreso()"
               color="primary"
@@ -69,36 +102,60 @@
           class="filters-custom-menu"
           panelClass="filters-custom-menu"
           xPosition="before">
-          <div class="egresos-filters-menu-content flex flex-col gap-4 p-3" (click)="$event.stopPropagation()">
-            <div class="flex items-center gap-2 pb-2 border-b border-primary/30">
-              <mat-icon svgIcon="mat:tune" class="icon-sm text-primary"></mat-icon>
+          <div
+            class="egresos-filters-menu-content flex flex-col gap-4 p-3"
+            (click)="$event.stopPropagation()">
+            <div
+              class="flex items-center gap-2 pb-2 border-b border-primary/30">
+              <mat-icon
+                svgIcon="mat:tune"
+                class="icon-sm text-primary"></mat-icon>
               <h3 class="m-0 font-medium text-sm">Filtros</h3>
             </div>
 
-            <mat-form-field appearance="outline" class="w-full filters-field-dense">
+            <mat-form-field
+              appearance="outline"
+              class="w-full filters-field-dense">
               <mat-label>Fecha inicio</mat-label>
-              <input matInput [matDatepicker]="pickerInicio" [formControl]="filterFechaInicioCtrl" />
-              <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+              <input
+                matInput
+                [matDatepicker]="pickerInicio"
+                [formControl]="filterFechaInicioCtrl" />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="pickerInicio"></mat-datepicker-toggle>
               <mat-datepicker #pickerInicio></mat-datepicker>
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="w-full filters-field-dense">
+            <mat-form-field
+              appearance="outline"
+              class="w-full filters-field-dense">
               <mat-label>Fecha fin</mat-label>
-              <input matInput [matDatepicker]="pickerFin" [formControl]="filterFechaFinCtrl" />
-              <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
+              <input
+                matInput
+                [matDatepicker]="pickerFin"
+                [formControl]="filterFechaFinCtrl" />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="pickerFin"></mat-datepicker-toggle>
               <mat-datepicker #pickerFin></mat-datepicker>
             </mat-form-field>
 
             <div class="flex justify-end gap-2 flex-wrap">
+              @if (hasActiveDateFilter()) {
+                <button
+                  mat-button
+                  color="warn"
+                  type="button"
+                  (click)="clearActiveFilter(); filtersMenuTrigger.closeMenu()">
+                  Limpiar
+                </button>
+              }
               <button
-                *ngIf="hasActiveDateFilter()"
-                mat-button
-                color="warn"
+                mat-flat-button
+                color="primary"
                 type="button"
-                (click)="clearActiveFilter(); filtersMenuTrigger.closeMenu()">
-                Limpiar
-              </button>
-              <button mat-flat-button color="primary" type="button" (click)="applyDateFilters()">
+                (click)="applyDateFilters()">
                 Aplicar
               </button>
             </div>
@@ -106,56 +163,80 @@
         </mat-menu>
       </div>
 
-      <div class="egresos-table-section px-6 pt-4 pb-2 flex flex-col flex-1 min-h-0 overflow-hidden">
-        <div *ngIf="loading" class="text-center py-8">Cargando egresos...</div>
+      <div
+        class="egresos-table-section px-6 pt-4 pb-2 flex flex-col flex-1 min-h-0 overflow-hidden">
+        @if (loading) {
+          <div class="text-center py-8">Cargando egresos...</div>
+        }
 
-        <div
-          #tableScroll
-          class="table-scroll-container"
-          *ngIf="!loading">
-          <table mat-table [dataSource]="dataSource" class="w-full egresos-table-compact">
-          <ng-container matColumnDef="fecha">
-            <th mat-header-cell *matHeaderCellDef>Fecha</th>
-            <td mat-cell *matCellDef="let egreso">{{ formatFecha(egreso.fecha) }}</td>
-          </ng-container>
-          <ng-container matColumnDef="valor">
-            <th mat-header-cell *matHeaderCellDef class="col-valor">Valor</th>
-            <td mat-cell *matCellDef="let egreso" class="col-valor">{{ formatCurrency(egreso.valor) }}</td>
-          </ng-container>
-          <ng-container matColumnDef="proveedor">
-            <th mat-header-cell *matHeaderCellDef>Proveedor</th>
-            <td mat-cell *matCellDef="let egreso">{{ egreso.proveedor?.nombre || '-' }}</td>
-          </ng-container>
-          <ng-container matColumnDef="tipoEgreso">
-            <th mat-header-cell *matHeaderCellDef>Tipo</th>
-            <td mat-cell *matCellDef="let egreso">{{ egreso.proveedor?.tipoEgreso?.nombre || '-' }}</td>
-          </ng-container>
-          <ng-container matColumnDef="descripcion">
-            <th mat-header-cell *matHeaderCellDef>Observación</th>
-            <td mat-cell *matCellDef="let egreso">{{ egreso.descripcion || '-' }}</td>
-          </ng-container>
-          <ng-container matColumnDef="edit">
-            <th mat-header-cell *matHeaderCellDef></th>
-            <td mat-cell *matCellDef="let egreso">
-              <button mat-icon-button color="accent" class="edit-btn-compact" (click)="editEgreso(egreso); $event.stopPropagation()">
-                <mat-icon svgIcon="mat:edit"></mat-icon>
-              </button>
-            </td>
-          </ng-container>
+        @if (!loading) {
+          <div #tableScroll class="table-scroll-container">
+            <table
+              mat-table
+              [dataSource]="dataSource"
+              class="w-full egresos-table-compact">
+              <ng-container matColumnDef="fecha">
+                <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                <td mat-cell *matCellDef="let egreso">
+                  {{ formatFecha(egreso.fecha) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="valor">
+                <th mat-header-cell *matHeaderCellDef class="col-valor">
+                  Valor
+                </th>
+                <td mat-cell *matCellDef="let egreso" class="col-valor">
+                  {{ formatCurrency(egreso.valor) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="proveedor">
+                <th mat-header-cell *matHeaderCellDef>Proveedor</th>
+                <td mat-cell *matCellDef="let egreso">
+                  {{ egreso.proveedor?.nombre || "-" }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="tipoEgreso">
+                <th mat-header-cell *matHeaderCellDef>Tipo</th>
+                <td mat-cell *matCellDef="let egreso">
+                  {{ egreso.proveedor?.tipoEgreso?.nombre || "-" }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="descripcion">
+                <th mat-header-cell *matHeaderCellDef>Observación</th>
+                <td mat-cell *matCellDef="let egreso">
+                  {{ egreso.descripcion || "-" }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="edit">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let egreso">
+                  <button
+                    mat-icon-button
+                    color="accent"
+                    class="edit-btn-compact"
+                    (click)="editEgreso(egreso); $event.stopPropagation()">
+                    <mat-icon svgIcon="mat:edit"></mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr
+                mat-row
+                *matRowDef="let row; columns: displayedColumns"
+                [class.selected-row]="isRowSelected(row)"
+                (click)="selectRow(row)"></tr>
+            </table>
+            @if (loadingMore) {
+              <div class="text-center py-4 text-secondary">Cargando más...</div>
+            }
+          </div>
+        }
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr
-            mat-row
-            *matRowDef="let row; columns: displayedColumns"
-            [class.selected-row]="isRowSelected(row)"
-            (click)="selectRow(row)"></tr>
-          </table>
-          <div *ngIf="loadingMore" class="text-center py-4 text-secondary">Cargando más...</div>
-        </div>
-
-        <div *ngIf="!loading && dataSource.length === 0" class="text-center py-8 text-secondary">
-          No se encontraron egresos
-        </div>
+        @if (!loading && dataSource.length === 0) {
+          <div class="text-center py-8 text-secondary">
+            No se encontraron egresos
+          </div>
+        }
       </div>
     </div>
   </div>

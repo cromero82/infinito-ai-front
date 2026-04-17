@@ -1,90 +1,89 @@
-<ng-container [ngSwitch]="size">
+@switch (size) {
   <!-- Small size: icon button -->
-  <button
-    *ngSwitchCase="'small'"
-    mat-icon-button
-    [color]="color"
-    [disabled]="disabled || !hasValidData"
-    type="button"
-    (click)="onSearchClick()"
-    [matTooltip]="tooltipText"
-    class="google-search-button">
-    
-    <ng-container *ngIf="showIcon">
-      <!-- Icono especial para búsqueda de código de barras (dos iconos superpuestos) -->
-      <ng-container *ngIf="searchType === 'barcode'">
-        <mat-icon svgIcon="mat:search" class="icon-search"></mat-icon>
-        <mat-icon svgIcon="mat:qr_code" class="icon-barcode"></mat-icon>
-      </ng-container>
-      
-      <!-- Icono simple para búsqueda por nombre -->
-      <mat-icon *ngIf="searchType === 'name'" svgIcon="mat:search"></mat-icon>
-    </ng-container>
-  </button>
-
+  @case ("small") {
+    <button
+      mat-icon-button
+      [color]="color"
+      [disabled]="disabled || !hasValidData"
+      type="button"
+      (click)="onSearchClick()"
+      [matTooltip]="tooltipText"
+      class="google-search-button">
+      @if (showIcon) {
+        <!-- Icono especial para búsqueda de código de barras (dos iconos superpuestos) -->
+        @if (searchType === "barcode") {
+          <mat-icon svgIcon="mat:search" class="icon-search"></mat-icon>
+          <mat-icon svgIcon="mat:qr_code" class="icon-barcode"></mat-icon>
+        }
+        <!-- Icono simple para búsqueda por nombre -->
+        @if (searchType === "name") {
+          <mat-icon svgIcon="mat:search"></mat-icon>
+        }
+      }
+    </button>
+  }
   <!-- Medium size: regular button -->
-  <button
-    *ngSwitchCase="'medium'"
-    mat-button
-    [color]="color"
-    [disabled]="disabled || !hasValidData"
-    type="button"
-    (click)="onSearchClick()"
-    [matTooltip]="tooltipText"
-    class="google-search-button">
-    
-    <ng-container *ngIf="showIcon">
-      <!-- Icono especial para búsqueda de código de barras (dos iconos superpuestos) -->
-      <ng-container *ngIf="searchType === 'barcode'">
-        <mat-icon svgIcon="mat:search" class="icon-search"></mat-icon>
-        <mat-icon svgIcon="mat:qr_code" class="icon-barcode"></mat-icon>
-      </ng-container>
-      
-      <!-- Icono simple para búsqueda por nombre -->
-      <mat-icon *ngIf="searchType === 'name'" svgIcon="mat:search"></mat-icon>
-    </ng-container>
-    
-    <!-- Texto para botones medianos -->
-    <span class="ml-1">
-      <ng-container *ngIf="searchType === 'barcode'">
-        Buscar Código
-      </ng-container>
-      <ng-container *ngIf="searchType === 'name'">
-        Buscar Nombre
-      </ng-container>
-    </span>
-  </button>
-
+  @case ("medium") {
+    <button
+      mat-button
+      [color]="color"
+      [disabled]="disabled || !hasValidData"
+      type="button"
+      (click)="onSearchClick()"
+      [matTooltip]="tooltipText"
+      class="google-search-button">
+      @if (showIcon) {
+        <!-- Icono especial para búsqueda de código de barras (dos iconos superpuestos) -->
+        @if (searchType === "barcode") {
+          <mat-icon svgIcon="mat:search" class="icon-search"></mat-icon>
+          <mat-icon svgIcon="mat:qr_code" class="icon-barcode"></mat-icon>
+        }
+        <!-- Icono simple para búsqueda por nombre -->
+        @if (searchType === "name") {
+          <mat-icon svgIcon="mat:search"></mat-icon>
+        }
+      }
+      <!-- Texto para botones medianos -->
+      <span class="ml-1">
+        @if (searchType === "barcode") {
+          Buscar Código
+        }
+        @if (searchType === "name") {
+          Buscar Nombre
+        }
+      </span>
+    </button>
+  }
   <!-- Large size: flat button -->
-  <button
-    *ngSwitchCase="'large'"
-    mat-flat-button
-    [color]="color"
-    [disabled]="disabled || !hasValidData"
-    type="button"
-    (click)="onSearchClick()"
-    [matTooltip]="tooltipText"
-    class="google-search-button">
-    
-    <ng-container *ngIf="showIcon">
-      <!-- Icono especial para búsqueda de código de barras (dos iconos superpuestos) -->
-      <ng-container *ngIf="searchType === 'barcode'">
-        <mat-icon svgIcon="mat:search" class="icon-search"></mat-icon>
-        <mat-icon svgIcon="mat:qr_code" class="icon-barcode"></mat-icon>
-      </ng-container>
-      
-      <!-- Icono simple para búsqueda por nombre -->
-      <mat-icon *ngIf="searchType === 'name'" svgIcon="mat:search"></mat-icon>
-    </ng-container>
-    
-    <!-- Texto para botones grandes -->
-    <span class="ml-1">
-      <ng-container *ngIf="searchType === 'barcode'">
-        Buscar Código
-      </ng-container>
-      <ng-container *ngIf="searchType === 'name'">
-        Buscar Nombre
-      </ng-container>
-    </span>
-  </button>
-</ng-container>
+  @case ("large") {
+    <button
+      mat-flat-button
+      [color]="color"
+      [disabled]="disabled || !hasValidData"
+      type="button"
+      (click)="onSearchClick()"
+      [matTooltip]="tooltipText"
+      class="google-search-button">
+      @if (showIcon) {
+        <!-- Icono especial para búsqueda de código de barras (dos iconos superpuestos) -->
+        @if (searchType === "barcode") {
+          <mat-icon svgIcon="mat:search" class="icon-search"></mat-icon>
+          <mat-icon svgIcon="mat:qr_code" class="icon-barcode"></mat-icon>
+        }
+        <!-- Icono simple para búsqueda por nombre -->
+        @if (searchType === "name") {
+          <mat-icon svgIcon="mat:search"></mat-icon>
+        }
+      }
+      <!-- Texto para botones grandes -->
+      <span class="ml-1">
+        @if (searchType === "barcode") {
+          Buscar Código
+        }
+        @if (searchType === "name") {
+          Buscar Nombre
+        }
+      </span>
+    </button>
+  }
+}

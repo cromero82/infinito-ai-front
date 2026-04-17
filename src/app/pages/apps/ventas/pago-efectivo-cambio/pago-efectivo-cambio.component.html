@@ -1,113 +1,140 @@
-<div class="pago-efectivo-dialog-shell" cdkDrag cdkDragRootElement=".cdk-overlay-pane">
+<div
+  class="pago-efectivo-dialog-shell"
+  cdkDrag
+  cdkDragRootElement=".cdk-overlay-pane">
   <div class="pago-efectivo-dialog-header" mat-dialog-title cdkDragHandle>
     <h2 class="dialog-title">Pago en efectivo</h2>
   </div>
 
-<div mat-dialog-content class="dialog-content extra-spacing">
-  <ng-container *ngIf="estado === 'entrada' || estado === 'procesando'">
-    <div class="total-a-pagar">
-      <span class="label">Total a pagar:</span>
-      <span class="value">{{ formatCurrency(total) }}</span>
-    </div>
-
-    <div class="total-a-pagar" *ngIf="estado === 'entrada'">
-      <span class="label">Paga con:</span>
-      <mat-form-field appearance="outline" class="paga-con-field">
-        <input
-          matInput
-          #pagaConInput
-          class="paga-con-input"
-          type="text"
-          [formControl]="pagaConCtrl"
-          (keydown)="onPagaConKeydown($event)" />
-      </mat-form-field>
-    </div>
-
-    <div class="billetes-grid" *ngIf="estado === 'entrada'">
-      <button
-        type="button"
-        class="billete"
-        *ngFor="let billete of billetes"
-        [class.selected]="esBilleteSeleccionado(billete.valor)"
-        [class.billete-modo-dual]="modoSumaRestaBilletes"
-        (click)="onBilleteButtonClick($event, billete.valor)">
-        <div class="billete-contenido">
-          <div class="billete-visual">
-            <img [src]="billete.imagen" [alt]="billete.label" />
-          </div>
-          <span class="billete-label">{{ billete.label }}</span>
+  <div mat-dialog-content class="dialog-content extra-spacing">
+    @if (estado === "entrada" || estado === "procesando") {
+      <div class="total-a-pagar">
+        <span class="label">Total a pagar:</span>
+        <span class="value">{{ formatCurrency(total) }}</span>
+      </div>
+      @if (estado === "entrada") {
+        <div class="total-a-pagar">
+          <span class="label">Paga con:</span>
+          <mat-form-field appearance="outline" class="paga-con-field">
+            <input
+              matInput
+              #pagaConInput
+              class="paga-con-input"
+              type="text"
+              [formControl]="pagaConCtrl"
+              (keydown)="onPagaConKeydown($event)" />
+          </mat-form-field>
         </div>
-        <ng-container *ngIf="modoSumaRestaBilletes">
-          <div
-            class="billete-zona billete-zona-sumar"
-            role="button"
-            [attr.aria-label]="'Sumar ' + billete.label + ' a Paga con'"
-            (click)="onZonaSumarBillete($event, billete.valor)"></div>
-          <div
-            class="billete-zona billete-zona-restar"
-            role="button"
-            [attr.aria-label]="'Restar ' + billete.label + ' de Paga con'"
-            (click)="onZonaRestarBillete($event, billete.valor)"></div>
-          <mat-icon
-            class="billete-flecha billete-flecha--sup"
-            svgIcon="mat:keyboard_arrow_up"
-            aria-hidden="true"></mat-icon>
-          <mat-icon
-            class="billete-flecha billete-flecha--inf"
-            svgIcon="mat:keyboard_arrow_down"
-            aria-hidden="true"></mat-icon>
-        </ng-container>
+      }
+      @if (estado === "entrada") {
+        <div class="billetes-grid">
+          @for (billete of billetes; track billete) {
+            <button
+              type="button"
+              class="billete"
+              [class.selected]="esBilleteSeleccionado(billete.valor)"
+              [class.billete-modo-dual]="modoSumaRestaBilletes"
+              (click)="onBilleteButtonClick($event, billete.valor)">
+              <div class="billete-contenido">
+                <div class="billete-visual">
+                  <img [src]="billete.imagen" [alt]="billete.label" />
+                </div>
+                <span class="billete-label">{{ billete.label }}</span>
+              </div>
+              @if (modoSumaRestaBilletes) {
+                <div
+                  class="billete-zona billete-zona-sumar"
+                  role="button"
+                  [attr.aria-label]="'Sumar ' + billete.label + ' a Paga con'"
+                  (click)="onZonaSumarBillete($event, billete.valor)"></div>
+                <div
+                  class="billete-zona billete-zona-restar"
+                  role="button"
+                  [attr.aria-label]="'Restar ' + billete.label + ' de Paga con'"
+                  (click)="onZonaRestarBillete($event, billete.valor)"></div>
+                <mat-icon
+                  class="billete-flecha billete-flecha--sup"
+                  svgIcon="mat:keyboard_arrow_up"
+                  aria-hidden="true"></mat-icon>
+                <mat-icon
+                  class="billete-flecha billete-flecha--inf"
+                  svgIcon="mat:keyboard_arrow_down"
+                  aria-hidden="true"></mat-icon>
+              }
+            </button>
+          }
+        </div>
+      }
+      @if (estado === "entrada") {
+        <div class="cambio" [class.cambio-insuficiente]="pagoInsuficiente">
+          <span class="label">Cambio:</span>
+          <span class="value">{{ formatCurrency(cambioParaMostrar) }}</span>
+        </div>
+      }
+      @if (estado === "procesando") {
+        <div class="estado-procesando">
+          <mat-spinner diameter="48"></mat-spinner>
+          <p>Registrando pago...</p>
+        </div>
+      }
+    }
+
+    @if (estado === "exito") {
+      <div class="estado-exito">
+        <mat-icon class="icono-exito">check_circle</mat-icon>
+        <p class="mensaje-exito">Pago registrado correctamente</p>
+        <p class="total-exito">{{ formatCurrency(totalGuardado) }}</p>
+      </div>
+    }
+
+    @if (estado === "error") {
+      <div class="estado-error">
+        <mat-icon class="icono-error">error</mat-icon>
+        <p class="mensaje-error">{{ errorMsg }}</p>
+      </div>
+    }
+  </div>
+
+  <div mat-dialog-actions align="end" class="dialog-actions">
+    @if (estado === "entrada") {
+      <button mat-stroked-button type="button" (click)="cancelar()">
+        Cancelar
       </button>
-    </div>
-
-    <div class="cambio" [class.cambio-insuficiente]="pagoInsuficiente" *ngIf="estado === 'entrada'">
-      <span class="label">Cambio:</span>
-      <span class="value">{{ formatCurrency(cambioParaMostrar) }}</span>
-    </div>
-
-    <div class="estado-procesando" *ngIf="estado === 'procesando'">
-      <mat-spinner diameter="48"></mat-spinner>
-      <p>Registrando pago...</p>
-    </div>
-  </ng-container>
-
-  <div class="estado-exito" *ngIf="estado === 'exito'">
-    <mat-icon class="icono-exito">check_circle</mat-icon>
-    <p class="mensaje-exito">Pago registrado correctamente</p>
-    <p class="total-exito">{{ formatCurrency(totalGuardado) }}</p>
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        (click)="confirmar()"
+        [disabled]="!pagaConCtrl.value || pagoInsuficiente">
+        Confirmar
+      </button>
+    }
+    @if (estado === "exito") {
+      @if (data.imprimirRecibo) {
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          (click)="onImprimirRecibo()">
+          <mat-icon>print</mat-icon>
+          Imprimir recibo
+        </button>
+      }
+      <button mat-stroked-button type="button" (click)="onCerrarExito()">
+        Cerrar
+      </button>
+    }
+    @if (estado === "error") {
+      <button mat-stroked-button type="button" (click)="cancelar()">
+        Cerrar
+      </button>
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        (click)="onReintentar()">
+        Reintentar
+      </button>
+    }
   </div>
-
-  <div class="estado-error" *ngIf="estado === 'error'">
-    <mat-icon class="icono-error">error</mat-icon>
-    <p class="mensaje-error">{{ errorMsg }}</p>
-  </div>
 </div>
-
-<div mat-dialog-actions align="end" class="dialog-actions">
-  <ng-container *ngIf="estado === 'entrada'">
-    <button mat-stroked-button type="button" (click)="cancelar()">Cancelar</button>
-    <button
-      mat-flat-button
-      color="primary"
-      type="button"
-      (click)="confirmar()"
-      [disabled]="!pagaConCtrl.value || pagoInsuficiente">
-      Confirmar
-    </button>
-  </ng-container>
-  <ng-container *ngIf="estado === 'exito'">
-    <button mat-flat-button color="primary" type="button" (click)="onImprimirRecibo()" *ngIf="data.imprimirRecibo">
-      <mat-icon>print</mat-icon>
-      Imprimir recibo
-    </button>
-    <button mat-stroked-button type="button" (click)="onCerrarExito()">Cerrar</button>
-  </ng-container>
-  <ng-container *ngIf="estado === 'error'">
-    <button mat-stroked-button type="button" (click)="cancelar()">Cerrar</button>
-    <button mat-flat-button color="primary" type="button" (click)="onReintentar()">Reintentar</button>
-  </ng-container>
-</div>
-
-</div>
-
-

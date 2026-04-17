@@ -1,4 +1,5 @@
-@import "tailwindcss/base";
-@import "partials/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+/* Tailwind layers: @tailwind evita @import deprecado de paquetes tailwindcss */
+@use "partials/base" as *;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

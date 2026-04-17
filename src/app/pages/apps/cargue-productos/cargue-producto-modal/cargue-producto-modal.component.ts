@@ -1,6 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -8,23 +13,25 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { CargueProductosService, CargueProductoDto } from '../service/cargue-productos.service';
+import {
+  CargueProductosService,
+  CargueProductoDto
+} from '../service/cargue-productos.service';
 
 @Component({
-    selector: 'vex-cargue-producto-modal',
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        MatDialogModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        MatProgressSpinnerModule,
-        MatIconModule,
-        MatTooltipModule
-    ],
-    templateUrl: './cargue-producto-modal.component.html',
-    styleUrls: ['./cargue-producto-modal.component.scss']
+  selector: 'vex-cargue-producto-modal',
+  imports: [
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatIconModule,
+    MatTooltipModule
+  ],
+  templateUrl: './cargue-producto-modal.component.html',
+  styleUrls: ['./cargue-producto-modal.component.scss']
 })
 export class CargueProductoModalComponent implements OnInit {
   form: FormGroup;
@@ -53,7 +60,8 @@ export class CargueProductoModalComponent implements OnInit {
       const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
 
       if (!allowedExtensions.includes(fileExtension)) {
-        this.error = 'Por favor seleccione un archivo Excel (.xls, .xlsx) o CSV (.csv)';
+        this.error =
+          'Por favor seleccione un archivo Excel (.xls, .xlsx) o CSV (.csv)';
         this.form.patchValue({ file: null });
         this.selectedFileName = null;
         return;
@@ -81,17 +89,21 @@ export class CargueProductoModalComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    this.cargueProductosService.registrarCargueProducto(nombre, file).subscribe({
-      next: (result: CargueProductoDto) => {
-        this.loading = false;
-        this.dialogRef.close(result);
-      },
-      error: (err) => {
-        console.error('Error al registrar cargue de productos', err);
-        this.error = err.error?.message || 'Error al registrar el cargue de productos. Por favor intente nuevamente.';
-        this.loading = false;
-      }
-    });
+    this.cargueProductosService
+      .registrarCargueProducto(nombre, file)
+      .subscribe({
+        next: (result: CargueProductoDto) => {
+          this.loading = false;
+          this.dialogRef.close(result);
+        },
+        error: (err) => {
+          console.error('Error al registrar cargue de productos', err);
+          this.error =
+            err.error?.message ||
+            'Error al registrar el cargue de productos. Por favor intente nuevamente.';
+          this.loading = false;
+        }
+      });
   }
 
   onCancel(): void {
@@ -104,4 +116,3 @@ export class CargueProductoModalComponent implements OnInit {
     this.error = null;
   }
 }
-

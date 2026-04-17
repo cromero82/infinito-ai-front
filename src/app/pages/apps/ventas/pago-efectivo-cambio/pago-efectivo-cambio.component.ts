@@ -1,6 +1,18 @@
-import { Component, ElementRef, Inject, OnInit, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import {
+  Component,
+  ElementRef,
+  Inject,
+  OnInit,
+  ViewChild,
+  AfterViewInit,
+  ChangeDetectorRef
+} from '@angular/core';
+
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef
+} from '@angular/material/dialog';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -20,7 +32,10 @@ export interface PagoEfectivoCambioData {
   /** Se llama al cerrar tras éxito (para snackbar). */
   mostrarSnackbarExito?: (totalGuardado: number) => void;
   /** Antes de snackbar / impresión: guarda monto recibido y cambio en el componente padre para la tirilla. */
-  registrarDatosImpresion?: (d: { montoRecibido: number; cambio: number }) => void;
+  registrarDatosImpresion?: (d: {
+    montoRecibido: number;
+    cambio: number;
+  }) => void;
 }
 
 export interface PagoEfectivoCambioResultado {
@@ -37,22 +52,21 @@ interface BilleteOption {
 }
 
 @Component({
-    selector: 'vex-pago-efectivo-cambio',
-    imports: [
-        CommonModule,
-        MatDialogModule,
-        MatButtonModule,
-        MatIconModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatProgressSpinnerModule,
-        ReactiveFormsModule,
-        DragDropModule,
-        CdkDrag,
-        CdkDragHandle
-    ],
-    templateUrl: './pago-efectivo-cambio.component.html',
-    styleUrls: ['./pago-efectivo-cambio.component.scss']
+  selector: 'vex-pago-efectivo-cambio',
+  imports: [
+    MatDialogModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatProgressSpinnerModule,
+    ReactiveFormsModule,
+    DragDropModule,
+    CdkDrag,
+    CdkDragHandle
+  ],
+  templateUrl: './pago-efectivo-cambio.component.html',
+  styleUrls: ['./pago-efectivo-cambio.component.scss']
 })
 export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
   @ViewChild('pagaConInput') pagaConInputRef?: ElementRef<HTMLInputElement>;
@@ -66,11 +80,31 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
   pagaConResultado = 0;
   cambioResultado = 0;
   readonly billetes: BilleteOption[] = [
-    { label: '$ 100.000', valor: 100000, imagen: 'assets/img/cash/billete-100mil-medium.png' },
-    { label: '$ 50.000', valor: 50000, imagen: 'assets/img/cash/billete-50mil-medium.png' },
-    { label: '$ 20.000', valor: 20000, imagen: 'assets/img/cash/billete-20-mil-medium.png' },
-    { label: '$ 10.000', valor: 10000, imagen: 'assets/img/cash/billete-10-mil-medium.png' },
-        { label: '$ 5.000', valor: 5000, imagen: 'assets/img/cash/billete-5-mil-medium.png' }
+    {
+      label: '$ 100.000',
+      valor: 100000,
+      imagen: 'assets/img/cash/billete-100mil-medium.png'
+    },
+    {
+      label: '$ 50.000',
+      valor: 50000,
+      imagen: 'assets/img/cash/billete-50mil-medium.png'
+    },
+    {
+      label: '$ 20.000',
+      valor: 20000,
+      imagen: 'assets/img/cash/billete-20-mil-medium.png'
+    },
+    {
+      label: '$ 10.000',
+      valor: 10000,
+      imagen: 'assets/img/cash/billete-10-mil-medium.png'
+    },
+    {
+      label: '$ 5.000',
+      valor: 5000,
+      imagen: 'assets/img/cash/billete-5-mil-medium.png'
+    }
   ];
 
   cambio = 0;
@@ -96,7 +130,10 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
   readonly data: PagoEfectivoCambioData;
 
   constructor(
-    private readonly dialogRef: MatDialogRef<PagoEfectivoCambioComponent, PagoEfectivoCambioResultado | null>,
+    private readonly dialogRef: MatDialogRef<
+      PagoEfectivoCambioComponent,
+      PagoEfectivoCambioResultado | null
+    >,
     @Inject(MAT_DIALOG_DATA) data: PagoEfectivoCambioData,
     private readonly cdr: ChangeDetectorRef
   ) {
@@ -249,17 +286,19 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
     const cambio = Math.max(0, pagaCon - this.total);
     this.pagaConResultado = pagaCon;
     this.cambioResultado = cambio;
-    this.data.registrarDatosImpresion?.({ montoRecibido: this.pagaConResultado, cambio: this.cambioResultado });
+    this.data.registrarDatosImpresion?.({
+      montoRecibido: this.pagaConResultado,
+      cambio: this.cambioResultado
+    });
 
     if (this.data.ejecutarPago) {
       this.estado = 'procesando';
       this.cdr.markForCheck();
-      
+
       // Verificar si debe imprimir automáticamente después del pago
       const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
-      
-      this.data
-        .ejecutarPago!(pagaCon)
+
+      this.data.ejecutarPago!(pagaCon)
         .pipe(finalize(() => this.cdr.markForCheck()))
         .subscribe({
           next: (tg) => {
@@ -294,7 +333,10 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
   }
 
   onImprimirRecibo(): void {
-    this.data.registrarDatosImpresion?.({ montoRecibido: this.pagaConResultado, cambio: this.cambioResultado });
+    this.data.registrarDatosImpresion?.({
+      montoRecibido: this.pagaConResultado,
+      cambio: this.cambioResultado
+    });
     this.data.mostrarSnackbarExito?.(this.totalGuardado);
     try {
       this.data.imprimirRecibo?.();
@@ -309,14 +351,20 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
 
   onCerrarExito(): void {
     console.log('=== CERRAR EXITO LLAMADO ===');
-    console.log('localStorage imprimir-recibo:', localStorage.getItem('imprimir-recibo'));
-    
+    console.log(
+      'localStorage imprimir-recibo:',
+      localStorage.getItem('imprimir-recibo')
+    );
+
     // Verificar localStorage antes de cerrar
     const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
     console.log('debeImprimir:', debeImprimir);
-    
+
     // Cerrar el modal primero
-    this.data.registrarDatosImpresion?.({ montoRecibido: this.pagaConResultado, cambio: this.cambioResultado });
+    this.data.registrarDatosImpresion?.({
+      montoRecibido: this.pagaConResultado,
+      cambio: this.cambioResultado
+    });
     this.data.mostrarSnackbarExito?.(this.totalGuardado);
     this.dialogRef.close({
       pagaCon: this.pagaConResultado,
@@ -373,5 +421,3 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
     return this.pagoInsuficiente ? -this.cambioNegativo : this.cambio;
   }
 }
-
-

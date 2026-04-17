@@ -30,12 +30,12 @@
             data-form-type="other"
             [id]="'login-email-' + fieldId"
             [name]="'login-email-' + fieldId" />
-          <mat-error *ngIf="form.controls.email.hasError('required')"
-          >Se requiere un correo electrónico
-          </mat-error>
-          <mat-error *ngIf="form.controls.email.hasError('email')"
-          >Correo electrónico inválido
-          </mat-error>
+          @if (form.controls.email.hasError("required")) {
+            <mat-error>Se requiere un correo electrónico </mat-error>
+          }
+          @if (form.controls.email.hasError("email")) {
+            <mat-error>Correo electrónico inválido </mat-error>
+          }
         </mat-form-field>
         <mat-form-field class="flex-1">
           <mat-label>Contraseña</mat-label>
@@ -60,20 +60,26 @@
             matIconSuffix
             matTooltip="Mostrar/Ocultar contraseña"
             type="button">
-            <mat-icon *ngIf="visible" svgIcon="mat:visibility"></mat-icon>
-            <mat-icon *ngIf="!visible" svgIcon="mat:visibility_off"></mat-icon>
+            @if (visible) {
+              <mat-icon svgIcon="mat:visibility"></mat-icon>
+            }
+            @if (!visible) {
+              <mat-icon svgIcon="mat:visibility_off"></mat-icon>
+            }
           </button>
-          <mat-hint>Haz clic en el ojo para mostrar/ocultar la contraseña</mat-hint>
-          <mat-error *ngIf="form.controls.password.hasError('required')"
-          >Se requiere una contraseña
-          </mat-error>
+          <mat-hint
+            >Haz clic en el ojo para mostrar/ocultar la contraseña</mat-hint
+          >
+          @if (form.controls.password.hasError("required")) {
+            <mat-error>Se requiere una contraseña </mat-error>
+          }
         </mat-form-field>
       </div>
 
       <div class="flex items-center justify-between">
         <mat-checkbox class="caption" color="primary">Recordarme</mat-checkbox>
         <a [routerLink]="['/forgot-password']" class="caption"
-        >¿Olvidaste tu contraseña?</a
+          >¿Olvidaste tu contraseña?</a
         >
       </div>
 
@@ -83,9 +89,15 @@
         mat-raised-button
         type="button"
         [disabled]="loading">
-        <mat-spinner *ngIf="loading" diameter="20" class="button-spinner"></mat-spinner>
-        <span *ngIf="!loading">INICIAR SESIÓN</span>
-        <span *ngIf="loading">Iniciando sesión...</span>
+        @if (loading) {
+          <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+        }
+        @if (!loading) {
+          <span>INICIAR SESIÓN</span>
+        }
+        @if (loading) {
+          <span>Iniciando sesión...</span>
+        }
       </button>
 
       <p class="text-secondary text-center">

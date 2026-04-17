@@ -3,170 +3,193 @@
     <div class="card">
       <div class="px-6 py-4 border-b flex items-center justify-between">
         <h2 class="title m-0">Información Personal</h2>
-        <button
-          *ngIf="!modoEdicion"
-          mat-icon-button
-          matTooltip="Editar"
-          (click)="activarModoEdicion()"
-          type="button">
-          <mat-icon svgIcon="mat:edit"></mat-icon>
-        </button>
+        @if (!modoEdicion) {
+          <button
+            mat-icon-button
+            matTooltip="Editar"
+            (click)="activarModoEdicion()"
+            type="button">
+            <mat-icon svgIcon="mat:edit"></mat-icon>
+          </button>
+        }
       </div>
 
       <div class="px-6 py-4">
         <!-- Modo visualización -->
-        <div *ngIf="!modoEdicion" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="py-3 flex items-center" *ngIf="telefonoUsuario">
-            <div
-              @scaleIn
-              class="w-10 h-10 rounded-full bg-primary-600/10 text-primary-600 ltr:mr-3 rtl:ml-3 flex items-center justify-center">
-              <mat-icon class="icon-sm" svgIcon="mat:phone"></mat-icon>
-            </div>
-
-            <div @fadeInRight>
-              <p class="m-0 body-1">{{ telefonoUsuario }}</p>
-              <p class="m-0 caption text-hint">Contacto</p>
+        @if (!modoEdicion) {
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            @if (telefonoUsuario) {
+              <div class="py-3 flex items-center">
+                <div
+                  @scaleIn
+                  class="w-10 h-10 rounded-full bg-primary-600/10 text-primary-600 ltr:mr-3 rtl:ml-3 flex items-center justify-center">
+                  <mat-icon class="icon-sm" svgIcon="mat:phone"></mat-icon>
+                </div>
+                <div @fadeInRight>
+                  <p class="m-0 body-1">{{ telefonoUsuario }}</p>
+                  <p class="m-0 caption text-hint">Contacto</p>
+                </div>
+              </div>
+            }
+            @if (nombreUsuario) {
+              <div class="py-3 flex items-center">
+                <div
+                  @scaleIn
+                  class="w-10 h-10 rounded-full bg-primary-600/10 text-primary-600 ltr:mr-3 rtl:ml-3 flex items-center justify-center">
+                  <mat-icon class="icon-sm" svgIcon="mat:person"></mat-icon>
+                </div>
+                <div @fadeInRight>
+                  <p class="m-0 body-1">{{ nombreUsuario }}</p>
+                  <p class="m-0 caption text-hint">Nombre</p>
+                </div>
+              </div>
+            }
+            @if (correoUsuario) {
+              <div class="py-3 flex items-center">
+                <div
+                  @scaleIn
+                  class="w-10 h-10 rounded-full bg-primary-600/10 text-primary-600 ltr:mr-3 rtl:ml-3 flex items-center justify-center">
+                  <mat-icon class="icon-sm" svgIcon="mat:mail"></mat-icon>
+                </div>
+                <div @fadeInRight>
+                  <p class="m-0 body-1">{{ correoUsuario }}</p>
+                  <p class="m-0 caption text-hint">Correo</p>
+                </div>
+              </div>
+            }
+            <div class="py-3 flex items-center">
+              <div
+                @scaleIn
+                class="w-10 h-10 rounded-full bg-primary-600/10 text-primary-600 ltr:mr-3 rtl:ml-3 flex items-center justify-center">
+                <mat-icon class="icon-sm" svgIcon="mat:lock"></mat-icon>
+              </div>
+              <div @fadeInRight>
+                <p class="m-0 body-1">{{ passwordOculto }}</p>
+                <p class="m-0 caption text-hint">Contraseña</p>
+              </div>
             </div>
           </div>
-
-          <div class="py-3 flex items-center" *ngIf="nombreUsuario">
-            <div
-              @scaleIn
-              class="w-10 h-10 rounded-full bg-primary-600/10 text-primary-600 ltr:mr-3 rtl:ml-3 flex items-center justify-center">
-              <mat-icon class="icon-sm" svgIcon="mat:person"></mat-icon>
-            </div>
-
-            <div @fadeInRight>
-              <p class="m-0 body-1">{{ nombreUsuario }}</p>
-              <p class="m-0 caption text-hint">Nombre</p>
-            </div>
-          </div>
-
-          <div class="py-3 flex items-center" *ngIf="correoUsuario">
-            <div
-              @scaleIn
-              class="w-10 h-10 rounded-full bg-primary-600/10 text-primary-600 ltr:mr-3 rtl:ml-3 flex items-center justify-center">
-              <mat-icon class="icon-sm" svgIcon="mat:mail"></mat-icon>
-            </div>
-
-            <div @fadeInRight>
-              <p class="m-0 body-1">{{ correoUsuario }}</p>
-              <p class="m-0 caption text-hint">Correo</p>
-            </div>
-          </div>
-
-          <div class="py-3 flex items-center">
-            <div
-              @scaleIn
-              class="w-10 h-10 rounded-full bg-primary-600/10 text-primary-600 ltr:mr-3 rtl:ml-3 flex items-center justify-center">
-              <mat-icon class="icon-sm" svgIcon="mat:lock"></mat-icon>
-            </div>
-
-            <div @fadeInRight>
-              <p class="m-0 body-1">{{ passwordOculto }}</p>
-              <p class="m-0 caption text-hint">Contraseña</p>
-            </div>
-          </div>
-        </div>
+        }
 
         <!-- Modo edición -->
-        <div *ngIf="modoEdicion" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Campos ocultos para confundir al autocompletar -->
-          <input type="text" style="position: absolute; opacity: 0; height: 0; width: 0; pointer-events: none;" tabindex="-1" autocomplete="off">
-          <input type="password" style="position: absolute; opacity: 0; height: 0; width: 0; pointer-events: none;" tabindex="-1" autocomplete="off">
-          
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Nombre</mat-label>
-            <mat-icon matPrefix svgIcon="mat:person"></mat-icon>
-            <input 
-              matInput 
-              [(ngModel)]="nombreEditado" 
-              placeholder="Nombre" 
-              autocomplete="chrome-off"
-              readonly 
-              onfocus="this.removeAttribute('readonly')"
-              onkeydown="this.removeAttribute('readonly')"
-              data-lpignore="true"
-              data-form-type="other">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Teléfono</mat-label>
-            <mat-icon matPrefix svgIcon="mat:phone"></mat-icon>
-            <input 
-              matInput 
-              [(ngModel)]="telefonoEditado" 
-              placeholder="Teléfono" 
-              autocomplete="chrome-off"
-              readonly 
-              onfocus="this.removeAttribute('readonly')"
-              onkeydown="this.removeAttribute('readonly')"
-              data-lpignore="true"
-              data-form-type="other">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Correo Electrónico</mat-label>
-            <mat-icon matPrefix svgIcon="mat:mail"></mat-icon>
-            <input 
-              matInput 
-              type="text" 
-              [(ngModel)]="correoEditado" 
-              placeholder="Correo electrónico" 
-              autocomplete="chrome-off"
-              readonly 
-              onfocus="this.removeAttribute('readonly')"
-              onkeydown="this.removeAttribute('readonly')"
-              data-lpignore="true"
-              data-form-type="other"
-              [id]="'email-field-' + fieldId"
-              [name]="'email-field-' + fieldId">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Contraseña</mat-label>
-            <mat-icon matPrefix svgIcon="mat:lock"></mat-icon>
-            <input 
-              #passwordInput
+        @if (modoEdicion) {
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Campos ocultos para confundir al autocompletar -->
+            <input
               type="text"
-              [(ngModel)]="passwordEditado"
-              matInput
-              placeholder="Nueva contraseña"
-              autocomplete="off"
-              readonly
-              (focus)="onPasswordFocus($event)"
-              (input)="onPasswordInput($event)"
-              (mousedown)="preventPasswordManager($event)"
-              (click)="preventPasswordManager($event)"
-              data-lpignore="true"
-              data-form-type="other"
-              [id]="'password-field-' + fieldId"
-              [name]="'password-field-' + fieldId"
-              [attr.autocomplete]="'off'">
-          </mat-form-field>
-        </div>
+              style="
+                position: absolute;
+                opacity: 0;
+                height: 0;
+                width: 0;
+                pointer-events: none;
+              "
+              tabindex="-1"
+              autocomplete="off" />
+            <input
+              type="password"
+              style="
+                position: absolute;
+                opacity: 0;
+                height: 0;
+                width: 0;
+                pointer-events: none;
+              "
+              tabindex="-1"
+              autocomplete="off" />
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Nombre</mat-label>
+              <mat-icon matPrefix svgIcon="mat:person"></mat-icon>
+              <input
+                matInput
+                [(ngModel)]="nombreEditado"
+                placeholder="Nombre"
+                autocomplete="chrome-off"
+                readonly
+                onfocus="this.removeAttribute('readonly')"
+                onkeydown="this.removeAttribute('readonly')"
+                data-lpignore="true"
+                data-form-type="other" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Teléfono</mat-label>
+              <mat-icon matPrefix svgIcon="mat:phone"></mat-icon>
+              <input
+                matInput
+                [(ngModel)]="telefonoEditado"
+                placeholder="Teléfono"
+                autocomplete="chrome-off"
+                readonly
+                onfocus="this.removeAttribute('readonly')"
+                onkeydown="this.removeAttribute('readonly')"
+                data-lpignore="true"
+                data-form-type="other" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Correo Electrónico</mat-label>
+              <mat-icon matPrefix svgIcon="mat:mail"></mat-icon>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="correoEditado"
+                placeholder="Correo electrónico"
+                autocomplete="chrome-off"
+                readonly
+                onfocus="this.removeAttribute('readonly')"
+                onkeydown="this.removeAttribute('readonly')"
+                data-lpignore="true"
+                data-form-type="other"
+                [id]="'email-field-' + fieldId"
+                [name]="'email-field-' + fieldId" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Contraseña</mat-label>
+              <mat-icon matPrefix svgIcon="mat:lock"></mat-icon>
+              <input
+                #passwordInput
+                type="text"
+                [(ngModel)]="passwordEditado"
+                matInput
+                placeholder="Nueva contraseña"
+                autocomplete="off"
+                readonly
+                (focus)="onPasswordFocus($event)"
+                (input)="onPasswordInput($event)"
+                (mousedown)="preventPasswordManager($event)"
+                (click)="preventPasswordManager($event)"
+                data-lpignore="true"
+                data-form-type="other"
+                [id]="'password-field-' + fieldId"
+                [name]="'password-field-' + fieldId"
+                [attr.autocomplete]="'off'" />
+            </mat-form-field>
+          </div>
+        }
 
         <!-- Botón Actualizar -->
-        <div *ngIf="modoEdicion" class="mt-4 flex justify-end gap-2">
-          <button
-            mat-button
-            (click)="cancelarEdicion()"
-            [disabled]="actualizando"
-            type="button">
-            Cancelar
-          </button>
-          <button
-            mat-raised-button
-            color="primary"
-            (click)="actualizarUsuario()"
-            [disabled]="actualizando"
-            type="button">
-            <mat-icon *ngIf="actualizando" svgIcon="mat:hourglass_empty" class="mr-2"></mat-icon>
-            Actualizar
-          </button>
-        </div>
+        @if (modoEdicion) {
+          <div class="mt-4 flex justify-end gap-2">
+            <button
+              mat-button
+              (click)="cancelarEdicion()"
+              [disabled]="actualizando"
+              type="button">
+              Cancelar
+            </button>
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="actualizarUsuario()"
+              [disabled]="actualizando"
+              type="button">
+              @if (actualizando) {
+                <mat-icon svgIcon="mat:hourglass_empty" class="mr-2"></mat-icon>
+              }
+              Actualizar
+            </button>
+          </div>
+        }
       </div>
     </div>
   </div>
 </div>
-

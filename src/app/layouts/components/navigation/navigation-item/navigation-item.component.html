@@ -1,29 +1,30 @@
-<a
-  *ngIf="isLink(item) && !isFunction(item.route)"
-  [class.hover:bg-hover]="!(isActive$ | async)?.(item)"
-  [ngClass]="{
-    'bg-primary-600 text-on-primary-600': (isActive$ | async)?.(item),
-    'navigation-color': !(isActive$ | async)?.(item)
-  }"
-  [routerLink]="item.route"
-  class="navigation-item"
-  matRipple>
-  {{ item.label }}
-</a>
+@if (isLink(item) && !isFunction(item.route)) {
+  <a
+    [class.hover:bg-hover]="!(isActive$ | async)?.(item)"
+    [ngClass]="{
+      'bg-primary-600 text-on-primary-600': (isActive$ | async)?.(item),
+      'navigation-color': !(isActive$ | async)?.(item)
+    }"
+    [routerLink]="item.route"
+    class="navigation-item"
+    matRipple>
+    {{ item.label }}
+  </a>
+}
 
-<div
-  (click)="item.route()"
-  *ngIf="isLink(item) && isFunction(item.route)"
-  [class.hover:bg-hover]="!(isActive$ | async)?.(item)"
-  class="navigation-item navigation-color"
-  matRipple>
-  {{ item.label }}
-</div>
+@if (isLink(item) && isFunction(item.route)) {
+  <div
+    (click)="item.route()"
+    [class.hover:bg-hover]="!(isActive$ | async)?.(item)"
+    class="navigation-item navigation-color"
+    matRipple>
+    {{ item.label }}
+  </div>
+}
 
-<ng-container
-  *ngIf="
-    (isSubheading(item) && (item.children?.length ?? 0) > 0) || isDropdown(item)
-  ">
+@if (
+  (isSubheading(item) && item.children.length > 0) || isDropdown(item)
+) {
   <div
     [class.hover:bg-hover]="!(isActive$ | async)?.(item)"
     [matMenuTriggerFor]="menu"
@@ -35,54 +36,45 @@
     matRipple>
     {{ item.label }}
   </div>
-
   <mat-menu #menu="matMenu" yPosition="below">
-    <ng-container *ngFor="let child of item.children">
-      <a
-        *ngIf="isLink(child) && !isFunction(child.route)"
-        [ngClass]="{ 'text-primary-600': (isActive$ | async)?.(child) }"
-        [routerLink]="child.route"
-        class="navigation-menu-item"
-        mat-menu-item>
-        <mat-icon
-          *ngIf="child.icon"
-          [svgIcon]="child.icon"
-          class="text-current"></mat-icon>
-        <span>{{ child.label }}</span>
-      </a>
-
-      <div
-        (click)="child.route()"
-        *ngIf="isLink(child) && isFunction(child.route)"
-        class="navigation-menu-item"
-        mat-menu-item>
-        <mat-icon
-          *ngIf="child.icon"
-          [svgIcon]="child.icon"
-          class="text-current"></mat-icon>
-        <span>{{ child.label }}</span>
-      </div>
-
-      <ng-container *ngIf="isDropdown(child)">
+    @for (child of item.children; track child) {
+      @if (isLink(child) && !isFunction(child.route)) {
+        <a
+          [ngClass]="{ 'text-primary-600': (isActive$ | async)?.(child) }"
+          [routerLink]="child.route"
+          class="navigation-menu-item"
+          mat-menu-item>
+          @if (child.icon) {
+            <mat-icon [svgIcon]="child.icon" class="text-current"></mat-icon>
+          }
+          <span>{{ child.label }}</span>
+        </a>
+      }
+      @if (isLink(child) && isFunction(child.route)) {
+        <div (click)="child.route()" class="navigation-menu-item" mat-menu-item>
+          @if (child.icon) {
+            <mat-icon [svgIcon]="child.icon" class="text-current"></mat-icon>
+          }
+          <span>{{ child.label }}</span>
+        </div>
+      }
+      @if (isDropdown(child)) {
         <button
           [matMenuTriggerFor]="level1"
           [ngClass]="{ 'text-primary-600': (isActive$ | async)?.(child) }"
           class="navigation-menu-item"
           mat-menu-item>
-          <mat-icon
-            *ngIf="child.icon"
-            [svgIcon]="child.icon"
-            class="text-current"></mat-icon>
+          @if (child.icon) {
+            <mat-icon [svgIcon]="child.icon" class="text-current"></mat-icon>
+          }
           <span>{{ child.label }}</span>
         </button>
-
         <mat-menu #level1="matMenu" yPosition="below">
-          <ng-container *ngFor="let item of child.children">
+          @for (item of child.children; track item) {
             <ng-container
               [ngTemplateOutletContext]="{ item: item }"
               [ngTemplateOutlet]="linkTemplate"></ng-container>
-
-            <ng-container *ngIf="isDropdown(item)">
+            @if (isDropdown(item)) {
               <button
                 [matMenuTriggerFor]="level2"
                 [ngClass]="{ 'text-primary-600': (isActive$ | async)?.(item) }"
@@ -90,14 +82,12 @@
                 mat-menu-item>
                 {{ item.label }}
               </button>
-
               <mat-menu #level2="matMenu" yPosition="below">
-                <ng-container *ngFor="let child of item.children">
+                @for (child of item.children; track child) {
                   <ng-container
                     [ngTemplateOutletContext]="{ item: child }"
                     [ngTemplateOutlet]="linkTemplate"></ng-container>
-
-                  <ng-container *ngIf="isDropdown(child)">
+                  @if (isDropdown(child)) {
                     <button
                       [matMenuTriggerFor]="level3"
                       [ngClass]="{
@@ -107,14 +97,12 @@
                       mat-menu-item>
                       {{ child.label }}
                     </button>
-
                     <mat-menu #level3="matMenu" yPosition="below">
-                      <ng-container *ngFor="let item of child.children">
+                      @for (item of child.children; track item) {
                         <ng-container
                           [ngTemplateOutletContext]="{ item: item }"
                           [ngTemplateOutlet]="linkTemplate"></ng-container>
-
-                        <ng-container *ngIf="isDropdown(item)">
+                        @if (isDropdown(item)) {
                           <button
                             [matMenuTriggerFor]="level4"
                             [ngClass]="{
@@ -124,16 +112,14 @@
                             mat-menu-item>
                             {{ item.label }}
                           </button>
-
                           <mat-menu #level4="matMenu" yPosition="below">
-                            <ng-container *ngFor="let child of item.children">
+                            @for (child of item.children; track child) {
                               <ng-container
                                 [ngTemplateOutletContext]="{ item: child }"
                                 [ngTemplateOutlet]="
                                   linkTemplate
                                 "></ng-container>
-
-                              <ng-container *ngIf="isDropdown(child)">
+                              @if (isDropdown(child)) {
                                 <button
                                   [matMenuTriggerFor]="level5"
                                   [ngClass]="{
@@ -145,50 +131,48 @@
                                   mat-menu-item>
                                   {{ child.label }}
                                 </button>
-
                                 <mat-menu #level5="matMenu" yPosition="below">
-                                  <ng-container
-                                    *ngFor="let item of child.children">
+                                  @for (item of child.children; track item) {
                                     <ng-container
                                       [ngTemplateOutletContext]="{ item: item }"
                                       [ngTemplateOutlet]="
                                         linkTemplate
                                       "></ng-container>
-                                  </ng-container>
+                                  }
                                 </mat-menu>
-                              </ng-container>
-                            </ng-container>
+                              }
+                            }
                           </mat-menu>
-                        </ng-container>
-                      </ng-container>
+                        }
+                      }
                     </mat-menu>
-                  </ng-container>
-                </ng-container>
+                  }
+                }
               </mat-menu>
-            </ng-container>
-          </ng-container>
+            }
+          }
         </mat-menu>
-      </ng-container>
-    </ng-container>
+      }
+    }
   </mat-menu>
-
   <ng-template #linkTemplate let-item="item">
-    <a
-      *ngIf="isLink(item) && !isFunction(item.route)"
-      [ngClass]="{ 'text-primary-600': (isActive$ | async)?.(item) }"
-      [routerLink]="item.route"
-      class="navigation-menu-item"
-      mat-menu-item
-    >{{ item.label }}</a
-    >
-
-    <div
-      (click)="item.route()"
-      *ngIf="isLink(item) && isFunction(item.route)"
-      [ngClass]="{ 'text-primary-600': (isActive$ | async)?.(item) }"
-      class="navigation-menu-item"
-      mat-menu-item>
-      {{ item.label }}
-    </div>
+    @if (isLink(item) && !isFunction(item.route)) {
+      <a
+        [ngClass]="{ 'text-primary-600': (isActive$ | async)?.(item) }"
+        [routerLink]="item.route"
+        class="navigation-menu-item"
+        mat-menu-item
+        >{{ item.label }}</a
+      >
+    }
+    @if (isLink(item) && isFunction(item.route)) {
+      <div
+        (click)="item.route()"
+        [ngClass]="{ 'text-primary-600': (isActive$ | async)?.(item) }"
+        class="navigation-menu-item"
+        mat-menu-item>
+        {{ item.label }}
+      </div>
+    }
   </ng-template>
-</ng-container>
+}

@@ -1,10 +1,27 @@
-import { Component, Inject, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  Component,
+  Inject,
+  OnInit,
+  AfterViewInit,
+  ViewChild,
+  ElementRef
+} from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule, MatDialogRef, MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import {
+  MatDialogModule,
+  MatDialogRef,
+  MatDialog,
+  MAT_DIALOG_DATA
+} from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { NgFor, NgIf } from '@angular/common';
+
 import { RelationalProductService } from '../service/relational-product.service';
 import { Producto } from '../model/producto';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,29 +29,30 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { FormsModule } from '@angular/forms';
 import { DragDropModule, CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
-import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../core/components/confirm-dialog/confirm-dialog.component';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData
+} from '../../../../core/components/confirm-dialog/confirm-dialog.component';
 import { ConfigurationService } from '../../../../auth/service/configuration.service';
 
 @Component({
-    selector: 'editar-producto',
-    imports: [
-        ReactiveFormsModule,
-        FormsModule,
-        MatDialogModule,
-        NgIf,
-        NgFor,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        MatIconModule,
-        MatDividerModule,
-        MatSlideToggleModule,
-        DragDropModule,
-        CdkDrag,
-        CdkDragHandle
-    ],
-    templateUrl: './editar-producto.component.html',
-    styleUrl: './editar-producto.component.scss'
+  selector: 'editar-producto',
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatDividerModule,
+    MatSlideToggleModule,
+    DragDropModule,
+    CdkDrag,
+    CdkDragHandle
+  ],
+  templateUrl: './editar-producto.component.html',
+  styleUrl: './editar-producto.component.scss'
 })
 export class EditarProductoComponent implements OnInit, AfterViewInit {
   form: FormGroup;
@@ -62,16 +80,21 @@ export class EditarProductoComponent implements OnInit, AfterViewInit {
     });
     if (data) {
       const patchValue: any = {};
-      
+
       // Handle barcode - can come directly from data.barcode or from data.reference.barcode
       let barcodeValue = data.barcode || data?.reference?.barcode;
       if (barcodeValue) {
         barcodeValue = String(barcodeValue).trim();
       }
-      
+
       // For NEW products: if barcode is not numeric, move it to nombre and clear barcode
       const isNewProduct = !data.id;
-      if (isNewProduct && barcodeValue && barcodeValue.length > 0 && !this.isNumericBarcode(barcodeValue)) {
+      if (
+        isNewProduct &&
+        barcodeValue &&
+        barcodeValue.length > 0 &&
+        !this.isNumericBarcode(barcodeValue)
+      ) {
         // Move non-numeric barcode to nombre (uppercase it)
         patchValue.nombre = barcodeValue.toUpperCase();
         patchValue.barcode = ''; // Clear barcode
@@ -82,11 +105,15 @@ export class EditarProductoComponent implements OnInit, AfterViewInit {
         if (data.nombre !== undefined) {
           patchValue.nombre = data.nombre;
         }
-        if (barcodeValue !== undefined && barcodeValue !== null && barcodeValue !== '') {
+        if (
+          barcodeValue !== undefined &&
+          barcodeValue !== null &&
+          barcodeValue !== ''
+        ) {
           patchValue.barcode = barcodeValue;
         }
       }
-      
+
       if (data.precio !== undefined || data.price !== undefined) {
         patchValue.precio = data.precio || data.price;
       }
@@ -94,18 +121,18 @@ export class EditarProductoComponent implements OnInit, AfterViewInit {
       if (data.precioUnidad !== undefined) {
         patchValue.precioUnidad = data.precioUnidad;
       }
-      
+
       if (data.precioCompra !== undefined || data.buy_price !== undefined) {
         patchValue.buy_price = data.precioCompra || data.buy_price;
       }
-      
+
       if (data.activate !== undefined) {
         patchValue.activate = data.activate;
         this.initialActivateValue = data.activate;
       } else {
         this.initialActivateValue = 1; // Default activo
       }
-      
+
       // Apply all patches at once
       if (Object.keys(patchValue).length > 0) {
         this.form.patchValue(patchValue);
@@ -156,13 +183,18 @@ export class EditarProductoComponent implements OnInit, AfterViewInit {
       const barcodeValue = this.form.controls['barcode'].value;
       const nombreValue = this.form.controls['nombre'].value;
       const precioValue = this.form.controls['precio'].value;
-      
+
       // Check if barcode was moved to nombre (for new products with non-numeric barcode)
       const barcodeMovedToNombre = (this.form as any)._barcodeMovedToNombre;
-      
+
       // Check if all fields are filled (editing existing product)
-      const allFieldsFilled = barcodeValue && nombreValue && precioValue !== null && precioValue !== undefined && precioValue !== '';
-      
+      const allFieldsFilled =
+        barcodeValue &&
+        nombreValue &&
+        precioValue !== null &&
+        precioValue !== undefined &&
+        precioValue !== '';
+
       // Priority 1: If barcode was moved to nombre, focus on precio
       if (barcodeMovedToNombre && nombreValue && !precioValue) {
         if (this.precioInput?.nativeElement) {
@@ -171,27 +203,36 @@ export class EditarProductoComponent implements OnInit, AfterViewInit {
         }
         return; // Exit early to prevent other focus logic
       }
-      
+
       // Priority 2: All fields filled (editing existing product)
       if (allFieldsFilled && this.precioInput?.nativeElement) {
         this.precioInput.nativeElement.focus({ preventScroll: true });
         this.precioInput.nativeElement.select();
         return;
       }
-      
+
       // Priority 3: Barcode is empty and wasn't moved - focus on it (only if nombre is also empty)
-      if (!barcodeValue && !barcodeMovedToNombre && !nombreValue && this.barcodeInput?.nativeElement) {
+      if (
+        !barcodeValue &&
+        !barcodeMovedToNombre &&
+        !nombreValue &&
+        this.barcodeInput?.nativeElement
+      ) {
         this.barcodeInput.nativeElement.focus({ preventScroll: true });
         return;
       }
-      
+
       // Priority 4: Barcode has value - check if numeric
       if (barcodeValue) {
         if (this.isNumericBarcode(barcodeValue)) {
           // Numeric barcode - focus on next empty field
           if (!nombreValue && this.nombreInput?.nativeElement) {
             this.nombreInput.nativeElement.focus({ preventScroll: true });
-          } else if (!precioValue && precioValue !== 0 && this.precioInput?.nativeElement) {
+          } else if (
+            !precioValue &&
+            precioValue !== 0 &&
+            this.precioInput?.nativeElement
+          ) {
             this.precioInput.nativeElement.focus({ preventScroll: true });
             this.precioInput.nativeElement.select();
           }
@@ -205,13 +246,13 @@ export class EditarProductoComponent implements OnInit, AfterViewInit {
         }
         return;
       }
-      
+
       // Priority 5: Nombre is empty and barcode is handled
       if (!nombreValue && this.nombreInput?.nativeElement) {
         this.nombreInput.nativeElement.focus({ preventScroll: true });
         return;
       }
-      
+
       // Priority 6: Focus on precio if everything else is filled
       if (this.precioInput?.nativeElement) {
         this.precioInput.nativeElement.focus({ preventScroll: true });
@@ -244,7 +285,11 @@ export class EditarProductoComponent implements OnInit, AfterViewInit {
   onBarcodeFocus() {
     // Select all text in barcode field if it's not a numeric barcode
     const barcodeValue = this.form.controls['barcode'].value;
-    if (this.barcodeInput?.nativeElement && barcodeValue && !this.isNumericBarcode(barcodeValue)) {
+    if (
+      this.barcodeInput?.nativeElement &&
+      barcodeValue &&
+      !this.isNumericBarcode(barcodeValue)
+    ) {
       setTimeout(() => {
         this.barcodeInput.nativeElement.select();
       }, 0);
@@ -294,7 +339,8 @@ export class EditarProductoComponent implements OnInit, AfterViewInit {
       return false;
     }
     const percent = ((precio - precioCompra) / precioCompra) * 100;
-    const porcentajeMinimo = this.configurationService.obtenerPorcentajeMinimoGanancia();
+    const porcentajeMinimo =
+      this.configurationService.obtenerPorcentajeMinimoGanancia();
     return percent < porcentajeMinimo;
   }
 
@@ -309,7 +355,10 @@ export class EditarProductoComponent implements OnInit, AfterViewInit {
       nombre: form.nombre,
       barcode: form.barcode,
       precio: form.precio,
-      precioUnidad: form.precioUnidad === '' || form.precioUnidad === undefined ? null : form.precioUnidad,
+      precioUnidad:
+        form.precioUnidad === '' || form.precioUnidad === undefined
+          ? null
+          : form.precioUnidad,
       precioCompra: form.buy_price || undefined,
       foto: this.data?.foto || '',
       company: this.data?.company,
@@ -317,9 +366,10 @@ export class EditarProductoComponent implements OnInit, AfterViewInit {
     } as Producto;
 
     // Verificar si se está desactivando el producto (solo en modo edición)
-    const isDeactivating = this.isEditMode &&
-                           this.initialActivateValue === 1 &&
-                           product.activate === 0;
+    const isDeactivating =
+      this.isEditMode &&
+      this.initialActivateValue === 1 &&
+      product.activate === 0;
 
     if (isDeactivating) {
       const dialogData: ConfirmDialogData = {
@@ -364,16 +414,29 @@ export class EditarProductoComponent implements OnInit, AfterViewInit {
   private executeSave(product: Producto) {
     if (this.isEditMode) {
       // Edit mode
-      const productId = typeof this.data.id === 'string' ? parseInt(this.data.id) : this.data.id;
-      this.relationalProductService.updateProduct(productId, product).subscribe({
-        next: (result) => this.dialogRef.close({ ...result, _edit: true }),
-        error: (err) => alert('Error al actualizar el producto: ' + (err?.error?.message || err.message || err))
-      });
+      const productId =
+        typeof this.data.id === 'string'
+          ? parseInt(this.data.id)
+          : this.data.id;
+      this.relationalProductService
+        .updateProduct(productId, product)
+        .subscribe({
+          next: (result) => this.dialogRef.close({ ...result, _edit: true }),
+          error: (err) =>
+            alert(
+              'Error al actualizar el producto: ' +
+                (err?.error?.message || err.message || err)
+            )
+        });
     } else {
       // Add mode
       this.relationalProductService.createProduct(product).subscribe({
         next: (result) => this.dialogRef.close(result),
-        error: (err) => alert('Error al guardar el producto: ' + (err?.error?.message || err.message || err))
+        error: (err) =>
+          alert(
+            'Error al guardar el producto: ' +
+              (err?.error?.message || err.message || err)
+          )
       });
     }
   }

@@ -14,22 +14,20 @@ import { VexScrollbarComponent } from '@vex/components/vex-scrollbar/vex-scrollb
 import { MatRippleModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
-    selector: 'vex-sidenav',
-    templateUrl: './sidenav.component.html',
-    styleUrls: ['./sidenav.component.scss'],
-    imports: [
-        NgIf,
-        MatButtonModule,
-        MatIconModule,
-        MatRippleModule,
-        VexScrollbarComponent,
-        NgFor,
-        SidenavItemComponent,
-        AsyncPipe
-    ]
+  selector: 'vex-sidenav',
+  templateUrl: './sidenav.component.html',
+  styleUrls: ['./sidenav.component.scss'],
+  imports: [
+    MatButtonModule,
+    MatIconModule,
+    MatRippleModule,
+    VexScrollbarComponent,
+    SidenavItemComponent,
+    AsyncPipe
+  ]
 })
 export class SidenavComponent implements OnInit {
   @Input() collapsed: boolean = false;

@@ -1,7 +1,19 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  OnChanges,
+  SimpleChanges,
+  OnDestroy
+} from '@angular/core';
+
 import { MatButtonModule } from '@angular/material/button';
-import { EdicionReciboDetalleService, EdicionReciboDetalleDto } from '../service/edicion-recibo-detalle.service';
+import {
+  EdicionReciboDetalleService,
+  EdicionReciboDetalleDto
+} from '../service/edicion-recibo-detalle.service';
 import { ReciboDetalleDto } from '../service/recibo-detalle.service';
 import { ReciboDto } from '../service/recibo.service';
 import { MetodoPagoDto } from '../service/metodo-pago.service';
@@ -20,17 +32,20 @@ export interface CambioDetalle {
 }
 
 @Component({
-    selector: 'edicion-ticket',
-    imports: [CommonModule, MetodosPagoComponent, MatButtonModule],
-    templateUrl: './edicion-ticket.component.html',
-    styleUrls: ['./edicion-ticket.component.scss']
+  selector: 'edicion-ticket',
+  imports: [MetodosPagoComponent, MatButtonModule],
+  templateUrl: './edicion-ticket.component.html',
+  styleUrls: ['./edicion-ticket.component.scss']
 })
 export class EdicionTicketComponent implements OnInit, OnChanges, OnDestroy {
   @Input() reciboId: number | null = null;
   @Input() detalles: ReciboDetalleDto[] = [];
   @Input() recibo: ReciboDto | null = null;
 
-  @Output() metodoPagoSeleccionado = new EventEmitter<{ metodo: MetodoPagoDto; valorReferencia: number | null }>();
+  @Output() metodoPagoSeleccionado = new EventEmitter<{
+    metodo: MetodoPagoDto;
+    valorReferencia: number | null;
+  }>();
   @Output() finalizar = new EventEmitter<void>();
 
   edicionDetalles: EdicionReciboDetalleDto[] = [];
@@ -76,7 +91,8 @@ export class EdicionTicketComponent implements OnInit, OnChanges, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    this.edicionReciboDetalleService.getEdicionReciboDetalles(this.reciboId)
+    this.edicionReciboDetalleService
+      .getEdicionReciboDetalles(this.reciboId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (detalles) => {
@@ -103,17 +119,17 @@ export class EdicionTicketComponent implements OnInit, OnChanges, OnDestroy {
 
     // Crear mapas para facilitar la búsqueda
     const edicionMap = new Map<number, EdicionReciboDetalleDto>();
-    this.edicionDetalles.forEach(d => {
+    this.edicionDetalles.forEach((d) => {
       edicionMap.set(d.productoId, d);
     });
 
     const detallesMap = new Map<number, ReciboDetalleDto>();
-    this.detalles.forEach(d => {
+    this.detalles.forEach((d) => {
       detallesMap.set(d.productoId, d);
     });
 
     // Buscar productos agregados (están en detalles actuales pero no en edición)
-    this.detalles.forEach(detalle => {
+    this.detalles.forEach((detalle) => {
       const edicionDetalle = edicionMap.get(detalle.productoId);
       if (!edicionDetalle) {
         cambios.push({
@@ -121,7 +137,8 @@ export class EdicionTicketComponent implements OnInit, OnChanges, OnDestroy {
           detalle: detalle,
           cantidadNueva: detalle.cantidad,
           subtotalNuevo: detalle.subtotal,
-          productoNombre: detalle.producto?.nombre || `Producto ${detalle.productoId}`
+          productoNombre:
+            detalle.producto?.nombre || `Producto ${detalle.productoId}`
         });
       } else if (edicionDetalle.cantidad !== detalle.cantidad) {
         // Producto modificado (cantidad diferente)
@@ -132,13 +149,14 @@ export class EdicionTicketComponent implements OnInit, OnChanges, OnDestroy {
           cantidadNueva: detalle.cantidad,
           subtotalAnterior: edicionDetalle.subtotal,
           subtotalNuevo: detalle.subtotal,
-          productoNombre: detalle.producto?.nombre || `Producto ${detalle.productoId}`
+          productoNombre:
+            detalle.producto?.nombre || `Producto ${detalle.productoId}`
         });
       }
     });
 
     // Buscar productos eliminados (están en edición pero no en detalles actuales)
-    this.edicionDetalles.forEach(edicionDetalle => {
+    this.edicionDetalles.forEach((edicionDetalle) => {
       const detalle = detallesMap.get(edicionDetalle.productoId);
       if (!detalle) {
         cambios.push({
@@ -146,7 +164,9 @@ export class EdicionTicketComponent implements OnInit, OnChanges, OnDestroy {
           detalle: edicionDetalle,
           cantidadAnterior: edicionDetalle.cantidad,
           subtotalAnterior: edicionDetalle.subtotal,
-          productoNombre: edicionDetalle.producto?.nombre || `Producto ${edicionDetalle.productoId}`
+          productoNombre:
+            edicionDetalle.producto?.nombre ||
+            `Producto ${edicionDetalle.productoId}`
         });
       }
     });
@@ -157,10 +177,16 @@ export class EdicionTicketComponent implements OnInit, OnChanges, OnDestroy {
 
   private calcularTotales(): void {
     // Calcular total del recibo actual
-    this.totalRecibo = this.detalles.reduce((sum, detalle) => sum + Number(detalle.subtotal ?? 0), 0);
+    this.totalRecibo = this.detalles.reduce(
+      (sum, detalle) => sum + Number(detalle.subtotal ?? 0),
+      0
+    );
 
     // Calcular total de edición recibo
-    this.totalEdicionRecibo = this.edicionDetalles.reduce((sum, detalle) => sum + Number(detalle.subtotal ?? 0), 0);
+    this.totalEdicionRecibo = this.edicionDetalles.reduce(
+      (sum, detalle) => sum + Number(detalle.subtotal ?? 0),
+      0
+    );
 
     // Calcular diferencia
     this.diferencia = this.totalRecibo - this.totalEdicionRecibo;
@@ -172,19 +198,22 @@ export class EdicionTicketComponent implements OnInit, OnChanges, OnDestroy {
       currency: 'COP',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(value).replace('COP', '$').trim();
+    })
+      .format(value)
+      .replace('COP', '$')
+      .trim();
   }
 
   getCambiosAgregados(): CambioDetalle[] {
-    return this.cambios.filter(c => c.tipo === 'agregado');
+    return this.cambios.filter((c) => c.tipo === 'agregado');
   }
 
   getCambiosEliminados(): CambioDetalle[] {
-    return this.cambios.filter(c => c.tipo === 'eliminado');
+    return this.cambios.filter((c) => c.tipo === 'eliminado');
   }
 
   getCambiosModificados(): CambioDetalle[] {
-    return this.cambios.filter(c => c.tipo === 'modificado');
+    return this.cambios.filter((c) => c.tipo === 'modificado');
   }
 
   getDiferenciaAbsoluta(): number {
@@ -192,7 +221,10 @@ export class EdicionTicketComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onMetodoPagoSeleccionado(metodo: MetodoPagoDto): void {
-    this.metodoPagoSeleccionado.emit({ metodo, valorReferencia: this.diferencia });
+    this.metodoPagoSeleccionado.emit({
+      metodo,
+      valorReferencia: this.diferencia
+    });
   }
 
   onFinalizar(): void {
@@ -200,4 +232,3 @@ export class EdicionTicketComponent implements OnInit, OnChanges, OnDestroy {
     this.finalizar.emit();
   }
 }
-

@@ -6,14 +6,7 @@ import {
 } from '@angular/material/slide-toggle';
 import { map } from 'rxjs/operators';
 import { MatRadioChange, MatRadioModule } from '@angular/material/radio';
-import {
-  AsyncPipe,
-  KeyValuePipe,
-  NgClass,
-  NgFor,
-  NgIf,
-  UpperCasePipe
-} from '@angular/common';
+import { AsyncPipe, NgClass, UpperCasePipe } from '@angular/common';
 import { Observable } from 'rxjs';
 import {
   VexColorScheme,
@@ -30,22 +23,19 @@ import { MatIconModule } from '@angular/material/icon';
 import { VEX_THEMES } from '@vex/config/config.token';
 
 @Component({
-    selector: 'vex-config-panel',
-    templateUrl: './config-panel.component.html',
-    styleUrls: ['./config-panel.component.scss'],
-    imports: [
-        NgIf,
-        MatIconModule,
-        MatRippleModule,
-        NgFor,
-        MatButtonModule,
-        NgClass,
-        MatSlideToggleModule,
-        MatRadioModule,
-        AsyncPipe,
-        UpperCasePipe,
-        KeyValuePipe
-    ]
+  selector: 'vex-config-panel',
+  templateUrl: './config-panel.component.html',
+  styleUrls: ['./config-panel.component.scss'],
+  imports: [
+    MatIconModule,
+    MatRippleModule,
+    MatButtonModule,
+    NgClass,
+    MatSlideToggleModule,
+    MatRadioModule,
+    AsyncPipe,
+    UpperCasePipe
+  ]
 })
 export class ConfigPanelComponent {
   configs: VexConfig[] = this.configService.configs;

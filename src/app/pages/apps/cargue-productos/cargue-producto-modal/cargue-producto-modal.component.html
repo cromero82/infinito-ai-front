@@ -6,17 +6,17 @@
       <div class="form-content">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Nombre del Cargue</mat-label>
-          <input 
-            matInput 
-            formControlName="nombre" 
+          <input
+            matInput
+            formControlName="nombre"
             placeholder="Ej: Migración Diciembre 2025"
-            [disabled]="loading">
-          <mat-error *ngIf="form.get('nombre')?.hasError('required')">
-            El nombre es requerido
-          </mat-error>
-          <mat-error *ngIf="form.get('nombre')?.hasError('minlength')">
-            El nombre debe tener al menos 3 caracteres
-          </mat-error>
+            [disabled]="loading" />
+          @if (form.get("nombre")?.hasError("required")) {
+            <mat-error> El nombre es requerido </mat-error>
+          }
+          @if (form.get("nombre")?.hasError("minlength")) {
+            <mat-error> El nombre debe tener al menos 3 caracteres </mat-error>
+          }
         </mat-form-field>
 
         <div class="file-upload-section">
@@ -26,8 +26,8 @@
             (change)="onFileSelected($event)"
             accept=".xls,.xlsx,.csv"
             [disabled]="loading"
-            style="display: none;">
-          
+            style="display: none" />
+
           <div class="file-input-container">
             <button
               type="button"
@@ -38,19 +38,21 @@
               <mat-icon svgIcon="mat:attach_file"></mat-icon>
               <span>Seleccionar Archivo</span>
             </button>
-            
-            <div class="file-info" *ngIf="selectedFileName">
-              <span class="file-name">{{ selectedFileName }}</span>
-              <button
-                type="button"
-                mat-icon-button
-                color="warn"
-                (click)="removeFile()"
-                [disabled]="loading"
-                matTooltip="Eliminar archivo">
-                <mat-icon svgIcon="mat:close"></mat-icon>
-              </button>
-            </div>
+
+            @if (selectedFileName) {
+              <div class="file-info">
+                <span class="file-name">{{ selectedFileName }}</span>
+                <button
+                  type="button"
+                  mat-icon-button
+                  color="warn"
+                  (click)="removeFile()"
+                  [disabled]="loading"
+                  matTooltip="Eliminar archivo">
+                  <mat-icon svgIcon="mat:close"></mat-icon>
+                </button>
+              </div>
+            }
           </div>
 
           <div class="file-hint">
@@ -58,19 +60,17 @@
           </div>
         </div>
 
-        <div class="error-message" *ngIf="error">
-          {{ error }}
-        </div>
+        @if (error) {
+          <div class="error-message">
+            {{ error }}
+          </div>
+        }
       </div>
     </form>
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button
-      mat-button
-      type="button"
-      (click)="onCancel()"
-      [disabled]="loading">
+    <button mat-button type="button" (click)="onCancel()" [disabled]="loading">
       Cancelar
     </button>
     <button
@@ -79,10 +79,15 @@
       type="button"
       (click)="onSubmit()"
       [disabled]="form.invalid || loading">
-      <mat-spinner *ngIf="loading" diameter="20" class="spinner-inline"></mat-spinner>
-      <span *ngIf="!loading">Registrar</span>
-      <span *ngIf="loading">Registrando...</span>
+      @if (loading) {
+        <mat-spinner diameter="20" class="spinner-inline"></mat-spinner>
+      }
+      @if (!loading) {
+        <span>Registrar</span>
+      }
+      @if (loading) {
+        <span>Registrando...</span>
+      }
     </button>
   </mat-dialog-actions>
 </div>
-

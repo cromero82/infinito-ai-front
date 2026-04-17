@@ -8,14 +8,36 @@
 
     <div class="text-center mt-4">
       <h2 class="title m-0">Registrar una cuenta</h2>
-      <h4 class="body-2 text-secondary m-0">Completa el formulario a continuación</h4>
+      <h4 class="body-2 text-secondary m-0">
+        Completa el formulario a continuación
+      </h4>
     </div>
 
     <div
       [formGroup]="form"
       class="p-6 flex flex-col gap-4 flex-auto flex flex-col">
-      <input type="text" style="position: absolute; opacity: 0; height: 0; width: 0; pointer-events: none;" tabindex="-1" autocomplete="off">
-      <input type="password" style="position: absolute; opacity: 0; height: 0; width: 0; pointer-events: none;" tabindex="-1" autocomplete="off">
+      <input
+        type="text"
+        style="
+          position: absolute;
+          opacity: 0;
+          height: 0;
+          width: 0;
+          pointer-events: none;
+        "
+        tabindex="-1"
+        autocomplete="off" />
+      <input
+        type="password"
+        style="
+          position: absolute;
+          opacity: 0;
+          height: 0;
+          width: 0;
+          pointer-events: none;
+        "
+        tabindex="-1"
+        autocomplete="off" />
 
       <div>
         <mat-form-field class="flex-1 block">
@@ -30,9 +52,9 @@
             onkeydown="this.removeAttribute('readonly')"
             data-lpignore="true"
             data-form-type="other" />
-          <mat-error *ngIf="form.get('name')?.hasError('required')"
-          >Se requiere un nombre
-          </mat-error>
+          @if (form.get("name")?.hasError("required")) {
+            <mat-error>Se requiere un nombre </mat-error>
+          }
         </mat-form-field>
 
         <mat-form-field class="flex-1 block">
@@ -50,12 +72,12 @@
             data-form-type="other"
             [id]="'register-email-' + fieldId"
             [name]="'register-email-' + fieldId" />
-          <mat-error *ngIf="form.get('email')?.hasError('required')"
-          >Se requiere un correo electrónico
-          </mat-error>
-          <mat-error *ngIf="form.get('email')?.hasError('email')"
-          >Correo electrónico inválido
-          </mat-error>
+          @if (form.get("email")?.hasError("required")) {
+            <mat-error>Se requiere un correo electrónico </mat-error>
+          }
+          @if (form.get("email")?.hasError("email")) {
+            <mat-error>Correo electrónico inválido </mat-error>
+          }
         </mat-form-field>
 
         <mat-form-field class="flex-1 block">
@@ -71,9 +93,9 @@
             onkeydown="this.removeAttribute('readonly')"
             data-lpignore="true"
             data-form-type="other" />
-          <mat-error *ngIf="form.get('telefono')?.hasError('required')"
-          >Se requiere un teléfono
-          </mat-error>
+          @if (form.get("telefono")?.hasError("required")) {
+            <mat-error>Se requiere un teléfono </mat-error>
+          }
         </mat-form-field>
 
         <mat-form-field class="flex-1 block">
@@ -97,15 +119,21 @@
             matIconSuffix
             matTooltip="Mostrar/Ocultar contraseña"
             type="button">
-            <mat-icon *ngIf="visible" svgIcon="mat:visibility"></mat-icon>
-            <mat-icon *ngIf="!visible" svgIcon="mat:visibility_off"></mat-icon>
+            @if (visible) {
+              <mat-icon svgIcon="mat:visibility"></mat-icon>
+            }
+            @if (!visible) {
+              <mat-icon svgIcon="mat:visibility_off"></mat-icon>
+            }
           </button>
-          <mat-error *ngIf="form.get('password')?.hasError('required')"
-          >Se requiere una contraseña
-          </mat-error>
-          <mat-error *ngIf="form.get('password')?.hasError('minlength')"
-          >La contraseña debe tener al menos 6 caracteres
-          </mat-error>
+          @if (form.get("password")?.hasError("required")) {
+            <mat-error>Se requiere una contraseña </mat-error>
+          }
+          @if (form.get("password")?.hasError("minlength")) {
+            <mat-error
+              >La contraseña debe tener al menos 6 caracteres
+            </mat-error>
+          }
         </mat-form-field>
 
         <mat-form-field class="flex-1 block">
@@ -129,21 +157,25 @@
             matIconSuffix
             matTooltip="Mostrar/Ocultar contraseña"
             type="button">
-            <mat-icon *ngIf="visible" svgIcon="mat:visibility"></mat-icon>
-            <mat-icon *ngIf="!visible" svgIcon="mat:visibility_off"></mat-icon>
+            @if (visible) {
+              <mat-icon svgIcon="mat:visibility"></mat-icon>
+            }
+            @if (!visible) {
+              <mat-icon svgIcon="mat:visibility_off"></mat-icon>
+            }
           </button>
-          <mat-error *ngIf="form.get('passwordConfirm')?.hasError('required')"
-          >Se requiere confirmar la contraseña
-          </mat-error>
-          <mat-error *ngIf="form.get('passwordConfirm')?.hasError('passwordMismatch')"
-          >Las contraseñas no coinciden
-          </mat-error>
+          @if (form.get("passwordConfirm")?.hasError("required")) {
+            <mat-error>Se requiere confirmar la contraseña </mat-error>
+          }
+          @if (form.get("passwordConfirm")?.hasError("passwordMismatch")) {
+            <mat-error>Las contraseñas no coinciden </mat-error>
+          }
         </mat-form-field>
       </div>
 
       <div class="flex items-center justify-center">
         <mat-checkbox class="caption"
-        >Acepto los <a>términos y condiciones.</a></mat-checkbox
+          >Acepto los <a>términos y condiciones.</a></mat-checkbox
         >
       </div>
       <button
@@ -152,9 +184,15 @@
         mat-raised-button
         type="button"
         [disabled]="loading">
-        <mat-spinner *ngIf="loading" diameter="20" class="button-spinner"></mat-spinner>
-        <span *ngIf="!loading">CREAR CUENTA</span>
-        <span *ngIf="loading">Registrando...</span>
+        @if (loading) {
+          <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+        }
+        @if (!loading) {
+          <span>CREAR CUENTA</span>
+        }
+        @if (loading) {
+          <span>Registrando...</span>
+        }
       </button>
       <p class="text-secondary text-center">
         ¿Ya tienes una cuenta?<br />

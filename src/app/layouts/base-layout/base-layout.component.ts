@@ -8,41 +8,22 @@ import {
   OnInit
 } from '@angular/core';
 import { VexLayoutService } from '@vex/services/vex-layout.service';
-import {
-  MatSidenavContainer,
-  MatSidenavModule
-} from '@angular/material/sidenav';
-import {
-  Event,
-  NavigationEnd,
-  Router,
-  RouterOutlet,
-  Scroll
-} from '@angular/router';
+import { Event, NavigationEnd, Router, Scroll } from '@angular/router';
 import { filter, map, startWith, withLatestFrom } from 'rxjs/operators';
 import { combineLatest, Observable } from 'rxjs';
 import { checkRouterChildsData } from '@vex/utils/check-router-childs-data';
-import { AsyncPipe, DOCUMENT, NgIf, NgTemplateOutlet } from '@angular/common';
+import { AsyncPipe, DOCUMENT } from '@angular/common';
 import { VexConfigService } from '@vex/config/vex-config.service';
-import { SearchComponent } from '../components/toolbar/search/search.component';
-import { VexProgressBarComponent } from '@vex/components/vex-progress-bar/vex-progress-bar.component';
+import { MatSidenavContainer } from '@angular/material/sidenav';
 import { isNil } from '@vex/utils/is-nil';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { VexConfig } from '@vex/config/vex-config.interface';
 
 @Component({
-    selector: 'vex-base-layout',
-    templateUrl: './base-layout.component.html',
-    styleUrls: ['./base-layout.component.scss'],
-    imports: [
-        VexProgressBarComponent,
-        SearchComponent,
-        MatSidenavModule,
-        NgTemplateOutlet,
-        RouterOutlet,
-        AsyncPipe,
-        NgIf
-    ]
+  selector: 'vex-base-layout',
+  templateUrl: './base-layout.component.html',
+  styleUrls: ['./base-layout.component.scss'],
+  imports: [AsyncPipe]
 })
 export class BaseLayoutComponent implements OnInit, AfterViewInit {
   config$: Observable<VexConfig> = this.configService.config$;

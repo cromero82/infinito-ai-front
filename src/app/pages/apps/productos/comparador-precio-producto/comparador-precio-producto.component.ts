@@ -1,26 +1,35 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import {
+  MatDialogRef,
+  MAT_DIALOG_DATA,
+  MatDialogModule
+} from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { DecimalPipe, CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ExitoStore, OlimpicaStore } from '../service/product-info-strategy';
 import { ProductInfo } from '../model/product-info.model';
 import { Observable, forkJoin } from 'rxjs';
-import { NgIf, NgClass, NgFor } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { GapAnalysisDialogComponent } from './gap-analysis-dialog.component';
 
 @Component({
-    selector: 'comparador-precio-producto',
-    imports: [
-        MatDialogModule, MatButtonModule, MatIconModule, NgIf, NgClass, NgFor, FormsModule, DecimalPipe, CurrencyPipe, MatTooltipModule,
-        GapAnalysisDialogComponent
-    ],
-    providers: [CurrencyPipe, DecimalPipe],
-    templateUrl: './comparador-precio-producto.component.html',
-    styleUrls: ['./comparador-precio-producto.component.scss']
+  selector: 'comparador-precio-producto',
+  imports: [
+    MatDialogModule,
+    MatButtonModule,
+    MatIconModule,
+    NgClass,
+    FormsModule,
+    DecimalPipe,
+    MatTooltipModule
+  ],
+  providers: [CurrencyPipe, DecimalPipe],
+  templateUrl: './comparador-precio-producto.component.html',
+  styleUrls: ['./comparador-precio-producto.component.scss']
 })
 export class ComparadorPrecioProductoComponent implements OnInit {
   openFoodProduct: any;
@@ -82,14 +91,30 @@ export class ComparadorPrecioProductoComponent implements OnInit {
         const openfoodName = this.openFoodProduct?.nombre?.trim();
         const exitoName = exito?.product?.product_name?.trim();
         const olimpicaName = olimpica?.product?.product_name?.trim();
-        if (olimpicaName && (!openfoodName || olimpicaName !== openfoodName) && (!exitoName || olimpicaName !== exitoName)) {
-          this.availableNames.push({ label: 'Nombre producto Olimpica', value: olimpicaName, source: 'olimpica' });
+        if (
+          olimpicaName &&
+          (!openfoodName || olimpicaName !== openfoodName) &&
+          (!exitoName || olimpicaName !== exitoName)
+        ) {
+          this.availableNames.push({
+            label: 'Nombre producto Olimpica',
+            value: olimpicaName,
+            source: 'olimpica'
+          });
         }
         if (exitoName && (!openfoodName || exitoName !== openfoodName)) {
-          this.availableNames.push({ label: 'Nombre producto Exito', value: exitoName, source: 'exito' });
+          this.availableNames.push({
+            label: 'Nombre producto Exito',
+            value: exitoName,
+            source: 'exito'
+          });
         }
         if (openfoodName) {
-          this.availableNames.unshift({ label: 'Nombre producto OpenFoodFacts', value: openfoodName, source: 'openfoodfacts' });
+          this.availableNames.unshift({
+            label: 'Nombre producto OpenFoodFacts',
+            value: openfoodName,
+            source: 'openfoodfacts'
+          });
         }
         // Default name selection: prefer OpenFoodFacts, then Olimpica, then Exito
         if (openfoodName) {
@@ -112,7 +137,15 @@ export class ComparadorPrecioProductoComponent implements OnInit {
         }
         // Names fallback
         const openfoodName = this.openFoodProduct?.nombre?.trim();
-        this.availableNames = openfoodName ? [{ label: 'Nombre producto OpenFoodFacts', value: openfoodName, source: 'openfoodfacts' }] : [];
+        this.availableNames = openfoodName
+          ? [
+              {
+                label: 'Nombre producto OpenFoodFacts',
+                value: openfoodName,
+                source: 'openfoodfacts'
+              }
+            ]
+          : [];
         this.selectedNameSource = openfoodName ? 'openfoodfacts' : null;
         this.loading = false;
       }
@@ -124,16 +157,20 @@ export class ComparadorPrecioProductoComponent implements OnInit {
   }
 
   getGapAnalysis(itemToGap: 'olimpica' | 'exito' | 'suggested') {
-    let item: any, comparators: any[] = [], label = '', icon = '';
+    let item: any,
+      comparators: any[] = [],
+      label = '',
+      icon = '';
     if (itemToGap === 'olimpica' && this.olimpicaProduct?.product) {
       item = this.olimpicaProduct.product;
       label = 'Olimpica store';
       icon = 'assets/img/icons/stores/olimpica-store-icon.png';
-      if (this.exitoProduct?.product) comparators.push({
-        ...this.exitoProduct.product,
-        label: 'Exito store',
-        icon: 'assets/img/icons/stores/exito-store-icon.png'
-      });
+      if (this.exitoProduct?.product)
+        comparators.push({
+          ...this.exitoProduct.product,
+          label: 'Exito store',
+          icon: 'assets/img/icons/stores/exito-store-icon.png'
+        });
       comparators.push({
         price: Number(this.suggestedPrice),
         label: 'Precio sugerido vendedor',
@@ -143,11 +180,12 @@ export class ComparadorPrecioProductoComponent implements OnInit {
       item = this.exitoProduct.product;
       label = 'Exito store';
       icon = 'assets/img/icons/stores/exito-store-icon.png';
-      if (this.olimpicaProduct?.product) comparators.push({
-        ...this.olimpicaProduct.product,
-        label: 'Olimpica store',
-        icon: 'assets/img/icons/stores/olimpica-store-icon.png'
-      });
+      if (this.olimpicaProduct?.product)
+        comparators.push({
+          ...this.olimpicaProduct.product,
+          label: 'Olimpica store',
+          icon: 'assets/img/icons/stores/olimpica-store-icon.png'
+        });
       comparators.push({
         price: Number(this.suggestedPrice),
         label: 'Precio sugerido vendedor',
@@ -157,16 +195,18 @@ export class ComparadorPrecioProductoComponent implements OnInit {
       item = { price: Number(this.suggestedPrice) };
       label = 'Precio sugerido vendedor';
       icon = 'assets/img/icons/stores/icon-vendor.png';
-      if (this.olimpicaProduct?.product) comparators.push({
-        ...this.olimpicaProduct.product,
-        label: 'Olimpica store',
-        icon: 'assets/img/icons/stores/olimpica-store-icon.png'
-      });
-      if (this.exitoProduct?.product) comparators.push({
-        ...this.exitoProduct.product,
-        label: 'Exito store',
-        icon: 'assets/img/icons/stores/exito-store-icon.png'
-      });
+      if (this.olimpicaProduct?.product)
+        comparators.push({
+          ...this.olimpicaProduct.product,
+          label: 'Olimpica store',
+          icon: 'assets/img/icons/stores/olimpica-store-icon.png'
+        });
+      if (this.exitoProduct?.product)
+        comparators.push({
+          ...this.exitoProduct.product,
+          label: 'Exito store',
+          icon: 'assets/img/icons/stores/exito-store-icon.png'
+        });
     }
     // Compute gap for each comparator
     const getPercentClass = (percent: number) => {
@@ -176,9 +216,9 @@ export class ComparadorPrecioProductoComponent implements OnInit {
       if (percent <= -30) return 'bg-red-700';
       return 'bg-gray-400';
     };
-    const comparatorsResult = comparators.map(comp => {
+    const comparatorsResult = comparators.map((comp) => {
       const amount = (item.price ?? 0) - (comp.price ?? 0);
-      const percent = comp.price ? ((amount) / comp.price) * 100 : 0;
+      const percent = comp.price ? (amount / comp.price) * 100 : 0;
       return {
         label: comp.label,
         icon: comp.icon,
@@ -200,7 +240,11 @@ export class ComparadorPrecioProductoComponent implements OnInit {
   }
 
   selectName(source: string) {
-    if (source === 'olimpica' || source === 'exito' || source === 'openfoodfacts') {
+    if (
+      source === 'olimpica' ||
+      source === 'exito' ||
+      source === 'openfoodfacts'
+    ) {
       this.selectedNameSource = source;
     }
   }
@@ -213,7 +257,9 @@ export class ComparadorPrecioProductoComponent implements OnInit {
     let nombre: string | null = null;
     // Get selected name value
     if (this.availableNames && this.selectedNameSource) {
-      const found = this.availableNames.find(n => n.source === this.selectedNameSource);
+      const found = this.availableNames.find(
+        (n) => n.source === this.selectedNameSource
+      );
       if (found) {
         nombre = found.value;
       }
@@ -232,7 +278,13 @@ export class ComparadorPrecioProductoComponent implements OnInit {
       product = { ...this.openFoodProduct };
     }
     if (price !== null && !isNaN(price)) {
-      this.dialogRef.close({ ...product, selectedSource: fromCase, price, image, nombre });
+      this.dialogRef.close({
+        ...product,
+        selectedSource: fromCase,
+        price,
+        image,
+        nombre
+      });
     }
   }
 
@@ -245,21 +297,30 @@ export class ComparadorPrecioProductoComponent implements OnInit {
       icon: 'assets/img/icons/stores/icon-vendor.png',
       image: this.openFoodProduct?.image || ''
     };
-    const olimpica = this.olimpicaProduct?.product ? {
-      ...this.olimpicaProduct.product,
-      label: 'Olimpica',
-      icon: 'assets/img/icons/stores/olimpica-store-icon.png',
-      image: this.olimpicaProduct.product.image_url || ''
-    } : null;
-    const exito = this.exitoProduct?.product ? {
-      ...this.exitoProduct.product,
-      label: 'Exito',
-      icon: 'assets/img/icons/stores/exito-store-icon.png',
-      image: this.exitoProduct.product.image_url || ''
-    } : null;
+    const olimpica = this.olimpicaProduct?.product
+      ? {
+          ...this.olimpicaProduct.product,
+          label: 'Olimpica',
+          icon: 'assets/img/icons/stores/olimpica-store-icon.png',
+          image: this.olimpicaProduct.product.image_url || ''
+        }
+      : null;
+    const exito = this.exitoProduct?.product
+      ? {
+          ...this.exitoProduct.product,
+          label: 'Exito',
+          icon: 'assets/img/icons/stores/exito-store-icon.png',
+          image: this.exitoProduct.product.image_url || ''
+        }
+      : null;
     const dialogRef = this.dialog.open(GapAnalysisDialogComponent, {
       data: {
-        itemToGap: itemToGap === 'olimpica' ? olimpica : itemToGap === 'exito' ? exito : vendedor,
+        itemToGap:
+          itemToGap === 'olimpica'
+            ? olimpica
+            : itemToGap === 'exito'
+              ? exito
+              : vendedor,
         vendedor,
         olimpica,
         exito,

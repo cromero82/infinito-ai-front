@@ -1,9 +1,20 @@
-<form (ngSubmit)="save()" [formGroup]="form" cdkDrag cdkDragRootElement=".cdk-overlay-pane">
+<form
+  (ngSubmit)="save()"
+  [formGroup]="form"
+  cdkDrag
+  cdkDragRootElement=".cdk-overlay-pane">
   <div class="flex items-center dialog-header" mat-dialog-title cdkDragHandle>
     <h2 class="headline m-0 flex-auto">
-      {{ form.controls['nombre'].value || (data ? 'Editar producto' : 'Nuevo producto') }}
+      {{
+        form.controls["nombre"].value ||
+          (data ? "Editar producto" : "Nuevo producto")
+      }}
     </h2>
-    <button class="text-secondary" mat-dialog-close mat-icon-button type="button">
+    <button
+      class="text-secondary"
+      mat-dialog-close
+      mat-icon-button
+      type="button">
       <mat-icon svgIcon="mat:close"></mat-icon>
     </button>
   </div>
@@ -11,7 +22,11 @@
   <mat-dialog-content class="flex flex-col">
     <mat-form-field class="mt-6 flex-1">
       <mat-label>Código de barras</mat-label>
-      <input #barcodeInput formControlName="barcode" matInput (focus)="onBarcodeFocus()" />
+      <input
+        #barcodeInput
+        formControlName="barcode"
+        matInput
+        (focus)="onBarcodeFocus()" />
       <mat-icon matIconPrefix svgIcon="mat:qr_code"></mat-icon>
     </mat-form-field>
     <mat-form-field class="flex-1">
@@ -22,7 +37,12 @@
     <div class="precio-venta-row">
       <mat-form-field class="precio-venta-field">
         <mat-label>Precio (Venta)</mat-label>
-        <input #precioInput formControlName="precio" matInput type="number" (focus)="onPrecioFocus()" />
+        <input
+          #precioInput
+          formControlName="precio"
+          matInput
+          type="number"
+          (focus)="onPrecioFocus()" />
         <mat-icon matIconPrefix svgIcon="mat:attach_money"></mat-icon>
       </mat-form-field>
       <mat-form-field class="precio-venta-field">
@@ -34,28 +54,45 @@
     <div class="precio-compra-row">
       <mat-form-field class="precio-compra-field">
         <mat-label>Precio de compra</mat-label>
-        <input #buyPriceInput formControlName="buy_price" matInput type="number" (focus)="onBuyPriceFocus()" />
+        <input
+          #buyPriceInput
+          formControlName="buy_price"
+          matInput
+          type="number"
+          (focus)="onBuyPriceFocus()" />
         <mat-icon matIconPrefix svgIcon="mat:shopping_cart"></mat-icon>
       </mat-form-field>
       <mat-form-field class="ganancia-porcentaje-field">
         <mat-label>% Ganancia</mat-label>
-        <input matInput [value]="getGananciaPorcentajeDisplay() ?? '—'" readonly />
+        <input
+          matInput
+          [value]="getGananciaPorcentajeDisplay() ?? '—'"
+          readonly />
       </mat-form-field>
     </div>
     <div class="flex items-center mt-4 gap-4 flex-wrap">
-      <mat-slide-toggle 
+      <mat-slide-toggle
         [checked]="isActivateChecked"
         (change)="onActivateChange($event)">
-        {{ isActivateChecked ? 'Producto activo' : 'Producto inactivo' }}
+        {{ isActivateChecked ? "Producto activo" : "Producto inactivo" }}
       </mat-slide-toggle>
     </div>
-    <div class="ganancia-alert" *ngIf="showGananciaInferiorAlert()">
-      <span class="ganancia-alert-label">Producto con ganancia inferior al {{ porcentajeMinimoGanancia }} %</span>
-    </div>
+    @if (showGananciaInferiorAlert()) {
+      <div class="ganancia-alert">
+        <span class="ganancia-alert-label"
+          >Producto con ganancia inferior al
+          {{ porcentajeMinimoGanancia }} %</span
+        >
+      </div>
+    }
   </mat-dialog-content>
   <mat-dialog-actions align="end">
     <button mat-button mat-dialog-close type="button">Cancelar</button>
-    <button [color]="isEditMode ? 'accent' : 'primary'" mat-flat-button type="submit" [disabled]="form.invalid">
+    <button
+      [color]="isEditMode ? 'accent' : 'primary'"
+      mat-flat-button
+      type="submit"
+      [disabled]="form.invalid">
       {{ buttonLabel }}
     </button>
   </mat-dialog-actions>

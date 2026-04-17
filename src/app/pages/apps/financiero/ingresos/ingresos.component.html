@@ -1,197 +1,253 @@
 <div class="ingresos-page mt-1 flex flex-col flex-1 min-h-0 min-w-0 w-full">
   <div class="flex flex-col flex-1 min-h-0 w-full pb-1">
-    <div class="card ingresos-card flex flex-col flex-1 min-h-0 overflow-hidden">
+    <div
+      class="card ingresos-card flex flex-col flex-1 min-h-0 overflow-hidden">
       <div class="border-b py-2 px-6 flex items-center flex-shrink-0">
-    <h2 class="m-0 title flex-auto">Ingresos</h2>
+        <h2 class="m-0 title flex-auto">Ingresos</h2>
 
-    <button
-      mat-flat-button
-      color="primary"
-      type="button"
-      (click)="abrirModalCierreVentas()"
-      matTooltip="Cierre de ventas"
-      class="mr-2">
-      <mat-icon svgIcon="mat:add"></mat-icon>
-      <span class="ml-1">Cierre de ventas</span>
-    </button>
-  </div>
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          (click)="abrirModalCierreVentas()"
+          matTooltip="Cierre de ventas"
+          class="mr-2">
+          <mat-icon svgIcon="mat:add"></mat-icon>
+          <span class="ml-1">Cierre de ventas</span>
+        </button>
+      </div>
 
       <div class="pt-2 pb-2 px-4 split-pane-container flex-1 min-h-0">
-    <div class="split-pane-left" [style.width.px]="leftPanelWidth" [class.oculto]="filtrosOcultos">
-      <div>
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="title font-medium m-0">Filtros</h3>
-          <button
-            mat-icon-button
-            type="button"
-            (click)="toggleFiltros()"
-            matTooltip="Ocultar filtros"
-            class="toggle-filtros-btn">
-            <mat-icon svgIcon="mat:chevron_left"></mat-icon>
-          </button>
-        </div>
-
-        <div class="flex flex-col gap-3">
-          <mat-form-field appearance="outline">
-            <mat-label>Fecha Inicio</mat-label>
-            <input matInput [matDatepicker]="pickerInicio" [formControl]="fechaInicioCtrl">
-            <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
-            <mat-datepicker #pickerInicio></mat-datepicker>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Fecha Fin</mat-label>
-            <input matInput [matDatepicker]="pickerFin" [formControl]="fechaFinCtrl">
-            <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
-            <mat-datepicker #pickerFin></mat-datepicker>
-          </mat-form-field>
-
-          <button
-            mat-flat-button
-            color="primary"
-            type="button"
-            [disabled]="!fechaInicioCtrl.value || !fechaFinCtrl.value || loading"
-            (click)="aplicarFiltro()">
-            Aplicar Filtro
-          </button>
-        </div>
-      </div>
-
-      <div class="mt-2">
-        <h3 class="title font-medium mb-2">Resumen</h3>
-
-        <div class="pb-2 pt-2 px-4 flex flex-col border-b">
-          <h2 class="resumen-total font-bold m-0 text-primary">{{ formatCurrency(promedioVentas) }}</h2>
-          <h3 class="title font-medium mt-1 mb-0 text-sm">Promedio</h3>
-        </div>
-
-        <div class="pb-2 pt-2 px-4 flex flex-col">
-          <h2 class="resumen-total font-bold m-0 text-green-600">{{ formatCurrency(ventasDiaActual) }}</h2>
-          <h3 class="title font-medium mt-1 mb-0 text-sm">Total</h3>
-        </div>
-      </div>
-    </div>
-
-    <div
-      class="split-pane-divider"
-      (mousedown)="startResize($event)"
-      [class.resizing]="isResizing"
-      [class.oculto]="filtrosOcultos">
-      <div class="divider-handle" *ngIf="!filtrosOcultos"></div>
-      <button
-        *ngIf="filtrosOcultos"
-        mat-icon-button
-        type="button"
-        (click)="toggleFiltros()"
-        matTooltip="Mostrar filtros"
-        class="toggle-filtros-btn-divider">
-        <mat-icon svgIcon="mat:chevron_right"></mat-icon>
-      </button>
-    </div>
-
-    <div class="split-pane-right flex flex-col">
-      <div *ngIf="loading" class="text-secondary py-8 text-center">
-        Cargando ventas...
-      </div>
-
-      <div *ngIf="!loading && error" class="text-warn py-8 text-center">
-        {{ error }}
-      </div>
-
-      <div *ngIf="!loading && !error" class="ingresos-toolbar-panel flex flex-col items-center gap-1 mt-0 mb-1">
-        <div class="flex justify-center items-center gap-6">
-          <button
-            mat-flat-button
-            color="primary"
-            type="button"
-            [disabled]="!puedeNavegarIzquierda() || loading"
-            (click)="navegarIzquierda()"
-            [matTooltip]="diasVisibles + ' días anteriores'"
-            class="navigation-button">
-            <mat-icon svgIcon="mat:chevron_left"></mat-icon>
-            <span class="ml-2">Anterior</span>
-          </button>
-
-          <div class="text-center">
-            <div class="text-secondary text-sm font-medium">
-              <span *ngIf="fechaInicioActual && fechaFinActual">
-                {{ formatDateRange(fechaInicioActual, fechaFinActual) }}
-              </span>
-              <span *ngIf="!fechaInicioActual || !fechaFinActual">
-                Cargando...
-              </span>
+        <div
+          class="split-pane-left"
+          [style.width.px]="leftPanelWidth"
+          [class.oculto]="filtrosOcultos">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="title font-medium m-0">Filtros</h3>
+              <button
+                mat-icon-button
+                type="button"
+                (click)="toggleFiltros()"
+                matTooltip="Ocultar filtros"
+                class="toggle-filtros-btn">
+                <mat-icon svgIcon="mat:chevron_left"></mat-icon>
+              </button>
             </div>
-            <div class="text-secondary text-xs mt-1">
-              <span *ngIf="ventasPorFecha.length > 0">
-                {{ ventasPorFecha.length }} día{{ ventasPorFecha.length !== 1 ? 's' : '' }} con ventas
-              </span>
-              <span *ngIf="ventasPorFecha.length === 0" class="text-warn">
-                No hay ventas en este período
-              </span>
+
+            <div class="flex flex-col gap-3">
+              <mat-form-field appearance="outline">
+                <mat-label>Fecha Inicio</mat-label>
+                <input
+                  matInput
+                  [matDatepicker]="pickerInicio"
+                  [formControl]="fechaInicioCtrl" />
+                <mat-datepicker-toggle
+                  matSuffix
+                  [for]="pickerInicio"></mat-datepicker-toggle>
+                <mat-datepicker #pickerInicio></mat-datepicker>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Fecha Fin</mat-label>
+                <input
+                  matInput
+                  [matDatepicker]="pickerFin"
+                  [formControl]="fechaFinCtrl" />
+                <mat-datepicker-toggle
+                  matSuffix
+                  [for]="pickerFin"></mat-datepicker-toggle>
+                <mat-datepicker #pickerFin></mat-datepicker>
+              </mat-form-field>
+
+              <button
+                mat-flat-button
+                color="primary"
+                type="button"
+                [disabled]="
+                  !fechaInicioCtrl.value || !fechaFinCtrl.value || loading
+                "
+                (click)="aplicarFiltro()">
+                Aplicar Filtro
+              </button>
             </div>
           </div>
 
-          <button
-            mat-flat-button
-            color="primary"
-            type="button"
-            [disabled]="!puedeNavegarDerecha() || loading"
-            (click)="navegarDerecha()"
-            [matTooltip]="diasVisibles + ' días siguientes'"
-            class="navigation-button">
-            <span class="mr-2">Siguiente</span>
-            <mat-icon svgIcon="mat:chevron_right"></mat-icon>
-          </button>
+          <div class="mt-2">
+            <h3 class="title font-medium mb-2">Resumen</h3>
+
+            <div class="pb-2 pt-2 px-4 flex flex-col border-b">
+              <h2 class="resumen-total font-bold m-0 text-primary">
+                {{ formatCurrency(promedioVentas) }}
+              </h2>
+              <h3 class="title font-medium mt-1 mb-0 text-sm">Promedio</h3>
+            </div>
+
+            <div class="pb-2 pt-2 px-4 flex flex-col">
+              <h2 class="resumen-total font-bold m-0 text-green-600">
+                {{ formatCurrency(ventasDiaActual) }}
+              </h2>
+              <h3 class="title font-medium mt-1 mb-0 text-sm">Total</h3>
+            </div>
+          </div>
         </div>
 
-        <div class="flex justify-center items-center">
-          <mat-button-toggle-group [formControl]="periodoCtrl" [disabled]="loading">
-            <mat-button-toggle value="semanal">Semanal</mat-button-toggle>
-            <mat-button-toggle value="quincenal">Quincenal</mat-button-toggle>
-            <mat-button-toggle value="mensual">Mensual</mat-button-toggle>
-          </mat-button-toggle-group>
+        <div
+          class="split-pane-divider"
+          (mousedown)="startResize($event)"
+          [class.resizing]="isResizing"
+          [class.oculto]="filtrosOcultos">
+          @if (!filtrosOcultos) {
+            <div class="divider-handle"></div>
+          }
+          @if (filtrosOcultos) {
+            <button
+              mat-icon-button
+              type="button"
+              (click)="toggleFiltros()"
+              matTooltip="Mostrar filtros"
+              class="toggle-filtros-btn-divider">
+              <mat-icon svgIcon="mat:chevron_right"></mat-icon>
+            </button>
+          }
         </div>
-      </div>
 
-      <div *ngIf="!loading && !error && ventasPorFecha.length === 0" class="text-secondary py-8 text-center">
-        No hay ventas disponibles para el período seleccionado.
-      </div>
+        <div class="split-pane-right flex flex-col">
+          @if (loading) {
+            <div class="text-secondary py-8 text-center">
+              Cargando ventas...
+            </div>
+          }
 
-      <div *ngIf="!loading && !error && ventasPorFecha.length > 0" class="ingresos-content-panel flex flex-col flex-1 min-h-0">
-        <div class="ingresos-chart-panel">
-          <vex-chart [options]="chartOptions" [series]="chartSeries"></vex-chart>
-        </div>
+          @if (!loading && error) {
+            <div class="text-warn py-8 text-center">
+              {{ error }}
+            </div>
+          }
 
-        <div class="ingresos-details-panel mt-4 flex flex-col flex-1 min-h-0">
-          <h3 class="title font-medium mb-3 flex-shrink-0">Detalles por Fecha</h3>
-          <div class="ingresos-details-table overflow-x-auto">
-            <table class="w-full border-collapse">
-              <thead>
-                <tr class="border-b">
-                  <th class="text-left py-2 px-4">Fecha</th>
-                  <th class="text-right py-2 px-4">Total</th>
-                  <th class="text-left py-2 px-4">Métodos de Pago</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let venta of ventasPorFechaVisibles" class="border-b hover:bg-gray-50">
-                  <td class="py-2 px-4">{{ venta.fecha }}</td>
-                  <td class="text-right py-2 px-4 font-medium">{{ formatCurrency(venta.total) }}</td>
-                  <td class="py-2 px-4">
-                    <div class="flex flex-col gap-1">
-                      <span *ngFor="let detalle of venta.detalles" class="text-sm">
-                        {{ detalle.metodoPagoNombre }}: {{ formatCurrency(detalle.total) }}
+          @if (!loading && !error) {
+            <div
+              class="ingresos-toolbar-panel flex flex-col items-center gap-1 mt-0 mb-1">
+              <div class="flex justify-center items-center gap-6">
+                <button
+                  mat-flat-button
+                  color="primary"
+                  type="button"
+                  [disabled]="!puedeNavegarIzquierda() || loading"
+                  (click)="navegarIzquierda()"
+                  [matTooltip]="diasVisibles + ' días anteriores'"
+                  class="navigation-button">
+                  <mat-icon svgIcon="mat:chevron_left"></mat-icon>
+                  <span class="ml-2">Anterior</span>
+                </button>
+                <div class="text-center">
+                  <div class="text-secondary text-sm font-medium">
+                    @if (fechaInicioActual && fechaFinActual) {
+                      <span>
+                        {{ formatDateRange(fechaInicioActual, fechaFinActual) }}
                       </span>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                    }
+                    @if (!fechaInicioActual || !fechaFinActual) {
+                      <span> Cargando... </span>
+                    }
+                  </div>
+                  <div class="text-secondary text-xs mt-1">
+                    @if (ventasPorFecha.length > 0) {
+                      <span>
+                        {{ ventasPorFecha.length }} día{{
+                          ventasPorFecha.length !== 1 ? "s" : ""
+                        }}
+                        con ventas
+                      </span>
+                    }
+                    @if (ventasPorFecha.length === 0) {
+                      <span class="text-warn">
+                        No hay ventas en este período
+                      </span>
+                    }
+                  </div>
+                </div>
+                <button
+                  mat-flat-button
+                  color="primary"
+                  type="button"
+                  [disabled]="!puedeNavegarDerecha() || loading"
+                  (click)="navegarDerecha()"
+                  [matTooltip]="diasVisibles + ' días siguientes'"
+                  class="navigation-button">
+                  <span class="mr-2">Siguiente</span>
+                  <mat-icon svgIcon="mat:chevron_right"></mat-icon>
+                </button>
+              </div>
+              <div class="flex justify-center items-center">
+                <mat-button-toggle-group
+                  appearance="legacy"
+                  [formControl]="periodoCtrl"
+                  [disabled]="loading">
+                  <mat-button-toggle value="semanal">Semanal</mat-button-toggle>
+                  <mat-button-toggle value="quincenal"
+                    >Quincenal</mat-button-toggle
+                  >
+                  <mat-button-toggle value="mensual">Mensual</mat-button-toggle>
+                </mat-button-toggle-group>
+              </div>
+            </div>
+          }
+
+          @if (!loading && !error && ventasPorFecha.length === 0) {
+            <div class="text-secondary py-8 text-center">
+              No hay ventas disponibles para el período seleccionado.
+            </div>
+          }
+
+          @if (!loading && !error && ventasPorFecha.length > 0) {
+            <div class="ingresos-content-panel flex flex-col flex-1 min-h-0">
+              <div class="ingresos-chart-panel">
+                <vex-chart
+                  [options]="chartOptions"
+                  [series]="chartSeries"></vex-chart>
+              </div>
+              <div
+                class="ingresos-details-panel mt-4 flex flex-col flex-1 min-h-0">
+                <h3 class="title font-medium mb-3 flex-shrink-0">
+                  Detalles por Fecha
+                </h3>
+                <div class="ingresos-details-table overflow-x-auto">
+                  <table class="w-full border-collapse">
+                    <thead>
+                      <tr class="border-b">
+                        <th class="text-left py-2 px-4">Fecha</th>
+                        <th class="text-right py-2 px-4">Total</th>
+                        <th class="text-left py-2 px-4">Métodos de Pago</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (venta of ventasPorFechaVisibles; track venta) {
+                        <tr class="border-b hover:bg-gray-50">
+                          <td class="py-2 px-4">{{ venta.fecha }}</td>
+                          <td class="text-right py-2 px-4 font-medium">
+                            {{ formatCurrency(venta.total) }}
+                          </td>
+                          <td class="py-2 px-4">
+                            <div class="flex flex-col gap-1">
+                              @for (detalle of venta.detalles; track detalle) {
+                                <span class="text-sm">
+                                  {{ detalle.metodoPagoNombre }}:
+                                  {{ formatCurrency(detalle.total) }}
+                                </span>
+                              }
+                            </div>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          }
         </div>
       </div>
-    </div>
-  </div>
     </div>
   </div>
 </div>

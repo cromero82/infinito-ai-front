@@ -13,7 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { NgFor, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
+
 import { MatDialog } from '@angular/material/dialog';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
@@ -39,7 +39,10 @@ import {
   EstadisticaAnioFiltro
 } from '../service/estadistica-financiera.service';
 import { TableViewportService } from '../../../../../core/table-viewport/table-viewport.service';
-import { UtilidadEditComponent, UtilidadEditPeriodo } from '../utilidad-edit/utilidad-edit.component';
+import {
+  UtilidadEditComponent,
+  UtilidadEditPeriodo
+} from '../utilidad-edit/utilidad-edit.component';
 import { httpErrorMessage } from '../http-error.util';
 import { FooterService } from '../../../../../layouts/services/footer.service';
 import { MonthYearPickerComponent } from '../../../../../core/components/month-year-picker/month-year-picker.component';
@@ -67,47 +70,45 @@ class DateAdapterDDMMYYYY extends NativeDateAdapter {
 }
 
 @Component({
-    selector: 'gm-resumen-economico-list',
-    providers: [
-        { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
-        { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
-        {
-            provide: MAT_DATE_FORMATS,
-            useValue: {
-                parse: { dateInput: 'dd/MM/yyyy' },
-                display: {
-                    dateInput: 'dd/MM/yyyy',
-                    monthYearLabel: 'MMM yyyy',
-                    dateA11yLabel: 'dd/MM/yyyy',
-                    monthYearA11yLabel: 'MMMM yyyy'
-                }
-            }
+  selector: 'gm-resumen-economico-list',
+  providers: [
+    { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
+    { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
+    {
+      provide: MAT_DATE_FORMATS,
+      useValue: {
+        parse: { dateInput: 'dd/MM/yyyy' },
+        display: {
+          dateInput: 'dd/MM/yyyy',
+          monthYearLabel: 'MMM yyyy',
+          dateA11yLabel: 'dd/MM/yyyy',
+          monthYearA11yLabel: 'MMMM yyyy'
         }
-    ],
-    imports: [
-        MatTableModule,
-        MatIconModule,
-        MatButtonModule,
-        MatButtonToggleModule,
-        MatTooltipModule,
-        MatSnackBarModule,
-        MatMenuModule,
-        MatChipsModule,
-        MatDatepickerModule,
-        MatNativeDateModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MonthYearPickerComponent,
-        ReactiveFormsModule,
-        NgFor,
-        NgIf,
-        NgSwitch,
-        NgSwitchCase
-    ],
-    templateUrl: './resumen-economico-list.component.html',
-    styleUrl: './resumen-economico-list.component.scss'
+      }
+    }
+  ],
+  imports: [
+    MatTableModule,
+    MatIconModule,
+    MatButtonModule,
+    MatButtonToggleModule,
+    MatTooltipModule,
+    MatSnackBarModule,
+    MatMenuModule,
+    MatChipsModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MonthYearPickerComponent,
+    ReactiveFormsModule
+  ],
+  templateUrl: './resumen-economico-list.component.html',
+  styleUrl: './resumen-economico-list.component.scss'
 })
-export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnDestroy {
+export class ResumenEconomicoListComponent
+  implements OnInit, AfterViewInit, OnDestroy
+{
   vista: VistaEstadistica = 'diaria';
 
   readonly filterFechaInicioCtrl = new FormControl<Date | null>(null);
@@ -238,35 +239,37 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
       this.pageIndex = 0;
       this.dataDiaria = [];
     }
-    this.estadisticaService.getDiaria(
-      reset ? 0 : this.pageIndex + 1,
-      this.pageSize,
-      this.getFechaFiltro()
-    ).subscribe({
-      next: (page) => {
-        if (reset) {
-          this.dataDiaria = page.content;
-        } else {
-          this.dataDiaria = [...this.dataDiaria, ...page.content];
+    this.estadisticaService
+      .getDiaria(
+        reset ? 0 : this.pageIndex + 1,
+        this.pageSize,
+        this.getFechaFiltro()
+      )
+      .subscribe({
+        next: (page) => {
+          if (reset) {
+            this.dataDiaria = page.content;
+          } else {
+            this.dataDiaria = [...this.dataDiaria, ...page.content];
+          }
+          this.pageIndex = page.number;
+          this.hasMoreDiaria = !page.last;
+          this.loading = false;
+          this.loadingMore = false;
+          this.actualizarFooterVistaDiaria();
+          setTimeout(() => {
+            this.attachScrollDiaria();
+            this.maybeLoadMoreDiaria();
+          }, 50);
+        },
+        error: () => {
+          this.dataDiaria = [];
+          this.hasMoreDiaria = false;
+          this.loading = false;
+          this.loadingMore = false;
+          this.footerService.clearFooterItems();
         }
-        this.pageIndex = page.number;
-        this.hasMoreDiaria = !page.last;
-        this.loading = false;
-        this.loadingMore = false;
-        this.actualizarFooterVistaDiaria();
-        setTimeout(() => {
-          this.attachScrollDiaria();
-          this.maybeLoadMoreDiaria();
-        }, 50);
-      },
-      error: () => {
-        this.dataDiaria = [];
-        this.hasMoreDiaria = false;
-        this.loading = false;
-        this.loadingMore = false;
-        this.footerService.clearFooterItems();
-      }
-    });
+      });
   }
 
   private cargarMensual() {
@@ -318,7 +321,14 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
 
   private onTableScrollDiaria() {
     const el = this.tableScrollDiaria?.nativeElement;
-    if (!el || this.loadingMore || !this.hasMoreDiaria || this.loading || this.vista !== 'diaria') return;
+    if (
+      !el ||
+      this.loadingMore ||
+      !this.hasMoreDiaria ||
+      this.loading ||
+      this.vista !== 'diaria'
+    )
+      return;
     const { scrollTop, scrollHeight, clientHeight } = el;
     if (scrollTop + clientHeight >= scrollHeight - 100) {
       this.loadMoreDiaria();
@@ -328,19 +338,21 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
   loadMoreDiaria() {
     if (this.loadingMore || !this.hasMoreDiaria) return;
     this.loadingMore = true;
-    this.estadisticaService.getDiaria(this.pageIndex + 1, this.pageSize, this.getFechaFiltro()).subscribe({
-      next: (page) => {
-        this.dataDiaria = [...this.dataDiaria, ...page.content];
-        this.pageIndex = page.number;
-        this.hasMoreDiaria = !page.last;
-        this.loadingMore = false;
-        this.actualizarFooterVistaDiaria();
-        setTimeout(() => this.maybeLoadMoreDiaria(), 50);
-      },
-      error: () => {
-        this.loadingMore = false;
-      }
-    });
+    this.estadisticaService
+      .getDiaria(this.pageIndex + 1, this.pageSize, this.getFechaFiltro())
+      .subscribe({
+        next: (page) => {
+          this.dataDiaria = [...this.dataDiaria, ...page.content];
+          this.pageIndex = page.number;
+          this.hasMoreDiaria = !page.last;
+          this.loadingMore = false;
+          this.actualizarFooterVistaDiaria();
+          setTimeout(() => this.maybeLoadMoreDiaria(), 50);
+        },
+        error: () => {
+          this.loadingMore = false;
+        }
+      });
   }
 
   private maybeLoadMoreDiaria() {
@@ -371,19 +383,34 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
 
   restoreFiltersState(): void {
     if (this.vista === 'diaria') {
-      this.filterFechaInicioCtrl.setValue(this.parseDateParam(this.appliedFechaInicio), { emitEvent: false });
-      this.filterFechaFinCtrl.setValue(this.parseDateParam(this.appliedFechaFin), { emitEvent: false });
+      this.filterFechaInicioCtrl.setValue(
+        this.parseDateParam(this.appliedFechaInicio),
+        { emitEvent: false }
+      );
+      this.filterFechaFinCtrl.setValue(
+        this.parseDateParam(this.appliedFechaFin),
+        { emitEvent: false }
+      );
       return;
     }
 
     if (this.vista === 'mensual') {
-      this.filterMesInicioCtrl.setValue(this.parseMonthParam(this.appliedMesInicio), { emitEvent: false });
-      this.filterMesFinCtrl.setValue(this.parseMonthParam(this.appliedMesFin), { emitEvent: false });
+      this.filterMesInicioCtrl.setValue(
+        this.parseMonthParam(this.appliedMesInicio),
+        { emitEvent: false }
+      );
+      this.filterMesFinCtrl.setValue(this.parseMonthParam(this.appliedMesFin), {
+        emitEvent: false
+      });
       return;
     }
 
-    this.filterAnioInicioCtrl.setValue(this.appliedAnioInicio ?? '', { emitEvent: false });
-    this.filterAnioFinCtrl.setValue(this.appliedAnioFin ?? '', { emitEvent: false });
+    this.filterAnioInicioCtrl.setValue(this.appliedAnioInicio ?? '', {
+      emitEvent: false
+    });
+    this.filterAnioFinCtrl.setValue(this.appliedAnioFin ?? '', {
+      emitEvent: false
+    });
   }
 
   applyFilters(): void {
@@ -403,11 +430,15 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
     const fechaFin = this.formatDateParam(this.filterFechaFinCtrl.value);
 
     if (fechaInicio && fechaFin && fechaInicio > fechaFin) {
-      this.snackBar.open('La fecha inicio no puede ser mayor que la fecha fin', undefined, {
-        duration: 5000,
-        horizontalPosition: 'right',
-        panelClass: ['recibo-snackbar-error']
-      });
+      this.snackBar.open(
+        'La fecha inicio no puede ser mayor que la fecha fin',
+        undefined,
+        {
+          duration: 5000,
+          horizontalPosition: 'right',
+          panelClass: ['recibo-snackbar-error']
+        }
+      );
       return;
     }
 
@@ -423,11 +454,15 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
     const mesFin = this.formatMonthParam(this.filterMesFinCtrl.value);
 
     if (mesInicio && mesFin && mesInicio > mesFin) {
-      this.snackBar.open('El mes inicio no puede ser mayor que el mes fin', undefined, {
-        duration: 5000,
-        horizontalPosition: 'right',
-        panelClass: ['recibo-snackbar-error']
-      });
+      this.snackBar.open(
+        'El mes inicio no puede ser mayor que el mes fin',
+        undefined,
+        {
+          duration: 5000,
+          horizontalPosition: 'right',
+          panelClass: ['recibo-snackbar-error']
+        }
+      );
       return;
     }
 
@@ -455,11 +490,15 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
     }
 
     if (anioInicio && anioFin && Number(anioInicio) > Number(anioFin)) {
-      this.snackBar.open('El año inicial no puede ser mayor que el año final', undefined, {
-        duration: 5000,
-        horizontalPosition: 'right',
-        panelClass: ['recibo-snackbar-error']
-      });
+      this.snackBar.open(
+        'El año inicial no puede ser mayor que el año final',
+        undefined,
+        {
+          duration: 5000,
+          horizontalPosition: 'right',
+          panelClass: ['recibo-snackbar-error']
+        }
+      );
       return;
     }
 
@@ -508,7 +547,9 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
   }
 
   isRowSelected(row: { id: number }): boolean {
-    return this.selectedRowVista === this.vista && this.selectedRowId === row.id;
+    return (
+      this.selectedRowVista === this.vista && this.selectedRowId === row.id
+    );
   }
 
   periodoTooltipDiaria(row: EstadisticaFinancieraDiariaDto): string {
@@ -516,7 +557,15 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
     if (!raw) return '';
     const date = this.fechaUtilService.parseDateAsLocal(raw);
     if (Number.isNaN(date.getTime())) return '';
-    const daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const daysOfWeek = [
+      'Domingo',
+      'Lunes',
+      'Martes',
+      'Miércoles',
+      'Jueves',
+      'Viernes',
+      'Sábado'
+    ];
     return daysOfWeek[date.getDay()] ?? '';
   }
 
@@ -637,7 +686,10 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
 
   private buildYearFilterLabel(): { label: string; value: string } | null {
     if (this.appliedAnioInicio && this.appliedAnioFin) {
-      return { label: 'Años:', value: `${this.appliedAnioInicio} a ${this.appliedAnioFin}` };
+      return {
+        label: 'Años:',
+        value: `${this.appliedAnioInicio} a ${this.appliedAnioFin}`
+      };
     }
     if (this.appliedAnioInicio) {
       return { label: 'Desde año:', value: this.appliedAnioInicio };
@@ -701,7 +753,9 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
     return /^\d{4}$/.test(normalized) ? normalized : null;
   }
 
-  private formatPeriodoDiaConMesTexto(value: string | null | undefined): string {
+  private formatPeriodoDiaConMesTexto(
+    value: string | null | undefined
+  ): string {
     const raw = value?.trim();
     if (!raw) return '—';
 
@@ -733,7 +787,20 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
   }
 
   private getMonthShortName(month: number): string {
-    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const monthNames = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic'
+    ];
     return monthNames[month - 1] ?? String(month).padStart(2, '0');
   }
 
@@ -753,7 +820,10 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
    * Sustituye la fila por el registro devuelto por el PUT sin recargar la lista.
    */
   private reemplazarFilaPorRespuestaPut(
-    row: EstadisticaFinancieraDiariaDto | EstadisticaFinancieraMensualDto | EstadisticaFinancieraAnualDto,
+    row:
+      | EstadisticaFinancieraDiariaDto
+      | EstadisticaFinancieraMensualDto
+      | EstadisticaFinancieraAnualDto,
     api: EstadisticaFinancieraPutResponse
   ): void {
     const id = row.id;
@@ -779,7 +849,9 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
         ...api,
         mes: api.mes ?? api.valorTiempo ?? prev.mes
       };
-      this.dataMensual = this.dataMensual.map((x, i) => (i === idx ? merged : x));
+      this.dataMensual = this.dataMensual.map((x, i) =>
+        i === idx ? merged : x
+      );
       this.actualizarFooterPorFilas('Meses', this.dataMensual);
       return;
     }
@@ -795,7 +867,12 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
     this.actualizarFooterPorFilas('Años', this.dataAnual);
   }
 
-  recalcular(row: EstadisticaFinancieraDiariaDto | EstadisticaFinancieraMensualDto | EstadisticaFinancieraAnualDto) {
+  recalcular(
+    row:
+      | EstadisticaFinancieraDiariaDto
+      | EstadisticaFinancieraMensualDto
+      | EstadisticaFinancieraAnualDto
+  ) {
     const valorTiempo = row.valorTiempo?.trim();
     if (!valorTiempo || this.recalculandoId !== null) return;
     this.recalculandoId = row.id;
@@ -846,9 +923,12 @@ export class ResumenEconomicoListComponent implements OnInit, AfterViewInit, OnD
       sumEgresos += r.totalEgresos ?? 0;
       sumUtilidad += r.utilidad ?? 0;
     }
-    const pctUtilidad = sumVentas !== 0 ? (sumUtilidad / sumVentas) * 100 : null;
+    const pctUtilidad =
+      sumVentas !== 0 ? (sumUtilidad / sumVentas) * 100 : null;
     const pctStr =
-      pctUtilidad === null || Number.isNaN(pctUtilidad) ? '—' : `${pctUtilidad.toFixed(2)} %`;
+      pctUtilidad === null || Number.isNaN(pctUtilidad)
+        ? '—'
+        : `${pctUtilidad.toFixed(2)} %`;
 
     this.footerService.setFooterItems([
       { textoClave: labelPeriodo, valorClave: String(n), estiloCssClave: '' },

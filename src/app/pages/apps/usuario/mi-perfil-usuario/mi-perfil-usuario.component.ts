@@ -1,9 +1,16 @@
-import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ChangeDetectorRef,
+  ViewChild,
+  ElementRef,
+  AfterViewInit
+} from '@angular/core';
 import { fadeInUp400ms } from '@vex/animations/fade-in-up.animation';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { scaleIn400ms } from '@vex/animations/scale-in.animation';
 import { MatButtonModule } from '@angular/material/button';
-import { NgFor, NgIf, CommonModule } from '@angular/common';
+
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -15,22 +22,19 @@ import { catchError, finalize } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 
 @Component({
-    selector: 'gm-mi-perfil-usuario',
-    templateUrl: './mi-perfil-usuario.component.html',
-    styleUrls: ['./mi-perfil-usuario.component.scss'],
-    animations: [fadeInUp400ms, fadeInRight400ms, scaleIn400ms],
-    imports: [
-        MatIconModule,
-        NgFor,
-        NgIf,
-        MatButtonModule,
-        CommonModule,
-        MatInputModule,
-        MatFormFieldModule,
-        MatTooltipModule,
-        FormsModule,
-        MatSnackBarModule
-    ]
+  selector: 'gm-mi-perfil-usuario',
+  templateUrl: './mi-perfil-usuario.component.html',
+  styleUrls: ['./mi-perfil-usuario.component.scss'],
+  animations: [fadeInUp400ms, fadeInRight400ms, scaleIn400ms],
+  imports: [
+    MatIconModule,
+    MatButtonModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatTooltipModule,
+    FormsModule,
+    MatSnackBarModule
+  ]
 })
 export class MiPerfilUsuarioComponent implements OnInit, AfterViewInit {
   nombreUsuario: string | null = null;
@@ -56,7 +60,8 @@ export class MiPerfilUsuarioComponent implements OnInit, AfterViewInit {
   passwordInputType: string = 'text'; // Inicialmente texto para evitar detección de password
   readonly fieldId = Math.random().toString(36).substring(7); // ID único para confundir autocompletar
 
-  @ViewChild('passwordInput', { static: false }) passwordInputRef?: ElementRef<HTMLInputElement>;
+  @ViewChild('passwordInput', { static: false })
+  passwordInputRef?: ElementRef<HTMLInputElement>;
 
   constructor(
     private authService: AuthService,
@@ -71,34 +76,36 @@ export class MiPerfilUsuarioComponent implements OnInit, AfterViewInit {
 
   private checkAndFixPasswordInput(): void {
     if (!this.modoEdicion) return;
-    
+
     // Intentar usar ViewChild primero
     let input = this.passwordInputRef?.nativeElement;
-    
+
     // Si ViewChild no está disponible (porque el campo aún no se renderizó), usar querySelector
     if (!input) {
-      input = document.querySelector(`input[id='password-field-${this.fieldId}']`) as HTMLInputElement;
+      input = document.querySelector(
+        `input[id='password-field-${this.fieldId}']`
+      ) as HTMLInputElement;
     }
-    
+
     if (input) {
       // Forzar tipo 'text' directamente en el DOM
       input.type = 'text';
-      
+
       // Forzar autocomplete deshabilitado con múltiples valores
       input.setAttribute('autocomplete', 'chrome-off');
       input.setAttribute('autocomplete', 'off');
       input.setAttribute('autocomplete', 'new-password');
-      
+
       // Eliminar atributos que puedan indicar que es un campo de contraseña
       input.removeAttribute('name');
       input.removeAttribute('id');
-      
+
       // Reestablecer con valores dinámicos después de un momento
       setTimeout(() => {
         input!.setAttribute('name', `password-field-${this.fieldId}`);
         input!.setAttribute('id', `password-field-${this.fieldId}`);
       }, 0);
-      
+
       // Agregar event listeners agresivos para prevenir autocomplete
       const preventAutocomplete = () => {
         input!.type = 'text';
@@ -108,12 +115,12 @@ export class MiPerfilUsuarioComponent implements OnInit, AfterViewInit {
           input!.setAttribute('name', `password-field-${this.fieldId}`);
         }, 0);
       };
-      
+
       input.addEventListener('focus', preventAutocomplete, true);
       input.addEventListener('click', preventAutocomplete, true);
       input.addEventListener('mousedown', preventAutocomplete, true);
       input.addEventListener('touchstart', preventAutocomplete, true);
-      
+
       // MutationObserver para detectar cambios en el tipo
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
@@ -122,13 +129,16 @@ export class MiPerfilUsuarioComponent implements OnInit, AfterViewInit {
             if (target.type === 'password') {
               target.type = 'text';
             }
-            if (target.getAttribute('autocomplete') && target.getAttribute('autocomplete') !== 'off') {
+            if (
+              target.getAttribute('autocomplete') &&
+              target.getAttribute('autocomplete') !== 'off'
+            ) {
               target.setAttribute('autocomplete', 'off');
             }
           }
         });
       });
-      
+
       observer.observe(input, {
         attributes: true,
         attributeFilter: ['type', 'autocomplete']
@@ -143,7 +153,7 @@ export class MiPerfilUsuarioComponent implements OnInit, AfterViewInit {
   cargarDatosUsuario(): void {
     this.nombreUsuario = this.authService.getNombre();
     this.rolNombre = this.authService.getRolNombre();
-    
+
     // Obtener correo del token decodificado
     const token = this.authService.getToken();
     if (token) {
@@ -151,12 +161,12 @@ export class MiPerfilUsuarioComponent implements OnInit, AfterViewInit {
         const payload = this.decodeJwt(token);
         this.correoUsuario = payload.sub || null;
         this.telefonoUsuario = payload.telefono || null;
-        
+
         // Guardar valores originales
         this.nombreOriginal = this.nombreUsuario || '';
         this.correoOriginal = this.correoUsuario || '';
         this.telefonoOriginal = this.telefonoUsuario || '';
-        
+
         // Inicializar valores editados con los originales
         this.nombreEditado = this.nombreOriginal;
         this.correoEditado = this.correoOriginal;
@@ -177,7 +187,7 @@ export class MiPerfilUsuarioComponent implements OnInit, AfterViewInit {
     this.telefonoEditado = this.telefonoOriginal;
     this.passwordEditado = '';
     this.cd.markForCheck();
-    
+
     // Asegurar que el campo se inicialice correctamente después de renderizarse
     // Usar múltiples timeouts para asegurar que se ejecute después de que Angular renderice
     setTimeout(() => {
@@ -245,17 +255,26 @@ export class MiPerfilUsuarioComponent implements OnInit, AfterViewInit {
     const datosActualizados: any = {};
     let hayCambios = false;
 
-    if (this.nombreEditado !== this.nombreOriginal && this.nombreEditado.trim() !== '') {
+    if (
+      this.nombreEditado !== this.nombreOriginal &&
+      this.nombreEditado.trim() !== ''
+    ) {
       datosActualizados.nombre = this.nombreEditado.trim();
       hayCambios = true;
     }
 
-    if (this.correoEditado !== this.correoOriginal && this.correoEditado.trim() !== '') {
+    if (
+      this.correoEditado !== this.correoOriginal &&
+      this.correoEditado.trim() !== ''
+    ) {
       datosActualizados.correoElectronico = this.correoEditado.trim();
       hayCambios = true;
     }
 
-    if (this.telefonoEditado !== this.telefonoOriginal && this.telefonoEditado.trim() !== '') {
+    if (
+      this.telefonoEditado !== this.telefonoOriginal &&
+      this.telefonoEditado.trim() !== ''
+    ) {
       datosActualizados.telefono = this.telefonoEditado.trim();
       hayCambios = true;
     }
@@ -275,15 +294,19 @@ export class MiPerfilUsuarioComponent implements OnInit, AfterViewInit {
     this.actualizando = true;
     this.cd.markForCheck();
 
-    this.authService.actualizarUsuario(datosActualizados)
+    this.authService
+      .actualizarUsuario(datosActualizados)
       .pipe(
         finalize(() => {
           this.actualizando = false;
           this.cd.markForCheck();
         }),
-        catchError(error => {
+        catchError((error) => {
           console.error('Error al actualizar usuario:', error);
-          const mensajeError = error?.error?.message || error?.message || 'Error al actualizar usuario';
+          const mensajeError =
+            error?.error?.message ||
+            error?.message ||
+            'Error al actualizar usuario';
           this.snackBar.open(mensajeError, 'Cerrar', {
             duration: 5000
           });
@@ -306,7 +329,7 @@ export class MiPerfilUsuarioComponent implements OnInit, AfterViewInit {
             this.telefonoOriginal = datosActualizados.telefono;
             this.telefonoUsuario = datosActualizados.telefono;
           }
-          
+
           // Reiniciar password
           this.passwordEditado = '';
 
@@ -328,10 +351,10 @@ export class MiPerfilUsuarioComponent implements OnInit, AfterViewInit {
 
       const payloadEncoded = parts[1];
       let base64 = payloadEncoded.replace(/-/g, '+').replace(/_/g, '/');
-      
-      const paddingLength = (4 - base64.length % 4) % 4;
+
+      const paddingLength = (4 - (base64.length % 4)) % 4;
       const padded = base64 + '='.repeat(paddingLength);
-      
+
       const decoded = atob(padded);
       return JSON.parse(decoded);
     } catch (error) {
@@ -340,4 +363,3 @@ export class MiPerfilUsuarioComponent implements OnInit, AfterViewInit {
     }
   }
 }
-

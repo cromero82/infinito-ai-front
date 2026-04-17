@@ -1,32 +1,77 @@
-<form (ngSubmit)="save()" [formGroup]="form" cdkDrag cdkDragRootElement=".cdk-overlay-pane">
+<form
+  (ngSubmit)="save()"
+  [formGroup]="form"
+  cdkDrag
+  cdkDragRootElement=".cdk-overlay-pane">
   <div class="flex items-center dialog-header" mat-dialog-title cdkDragHandle>
     <h2 class="headline m-0 flex-auto">
-      {{ form.controls['nombre'].value || (isEditMode ? 'Editar proveedor' : 'Nuevo proveedor') }}
+      {{
+        form.controls["nombre"].value ||
+          (isEditMode ? "Editar proveedor" : "Nuevo proveedor")
+      }}
     </h2>
-    <button class="text-secondary" mat-dialog-close mat-icon-button type="button">
+    <button
+      class="text-secondary"
+      mat-dialog-close
+      mat-icon-button
+      type="button">
       <mat-icon svgIcon="mat:close"></mat-icon>
     </button>
   </div>
   <mat-divider class="text-border"></mat-divider>
   <mat-dialog-content class="flex flex-col">
     <!-- Errores al intentar registrar -->
-    <div *ngIf="errores.length > 0" class="errores-alert" style="margin-top: 16px; padding: 12px 16px; background-color: rgba(244, 67, 54, 0.12); border: 1px solid rgba(244, 67, 54, 0.4); border-radius: 8px;">
-      <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #c62828; margin-bottom: 8px;">
-        <mat-icon svgIcon="mat:error" style="width: 24px; height: 24px; font-size: 24px;"></mat-icon>
-        <span>Errores al intentar registrar</span>
+    @if (errores.length > 0) {
+      <div
+        class="errores-alert"
+        style="
+          margin-top: 16px;
+          padding: 12px 16px;
+          background-color: rgba(244, 67, 54, 0.12);
+          border: 1px solid rgba(244, 67, 54, 0.4);
+          border-radius: 8px;
+        ">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #c62828;
+            margin-bottom: 8px;
+          ">
+          <mat-icon
+            svgIcon="mat:error"
+            style="width: 24px; height: 24px; font-size: 24px"></mat-icon>
+          <span>Errores al intentar registrar</span>
+        </div>
+        <ul
+          style="
+            margin: 0;
+            padding-left: 24px;
+            color: #b71c1c;
+            line-height: 1.6;
+          ">
+          @for (e of errores; track e) {
+            <li>
+              {{ e.descripcionError }}
+              @if (e.campo !== "_general") {
+                <span style="font-size: 0.9em; color: #795548">
+                  ({{ e.campo }})</span
+                >
+              }
+            </li>
+          }
+        </ul>
       </div>
-      <ul style="margin: 0; padding-left: 24px; color: #b71c1c; line-height: 1.6;">
-        <li *ngFor="let e of errores">
-          {{ e.descripcionError }}
-          <span *ngIf="e.campo !== '_general'" style="font-size: 0.9em; color: #795548;"> ({{ e.campo }})</span>
-        </li>
-      </ul>
-    </div>
+    }
     <mat-form-field class="mt-6 flex-1">
       <mat-label>Nombre</mat-label>
       <input #nombreInput formControlName="nombre" matInput />
       <mat-icon matIconPrefix svgIcon="mat:business"></mat-icon>
-      <mat-error *ngIf="getErrorForCampo('nombre')">{{ getErrorForCampo('nombre') }}</mat-error>
+      @if (getErrorForCampo("nombre")) {
+        <mat-error>{{ getErrorForCampo("nombre") }}</mat-error>
+      }
     </mat-form-field>
     <mat-form-field class="flex-1">
       <mat-label>Tipo de egreso</mat-label>
@@ -37,36 +82,68 @@
         [matAutocomplete]="autoTipo"
         placeholder="Escriba para filtrar por nombre o descripción" />
       <mat-icon matIconPrefix svgIcon="mat:category"></mat-icon>
-      <mat-autocomplete #autoTipo="matAutocomplete" [displayWith]="displayTipoEgreso">
-        <mat-option *ngFor="let tipo of filteredTipos$ | async" [value]="tipo">
-          <span>{{ tipo.nombre }}</span>
-          <span *ngIf="tipo.descripcion" class="text-secondary text-sm"> - {{ tipo.descripcion }}</span>
-        </mat-option>
+      <mat-autocomplete
+        #autoTipo="matAutocomplete"
+        [displayWith]="displayTipoEgreso">
+        @for (tipo of filteredTipos$ | async; track tipo) {
+          <mat-option [value]="tipo">
+            <span>{{ tipo.nombre }}</span>
+            @if (tipo.descripcion) {
+              <span class="text-secondary text-sm">
+                - {{ tipo.descripcion }}</span
+              >
+            }
+          </mat-option>
+        }
       </mat-autocomplete>
-      <mat-error *ngIf="form.get('tipoEgreso')?.hasError('required')">Seleccione un tipo</mat-error>
+      @if (form.get("tipoEgreso")?.hasError("required")) {
+        <mat-error>Seleccione un tipo</mat-error>
+      }
     </mat-form-field>
     <mat-form-field class="flex-1">
       <mat-label>Documento</mat-label>
-      <input #documentoInput formControlName="documento" matInput (focus)="onDocumentoFocus()" />
+      <input
+        #documentoInput
+        formControlName="documento"
+        matInput
+        (focus)="onDocumentoFocus()" />
       <mat-icon matIconPrefix svgIcon="mat:badge"></mat-icon>
-      <mat-error *ngIf="getErrorForCampo('documento')">{{ getErrorForCampo('documento') }}</mat-error>
+      @if (getErrorForCampo("documento")) {
+        <mat-error>{{ getErrorForCampo("documento") }}</mat-error>
+      }
     </mat-form-field>
     <mat-form-field class="flex-1">
       <mat-label>Teléfono</mat-label>
-      <input #telefonoInput formControlName="telefono" matInput (focus)="onTelefonoFocus()" />
+      <input
+        #telefonoInput
+        formControlName="telefono"
+        matInput
+        (focus)="onTelefonoFocus()" />
       <mat-icon matIconPrefix svgIcon="mat:phone"></mat-icon>
-      <mat-error *ngIf="getErrorForCampo('telefono')">{{ getErrorForCampo('telefono') }}</mat-error>
+      @if (getErrorForCampo("telefono")) {
+        <mat-error>{{ getErrorForCampo("telefono") }}</mat-error>
+      }
     </mat-form-field>
     <mat-form-field class="flex-1">
       <mat-label>Correo</mat-label>
-      <input #correoInput formControlName="correo" matInput (focus)="onCorreoFocus()" />
+      <input
+        #correoInput
+        formControlName="correo"
+        matInput
+        (focus)="onCorreoFocus()" />
       <mat-icon matIconPrefix svgIcon="mat:email"></mat-icon>
-      <mat-error *ngIf="getErrorForCampo('correo')">{{ getErrorForCampo('correo') }}</mat-error>
+      @if (getErrorForCampo("correo")) {
+        <mat-error>{{ getErrorForCampo("correo") }}</mat-error>
+      }
     </mat-form-field>
   </mat-dialog-content>
   <mat-dialog-actions align="end">
     <button mat-button type="button" (click)="cancel()">Cancelar</button>
-    <button [color]="isEditMode ? 'accent' : 'primary'" mat-flat-button type="submit" [disabled]="form.invalid">
+    <button
+      [color]="isEditMode ? 'accent' : 'primary'"
+      mat-flat-button
+      type="submit"
+      [disabled]="form.invalid">
       {{ buttonLabel }}
     </button>
   </mat-dialog-actions>

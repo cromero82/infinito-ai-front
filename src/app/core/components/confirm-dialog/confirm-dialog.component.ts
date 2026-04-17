@@ -1,8 +1,11 @@
 import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef
+} from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { NgIf } from '@angular/common';
 
 export interface ConfirmDialogData {
   mensaje: string;
@@ -10,15 +13,10 @@ export interface ConfirmDialogData {
 }
 
 @Component({
-    selector: 'vex-confirm-dialog',
-    templateUrl: './confirm-dialog.component.html',
-    styleUrls: ['./confirm-dialog.component.scss'],
-    imports: [
-        MatDialogModule,
-        MatButtonModule,
-        MatIconModule,
-        NgIf
-    ]
+  selector: 'vex-confirm-dialog',
+  templateUrl: './confirm-dialog.component.html',
+  styleUrls: ['./confirm-dialog.component.scss'],
+  imports: [MatDialogModule, MatButtonModule, MatIconModule]
 })
 export class ConfirmDialogComponent {
   constructor(
@@ -34,4 +32,3 @@ export class ConfirmDialogComponent {
     this.dialogRef.close(true);
   }
 }
-

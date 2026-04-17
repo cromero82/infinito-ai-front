@@ -2,7 +2,7 @@
   <!-- Left side -->
   <div class="left-side">
     <h2 class="title mt-0 mb-4">Usuarios</h2>
-    
+
     <div class="fecha-section">
       <mat-form-field appearance="outline" class="fecha-field">
         <mat-label>Fecha</mat-label>
@@ -12,40 +12,45 @@
           [formControl]="fechaCtrl"
           (dateChange)="onFechaChange()" />
         <span matSuffix class="fecha-suffix-container">
-          <button
-            *ngIf="fechaCtrl.value"
-            mat-icon-button
-            type="button"
-            (click)="clearFecha(); $event.stopPropagation()"
-            class="clear-button">
-            <mat-icon svgIcon="mat:close"></mat-icon>
-          </button>
+          @if (fechaCtrl.value) {
+            <button
+              mat-icon-button
+              type="button"
+              (click)="clearFecha(); $event.stopPropagation()"
+              class="clear-button">
+              <mat-icon svgIcon="mat:close"></mat-icon>
+            </button>
+          }
           <mat-datepicker-toggle [for]="picker"></mat-datepicker-toggle>
         </span>
         <mat-datepicker #picker></mat-datepicker>
       </mat-form-field>
     </div>
-    
+
     <div class="usuarios-list-container">
-      <div class="loading" *ngIf="loading">Cargando...</div>
-      <div class="error" *ngIf="!loading && error">{{ error }}</div>
-      
-      <div 
-        class="usuarios-list" 
-        #usuariosList
-        *ngIf="!loading && !error">
-        <div
-          *ngFor="let usuario of usuarios"
-          class="usuario-item"
-          [class.selected]="selectedUsuarioId === usuario.id"
-          (click)="selectUsuario(usuario)">
-          <div class="usuario-nombre">{{ usuario.nombre }}</div>
-          <div class="usuario-email">{{ usuario.correoElectronico }}</div>
+      @if (loading) {
+        <div class="loading">Cargando...</div>
+      }
+      @if (!loading && error) {
+        <div class="error">{{ error }}</div>
+      }
+
+      @if (!loading && !error) {
+        <div class="usuarios-list" #usuariosList>
+          @for (usuario of usuarios; track usuario) {
+            <div
+              class="usuario-item"
+              [class.selected]="selectedUsuarioId === usuario.id"
+              (click)="selectUsuario(usuario)">
+              <div class="usuario-nombre">{{ usuario.nombre }}</div>
+              <div class="usuario-email">{{ usuario.correoElectronico }}</div>
+            </div>
+          }
+          @if (usuarios.length === 0) {
+            <div class="empty-message">No hay usuarios disponibles</div>
+          }
         </div>
-        <div class="empty-message" *ngIf="usuarios.length === 0">
-          No hay usuarios disponibles
-        </div>
-      </div>
+      }
     </div>
   </div>
 
@@ -55,62 +60,87 @@
       <div class="right-header">
         <h2 class="title mt-0 mb-4">Bitácora de Usuario</h2>
       </div>
-      
-      <div *ngIf="!selectedUsuarioId" class="text-secondary">
-        Seleccione un usuario para ver su bitácora
-      </div>
 
-      <div *ngIf="selectedUsuarioId && bitacoraLoading" class="loading">
-        Cargando bitácora...
-      </div>
+      @if (!selectedUsuarioId) {
+        <div class="text-secondary">
+          Seleccione un usuario para ver su bitácora
+        </div>
+      }
 
-      <div *ngIf="selectedUsuarioId && bitacoraError" class="error">
-        {{ bitacoraError }}
-      </div>
+      @if (selectedUsuarioId && bitacoraLoading) {
+        <div class="loading">Cargando bitácora...</div>
+      }
 
-      <div *ngIf="selectedUsuarioId && !bitacoraLoading && !bitacoraError" class="bitacora-content">
-        <div class="bitacora-container">
-          <div class="bitacora-wrapper">
-            <div class="bitacora-header">
-              <span class="bitacora-col fecha">Fecha</span>
-              <span class="bitacora-col evento">Evento</span>
-              <span class="bitacora-col valor-antes">Valor Antes</span>
-              <span class="bitacora-col valor-despues">Valor Después</span>
-            </div>
-            <div class="bitacora-list" #bitacoraList (scroll)="onBitacoraListScroll()">
-              <div
-                class="bitacora-row"
-                *ngFor="let item of bitacora">
-                <span class="bitacora-col fecha">
-                  {{ formatDate(item.fechaCreacion) }}
-                </span>
-                <span class="bitacora-col evento">
-                  <div class="evento-container">
-                    <span>{{ item.evento.nombre || 'N/A' }}</span>
-                    <button 
-                      *ngIf="item.evento.sigla === 'INI_SESION' && item.referenciaId"
-                      mat-icon-button
-                      type="button"
-                      matTooltip="Ver historial de ventas de esta sesión"
-                      (click)="navigateToHistorialVentas(item.referenciaId)"
-                      class="view-historial-button">
-                      <mat-icon svgIcon="mat:arrow_forward"></mat-icon>
-                    </button>
-                  </div>
-                </span>
-                <span class="bitacora-col valor-antes" [innerHTML]="formatValorAntes(item.valorAntes, item.valorDespues)"></span>
-                <span class="bitacora-col valor-despues" [innerHTML]="formatValorDespues(item.valorAntes, item.valorDespues)"></span>
+      @if (selectedUsuarioId && bitacoraError) {
+        <div class="error">
+          {{ bitacoraError }}
+        </div>
+      }
+
+      @if (selectedUsuarioId && !bitacoraLoading && !bitacoraError) {
+        <div class="bitacora-content">
+          <div class="bitacora-container">
+            <div class="bitacora-wrapper">
+              <div class="bitacora-header">
+                <span class="bitacora-col fecha">Fecha</span>
+                <span class="bitacora-col evento">Evento</span>
+                <span class="bitacora-col valor-antes">Valor Antes</span>
+                <span class="bitacora-col valor-despues">Valor Después</span>
               </div>
-            </div>
-            <div class="loading-more" *ngIf="loadingMore">
-              Cargando más...
-            </div>
-            <div class="empty-message" *ngIf="bitacora.length === 0 && !loadingMore && !bitacoraLoading">
-              No hay registros de bitácora para este usuario
+              <div
+                class="bitacora-list"
+                #bitacoraList
+                (scroll)="onBitacoraListScroll()">
+                @for (item of bitacora; track item) {
+                  <div class="bitacora-row">
+                    <span class="bitacora-col fecha">
+                      {{ formatDate(item.fechaCreacion) }}
+                    </span>
+                    <span class="bitacora-col evento">
+                      <div class="evento-container">
+                        <span>{{ item.evento.nombre || "N/A" }}</span>
+                        @if (
+                          item.evento.sigla === "INI_SESION" &&
+                          item.referenciaId
+                        ) {
+                          <button
+                            mat-icon-button
+                            type="button"
+                            matTooltip="Ver historial de ventas de esta sesión"
+                            (click)="
+                              navigateToHistorialVentas(item.referenciaId)
+                            "
+                            class="view-historial-button">
+                            <mat-icon svgIcon="mat:arrow_forward"></mat-icon>
+                          </button>
+                        }
+                      </div>
+                    </span>
+                    <span
+                      class="bitacora-col valor-antes"
+                      [innerHTML]="
+                        formatValorAntes(item.valorAntes, item.valorDespues)
+                      "></span>
+                    <span
+                      class="bitacora-col valor-despues"
+                      [innerHTML]="
+                        formatValorDespues(item.valorAntes, item.valorDespues)
+                      "></span>
+                  </div>
+                }
+              </div>
+              @if (loadingMore) {
+                <div class="loading-more">Cargando más...</div>
+              }
+              @if (bitacora.length === 0 && !loadingMore && !bitacoraLoading) {
+                <div class="empty-message">
+                  No hay registros de bitácora para este usuario
+                </div>
+              }
             </div>
           </div>
         </div>
-      </div>
+      }
     </div>
   </div>
 </div>

@@ -11,22 +11,16 @@ import { VexLayoutService } from '@vex/services/vex-layout.service';
 import { filter } from 'rxjs/operators';
 import { ReactiveFormsModule, UntypedFormControl } from '@angular/forms';
 import { SearchService } from './search.service';
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-    selector: 'vex-search',
-    templateUrl: './search.component.html',
-    styleUrls: ['./search.component.scss'],
-    imports: [
-        MatButtonModule,
-        MatIconModule,
-        ReactiveFormsModule,
-        NgIf,
-        AsyncPipe
-    ]
+  selector: 'vex-search',
+  templateUrl: './search.component.html',
+  styleUrls: ['./search.component.scss'],
+  imports: [MatButtonModule, MatIconModule, ReactiveFormsModule, AsyncPipe]
 })
 export class SearchComponent implements OnInit, OnDestroy {
   show$ = this.layoutService.searchOpen$;

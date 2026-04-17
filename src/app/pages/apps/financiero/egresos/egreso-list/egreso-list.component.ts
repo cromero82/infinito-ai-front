@@ -1,13 +1,26 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+  HostListener
+} from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { NgFor, NgIf } from '@angular/common';
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { UntypedFormControl, FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import {
+  UntypedFormControl,
+  FormControl,
+  ReactiveFormsModule,
+  FormsModule
+} from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
@@ -20,9 +33,19 @@ import {
   DateAdapter,
   NativeDateAdapter
 } from '@angular/material/core';
-import { EgresosService, EgresoDto, EgresoSearchParams } from '../service/egresos.service';
-import { TipoEgresoService, TipoEgresoDto } from '../service/tipo-egreso.service';
-import { ProveedorService, ProveedorDto } from '../../proveedores/service/proveedor.service';
+import {
+  EgresosService,
+  EgresoDto,
+  EgresoSearchParams
+} from '../service/egresos.service';
+import {
+  TipoEgresoService,
+  TipoEgresoDto
+} from '../service/tipo-egreso.service';
+import {
+  ProveedorService,
+  ProveedorDto
+} from '../../proveedores/service/proveedor.service';
 import { EgresoEditComponent } from '../egreso-edit/egreso-edit.component';
 import { TableViewportService } from '../../../../../core/table-viewport/table-viewport.service';
 import { FechaUtilService } from '../../../ventas/service/fecha-util.service';
@@ -48,46 +71,49 @@ class DateAdapterDDMMYYYY extends NativeDateAdapter {
 }
 
 @Component({
-    selector: 'gm-egreso-list',
-    providers: [
-        { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
-        { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
-        {
-            provide: MAT_DATE_FORMATS,
-            useValue: {
-                parse: { dateInput: 'dd/MM/yyyy' },
-                display: {
-                    dateInput: 'dd/MM/yyyy',
-                    monthYearLabel: 'MMM yyyy',
-                    dateA11yLabel: 'dd/MM/yyyy',
-                    monthYearA11yLabel: 'MMMM yyyy'
-                }
-            }
+  selector: 'gm-egreso-list',
+  providers: [
+    { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
+    { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
+    {
+      provide: MAT_DATE_FORMATS,
+      useValue: {
+        parse: { dateInput: 'dd/MM/yyyy' },
+        display: {
+          dateInput: 'dd/MM/yyyy',
+          monthYearLabel: 'MMM yyyy',
+          dateA11yLabel: 'dd/MM/yyyy',
+          monthYearA11yLabel: 'MMMM yyyy'
         }
-    ],
-    imports: [
-        MatButtonModule,
-        MatTooltipModule,
-        MatTableModule,
-        MatIconModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatSelectModule,
-        MatMenuModule,
-        MatChipsModule,
-        MatDatepickerModule,
-        MatNativeDateModule,
-        ReactiveFormsModule,
-        FormsModule,
-        NgFor,
-        NgIf
-    ],
-    templateUrl: './egreso-list.component.html',
-    styleUrl: './egreso-list.component.scss'
+      }
+    }
+  ],
+  imports: [
+    MatButtonModule,
+    MatTooltipModule,
+    MatTableModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatMenuModule,
+    MatChipsModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    ReactiveFormsModule,
+    FormsModule
+  ],
+  templateUrl: './egreso-list.component.html',
+  styleUrl: './egreso-list.component.scss'
 })
 export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   displayedColumns: string[] = [
-    'fecha', 'valor', 'proveedor', 'tipoEgreso', 'descripcion', 'edit'
+    'fecha',
+    'valor',
+    'proveedor',
+    'tipoEgreso',
+    'descripcion',
+    'edit'
   ];
   dataSource: EgresoDto[] = [];
   activeFilters: Array<{ label: string; value: string }> = [];
@@ -144,8 +170,12 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadTiposYProveedores() {
-    this.tipoEgresoService.getTiposEgreso().subscribe(t => (this.tiposEgreso = t));
-    this.proveedorService.getProveedores().subscribe(p => (this.proveedores = p));
+    this.tipoEgresoService
+      .getTiposEgreso()
+      .subscribe((t) => (this.tiposEgreso = t));
+    this.proveedorService
+      .getProveedores()
+      .subscribe((p) => (this.proveedores = p));
   }
 
   ngAfterViewInit() {
@@ -272,7 +302,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
       data: null
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       this.justClosedDialog = true;
       if (result) {
         this.searchEgresos();
@@ -287,7 +317,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
       data: egreso
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       this.justClosedDialog = true;
       if (result && result._edit) {
         this.searchEgresos();
@@ -305,8 +335,14 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   restoreFiltersState(): void {
-    this.filterFechaInicioCtrl.setValue(this.parseDateParam(this.appliedFechaInicio), { emitEvent: false });
-    this.filterFechaFinCtrl.setValue(this.parseDateParam(this.appliedFechaFin), { emitEvent: false });
+    this.filterFechaInicioCtrl.setValue(
+      this.parseDateParam(this.appliedFechaInicio),
+      { emitEvent: false }
+    );
+    this.filterFechaFinCtrl.setValue(
+      this.parseDateParam(this.appliedFechaFin),
+      { emitEvent: false }
+    );
   }
 
   applyDateFilters(): void {
@@ -377,8 +413,14 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   private buildSearchParams(page: number): EgresoSearchParams {
     return {
       descripcion: this.descripcionCtrl.value?.trim() || undefined,
-      tipoEgresoId: this.tipoEgresoIdCtrl.value !== '' ? Number(this.tipoEgresoIdCtrl.value) : undefined,
-      proveedorId: this.proveedorIdCtrl.value !== '' ? Number(this.proveedorIdCtrl.value) : undefined,
+      tipoEgresoId:
+        this.tipoEgresoIdCtrl.value !== ''
+          ? Number(this.tipoEgresoIdCtrl.value)
+          : undefined,
+      proveedorId:
+        this.proveedorIdCtrl.value !== ''
+          ? Number(this.proveedorIdCtrl.value)
+          : undefined,
       fechaInicio: this.appliedFechaInicio ?? undefined,
       fechaFin: this.appliedFechaFin ?? undefined,
       page,
@@ -437,7 +479,10 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
         .filter((fecha): fecha is string => !!fecha)
     ).size;
 
-    const totalEgresos = this.dataSource.reduce((sum, egreso) => sum + (egreso.valor ?? 0), 0);
+    const totalEgresos = this.dataSource.reduce(
+      (sum, egreso) => sum + (egreso.valor ?? 0),
+      0
+    );
 
     this.footerService.setFooterItems([
       { textoClave: 'Días', valorClave: String(dias), estiloCssClave: '' },

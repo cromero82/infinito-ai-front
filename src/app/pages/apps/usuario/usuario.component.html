@@ -20,24 +20,27 @@
 
       <div class="max-w-full flex-auto sm:ltr:ml-6 sm:rtl:mr-6">
         <div class="h-16 flex items-end">
-          <h1 @fadeInRight class="headline text-white pb-2 m-0">{{ nombreUsuario }}</h1>
+          <h1 @fadeInRight class="headline text-white pb-2 m-0">
+            {{ nombreUsuario }}
+          </h1>
         </div>
 
         <nav [tabPanel]="tabPanel" class="border-0" mat-tab-nav-bar>
-          <a
-            #rla="routerLinkActive"
-            *ngFor="let link of links"
-            [active]="rla.isActive"
-            [disabled]="link.disabled ?? false"
-            [routerLinkActiveOptions]="
-              link.routerLinkActiveOptions || { exact: false }
-            "
-            [routerLink]="link.route"
-            mat-tab-link
-            queryParamsHandling="preserve"
-            routerLinkActive>
-            {{ link.label }}
-          </a>
+          @for (link of links; track link) {
+            <a
+              #rla="routerLinkActive"
+              [active]="rla.isActive"
+              [disabled]="link.disabled ?? false"
+              [routerLinkActiveOptions]="
+                link.routerLinkActiveOptions || { exact: false }
+              "
+              [routerLink]="link.route"
+              mat-tab-link
+              queryParamsHandling="preserve"
+              routerLinkActive>
+              {{ link.label }}
+            </a>
+          }
         </nav>
         <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
       </div>
@@ -46,4 +49,3 @@
 
   <router-outlet></router-outlet>
 </div>
-

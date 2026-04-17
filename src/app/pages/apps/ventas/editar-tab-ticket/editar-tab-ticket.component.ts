@@ -1,6 +1,10 @@
 import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+
+import {
+  MatDialogModule,
+  MatDialogRef,
+  MAT_DIALOG_DATA
+} from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ClienteDto } from '../service/cliente.service';
@@ -12,16 +16,15 @@ export interface EditarTabTicketData {
 }
 
 @Component({
-    selector: 'editar-tab-ticket',
-    imports: [
-        CommonModule,
-        MatDialogModule,
-        MatButtonModule,
-        MatProgressSpinnerModule,
-        ClienteSelectorComponent
-    ],
-    templateUrl: './editar-tab-ticket.component.html',
-    styleUrls: ['./editar-tab-ticket.component.scss']
+  selector: 'editar-tab-ticket',
+  imports: [
+    MatDialogModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    ClienteSelectorComponent
+  ],
+  templateUrl: './editar-tab-ticket.component.html',
+  styleUrls: ['./editar-tab-ticket.component.scss']
 })
 export class EditarTabTicketComponent {
   selectedClienteId: number | null = null;
@@ -53,16 +56,18 @@ export class EditarTabTicketComponent {
     this.loading = true;
     this.error = null;
 
-    this.ticketsService.actualizaCliente(this.data.ticket.id, this.selectedClienteId!).subscribe({
-      next: () => {
-        this.dialogRef.close(true);
-      },
-      error: (err) => {
-        console.error('Error actualizando cliente del ticket', err);
-        this.error = 'No se pudo actualizar el cliente del ticket.';
-        this.loading = false;
-      }
-    });
+    this.ticketsService
+      .actualizaCliente(this.data.ticket.id, this.selectedClienteId!)
+      .subscribe({
+        next: () => {
+          this.dialogRef.close(true);
+        },
+        error: (err) => {
+          console.error('Error actualizando cliente del ticket', err);
+          this.error = 'No se pudo actualizar el cliente del ticket.';
+          this.loading = false;
+        }
+      });
   }
 
   cancelar(): void {

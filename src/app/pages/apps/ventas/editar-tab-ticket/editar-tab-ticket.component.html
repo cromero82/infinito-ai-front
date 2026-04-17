@@ -10,9 +10,11 @@
     </cliente-selector>
   </div>
 
-  <div class="error-message" *ngIf="error">
-    {{ error }}
-  </div>
+  @if (error) {
+    <div class="error-message">
+      {{ error }}
+    </div>
+  }
 </div>
 
 <div mat-dialog-actions align="end">
@@ -22,7 +24,14 @@
     color="primary"
     (click)="guardar()"
     [disabled]="!canGuardar()">
-    <mat-progress-spinner *ngIf="loading" diameter="18" mode="indeterminate" class="inline-spinner"></mat-progress-spinner>
-    <span *ngIf="!loading">Guardar</span>
+    @if (loading) {
+      <mat-progress-spinner
+        diameter="18"
+        mode="indeterminate"
+        class="inline-spinner"></mat-progress-spinner>
+    }
+    @if (!loading) {
+      <span>Guardar</span>
+    }
   </button>
 </div>

@@ -11,7 +11,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
-import { NgIf } from '@angular/common';
+
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -24,24 +24,23 @@ import { finalize, switchMap, map, catchError } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
 
 @Component({
-    selector: 'vex-login',
-    templateUrl: './login.component.html',
-    styleUrls: ['./login.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    animations: [fadeInUp400ms],
-    imports: [
-        ReactiveFormsModule,
-        MatFormFieldModule,
-        MatInputModule,
-        NgIf,
-        MatButtonModule,
-        MatTooltipModule,
-        MatIconModule,
-        MatCheckboxModule,
-        RouterLink,
-        MatSnackBarModule,
-        MatProgressSpinnerModule
-    ]
+  selector: 'vex-login',
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [fadeInUp400ms],
+  imports: [
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatIconModule,
+    MatCheckboxModule,
+    RouterLink,
+    MatSnackBarModule,
+    MatProgressSpinnerModule
+  ]
 })
 export class LoginComponent {
   private readonly defaultRedirectUrl = '/apps/tickets';
@@ -97,89 +96,111 @@ export class LoginComponent {
 
     const { email, password } = this.form.value;
 
-    this.authService.login({
-      correoElectronico: email!,
-      contrasena: password!
-    }).pipe(
-      switchMap(() => {
-        const cookie = this.sesionesService.generarCookieUnico();
-        return this.sesionesService.crearSesion(cookie);
-      }),
-      switchMap((sesion) => {
-        localStorage.setItem('session-id', sesion.id.toString());
-
-        const config$ = this.configurationService.obtenerTodasConfiguraciones().pipe(
-          catchError((error) => {
-            console.warn('No se pudieron obtener las configuraciones:', error);
-            return of(null);
-          })
-        );
-
-        const perfil$ = this.usuarioPerfilService.getMyProfile().pipe(
-          map(result => {
-            if (result && result.length > 0 && result[0].personalizacion) {
-              localStorage.setItem('configuraciones-personales', JSON.stringify(result[0].personalizacion));
-            }
-            return result;
-          }),
-          catchError((error) => {
-            console.warn('No se pudo obtener el perfil de usuario:', error);
-            return of(null);
-          })
-        );
-
-        const todosUsuarios$ = this.authService.cargarTodosUsuariosEnStorage().pipe(
-          catchError((error) => {
-            console.warn('No se pudo obtener la caché de todos los usuarios:', error);
-            return of(null);
-          })
-        );
-
-        return forkJoin([config$, perfil$, todosUsuarios$]).pipe(
-          map(() => sesion)
-        );
-      }),
-      switchMap((sesion) => {
-        return this.bitacoraUsuarioService.registrarEventoInicioSesion(sesion.id).pipe(
-          catchError((error) => {
-            console.warn('No se pudo registrar el evento de inicio de sesión en bitácora:', error);
-            return of(null);
-          })
-        );
-      }),
-      finalize(() => {
-        this.loading = false;
-        this.cd.markForCheck();
+    this.authService
+      .login({
+        correoElectronico: email!,
+        contrasena: password!
       })
-    ).subscribe({
-      next: () => {
-        const redirectUrl = this.resolvePostLoginUrl();
+      .pipe(
+        switchMap(() => {
+          const cookie = this.sesionesService.generarCookieUnico();
+          return this.sesionesService.crearSesion(cookie);
+        }),
+        switchMap((sesion) => {
+          localStorage.setItem('session-id', sesion.id.toString());
 
-        this.snackbar.open('Inicio de sesión exitoso', 'Cerrar', {
-          duration: 3000
-        });
-        void this.router.navigateByUrl(redirectUrl);
-      },
-      error: (error) => {
-        let mensaje = 'Error al iniciar sesión';
+          const config$ = this.configurationService
+            .obtenerTodasConfiguraciones()
+            .pipe(
+              catchError((error) => {
+                console.warn(
+                  'No se pudieron obtener las configuraciones:',
+                  error
+                );
+                return of(null);
+              })
+            );
 
-        if (error.error) {
-          mensaje = error.error.mensaje ||
-                   error.error.message ||
-                   error.error.error ||
-                   (typeof error.error === 'string' ? error.error : mensaje);
-        } else if (error.message) {
-          mensaje = error.message;
+          const perfil$ = this.usuarioPerfilService.getMyProfile().pipe(
+            map((result) => {
+              if (result && result.length > 0 && result[0].personalizacion) {
+                localStorage.setItem(
+                  'configuraciones-personales',
+                  JSON.stringify(result[0].personalizacion)
+                );
+              }
+              return result;
+            }),
+            catchError((error) => {
+              console.warn('No se pudo obtener el perfil de usuario:', error);
+              return of(null);
+            })
+          );
+
+          const todosUsuarios$ = this.authService
+            .cargarTodosUsuariosEnStorage()
+            .pipe(
+              catchError((error) => {
+                console.warn(
+                  'No se pudo obtener la caché de todos los usuarios:',
+                  error
+                );
+                return of(null);
+              })
+            );
+
+          return forkJoin([config$, perfil$, todosUsuarios$]).pipe(
+            map(() => sesion)
+          );
+        }),
+        switchMap((sesion) => {
+          return this.bitacoraUsuarioService
+            .registrarEventoInicioSesion(sesion.id)
+            .pipe(
+              catchError((error) => {
+                console.warn(
+                  'No se pudo registrar el evento de inicio de sesión en bitácora:',
+                  error
+                );
+                return of(null);
+              })
+            );
+        }),
+        finalize(() => {
+          this.loading = false;
+          this.cd.markForCheck();
+        })
+      )
+      .subscribe({
+        next: () => {
+          const redirectUrl = this.resolvePostLoginUrl();
+
+          this.snackbar.open('Inicio de sesión exitoso', 'Cerrar', {
+            duration: 3000
+          });
+          void this.router.navigateByUrl(redirectUrl);
+        },
+        error: (error) => {
+          let mensaje = 'Error al iniciar sesión';
+
+          if (error.error) {
+            mensaje =
+              error.error.mensaje ||
+              error.error.message ||
+              error.error.error ||
+              (typeof error.error === 'string' ? error.error : mensaje);
+          } else if (error.message) {
+            mensaje = error.message;
+          }
+
+          this.snackbar.open(mensaje, 'Cerrar', {
+            duration: 7000,
+            panelClass: ['alert-danger', 'snackbar-error'],
+            horizontalPosition: 'center',
+            verticalPosition: 'top'
+          });
         }
-
-        this.snackbar.open(mensaje, 'Cerrar', {
-          duration: 7000,
-          panelClass: ['alert-danger', 'snackbar-error'],
-          horizontalPosition: 'center',
-          verticalPosition: 'top'
-        });
-      }
-    });
+      });
   }
 
   private resolvePostLoginUrl(): string {
@@ -195,12 +216,18 @@ export class LoginComponent {
     return shouldRestorePreviousUrl ? previousUrl! : this.defaultRedirectUrl;
   }
 
-  private isSameUser(previousUser: string | null, currentUser: string | null): boolean {
+  private isSameUser(
+    previousUser: string | null,
+    currentUser: string | null
+  ): boolean {
     if (!previousUser || !currentUser) {
       return false;
     }
 
-    return this.normalizeUserName(previousUser) === this.normalizeUserName(currentUser);
+    return (
+      this.normalizeUserName(previousUser) ===
+      this.normalizeUserName(currentUser)
+    );
   }
 
   private normalizeUserName(userName: string): string {

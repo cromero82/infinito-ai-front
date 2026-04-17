@@ -1,14 +1,13 @@
 <div class="footer-inner">
-  <div
-    *ngIf="footerItems?.length"
-    class="footer-items-horizontal">
-    <span
-      *ngFor="let item of footerItems; trackBy: trackByTextoClave"
-      class="footer-item"
-      [ngClass]="item.estiloCssClave">
-      <span class="footer-item-key">{{ item.textoClave }}</span>
-      <span class="footer-item-separator">:</span>
-      <span class="footer-item-value">{{ item.valorClave }}</span>
-    </span>
-  </div>
+  @if (footerItems.length) {
+    <div class="footer-items-horizontal">
+      @for (item of footerItems; track trackByTextoClave($index, item)) {
+        <span class="footer-item" [ngClass]="item.estiloCssClave">
+          <span class="footer-item-key">{{ item.textoClave }}</span>
+          <span class="footer-item-separator">:</span>
+          <span class="footer-item-value">{{ item.valorClave }}</span>
+        </span>
+      }
+    </div>
+  }
 </div>

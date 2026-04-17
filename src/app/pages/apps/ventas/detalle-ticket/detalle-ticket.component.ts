@@ -12,15 +12,30 @@ import {
   ElementRef,
   ChangeDetectorRef
 } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { RelationalProductService } from '../../productos/service/relational-product.service';
 import { Producto, ProductPage } from '../../productos/model/producto';
-import { Subject, of, throwError, Observable, EMPTY, firstValueFrom } from 'rxjs';
-import { debounceTime, distinctUntilChanged, takeUntil, switchMap, tap, map, finalize } from 'rxjs/operators';
+import {
+  Subject,
+  of,
+  throwError,
+  Observable,
+  EMPTY,
+  firstValueFrom
+} from 'rxjs';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  takeUntil,
+  switchMap,
+  tap,
+  map,
+  finalize
+} from 'rxjs/operators';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
@@ -33,14 +48,31 @@ import {
   CreateReciboDetalleRequest,
   UpdateReciboDetalleRequest
 } from '../service/recibo-detalle.service';
-import { MetodoPagoService, MetodoPagoDto } from '../service/metodo-pago.service';
-import { ReciboService, ReciboDto, ActualizarReciboRequest } from '../service/recibo.service';
-import { TicketReciboService, TicketReciboDto } from '../service/ticket-recibo.service';
-import { EstadoRecibosService, EstadoReciboDto } from '../service/estado-recibos.service';
+import {
+  MetodoPagoService,
+  MetodoPagoDto
+} from '../service/metodo-pago.service';
+import {
+  ReciboService,
+  ReciboDto,
+  ActualizarReciboRequest
+} from '../service/recibo.service';
+import {
+  TicketReciboService,
+  TicketReciboDto
+} from '../service/ticket-recibo.service';
+import {
+  EstadoRecibosService,
+  EstadoReciboDto
+} from '../service/estado-recibos.service';
 import { FechaUtilService } from '../service/fecha-util.service';
 import { TicketsService } from '../service/tickets.service';
 import { AuthService } from '../../../../auth/service/auth.service';
-import { ReciboPrintService, ReciboTicketImpresionExtra, ReciboImpresionOpciones } from '../service/recibo-print.service';
+import {
+  ReciboPrintService,
+  ReciboTicketImpresionExtra,
+  ReciboImpresionOpciones
+} from '../service/recibo-print.service';
 import { ModoPrecioLista } from '../service/producto-desde-lista-ventas.service';
 import {
   SelectorProductosComponent,
@@ -82,25 +114,22 @@ interface TargetDetalleRollback {
 }
 
 @Component({
-    selector: 'detalle-ticket',
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        MatDialogModule,
-        MatIconModule,
-        MatMenuModule,
-        MatTooltipModule,
-        MatSnackBarModule,
-        CurrencyPipe,
-        DatePipe,
-        EdicionTicketComponent,
-        MetodosPagoComponent
-    ],
-    templateUrl: './detalle-ticket.component.html',
-    styleUrls: ['./detalle-ticket.component.scss']
+  selector: 'detalle-ticket',
+  imports: [
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatDialogModule,
+    MatIconModule,
+    MatMenuModule,
+    MatTooltipModule,
+    MatSnackBarModule,
+    EdicionTicketComponent,
+    MetodosPagoComponent
+  ],
+  templateUrl: './detalle-ticket.component.html',
+  styleUrls: ['./detalle-ticket.component.scss']
 })
 export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   @Input() ticket: any;
@@ -150,7 +179,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   private dialogAbierto = false;
   private destroy$ = new Subject<void>();
   @ViewChild('detalleList') detalleListRef?: ElementRef<HTMLDivElement>;
-  @ViewChild('detalleContextMenuTrigger') detalleContextMenuTrigger?: MatMenuTrigger;
+  @ViewChild('detalleContextMenuTrigger')
+  detalleContextMenuTrigger?: MatMenuTrigger;
   private readonly currencyFormatter = new Intl.NumberFormat('es-CO', {
     style: 'currency',
     currency: 'COP',
@@ -169,7 +199,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   mostrarColumnaAtendido = false;
   private readonly historicoExpandidoDetalleIds = new Set<number>();
   private usuariosCachePorId = new Map<string, string>();
-  private historicoRefreshIntervalId: ReturnType<typeof setInterval> | null = null;
+  private historicoRefreshIntervalId: ReturnType<typeof setInterval> | null =
+    null;
 
   constructor(
     private reciboService: ReciboService,
@@ -190,11 +221,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   ngOnInit(): void {
     this.cargarUsuariosDesdeStorage();
     this.productSearchCtrl.valueChanges
-      .pipe(
-        debounceTime(400),
-        distinctUntilChanged(),
-        takeUntil(this.destroy$)
-      )
+      .pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((value) => {
         const term = value?.trim();
         if (!term) {
@@ -212,7 +239,11 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   private updateSearchDisabled(): void {
-    const disabled = !this.reciboId || this.searchingProduct || this.loading || this.movingDetalles;
+    const disabled =
+      !this.reciboId ||
+      this.searchingProduct ||
+      this.loading ||
+      this.movingDetalles;
     if (disabled !== this.lastSearchDisabled) {
       this.lastSearchDisabled = disabled;
       if (disabled) {
@@ -361,7 +392,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    this.ticketDeOtraSesion = userNombre.trim().toLowerCase() !== atendidoPorNombre.trim().toLowerCase();
+    this.ticketDeOtraSesion =
+      userNombre.trim().toLowerCase() !==
+      atendidoPorNombre.trim().toLowerCase();
   }
 
   /**
@@ -370,22 +403,25 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
    * tiene nombreUsuarioAtendio (crudo del API) distinto al user-nombre del localStorage.
    */
   private actualizarMostrarColumnaAtendido(): void {
-    const clienteNombre = this.recibo?.cliente?.nombre?.trim().toUpperCase() ?? '';
+    const clienteNombre =
+      this.recibo?.cliente?.nombre?.trim().toUpperCase() ?? '';
     if (!clienteNombre || clienteNombre === 'ANONIMO') {
       this.mostrarColumnaAtendido = false;
       return;
     }
 
-    const userNombre = localStorage.getItem('user-nombre')?.trim().toLowerCase() ?? '';
+    const userNombre =
+      localStorage.getItem('user-nombre')?.trim().toLowerCase() ?? '';
     if (!userNombre) {
       this.mostrarColumnaAtendido = false;
       return;
     }
 
-    this.mostrarColumnaAtendido = this.detalles.some(det =>
-      det.nombreUsuarioAtendio != null &&
-      det.nombreUsuarioAtendio.trim().length > 0 &&
-      det.nombreUsuarioAtendio.trim().toLowerCase() !== userNombre
+    this.mostrarColumnaAtendido = this.detalles.some(
+      (det) =>
+        det.nombreUsuarioAtendio != null &&
+        det.nombreUsuarioAtendio.trim().length > 0 &&
+        det.nombreUsuarioAtendio.trim().toLowerCase() !== userNombre
     );
   }
 
@@ -409,7 +445,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   hasHistoricoAcciones(det: ReciboDetalleDto): boolean {
-    return Array.isArray(det.historicoAcciones) && det.historicoAcciones.length > 0;
+    return (
+      Array.isArray(det.historicoAcciones) && det.historicoAcciones.length > 0
+    );
   }
 
   isHistoricoExpandido(det: ReciboDetalleDto): boolean {
@@ -465,12 +503,20 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.historicoRefreshIntervalId = null;
   }
 
-  getHistoricoAccionesOrdenadas(det: ReciboDetalleDto): ReciboDetalleHistoricoAccionDto[] {
-    const historicoCronologico = [...(det.historicoAcciones ?? [])].sort((a, b) => {
-      const fechaA = this.fechaUtilService.parseDateAsLocal(a.fechaHora).getTime();
-      const fechaB = this.fechaUtilService.parseDateAsLocal(b.fechaHora).getTime();
-      return fechaA - fechaB;
-    });
+  getHistoricoAccionesOrdenadas(
+    det: ReciboDetalleDto
+  ): ReciboDetalleHistoricoAccionDto[] {
+    const historicoCronologico = [...(det.historicoAcciones ?? [])].sort(
+      (a, b) => {
+        const fechaA = this.fechaUtilService
+          .parseDateAsLocal(a.fechaHora)
+          .getTime();
+        const fechaB = this.fechaUtilService
+          .parseDateAsLocal(b.fechaHora)
+          .getTime();
+        return fechaA - fechaB;
+      }
+    );
 
     const accionesVisibles: ReciboDetalleHistoricoAccionDto[] = [];
 
@@ -490,8 +536,13 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     return accionesVisibles;
   }
 
-  getDescripcionHistoricoAccion(det: ReciboDetalleDto, accion: ReciboDetalleHistoricoAccionDto): string {
-    const tiempo = this.fechaUtilService.formatDateConTiempoRelativo(accion.fechaHora);
+  getDescripcionHistoricoAccion(
+    det: ReciboDetalleDto,
+    accion: ReciboDetalleHistoricoAccionDto
+  ): string {
+    const tiempo = this.fechaUtilService.formatDateConTiempoRelativo(
+      accion.fechaHora
+    );
     if (!this.debeMostrarUsuarioEnHistorico(det)) {
       return tiempo;
     }
@@ -501,24 +552,32 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   private debeMostrarUsuarioEnHistorico(det: ReciboDetalleDto): boolean {
-    const usuarioLogueado = this.normalizarNombreUsuario(this.authService.getNombre());
+    const usuarioLogueado = this.normalizarNombreUsuario(
+      this.authService.getNombre()
+    );
     if (!usuarioLogueado) {
       return true;
     }
 
     return this.getHistoricoAccionesOrdenadas(det).some((accion) => {
-      const nombreUsuario = this.normalizarNombreUsuario(this.obtenerNombreUsuarioHistorico(accion.usuarioId));
+      const nombreUsuario = this.normalizarNombreUsuario(
+        this.obtenerNombreUsuarioHistorico(accion.usuarioId)
+      );
       return !!nombreUsuario && nombreUsuario !== usuarioLogueado;
     });
   }
 
-  private obtenerNombreUsuarioHistorico(usuarioId: string | null | undefined): string {
+  private obtenerNombreUsuarioHistorico(
+    usuarioId: string | null | undefined
+  ): string {
     const usuarioIdNormalizado = usuarioId?.trim();
     if (!usuarioIdNormalizado) {
       return 'Usuario desconocido';
     }
 
-    return this.usuariosCachePorId.get(usuarioIdNormalizado) ?? 'Usuario desconocido';
+    return (
+      this.usuariosCachePorId.get(usuarioIdNormalizado) ?? 'Usuario desconocido'
+    );
   }
 
   private normalizarNombreUsuario(nombre: string | null | undefined): string {
@@ -574,7 +633,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     });
   }
 
-  private addProductToRecibo(product: Producto, modoPrecio: ModoPrecioLista = 'precio'): void {
+  private addProductToRecibo(
+    product: Producto,
+    modoPrecio: ModoPrecioLista = 'precio'
+  ): void {
     if (!this.reciboId) {
       this.productSearchError = 'No hay un recibo seleccionado.';
       this.searchingProduct = false;
@@ -605,8 +667,14 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           ? Number(existingDetalle.subtotal ?? 0) / currentCantidad
           : Number(product.precio ?? 0);
 
-      if (!existingDetalle.id || unitPrice <= 0 || !existingDetalle.reciboId || !existingDetalle.productoId) {
-        this.productSearchError = 'No se pudo actualizar el producto existente.';
+      if (
+        !existingDetalle.id ||
+        unitPrice <= 0 ||
+        !existingDetalle.reciboId ||
+        !existingDetalle.productoId
+      ) {
+        this.productSearchError =
+          'No se pudo actualizar el producto existente.';
         this.searchingProduct = false;
         this.showCreateProductFromSearchButton = false;
         this.updateSearchDisabled();
@@ -635,7 +703,11 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       updatedList[existingDetalleIndex] = optimisticDetalle;
       this.detalles = updatedList;
       this.recalculateTotal();
-      this.setSelectedDetalles([existingDetalleIndex], existingDetalleIndex, false);
+      this.setSelectedDetalles(
+        [existingDetalleIndex],
+        existingDetalleIndex,
+        false
+      );
       this.productSearchCtrl.setValue('');
       this.searchingProduct = false;
       this.showCreateProductFromSearchButton = false;
@@ -644,31 +716,34 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       this.focusSearchInputRequest.emit();
       this.scrollDetalleListToBottom();
 
-      this.reciboDetalleService.updateDetalle(existingDetalle.id, payload).subscribe({
-        next: async (updatedDetalle) => {
-          const detalleBackend = await this.prepararDetalleActualizado(updatedDetalle);
-          const updatedListFinal = [...this.detalles];
-          const detalleActualizado = {
-            ...optimisticDetalle,
-            ...detalleBackend,
-            cantidad: newCantidad,
-            subtotal: newSubtotal,
-            producto: detalleBackend.producto ?? existingDetalle.producto
-          };
-          updatedListFinal[existingDetalleIndex] = detalleActualizado;
-          this.detalles = updatedListFinal;
-          this.depurarHistoricosExpandidos();
-          this.recalculateTotal();
-        },
-        error: (err: unknown) => {
-          const revertedList = [...this.detalles];
-          revertedList[existingDetalleIndex] = previousDetalle;
-          this.detalles = revertedList;
-          this.recalculateTotal();
-          console.error('Error actualizando cantidad del producto', err);
-          this.productSearchError = 'No se pudo actualizar la cantidad.';
-        }
-      });
+      this.reciboDetalleService
+        .updateDetalle(existingDetalle.id, payload)
+        .subscribe({
+          next: async (updatedDetalle) => {
+            const detalleBackend =
+              await this.prepararDetalleActualizado(updatedDetalle);
+            const updatedListFinal = [...this.detalles];
+            const detalleActualizado = {
+              ...optimisticDetalle,
+              ...detalleBackend,
+              cantidad: newCantidad,
+              subtotal: newSubtotal,
+              producto: detalleBackend.producto ?? existingDetalle.producto
+            };
+            updatedListFinal[existingDetalleIndex] = detalleActualizado;
+            this.detalles = updatedListFinal;
+            this.depurarHistoricosExpandidos();
+            this.recalculateTotal();
+          },
+          error: (err: unknown) => {
+            const revertedList = [...this.detalles];
+            revertedList[existingDetalleIndex] = previousDetalle;
+            this.detalles = revertedList;
+            this.recalculateTotal();
+            console.error('Error actualizando cantidad del producto', err);
+            this.productSearchError = 'No se pudo actualizar la cantidad.';
+          }
+        });
       return;
     }
 
@@ -706,7 +781,11 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             };
         this.detalles = [...this.detalles, detalleConProducto];
         this.recalculateTotal();
-        this.setSelectedDetalles([this.detalles.length - 1], this.detalles.length - 1, false);
+        this.setSelectedDetalles(
+          [this.detalles.length - 1],
+          this.detalles.length - 1,
+          false
+        );
         this.focusSearchInputRequest.emit();
         this.scrollDetalleListToBottom();
       },
@@ -768,11 +847,16 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     });
   }
 
-  private async procesarDetallesCargados(detalles: ReciboDetalleDto[]): Promise<void> {
+  private async procesarDetallesCargados(
+    detalles: ReciboDetalleDto[]
+  ): Promise<void> {
     try {
       await this.sincronizarCacheUsuariosHistorico(detalles);
     } catch (error) {
-      console.warn('No se pudo sincronizar la caché de usuarios para el histórico:', error);
+      console.warn(
+        'No se pudo sincronizar la caché de usuarios para el histórico:',
+        error
+      );
     }
 
     this.detalles = detalles;
@@ -783,7 +867,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.actualizarMostrarColumnaAtendido();
   }
 
-  private async sincronizarCacheUsuariosHistorico(detalles: ReciboDetalleDto[]): Promise<void> {
+  private async sincronizarCacheUsuariosHistorico(
+    detalles: ReciboDetalleDto[]
+  ): Promise<void> {
     this.cargarUsuariosDesdeStorage();
     const faltantes = this.obtenerUsuarioIdsFaltantesEnHistorico(detalles);
     if (!faltantes.length) {
@@ -797,11 +883,16 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     }
   }
 
-  private async prepararDetalleActualizado(detalle: ReciboDetalleDto): Promise<ReciboDetalleDto> {
+  private async prepararDetalleActualizado(
+    detalle: ReciboDetalleDto
+  ): Promise<ReciboDetalleDto> {
     try {
       await this.sincronizarCacheUsuariosHistorico([detalle]);
     } catch (error) {
-      console.warn('No se pudo sincronizar la caché de usuarios para el detalle actualizado:', error);
+      console.warn(
+        'No se pudo sincronizar la caché de usuarios para el detalle actualizado:',
+        error
+      );
     }
 
     return detalle;
@@ -809,10 +900,14 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
   private cargarUsuariosDesdeStorage(): void {
     const usuarios = this.authService.obtenerTodosUsuariosCache();
-    this.usuariosCachePorId = new Map(usuarios.map((usuario) => [usuario.id, usuario.nombre]));
+    this.usuariosCachePorId = new Map(
+      usuarios.map((usuario) => [usuario.id, usuario.nombre])
+    );
   }
 
-  private obtenerUsuarioIdsFaltantesEnHistorico(detalles: ReciboDetalleDto[]): string[] {
+  private obtenerUsuarioIdsFaltantesEnHistorico(
+    detalles: ReciboDetalleDto[]
+  ): string[] {
     const faltantes = new Set<string>();
 
     for (const detalle of detalles) {
@@ -883,7 +978,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    const detallesFuente = this.detallesParaImprimir?.length ? this.detallesParaImprimir : this.detalles;
+    const detallesFuente = this.detallesParaImprimir?.length
+      ? this.detallesParaImprimir
+      : this.detalles;
     if (!detallesFuente?.length) {
       return;
     }
@@ -896,17 +993,24 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     );
   }
 
-  private opcionesImpresionRecibo(detalles: ReciboDetalleDto[], fechaEmision?: Date | null): ReciboImpresionOpciones {
+  private opcionesImpresionRecibo(
+    detalles: ReciboDetalleDto[],
+    fechaEmision?: Date | null
+  ): ReciboImpresionOpciones {
     return {
       detalles: this.reciboPrintService.toPrintableDetalles(detalles),
       fechaCreacion: this.recibo?.fechaCreacion,
       fechaEmision: fechaEmision ?? undefined,
-      clienteNombre: this.recibo?.cliente?.nombre ?? this.ticket?.cliente?.nombre,
+      clienteNombre:
+        this.recibo?.cliente?.nombre ?? this.ticket?.cliente?.nombre,
       ...this.ticketImpresionExtras
     };
   }
 
-  private aplicarExtrasImpresionMetodoDirecto(metodo: MetodoPagoDto, totalARegistrar: number): void {
+  private aplicarExtrasImpresionMetodoDirecto(
+    metodo: MetodoPagoDto,
+    totalARegistrar: number
+  ): void {
     this.ticketImpresionExtras = {
       metodoPagoLabel: metodo.descripcion ?? null,
       montoRecibido: totalARegistrar,
@@ -914,7 +1018,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     };
   }
 
-  private performProductSearch(term: string, triggeredAutomatically: boolean): void {
+  private performProductSearch(
+    term: string,
+    triggeredAutomatically: boolean
+  ): void {
     if (this.searchingProduct || this.dialogAbierto) {
       return;
     }
@@ -1010,7 +1117,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     return sum;
   }
 
-  private sonPreciosEquivalentes(a: number | null | undefined, b: number | null | undefined): boolean {
+  private sonPreciosEquivalentes(
+    a: number | null | undefined,
+    b: number | null | undefined
+  ): boolean {
     return Math.abs(Number(a ?? 0) - Number(b ?? 0)) < 0.0001;
   }
 
@@ -1045,14 +1155,23 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return false;
     }
 
-    return this.sonPreciosEquivalentes(this.getDetalleUnitario(detalle), precioUnidad);
+    return this.sonPreciosEquivalentes(
+      this.getDetalleUnitario(detalle),
+      precioUnidad
+    );
   }
 
   getPrecioUnidadToggleTooltip(detalle: ReciboDetalleDto): string {
-    return this.estaUsandoPrecioUnidad(detalle) ? 'Usar precio por empaque' : 'Usar precio por unidad';
+    return this.estaUsandoPrecioUnidad(detalle)
+      ? 'Usar precio por empaque'
+      : 'Usar precio por unidad';
   }
 
-  togglePrecioUnidad(detalle: ReciboDetalleDto, index: number, event: MouseEvent): void {
+  togglePrecioUnidad(
+    detalle: ReciboDetalleDto,
+    index: number,
+    event: MouseEvent
+  ): void {
     event.preventDefault();
     event.stopPropagation();
 
@@ -1067,11 +1186,17 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    const precioBase = Number(detalle.producto?.precio ?? this.getDetalleUnitario(detalle));
-    const unitPrice = this.estaUsandoPrecioUnidad(detalle) ? precioBase : precioUnidad;
+    const precioBase = Number(
+      detalle.producto?.precio ?? this.getDetalleUnitario(detalle)
+    );
+    const unitPrice = this.estaUsandoPrecioUnidad(detalle)
+      ? precioBase
+      : precioUnidad;
     const newSubtotal = unitPrice * detalle.cantidad;
 
-    if (this.sonPreciosEquivalentes(newSubtotal, Number(detalle.subtotal ?? 0))) {
+    if (
+      this.sonPreciosEquivalentes(newSubtotal, Number(detalle.subtotal ?? 0))
+    ) {
       return;
     }
 
@@ -1095,7 +1220,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
       next: async (updatedDetalle) => {
-        const detalleBackend = await this.prepararDetalleActualizado(updatedDetalle);
+        const detalleBackend =
+          await this.prepararDetalleActualizado(updatedDetalle);
         const updatedListFinal = [...this.detalles];
         updatedListFinal[index] = {
           ...optimisticDetalle,
@@ -1112,7 +1238,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             this.recibo = await this.updateReciboTotal(this.recibo, finalTotal);
             this.metodoPagoActualizado.emit();
           } catch (err) {
-            console.error('Error updating recibo total after unit price toggle', err);
+            console.error(
+              'Error updating recibo total after unit price toggle',
+              err
+            );
           }
         }
       },
@@ -1129,38 +1258,42 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   onDetalleRowMouseDown(index: number, event: MouseEvent): void {
     const currentTime = Date.now();
     const timeDiff = currentTime - this.lastClickTime;
-    
+
     // Si es un doble clic (menos de 300ms entre clics), prevenir el click
     if (timeDiff < 300) {
       event.preventDefault();
       event.stopPropagation();
     }
-    
+
     this.lastClickTime = currentTime;
   }
 
   onDetalleRowClick(index: number, event: MouseEvent): void {
     const target = event.target as HTMLElement;
-    
+
     // Verificar si el clic fue en un input de edición activo
-    if (target.classList.contains('producto-input') || 
-        target.classList.contains('valor-unitario-input') || 
-        target.classList.contains('cantidad-input')) {
+    if (
+      target.classList.contains('producto-input') ||
+      target.classList.contains('valor-unitario-input') ||
+      target.classList.contains('cantidad-input')
+    ) {
       // No hacer nada si el clic fue en inputs de edición activos
       return;
     }
-    
+
     // Prevenir selección si estamos en modo de edición, iniciando edición o doble click activo
-    if (this.startingEdit || 
-        this.editingProductoIndex !== -1 || 
-        this.editingUnitarioIndex !== -1 || 
-        this.editingDetalleIndex !== -1 ||
-        this.estaEnEdicion ||
-        this.movingDetalles ||
-        this.isDoubleClickActive) {
+    if (
+      this.startingEdit ||
+      this.editingProductoIndex !== -1 ||
+      this.editingUnitarioIndex !== -1 ||
+      this.editingDetalleIndex !== -1 ||
+      this.estaEnEdicion ||
+      this.movingDetalles ||
+      this.isDoubleClickActive
+    ) {
       return;
     }
-    
+
     this.selectDetalle(index, event.ctrlKey || event.metaKey);
   }
 
@@ -1169,7 +1302,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     if (this.startingEdit) {
       return;
     }
-    
+
     if (index < 0 || index >= this.detalles.length) {
       this.setSelectedDetalles([], null, false);
       return;
@@ -1182,10 +1315,16 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     const alreadySelected = this.selectedDetalleIndices.includes(index);
     const nextSelection = alreadySelected
-      ? this.selectedDetalleIndices.filter((selectedIndex) => selectedIndex !== index)
+      ? this.selectedDetalleIndices.filter(
+          (selectedIndex) => selectedIndex !== index
+        )
       : [...this.selectedDetalleIndices, index];
 
-    this.setSelectedDetalles(nextSelection, alreadySelected ? null : index, !alreadySelected);
+    this.setSelectedDetalles(
+      nextSelection,
+      alreadySelected ? null : index,
+      !alreadySelected
+    );
   }
 
   isDetalleSelected(index: number): boolean {
@@ -1196,7 +1335,12 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     event.preventDefault();
     event.stopPropagation();
 
-    if (this.estaEnEdicion || this.movingDetalles || index < 0 || index >= this.detalles.length) {
+    if (
+      this.estaEnEdicion ||
+      this.movingDetalles ||
+      index < 0 ||
+      index >= this.detalles.length
+    ) {
       return;
     }
 
@@ -1210,7 +1354,11 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   onDetalleListContextMenu(event: MouseEvent): void {
     event.preventDefault();
 
-    if (!this.selectedDetalleIndices.length || this.estaEnEdicion || this.movingDetalles) {
+    if (
+      !this.selectedDetalleIndices.length ||
+      this.estaEnEdicion ||
+      this.movingDetalles
+    ) {
       return;
     }
 
@@ -1239,11 +1387,19 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     targetTicketId: number,
     reciboPadreId?: number
   ): Promise<TicketSplitMoveResult | null> {
-    if (!this.reciboId || !this.recibo || !this.ticket?.id || this.sessionId === null) {
+    if (
+      !this.reciboId ||
+      !this.recibo ||
+      !this.ticket?.id ||
+      this.sessionId === null
+    ) {
       return null;
     }
 
-    if (!this.selectedDetalleIndices.length || targetTicketId === this.ticket.id) {
+    if (
+      !this.selectedDetalleIndices.length ||
+      targetTicketId === this.ticket.id
+    ) {
       return null;
     }
 
@@ -1261,7 +1417,11 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     try {
       const targetRelation = await firstValueFrom(
-        this.ticketReciboService.getByTicketId(targetTicketId, this.sessionId, reciboPadreId)
+        this.ticketReciboService.getByTicketId(
+          targetTicketId,
+          this.sessionId,
+          reciboPadreId
+        )
       );
 
       if (!targetRelation?.reciboId) {
@@ -1270,7 +1430,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
       const [targetRecibo, targetDetallesResponse] = await Promise.all([
         firstValueFrom(this.reciboService.getRecibo(targetRelation.reciboId)),
-        firstValueFrom(this.reciboDetalleService.getDetallesByRecibo(targetRelation.reciboId))
+        firstValueFrom(
+          this.reciboDetalleService.getDetallesByRecibo(targetRelation.reciboId)
+        )
       ]);
 
       let targetDetalles = [...(targetDetallesResponse ?? [])];
@@ -1287,21 +1449,29 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           const payload: UpdateReciboDetalleRequest = {
             reciboId: detalleDestino.reciboId,
             productoId: detalleDestino.productoId,
-            cantidad: Number(detalleDestino.cantidad ?? 0) + Number(detalle.cantidad ?? 0),
-            subtotal: Number(detalleDestino.subtotal ?? 0) + Number(detalle.subtotal ?? 0)
+            cantidad:
+              Number(detalleDestino.cantidad ?? 0) +
+              Number(detalle.cantidad ?? 0),
+            subtotal:
+              Number(detalleDestino.subtotal ?? 0) +
+              Number(detalle.subtotal ?? 0)
           };
 
           const detalleActualizado = await firstValueFrom(
             this.reciboDetalleService.updateDetalle(detalleDestino.id, payload)
           );
-          const detalleBackend = await this.prepararDetalleActualizado(detalleActualizado);
+          const detalleBackend =
+            await this.prepararDetalleActualizado(detalleActualizado);
 
           targetDetalles[existingTargetIndex] = {
             ...detalleDestino,
             ...detalleBackend,
             cantidad: payload.cantidad,
             subtotal: payload.subtotal,
-            producto: detalleBackend.producto ?? detalleDestino.producto ?? detalle.producto
+            producto:
+              detalleBackend.producto ??
+              detalleDestino.producto ??
+              detalle.producto
           };
 
           rollback = {
@@ -1339,15 +1509,21 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         }
 
         try {
-          await firstValueFrom(this.reciboDetalleService.deleteDetalle(detalle.id));
+          await firstValueFrom(
+            this.reciboDetalleService.deleteDetalle(detalle.id)
+          );
         } catch (deleteError) {
           await this.rollbackTargetDetalleChange(rollback);
           throw deleteError;
         }
       }
 
-      const movedDetalleIds = new Set(detallesSeleccionados.map((detalle) => detalle.id));
-      this.detalles = this.detalles.filter((detalle) => !movedDetalleIds.has(detalle.id));
+      const movedDetalleIds = new Set(
+        detallesSeleccionados.map((detalle) => detalle.id)
+      );
+      this.detalles = this.detalles.filter(
+        (detalle) => !movedDetalleIds.has(detalle.id)
+      );
       this.recalculateTotal();
       this.actualizarMostrarColumnaAtendido();
 
@@ -1369,7 +1545,11 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         ? Math.min(this.selectedDetalleIndices[0], this.detalles.length - 1)
         : -1;
 
-      this.setSelectedDetalles(nextIndex >= 0 ? [nextIndex] : [], nextIndex, false);
+      this.setSelectedDetalles(
+        nextIndex >= 0 ? [nextIndex] : [],
+        nextIndex,
+        false
+      );
       this.focusSearchInputRequest.emit();
 
       this.snackBar.open('Productos movidos correctamente.', 'Cerrar', {
@@ -1386,12 +1566,16 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       };
     } catch (error) {
       console.error('Error moviendo productos entre tickets', error);
-      this.snackBar.open('No se pudieron mover los productos seleccionados.', 'Cerrar', {
-        duration: 5000,
-        horizontalPosition: 'center',
-        verticalPosition: 'top',
-        panelClass: ['error-snackbar']
-      });
+      this.snackBar.open(
+        'No se pudieron mover los productos seleccionados.',
+        'Cerrar',
+        {
+          duration: 5000,
+          horizontalPosition: 'center',
+          verticalPosition: 'top',
+          panelClass: ['error-snackbar']
+        }
+      );
       return null;
     } finally {
       this.movingDetalles = false;
@@ -1410,7 +1594,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     // Ir al elemento anterior
-    this.setSelectedDetalles([this.selectedDetalleIndex - 1], this.selectedDetalleIndex - 1);
+    this.setSelectedDetalles(
+      [this.selectedDetalleIndex - 1],
+      this.selectedDetalleIndex - 1
+    );
   }
 
   private navigateDetalleDown(): void {
@@ -1424,11 +1611,17 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     // Ir al elemento siguiente
-    this.setSelectedDetalles([this.selectedDetalleIndex + 1], this.selectedDetalleIndex + 1);
+    this.setSelectedDetalles(
+      [this.selectedDetalleIndex + 1],
+      this.selectedDetalleIndex + 1
+    );
   }
 
   private scrollToSelectedDetalle(): void {
-    if (this.selectedDetalleIndex < 0 || this.selectedDetalleIndex >= this.detalles.length) {
+    if (
+      this.selectedDetalleIndex < 0 ||
+      this.selectedDetalleIndex >= this.detalles.length
+    ) {
       return;
     }
 
@@ -1439,7 +1632,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     // Esperar a que Angular actualice el DOM
     setTimeout(() => {
-      const selectedRow = listEl.querySelector(`.detalle-row:nth-child(${this.selectedDetalleIndex + 1})`) as HTMLElement;
+      const selectedRow = listEl.querySelector(
+        `.detalle-row:nth-child(${this.selectedDetalleIndex + 1})`
+      ) as HTMLElement;
       if (selectedRow) {
         const rowTop = selectedRow.offsetTop;
         const rowHeight = selectedRow.offsetHeight;
@@ -1459,7 +1654,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         // Lógica de scroll natural: solo hacer scroll cuando sea realmente necesario
         const rowBottom = rowTop + rowHeight;
         const listBottom = listTop + listHeight;
-        const middlePoint = listTop + (listHeight / 2);
+        const middlePoint = listTop + listHeight / 2;
 
         console.log('Natural scroll analysis:', {
           rowTop,
@@ -1486,15 +1681,17 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           needsScroll = true;
           targetScrollTop = rowBottom - listHeight + 20; // Dejar espacio abajo
           console.log('Element is below middle point, scrolling down');
-        }
-        else {
+        } else {
           console.log('Element is in good position, no scroll needed');
           return; // No hacer scroll si el elemento está bien posicionado
         }
 
         // Asegurar que el scroll no sea negativo ni exceda el máximo
         const maxScroll = listEl.scrollHeight - listEl.clientHeight;
-        const clampedScrollTop = Math.max(0, Math.min(targetScrollTop, maxScroll));
+        const clampedScrollTop = Math.max(
+          0,
+          Math.min(targetScrollTop, maxScroll)
+        );
 
         console.log('Natural scroll to:', clampedScrollTop);
         listEl.scrollTop = clampedScrollTop;
@@ -1509,26 +1706,34 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     }
     const target = event.target as HTMLElement;
     const detalle = this.detalles[index];
-    
+
     // Check if double-click was on "Valor unitario" field
-    if (target.classList.contains('detalle-col') && target.classList.contains('unitario')) {
+    if (
+      target.classList.contains('detalle-col') &&
+      target.classList.contains('unitario')
+    ) {
       this.onUnitarioDoubleClick(index, event);
       return;
     }
-    
+
     // Check if double-click was on "Producto" field
-    if (target.classList.contains('detalle-col') && target.classList.contains('producto')) {
+    if (
+      target.classList.contains('detalle-col') &&
+      target.classList.contains('producto')
+    ) {
       this.onProductoDoubleClick(index, event);
       return;
     }
-    
+
     // Default: edit cantidad
     this.startingEdit = true;
     this.editingDetalleIndex = index;
     this.editingCantidadCtrl.setValue(String(detalle.cantidad ?? 1));
     // Focus the input after a short delay to ensure it's rendered
     setTimeout(() => {
-      const input = document.querySelector(`.cantidad-input-${index}`) as HTMLInputElement;
+      const input = document.querySelector(
+        `.cantidad-input-${index}`
+      ) as HTMLInputElement;
       if (input) {
         input.focus();
         input.select();
@@ -1549,17 +1754,19 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     if (!detalle.producto?.id) {
       return;
     }
-    
+
     // Activar bandera de doble click
     this.isDoubleClickActive = true;
     this.startingEdit = true;
-    
+
     const currentPrecio = this.getDetalleUnitario(detalle);
     this.editingUnitarioIndex = index;
     this.editingUnitarioCtrl.setValue(String(currentPrecio));
-    
+
     setTimeout(() => {
-      const input = document.querySelector(`.valor-unitario-input-${index}`) as HTMLInputElement;
+      const input = document.querySelector(
+        `.valor-unitario-input-${index}`
+      ) as HTMLInputElement;
       if (input) {
         input.focus();
         input.select();
@@ -1600,15 +1807,24 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   saveCantidadEdit(index: number, focusSearch: boolean = false): void {
-    if (this.editingDetalleIndex !== index || index < 0 || index >= this.detalles.length) {
+    if (
+      this.editingDetalleIndex !== index ||
+      index < 0 ||
+      index >= this.detalles.length
+    ) {
       this.cancelCantidadEdit();
       return;
     }
 
     const detalle = this.detalles[index];
     // Get value directly from the input element if possible, otherwise from form control
-    const inputElement = document.querySelector(`.cantidad-input-${index}`) as HTMLInputElement;
-    const newCantidadStr = inputElement?.value?.trim() || this.editingCantidadCtrl.value?.trim() || '';
+    const inputElement = document.querySelector(
+      `.cantidad-input-${index}`
+    ) as HTMLInputElement;
+    const newCantidadStr =
+      inputElement?.value?.trim() ||
+      this.editingCantidadCtrl.value?.trim() ||
+      '';
     const newCantidad = Number(newCantidadStr);
 
     if (isNaN(newCantidad) || newCantidad <= 0) {
@@ -1623,7 +1839,12 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     const unitPrice = this.getDetalleUnitario(detalle);
 
-    if (!detalle.id || unitPrice <= 0 || !detalle.reciboId || !detalle.productoId) {
+    if (
+      !detalle.id ||
+      unitPrice <= 0 ||
+      !detalle.reciboId ||
+      !detalle.productoId
+    ) {
       this.cancelCantidadEdit();
       return;
     }
@@ -1647,7 +1868,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     // Clear editing state immediately to return to normal display
     this.editingDetalleIndex = -1;
     this.editingCantidadCtrl.setValue('');
-    
+
     const updatedList = [...this.detalles];
     updatedList[index] = optimisticDetalle;
     this.detalles = updatedList;
@@ -1658,7 +1879,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
       next: async (updatedDetalle) => {
-        const detalleBackend = await this.prepararDetalleActualizado(updatedDetalle);
+        const detalleBackend =
+          await this.prepararDetalleActualizado(updatedDetalle);
         const updatedListFinal = [...this.detalles];
         const detalleActualizado = {
           ...optimisticDetalle,
@@ -1671,31 +1893,39 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         this.detalles = updatedListFinal;
         this.depurarHistoricosExpandidos();
         const finalTotal = this.recalculateTotal();
-        
+
         // Update recibo total on backend
-        if (this.recibo && this.recibo.id && this.recibo.ticketId && this.recibo.clienteId) {
+        if (
+          this.recibo &&
+          this.recibo.id &&
+          this.recibo.ticketId &&
+          this.recibo.clienteId
+        ) {
           // Calcular montoRecibido: si es efectivo, igual al total; si no, igual al total
-          const montoRecibidoFinal = (this.recibo.metodoPagoId === 1) ? finalTotal : finalTotal;
-          
-          this.reciboService.actualizarRecibo(this.recibo.id, {
-            clienteId: this.recibo.clienteId,
-            ticketId: this.recibo.ticketId,
-            estadoId: this.recibo.estadoId ?? ESTADOS_RECIBO.PENDIENTE_PAGO,
-            metodoPagoId: this.recibo.metodoPagoId ?? 0,
-            total: String(finalTotal.toFixed(2)),
-            sesionId: this.recibo.sesionId,
-            montoRecibido: montoRecibidoFinal
-          }).subscribe({
-            next: (updatedRecibo) => {
-              this.recibo = updatedRecibo;
-              
-              // Emitir evento para que el componente padre recargue los tickets
-              this.metodoPagoActualizado.emit();
-            },
-            error: (err) => {
-              console.error('Error updating recibo total', err);
-            }
-          });
+          const montoRecibidoFinal =
+            this.recibo.metodoPagoId === 1 ? finalTotal : finalTotal;
+
+          this.reciboService
+            .actualizarRecibo(this.recibo.id, {
+              clienteId: this.recibo.clienteId,
+              ticketId: this.recibo.ticketId,
+              estadoId: this.recibo.estadoId ?? ESTADOS_RECIBO.PENDIENTE_PAGO,
+              metodoPagoId: this.recibo.metodoPagoId ?? 0,
+              total: String(finalTotal.toFixed(2)),
+              sesionId: this.recibo.sesionId,
+              montoRecibido: montoRecibidoFinal
+            })
+            .subscribe({
+              next: (updatedRecibo) => {
+                this.recibo = updatedRecibo;
+
+                // Emitir evento para que el componente padre recargue los tickets
+                this.metodoPagoActualizado.emit();
+              },
+              error: (err) => {
+                console.error('Error updating recibo total', err);
+              }
+            });
         }
       },
       error: (err: unknown) => {
@@ -1738,7 +1968,11 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   saveUnitarioEdit(index: number, focusSearch: boolean = false): void {
-    if (this.editingUnitarioIndex !== index || index < 0 || index >= this.detalles.length) {
+    if (
+      this.editingUnitarioIndex !== index ||
+      index < 0 ||
+      index >= this.detalles.length
+    ) {
       this.cancelUnitarioEdit();
       return;
     }
@@ -1749,8 +1983,13 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    const inputElement = document.querySelector(`.valor-unitario-input-${index}`) as HTMLInputElement;
-    const newPrecioStr = inputElement?.value?.trim() || this.editingUnitarioCtrl.value?.trim() || '';
+    const inputElement = document.querySelector(
+      `.valor-unitario-input-${index}`
+    ) as HTMLInputElement;
+    const newPrecioStr =
+      inputElement?.value?.trim() ||
+      this.editingUnitarioCtrl.value?.trim() ||
+      '';
     const newPrecio = Number(newPrecioStr);
 
     if (isNaN(newPrecio) || newPrecio <= 0) {
@@ -1775,110 +2014,128 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       foto: detalle.producto.foto ?? ''
     };
 
-    this.relationalProductService.updateProduct(detalle.producto.id, productUpdate).subscribe({
-      next: (updatedProduct) => {
-        // Find all detalles that use this product
-        const detallesToUpdate = this.detalles.filter((det) => det.productoId === updatedProduct.id);
-        
-        // Optimistically update all detalles
-        const updatedList = this.detalles.map((det) => {
-          if (det.productoId === updatedProduct.id) {
+    this.relationalProductService
+      .updateProduct(detalle.producto.id, productUpdate)
+      .subscribe({
+        next: (updatedProduct) => {
+          // Find all detalles that use this product
+          const detallesToUpdate = this.detalles.filter(
+            (det) => det.productoId === updatedProduct.id
+          );
+
+          // Optimistically update all detalles
+          const updatedList = this.detalles.map((det) => {
+            if (det.productoId === updatedProduct.id) {
+              const newSubtotal = updatedProduct.precio * det.cantidad;
+              return {
+                ...det,
+                subtotal: newSubtotal,
+                producto: {
+                  ...det.producto!,
+                  ...updatedProduct,
+                  precio: updatedProduct.precio
+                }
+              };
+            }
+            return det;
+          });
+          this.detalles = updatedList;
+          this.recalculateTotal();
+
+          // Update each detalle via API
+          detallesToUpdate.forEach((det) => {
+            if (!det.id) {
+              return;
+            }
             const newSubtotal = updatedProduct.precio * det.cantidad;
-            return {
-              ...det,
-              subtotal: newSubtotal,
-              producto: {
-                ...det.producto!,
-                ...updatedProduct,
-                precio: updatedProduct.precio
-              }
+            const payload: UpdateReciboDetalleRequest = {
+              reciboId: det.reciboId,
+              productoId: det.productoId,
+              cantidad: det.cantidad,
+              subtotal: newSubtotal
             };
-          }
-          return det;
-        });
-        this.detalles = updatedList;
-        this.recalculateTotal();
-        
-        // Update each detalle via API
-        detallesToUpdate.forEach((det) => {
-          if (!det.id) {
-            return;
-          }
-          const newSubtotal = updatedProduct.precio * det.cantidad;
-          const payload: UpdateReciboDetalleRequest = {
-            reciboId: det.reciboId,
-            productoId: det.productoId,
-            cantidad: det.cantidad,
-            subtotal: newSubtotal
-          };
-          
-          this.reciboDetalleService.updateDetalle(det.id, payload).subscribe({
-            next: async (apiUpdatedDetalle: ReciboDetalleDto) => {
-              const detalleBackend = await this.prepararDetalleActualizado(apiUpdatedDetalle);
-              const finalIndex = this.detalles.findIndex((d) => d.id === det.id);
-              if (finalIndex >= 0) {
-                const finalList = [...this.detalles];
-                const newSubtotal = updatedProduct.precio * det.cantidad;
-                finalList[finalIndex] = {
-                  ...detalleBackend,
-                  subtotal: newSubtotal,
-                  cantidad: det.cantidad,
-                  producto: detalleBackend.producto
-                    ? {
-                        ...detalleBackend.producto,
-                        precio: updatedProduct.precio
-                      }
-                    : {
-                        ...det.producto!,
-                        precio: updatedProduct.precio
-                      }
-                };
-                this.detalles = finalList;
-                this.depurarHistoricosExpandidos();
-                this.recalculateTotal();
+
+            this.reciboDetalleService.updateDetalle(det.id, payload).subscribe({
+              next: async (apiUpdatedDetalle: ReciboDetalleDto) => {
+                const detalleBackend =
+                  await this.prepararDetalleActualizado(apiUpdatedDetalle);
+                const finalIndex = this.detalles.findIndex(
+                  (d) => d.id === det.id
+                );
+                if (finalIndex >= 0) {
+                  const finalList = [...this.detalles];
+                  const newSubtotal = updatedProduct.precio * det.cantidad;
+                  finalList[finalIndex] = {
+                    ...detalleBackend,
+                    subtotal: newSubtotal,
+                    cantidad: det.cantidad,
+                    producto: detalleBackend.producto
+                      ? {
+                          ...detalleBackend.producto,
+                          precio: updatedProduct.precio
+                        }
+                      : {
+                          ...det.producto!,
+                          precio: updatedProduct.precio
+                        }
+                  };
+                  this.detalles = finalList;
+                  this.depurarHistoricosExpandidos();
+                  this.recalculateTotal();
+                }
+              },
+              error: (err) => {
+                console.error(
+                  'Error updating detalle after product price change',
+                  err
+                );
               }
-            },
-            error: (err) => {
-              console.error('Error updating detalle after product price change', err);
-            }
+            });
           });
-        });
-        
-        // Update recibo total on backend
-        const finalTotal = this.recalculateTotal();
-        if (this.recibo && this.recibo.id && this.recibo.ticketId && this.recibo.clienteId) {
-          // Calcular montoRecibido: si es efectivo, igual al total; si no, igual al total
-          const montoRecibidoFinal = (this.recibo.metodoPagoId === 1) ? finalTotal : finalTotal;
-          
-          this.reciboService.actualizarRecibo(this.recibo.id, {
-            clienteId: this.recibo.clienteId,
-            ticketId: this.recibo.ticketId,
-            estadoId: this.recibo.estadoId ?? ESTADOS_RECIBO.PENDIENTE_PAGO,
-            metodoPagoId: this.recibo.metodoPagoId ?? 0,
-            total: String(finalTotal.toFixed(2)),
-            sesionId: this.recibo.sesionId,
-            montoRecibido: montoRecibidoFinal
-          }).subscribe({
-            next: (updatedRecibo) => {
-              this.recibo = updatedRecibo;
-              
-              // Emitir evento para que el componente padre recargue los tickets
-              this.metodoPagoActualizado.emit();
-            },
-            error: (err) => {
-              console.error('Error updating recibo total', err);
-            }
-          });
+
+          // Update recibo total on backend
+          const finalTotal = this.recalculateTotal();
+          if (
+            this.recibo &&
+            this.recibo.id &&
+            this.recibo.ticketId &&
+            this.recibo.clienteId
+          ) {
+            // Calcular montoRecibido: si es efectivo, igual al total; si no, igual al total
+            const montoRecibidoFinal =
+              this.recibo.metodoPagoId === 1 ? finalTotal : finalTotal;
+
+            this.reciboService
+              .actualizarRecibo(this.recibo.id, {
+                clienteId: this.recibo.clienteId,
+                ticketId: this.recibo.ticketId,
+                estadoId: this.recibo.estadoId ?? ESTADOS_RECIBO.PENDIENTE_PAGO,
+                metodoPagoId: this.recibo.metodoPagoId ?? 0,
+                total: String(finalTotal.toFixed(2)),
+                sesionId: this.recibo.sesionId,
+                montoRecibido: montoRecibidoFinal
+              })
+              .subscribe({
+                next: (updatedRecibo) => {
+                  this.recibo = updatedRecibo;
+
+                  // Emitir evento para que el componente padre recargue los tickets
+                  this.metodoPagoActualizado.emit();
+                },
+                error: (err) => {
+                  console.error('Error updating recibo total', err);
+                }
+              });
+          }
+          if (focusSearch) {
+            this.focusSearchInputRequest.emit();
+          }
+        },
+        error: (err: unknown) => {
+          console.error('Error updating product price', err);
+          this.cancelUnitarioEdit();
         }
-        if (focusSearch) {
-          this.focusSearchInputRequest.emit();
-        }
-      },
-      error: (err: unknown) => {
-        console.error('Error updating product price', err);
-        this.cancelUnitarioEdit();
-      }
-    });
+      });
   }
 
   cancelUnitarioEdit(): void {
@@ -1895,18 +2152,20 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     if (!detalle.producto?.id || !detalle.producto?.nombre) {
       return;
     }
-    
+
     // Activar bandera de doble click y bloqueo de focus
     this.isDoubleClickActive = true;
     this.blockFocusRequest = true;
     this.startingEdit = true;
-    
+
     this.editingProductoIndex = index;
     this.editingProductoCtrl.setValue(detalle.producto.nombre);
-    
+
     // Focus the input after a short delay to ensure it's rendered
     setTimeout(() => {
-      const input = document.querySelector(`.producto-input-${index}`) as HTMLInputElement;
+      const input = document.querySelector(
+        `.producto-input-${index}`
+      ) as HTMLInputElement;
       if (input) {
         input.focus();
         input.select();
@@ -1928,16 +2187,18 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
     const detalle = this.detalles[index];
-    
+
     // Activar bandera de doble click
     this.isDoubleClickActive = true;
     this.startingEdit = true;
-    
+
     this.editingDetalleIndex = index;
     this.editingCantidadCtrl.setValue(String(detalle.cantidad ?? 1));
-    
+
     setTimeout(() => {
-      const input = document.querySelector(`.cantidad-input-${index}`) as HTMLInputElement;
+      const input = document.querySelector(
+        `.cantidad-input-${index}`
+      ) as HTMLInputElement;
       if (input) {
         input.focus();
         input.select();
@@ -1976,7 +2237,11 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   saveProductoEdit(index: number, focusSearch: boolean = false): void {
-    if (this.editingProductoIndex !== index || index < 0 || index >= this.detalles.length) {
+    if (
+      this.editingProductoIndex !== index ||
+      index < 0 ||
+      index >= this.detalles.length
+    ) {
       this.cancelProductoEdit();
       return;
     }
@@ -1987,8 +2252,14 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    const inputElement = document.querySelector(`.producto-input-${index}`) as HTMLInputElement;
-    const newNombre = (inputElement?.value?.trim() || this.editingProductoCtrl.value?.trim() || '').trim();
+    const inputElement = document.querySelector(
+      `.producto-input-${index}`
+    ) as HTMLInputElement;
+    const newNombre = (
+      inputElement?.value?.trim() ||
+      this.editingProductoCtrl.value?.trim() ||
+      ''
+    ).trim();
 
     if (!newNombre || newNombre.length === 0) {
       this.cancelProductoEdit();
@@ -2011,32 +2282,34 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       foto: detalle.producto.foto ?? ''
     };
 
-    this.relationalProductService.updateProduct(detalle.producto.id, productUpdate).subscribe({
-      next: (updatedProduct) => {
-        // Update all detalles that use this product
-        const updatedList = this.detalles.map((det) => {
-          if (det.productoId === updatedProduct.id) {
-            return {
-              ...det,
-              producto: {
-                ...det.producto!,
-                ...updatedProduct,
-                nombre: updatedProduct.nombre
-              }
-            };
+    this.relationalProductService
+      .updateProduct(detalle.producto.id, productUpdate)
+      .subscribe({
+        next: (updatedProduct) => {
+          // Update all detalles that use this product
+          const updatedList = this.detalles.map((det) => {
+            if (det.productoId === updatedProduct.id) {
+              return {
+                ...det,
+                producto: {
+                  ...det.producto!,
+                  ...updatedProduct,
+                  nombre: updatedProduct.nombre
+                }
+              };
+            }
+            return det;
+          });
+          this.detalles = updatedList;
+          if (focusSearch) {
+            this.focusSearchInputRequest.emit();
           }
-          return det;
-        });
-        this.detalles = updatedList;
-        if (focusSearch) {
-          this.focusSearchInputRequest.emit();
+        },
+        error: (err: unknown) => {
+          console.error('Error updating product name', err);
+          this.cancelProductoEdit();
         }
-      },
-      error: (err: unknown) => {
-        console.error('Error updating product name', err);
-        this.cancelProductoEdit();
-      }
-    });
+      });
   }
 
   cancelProductoEdit(): void {
@@ -2045,7 +2318,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   deleteSelectedDetalle(): void {
-    if (this.selectedDetalleIndex < 0 || this.selectedDetalleIndex >= this.detalles.length) {
+    if (
+      this.selectedDetalleIndex < 0 ||
+      this.selectedDetalleIndex >= this.detalles.length
+    ) {
       return;
     }
     const detalle = this.detalles[this.selectedDetalleIndex];
@@ -2059,7 +2335,11 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           this.detalles.length === 0
             ? -1
             : Math.min(this.selectedDetalleIndex, this.detalles.length - 1);
-        this.setSelectedDetalles(nextIndex >= 0 ? [nextIndex] : [], nextIndex, false);
+        this.setSelectedDetalles(
+          nextIndex >= 0 ? [nextIndex] : [],
+          nextIndex,
+          false
+        );
         this.focusSearchInputRequest.emit();
       },
       error: (err: unknown) => {
@@ -2069,7 +2349,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   private incrementSelectedDetalleQuantity(): void {
-    if (this.selectedDetalleIndex < 0 || this.selectedDetalleIndex >= this.detalles.length) {
+    if (
+      this.selectedDetalleIndex < 0 ||
+      this.selectedDetalleIndex >= this.detalles.length
+    ) {
       return;
     }
 
@@ -2077,7 +2360,12 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     const currentCantidad = Number(detalle.cantidad ?? 0);
     const unitPrice = this.getDetalleUnitario(detalle);
 
-    if (!detalle.id || unitPrice <= 0 || !detalle.reciboId || !detalle.productoId) {
+    if (
+      !detalle.id ||
+      unitPrice <= 0 ||
+      !detalle.reciboId ||
+      !detalle.productoId
+    ) {
       return;
     }
 
@@ -2104,11 +2392,12 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.recalculateTotal();
 
     // Keep focus on search input
-        this.focusSearchInputRequest.emit();
+    this.focusSearchInputRequest.emit();
 
     this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
       next: async (updatedDetalle) => {
-        const detalleBackend = await this.prepararDetalleActualizado(updatedDetalle);
+        const detalleBackend =
+          await this.prepararDetalleActualizado(updatedDetalle);
         const updatedListFinal = [...this.detalles];
         const detalleActualizado = {
           ...optimisticDetalle,
@@ -2132,7 +2421,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   private decrementSelectedDetalleQuantity(): void {
-    if (this.selectedDetalleIndex < 0 || this.selectedDetalleIndex >= this.detalles.length) {
+    if (
+      this.selectedDetalleIndex < 0 ||
+      this.selectedDetalleIndex >= this.detalles.length
+    ) {
       return;
     }
 
@@ -2145,7 +2437,12 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     const unitPrice = this.getDetalleUnitario(detalle);
 
-    if (!detalle.id || unitPrice <= 0 || !detalle.reciboId || !detalle.productoId) {
+    if (
+      !detalle.id ||
+      unitPrice <= 0 ||
+      !detalle.reciboId ||
+      !detalle.productoId
+    ) {
       return;
     }
 
@@ -2174,7 +2471,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
       next: async (updatedDetalle) => {
-        const detalleBackend = await this.prepararDetalleActualizado(updatedDetalle);
+        const detalleBackend =
+          await this.prepararDetalleActualizado(updatedDetalle);
         const updatedListFinal = [...this.detalles];
         updatedListFinal[this.selectedDetalleIndex] = {
           ...optimisticDetalle,
@@ -2243,7 +2541,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     return detalles.reduce((acc, det) => acc + Number(det?.subtotal ?? 0), 0);
   }
 
-  private async updateReciboTotal(recibo: ReciboDto, total: number): Promise<ReciboDto> {
+  private async updateReciboTotal(
+    recibo: ReciboDto,
+    total: number
+  ): Promise<ReciboDto> {
     const ticketId = recibo.ticketId ?? this.ticket?.id ?? null;
     if (!ticketId) {
       throw new Error('No se pudo determinar el ticket asociado al recibo.');
@@ -2262,20 +2563,30 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     );
   }
 
-  private async rollbackTargetDetalleChange(rollback: TargetDetalleRollback): Promise<void> {
+  private async rollbackTargetDetalleChange(
+    rollback: TargetDetalleRollback
+  ): Promise<void> {
     try {
       if (rollback.type === 'delete-created') {
-        await firstValueFrom(this.reciboDetalleService.deleteDetalle(rollback.detalleId));
+        await firstValueFrom(
+          this.reciboDetalleService.deleteDetalle(rollback.detalleId)
+        );
         return;
       }
 
       if (rollback.payload) {
         await firstValueFrom(
-          this.reciboDetalleService.updateDetalle(rollback.detalleId, rollback.payload)
+          this.reciboDetalleService.updateDetalle(
+            rollback.detalleId,
+            rollback.payload
+          )
         );
       }
     } catch (rollbackError) {
-      console.error('No se pudo revertir el movimiento parcial del detalle', rollbackError);
+      console.error(
+        'No se pudo revertir el movimiento parcial del detalle',
+        rollbackError
+      );
     }
   }
 
@@ -2297,48 +2608,74 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     console.log('onFinalizarEdicion called in recibo component');
     console.log('recibo:', this.recibo);
     console.log('metodosPago length:', this.metodosPago.length);
-    
+
     // Si el recibo ya tiene un método de pago seleccionado, usar ese
     if (this.recibo && this.recibo.metodoPagoId) {
       if (this.metodosPago.length > 0) {
         // Buscar el método de pago en la lista
-        const metodo = this.metodosPago.find(m => m.id === this.recibo!.metodoPagoId);
+        const metodo = this.metodosPago.find(
+          (m) => m.id === this.recibo!.metodoPagoId
+        );
         console.log('metodo encontrado:', metodo);
         if (metodo) {
           // Ejecutar el pago usando el método ya seleccionado,
           // omitiendo el diálogo de efectivo si aplica
           this.ejecutarPago(metodo, true);
         } else {
-          console.error('No se encontró el método de pago con id:', this.recibo.metodoPagoId);
+          console.error(
+            'No se encontró el método de pago con id:',
+            this.recibo.metodoPagoId
+          );
         }
       } else {
         // Si los métodos de pago aún no se han cargado, esperar un momento
         console.log('Esperando a que se carguen los métodos de pago...');
         setTimeout(() => {
-          const metodo = this.metodosPago.find(m => m.id === this.recibo!.metodoPagoId);
+          const metodo = this.metodosPago.find(
+            (m) => m.id === this.recibo!.metodoPagoId
+          );
           if (metodo) {
             console.log('metodo encontrado después de esperar:', metodo);
             this.ejecutarPago(metodo, true);
           } else {
-            console.error('No se encontró el método de pago después de esperar');
+            console.error(
+              'No se encontró el método de pago después de esperar'
+            );
           }
         }, 500);
       }
     } else {
-      console.warn('El recibo no tiene un método de pago seleccionado. recibo:', this.recibo);
+      console.warn(
+        'El recibo no tiene un método de pago seleccionado. recibo:',
+        this.recibo
+      );
     }
   }
 
-  private ejecutarPago(metodo: MetodoPagoDto, omitirDialogoEfectivo: boolean = false): void {
-    console.log('ejecutarPago called with:', { metodo, recibo: this.recibo, reciboId: this.reciboId, actualizandoMetodoPago: this.actualizandoMetodoPago });
-    
-    if (!metodo || metodo.estado === 'inactivo' || !this.recibo || !this.reciboId || this.actualizandoMetodoPago) {
-      console.log('Validación falló en ejecutarPago:', { 
-        metodo: !!metodo, 
-        metodoEstado: metodo?.estado, 
-        recibo: !!this.recibo, 
-        reciboId: this.reciboId, 
-        actualizandoMetodoPago: this.actualizandoMetodoPago 
+  private ejecutarPago(
+    metodo: MetodoPagoDto,
+    omitirDialogoEfectivo: boolean = false
+  ): void {
+    console.log('ejecutarPago called with:', {
+      metodo,
+      recibo: this.recibo,
+      reciboId: this.reciboId,
+      actualizandoMetodoPago: this.actualizandoMetodoPago
+    });
+
+    if (
+      !metodo ||
+      metodo.estado === 'inactivo' ||
+      !this.recibo ||
+      !this.reciboId ||
+      this.actualizandoMetodoPago
+    ) {
+      console.log('Validación falló en ejecutarPago:', {
+        metodo: !!metodo,
+        metodoEstado: metodo?.estado,
+        recibo: !!this.recibo,
+        reciboId: this.reciboId,
+        actualizandoMetodoPago: this.actualizandoMetodoPago
       });
       return;
     }
@@ -2348,7 +2685,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     const totalARegistrar = Number(this.recibo!.total ?? 0);
 
     if (metodo.id === 1 && !omitirDialogoEfectivo) {
-      const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && !!this.recibo && !!this.detalles?.length;
+      const quiereImprimir =
+        localStorage.getItem('imprimir-recibo') === 'true' &&
+        !!this.recibo &&
+        !!this.detalles?.length;
       this.snapshotDetallesAntesDelPago();
       this.actualizandoMetodoPago = true;
       const dialogRef = this.dialog.open<
@@ -2359,9 +2699,13 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         width: '640px',
         data: {
           total: totalARegistrar,
-          ejecutarPago: (montoRecibido: number) => this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
-          imprimirRecibo: quiereImprimir ? () => this.imprimirRecibo() : undefined,
-          mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg),
+          ejecutarPago: (montoRecibido: number) =>
+            this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
+          imprimirRecibo: quiereImprimir
+            ? () => this.imprimirRecibo()
+            : undefined,
+          mostrarSnackbarExito: (tg) =>
+            this.mostrarSnackbarPagoExitosoSinImpresion(tg),
           registrarDatosImpresion: (d) => {
             this.ticketImpresionExtras = {
               metodoPagoLabel: metodo.descripcion ?? 'EFECTIVO',
@@ -2403,8 +2747,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         switchMap((ticketId) => {
           const sesionId = this.getSessionId();
           // Calcular montoRecibido: si es efectivo, igual al total (se pasará desde el modal); si no, igual al total
-          const montoRecibidoFinal = metodo.id === 1 ? totalARegistrar : totalARegistrar;
-          
+          const montoRecibidoFinal =
+            metodo.id === 1 ? totalARegistrar : totalARegistrar;
+
           const payload: ActualizarReciboRequest = {
             clienteId: this.recibo!.clienteId,
             ticketId,
@@ -2415,22 +2760,31 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             montoRecibido: montoRecibidoFinal
           };
 
-          return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
-            switchMap(() => {
-              const sessionId = this.getSessionId();
-              if (!sessionId) {
-                throw new Error('No se encontró sessionId.');
-              }
-              return this.ticketReciboService.getByTicketId(ticketId, sessionId).pipe(
-                map((relacion) => {
-                  if (!relacion?.reciboId) {
-                    throw new Error('No se encontró relación recibo para este ticket.');
-                  }
-                  return { reciboId: relacion.reciboId, totalGuardado: totalARegistrar };
-                })
-              );
-            })
-          );
+          return this.reciboService
+            .actualizarRecibo(this.recibo!.id, payload)
+            .pipe(
+              switchMap(() => {
+                const sessionId = this.getSessionId();
+                if (!sessionId) {
+                  throw new Error('No se encontró sessionId.');
+                }
+                return this.ticketReciboService
+                  .getByTicketId(ticketId, sessionId)
+                  .pipe(
+                    map((relacion) => {
+                      if (!relacion?.reciboId) {
+                        throw new Error(
+                          'No se encontró relación recibo para este ticket.'
+                        );
+                      }
+                      return {
+                        reciboId: relacion.reciboId,
+                        totalGuardado: totalARegistrar
+                      };
+                    })
+                  );
+              })
+            );
         }),
         switchMap(({ reciboId, totalGuardado }) =>
           this.reciboService.getRecibo(reciboId).pipe(
@@ -2451,7 +2805,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
                   map(() => totalGuardado),
                   tap({
                     error: (err) => {
-                      console.error('Error recargando tickets después de actualizar recibo', err);
+                      console.error(
+                        'Error recargando tickets después de actualizar recibo',
+                        err
+                      );
                     }
                   })
                 );
@@ -2468,7 +2825,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         next: (totalGuardado) => {
           // Si debe imprimir, hacerlo automáticamente sin mostrar snackbar
           if (debeImprimir) {
-            console.log('Pago exitoso (método no efectivo - ejecutarPago), imprimiendo automáticamente...');
+            console.log(
+              'Pago exitoso (método no efectivo - ejecutarPago), imprimiendo automáticamente...'
+            );
             this.aplicarExtrasImpresionMetodoDirecto(metodo, totalARegistrar);
             this.cacheRecentReciboForReprint();
             this.emitPaymentProcessedEvents();
@@ -2480,7 +2839,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             this.mostrarSnackbarPagoExitoso(totalGuardado);
             // Enfocar el input de búsqueda después del pago cuando no se imprime
             // Usamos un delay más largo para asegurar que el snackbar se haya mostrado completamente
-            console.log('Pago exitoso sin impresión, restaurando focus al input de búsqueda...');
+            console.log(
+              'Pago exitoso sin impresión, restaurando focus al input de búsqueda...'
+            );
             setTimeout(() => {
               console.log('Emitiendo evento focusSearchInputRequest...');
               this.focusSearchInputRequest.emit();
@@ -2501,13 +2862,18 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           );
           // Make the currency value bold
           setTimeout(() => {
-            const snackBarElement = document.querySelector('.recibo-snackbar-error .mat-mdc-snack-bar-label');
+            const snackBarElement = document.querySelector(
+              '.recibo-snackbar-error .mat-mdc-snack-bar-label'
+            );
             if (snackBarElement) {
               const text = snackBarElement.textContent || '';
               const currencyRegex = /\$\s*[\d.,]+/;
               const match = text.match(currencyRegex);
               if (match) {
-                const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+                const boldText = text.replace(
+                  currencyRegex,
+                  `<strong>${match[0]}</strong>`
+                );
                 snackBarElement.innerHTML = boldText;
               }
             }
@@ -2516,23 +2882,38 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       });
   }
 
-  onMetodoPagoSeleccionadoDesdeEdicion(event: { metodo: MetodoPagoDto; valorReferencia: number | null }): void {
+  onMetodoPagoSeleccionadoDesdeEdicion(event: {
+    metodo: MetodoPagoDto;
+    valorReferencia: number | null;
+  }): void {
     // Cuando se selecciona un método de pago desde el componente de edición,
     // usar valorReferencia (diferencia) para el diálogo, pero procesar el total completo
     const metodo = event.metodo;
     const valorReferencia = event.valorReferencia;
 
-    if (!metodo || metodo.estado === 'inactivo' || !this.recibo || !this.reciboId || this.actualizandoMetodoPago) {
+    if (
+      !metodo ||
+      metodo.estado === 'inactivo' ||
+      !this.recibo ||
+      !this.reciboId ||
+      this.actualizandoMetodoPago
+    ) {
       return;
     }
 
     // Obtener el total del recibo completo para el PUT
     const totalARegistrar = Number(this.recibo!.total ?? 0);
     // Usar valorReferencia (diferencia) para el diálogo de pago en efectivo
-    const valorParaDialogo = valorReferencia !== null && valorReferencia > 0 ? valorReferencia : totalARegistrar;
+    const valorParaDialogo =
+      valorReferencia !== null && valorReferencia > 0
+        ? valorReferencia
+        : totalARegistrar;
 
     if (metodo.id === 1) {
-      const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && !!this.recibo && !!this.detalles?.length;
+      const quiereImprimir =
+        localStorage.getItem('imprimir-recibo') === 'true' &&
+        !!this.recibo &&
+        !!this.detalles?.length;
       this.snapshotDetallesAntesDelPago();
       this.actualizandoMetodoPago = true;
       const dialogRef = this.dialog.open<
@@ -2543,9 +2924,13 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         width: '640px',
         data: {
           total: valorParaDialogo,
-          ejecutarPago: (montoRecibido: number) => this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
-          imprimirRecibo: quiereImprimir ? () => this.imprimirRecibo() : undefined,
-          mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg),
+          ejecutarPago: (montoRecibido: number) =>
+            this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
+          imprimirRecibo: quiereImprimir
+            ? () => this.imprimirRecibo()
+            : undefined,
+          mostrarSnackbarExito: (tg) =>
+            this.mostrarSnackbarPagoExitosoSinImpresion(tg),
           registrarDatosImpresion: (d) => {
             this.ticketImpresionExtras = {
               metodoPagoLabel: metodo.descripcion ?? 'EFECTIVO',
@@ -2587,8 +2972,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         switchMap((ticketId) => {
           const sesionId = this.getSessionId();
           // Calcular montoRecibido: si es efectivo, igual al total (se pasará desde el modal); si no, igual al total
-          const montoRecibidoFinal = metodo.id === 1 ? totalARegistrar : totalARegistrar;
-          
+          const montoRecibidoFinal =
+            metodo.id === 1 ? totalARegistrar : totalARegistrar;
+
           const payload: ActualizarReciboRequest = {
             clienteId: this.recibo!.clienteId,
             ticketId,
@@ -2599,22 +2985,31 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             montoRecibido: montoRecibidoFinal
           };
 
-          return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
-            switchMap(() => {
-              const sessionId = this.getSessionId();
-              if (!sessionId) {
-                throw new Error('No se encontró sessionId.');
-              }
-              return this.ticketReciboService.getByTicketId(ticketId, sessionId).pipe(
-                map((relacion) => {
-                  if (!relacion?.reciboId) {
-                    throw new Error('No se encontró relación recibo para este ticket.');
-                  }
-                  return { reciboId: relacion.reciboId, totalGuardado: totalARegistrar };
-                })
-              );
-            })
-          );
+          return this.reciboService
+            .actualizarRecibo(this.recibo!.id, payload)
+            .pipe(
+              switchMap(() => {
+                const sessionId = this.getSessionId();
+                if (!sessionId) {
+                  throw new Error('No se encontró sessionId.');
+                }
+                return this.ticketReciboService
+                  .getByTicketId(ticketId, sessionId)
+                  .pipe(
+                    map((relacion) => {
+                      if (!relacion?.reciboId) {
+                        throw new Error(
+                          'No se encontró relación recibo para este ticket.'
+                        );
+                      }
+                      return {
+                        reciboId: relacion.reciboId,
+                        totalGuardado: totalARegistrar
+                      };
+                    })
+                  );
+              })
+            );
         }),
         switchMap(({ reciboId, totalGuardado }) =>
           this.reciboService.getRecibo(reciboId).pipe(
@@ -2635,7 +3030,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
                   map(() => totalGuardado),
                   tap({
                     error: (err) => {
-                      console.error('Error recargando tickets después de actualizar recibo', err);
+                      console.error(
+                        'Error recargando tickets después de actualizar recibo',
+                        err
+                      );
                     }
                   })
                 );
@@ -2652,7 +3050,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         next: (totalGuardado) => {
           // Si debe imprimir, hacerlo automáticamente sin mostrar snackbar
           if (debeImprimir) {
-            console.log('Pago exitoso (método no efectivo - onMetodoPagoSeleccionadoDesdeEdicion), imprimiendo automáticamente...');
+            console.log(
+              'Pago exitoso (método no efectivo - onMetodoPagoSeleccionadoDesdeEdicion), imprimiendo automáticamente...'
+            );
             this.aplicarExtrasImpresionMetodoDirecto(metodo, totalARegistrar);
             this.cacheRecentReciboForReprint();
             this.emitPaymentProcessedEvents();
@@ -2664,7 +3064,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             this.mostrarSnackbarPagoExitoso(totalGuardado);
             // Enfocar el input de búsqueda después del pago cuando no se imprime
             // Usamos un delay más largo para asegurar que el snackbar se haya mostrado completamente
-            console.log('Pago exitoso sin impresión, restaurando focus al input de búsqueda...');
+            console.log(
+              'Pago exitoso sin impresión, restaurando focus al input de búsqueda...'
+            );
             setTimeout(() => {
               console.log('Emitiendo evento focusSearchInputRequest...');
               this.focusSearchInputRequest.emit();
@@ -2685,13 +3087,18 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           );
           // Make the currency value bold
           setTimeout(() => {
-            const snackBarElement = document.querySelector('.recibo-snackbar-error .mat-mdc-snack-bar-label');
+            const snackBarElement = document.querySelector(
+              '.recibo-snackbar-error .mat-mdc-snack-bar-label'
+            );
             if (snackBarElement) {
               const text = snackBarElement.textContent || '';
               const currencyRegex = /\$\s*[\d.,]+/;
               const match = text.match(currencyRegex);
               if (match) {
-                const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+                const boldText = text.replace(
+                  currencyRegex,
+                  `<strong>${match[0]}</strong>`
+                );
                 snackBarElement.innerHTML = boldText;
               }
             }
@@ -2742,7 +3149,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (metodos) =>
-          (this.metodosPago = (metodos ?? []).slice().sort((a, b) => a.id - b.id)),
+          (this.metodosPago = (metodos ?? [])
+            .slice()
+            .sort((a, b) => a.id - b.id)),
         error: (err) => console.error('Error cargando métodos de pago', err)
       });
   }
@@ -2774,7 +3183,13 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   seleccionarMetodoPago(metodo: MetodoPagoDto): void {
-    if (!metodo || metodo.estado === 'inactivo' || !this.recibo || !this.reciboId || this.actualizandoMetodoPago) {
+    if (
+      !metodo ||
+      metodo.estado === 'inactivo' ||
+      !this.recibo ||
+      !this.reciboId ||
+      this.actualizandoMetodoPago
+    ) {
       return;
     }
 
@@ -2785,7 +3200,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     const totalARegistrar = Number(this.recibo!.total ?? 0);
 
     if (metodo.id === 1) {
-      const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && !!this.recibo && !!this.detalles?.length;
+      const quiereImprimir =
+        localStorage.getItem('imprimir-recibo') === 'true' &&
+        !!this.recibo &&
+        !!this.detalles?.length;
       this.snapshotDetallesAntesDelPago();
       this.actualizandoMetodoPago = true;
       const dialogRef = this.dialog.open<
@@ -2796,9 +3214,13 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         width: '640px',
         data: {
           total: totalARegistrar,
-          ejecutarPago: (montoRecibido: number) => this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
-          imprimirRecibo: quiereImprimir ? () => this.imprimirRecibo() : undefined,
-          mostrarSnackbarExito: (tg) => this.mostrarSnackbarPagoExitosoSinImpresion(tg),
+          ejecutarPago: (montoRecibido: number) =>
+            this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
+          imprimirRecibo: quiereImprimir
+            ? () => this.imprimirRecibo()
+            : undefined,
+          mostrarSnackbarExito: (tg) =>
+            this.mostrarSnackbarPagoExitosoSinImpresion(tg),
           registrarDatosImpresion: (d) => {
             this.ticketImpresionExtras = {
               metodoPagoLabel: metodo.descripcion ?? 'EFECTIVO',
@@ -2840,8 +3262,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         switchMap((ticketId) => {
           const sesionId = this.getSessionId();
           // Calcular montoRecibido: si es efectivo, igual al total (se pasará desde el modal); si no, igual al total
-          const montoRecibidoFinal = metodo.id === 1 ? totalARegistrar : totalARegistrar;
-          
+          const montoRecibidoFinal =
+            metodo.id === 1 ? totalARegistrar : totalARegistrar;
+
           const payload: ActualizarReciboRequest = {
             clienteId: this.recibo!.clienteId,
             ticketId,
@@ -2852,22 +3275,31 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             montoRecibido: montoRecibidoFinal
           };
 
-          return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
-            switchMap(() => {
-              const sessionId = this.getSessionId();
-              if (!sessionId) {
-                throw new Error('No se encontró sessionId.');
-              }
-              return this.ticketReciboService.getByTicketId(ticketId, sessionId).pipe(
-                map((relacion) => {
-                  if (!relacion?.reciboId) {
-                    throw new Error('No se encontró relación recibo para este ticket.');
-                  }
-                  return { reciboId: relacion.reciboId, totalGuardado: totalARegistrar };
-                })
-              );
-            })
-          );
+          return this.reciboService
+            .actualizarRecibo(this.recibo!.id, payload)
+            .pipe(
+              switchMap(() => {
+                const sessionId = this.getSessionId();
+                if (!sessionId) {
+                  throw new Error('No se encontró sessionId.');
+                }
+                return this.ticketReciboService
+                  .getByTicketId(ticketId, sessionId)
+                  .pipe(
+                    map((relacion) => {
+                      if (!relacion?.reciboId) {
+                        throw new Error(
+                          'No se encontró relación recibo para este ticket.'
+                        );
+                      }
+                      return {
+                        reciboId: relacion.reciboId,
+                        totalGuardado: totalARegistrar
+                      };
+                    })
+                  );
+              })
+            );
         }),
         switchMap(({ reciboId, totalGuardado }) =>
           this.reciboService.getRecibo(reciboId).pipe(
@@ -2888,7 +3320,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
                   map(() => totalGuardado),
                   tap({
                     error: (err) => {
-                      console.error('Error recargando tickets después de actualizar recibo', err);
+                      console.error(
+                        'Error recargando tickets después de actualizar recibo',
+                        err
+                      );
                     }
                   })
                 );
@@ -2905,7 +3340,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         next: (totalGuardado) => {
           // Si debe imprimir, hacerlo automáticamente sin mostrar snackbar
           if (debeImprimir) {
-            console.log('Pago exitoso (método no efectivo - seleccionarMetodoPago), imprimiendo automáticamente...');
+            console.log(
+              'Pago exitoso (método no efectivo - seleccionarMetodoPago), imprimiendo automáticamente...'
+            );
             this.aplicarExtrasImpresionMetodoDirecto(metodo, totalARegistrar);
             this.cacheRecentReciboForReprint();
             this.emitPaymentProcessedEvents();
@@ -2917,7 +3354,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             this.mostrarSnackbarPagoExitoso(totalGuardado);
             // Enfocar el input de búsqueda después del pago cuando no se imprime
             // Usamos un delay más largo para asegurar que el snackbar se haya mostrado completamente
-            console.log('Pago exitoso sin impresión, restaurando focus al input de búsqueda...');
+            console.log(
+              'Pago exitoso sin impresión, restaurando focus al input de búsqueda...'
+            );
             setTimeout(() => {
               console.log('Emitiendo evento focusSearchInputRequest...');
               this.focusSearchInputRequest.emit();
@@ -2938,13 +3377,18 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           );
           // Make the currency value bold
           setTimeout(() => {
-            const snackBarElement = document.querySelector('.recibo-snackbar-error .mat-mdc-snack-bar-label');
+            const snackBarElement = document.querySelector(
+              '.recibo-snackbar-error .mat-mdc-snack-bar-label'
+            );
             if (snackBarElement) {
               const text = snackBarElement.textContent || '';
               const currencyRegex = /\$\s*[\d.,]+/;
               const match = text.match(currencyRegex);
               if (match) {
-                const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+                const boldText = text.replace(
+                  currencyRegex,
+                  `<strong>${match[0]}</strong>`
+                );
                 snackBarElement.innerHTML = boldText;
               }
             }
@@ -2961,7 +3405,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return of(this.recibo.ticketId);
     }
     if (!this.recibo?.id) {
-      return throwError(() => new Error('Recibo no válido para determinar ticket.'));
+      return throwError(
+        () => new Error('Recibo no válido para determinar ticket.')
+      );
     }
 
     return this.ticketReciboService.getByReciboId(this.recibo.id).pipe(
@@ -2991,15 +3437,20 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   /**
    * Ejecuta la API de pago (actualizar recibo, recargar tickets). Usado por el modal de efectivo.
    */
-  private ejecutarPagoApi$(metodo: MetodoPagoDto, totalARegistrar: number, montoRecibido?: number): Observable<number> {
+  private ejecutarPagoApi$(
+    metodo: MetodoPagoDto,
+    totalARegistrar: number,
+    montoRecibido?: number
+  ): Observable<number> {
     return this.obtenerTicketAsociado().pipe(
       switchMap((ticketId) => {
         const sesionId = this.getSessionId();
         // Calcular montoRecibido: si es efectivo y se proporciona, usarlo; si no, igual al total
-        const montoRecibidoFinal = metodo.id === 1 && montoRecibido !== undefined 
-          ? montoRecibido 
-          : totalARegistrar;
-        
+        const montoRecibidoFinal =
+          metodo.id === 1 && montoRecibido !== undefined
+            ? montoRecibido
+            : totalARegistrar;
+
         const payload: ActualizarReciboRequest = {
           clienteId: this.recibo!.clienteId,
           ticketId,
@@ -3009,18 +3460,28 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           sesionId: sesionId ?? undefined,
           montoRecibido: montoRecibidoFinal
         };
-        return this.reciboService.actualizarRecibo(this.recibo!.id, payload).pipe(
-          switchMap(() => {
-            const sessionId = this.getSessionId();
-            if (!sessionId) throw new Error('No se encontró sessionId.');
-            return this.ticketReciboService.getByTicketId(ticketId, sessionId).pipe(
-              map((relacion) => {
-                if (!relacion?.reciboId) throw new Error('No se encontró relación recibo para este ticket.');
-                return { reciboId: relacion.reciboId, totalGuardado: totalARegistrar };
-              })
-            );
-          })
-        );
+        return this.reciboService
+          .actualizarRecibo(this.recibo!.id, payload)
+          .pipe(
+            switchMap(() => {
+              const sessionId = this.getSessionId();
+              if (!sessionId) throw new Error('No se encontró sessionId.');
+              return this.ticketReciboService
+                .getByTicketId(ticketId, sessionId)
+                .pipe(
+                  map((relacion) => {
+                    if (!relacion?.reciboId)
+                      throw new Error(
+                        'No se encontró relación recibo para este ticket.'
+                      );
+                    return {
+                      reciboId: relacion.reciboId,
+                      totalGuardado: totalARegistrar
+                    };
+                  })
+                );
+            })
+          );
       }),
       switchMap(({ reciboId, totalGuardado }) =>
         this.reciboService.getRecibo(reciboId).pipe(
@@ -3039,7 +3500,11 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
                 takeUntil(this.destroy$),
                 map(() => totalGuardado),
                 tap({
-                  error: (err) => console.error('Error recargando tickets después de actualizar recibo', err)
+                  error: (err) =>
+                    console.error(
+                      'Error recargando tickets después de actualizar recibo',
+                      err
+                    )
                 })
               );
             }
@@ -3067,13 +3532,18 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       }
     );
     setTimeout(() => {
-      const snackBarElement = document.querySelector('.recibo-snackbar-success .mat-mdc-snack-bar-label');
+      const snackBarElement = document.querySelector(
+        '.recibo-snackbar-success .mat-mdc-snack-bar-label'
+      );
       if (snackBarElement) {
         const text = snackBarElement.textContent || '';
         const currencyRegex = /\$\s*[\d.,]+/;
         const match = text.match(currencyRegex);
         if (match) {
-          const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+          const boldText = text.replace(
+            currencyRegex,
+            `<strong>${match[0]}</strong>`
+          );
           snackBarElement.innerHTML = boldText;
         }
       }
@@ -3091,10 +3561,16 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   private mostrarSnackbarPagoExitoso(totalGuardado: number): void {
     this.cacheRecentReciboForReprint();
     const totalFormateado = this.formatCurrency(totalGuardado);
-    const quiereImprimir = localStorage.getItem('imprimir-recibo') === 'true' && this.recibo && this.detalles?.length;
+    const quiereImprimir =
+      localStorage.getItem('imprimir-recibo') === 'true' &&
+      this.recibo &&
+      this.detalles?.length;
     let limpiarRecibo: (() => void) | null = null;
     if (quiereImprimir && this.recibo && this.detalles?.length) {
-      limpiarRecibo = this.prepararReciboParaImpresion(this.recibo, this.detalles);
+      limpiarRecibo = this.prepararReciboParaImpresion(
+        this.recibo,
+        this.detalles
+      );
     }
     const config = {
       duration: 8000,
@@ -3120,13 +3596,18 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       snackRef.afterDismissed().subscribe(() => limpiarRecibo?.());
     }
     setTimeout(() => {
-      const snackBarElement = document.querySelector('.recibo-snackbar-success .mat-mdc-snack-bar-label');
+      const snackBarElement = document.querySelector(
+        '.recibo-snackbar-success .mat-mdc-snack-bar-label'
+      );
       if (snackBarElement) {
         const text = snackBarElement.textContent || '';
         const currencyRegex = /\$\s*[\d.,]+/;
         const match = text.match(currencyRegex);
         if (match) {
-          const boldText = text.replace(currencyRegex, `<strong>${match[0]}</strong>`);
+          const boldText = text.replace(
+            currencyRegex,
+            `<strong>${match[0]}</strong>`
+          );
           snackBarElement.innerHTML = boldText;
         }
       }
@@ -3138,7 +3619,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
    * Inyecta el recibo en la ventana actual (oculto en pantalla, visible al imprimir).
    * Devuelve una función para limpiar el DOM. La impresión se dispara desde el clic en "Imprimir" del snackbar.
    */
-  private prepararReciboParaImpresion(recibo: ReciboDto, detalles: ReciboDetalleDto[]): () => void {
+  private prepararReciboParaImpresion(
+    recibo: ReciboDto,
+    detalles: ReciboDetalleDto[]
+  ): () => void {
     const idRoot = 'recibo-pos-print-root';
     const idStyles = 'recibo-pos-print-styles';
     const contenido = this.reciboPrintService.buildReciboHtmlFromOpciones(
@@ -3169,11 +3653,14 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
    */
   imprimirRecibo(): void {
     console.log('=== IMPRIMIR RECIBO LLAMADO ===');
-    console.log('localStorage imprimir-recibo:', localStorage.getItem('imprimir-recibo'));
-    
+    console.log(
+      'localStorage imprimir-recibo:',
+      localStorage.getItem('imprimir-recibo')
+    );
+
     // Verificar localStorage antes de imprimir
     const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
-    
+
     if (!debeImprimir) {
       console.log('Impresión deshabilitada: imprimir-recibo no está en true');
       return;
@@ -3186,7 +3673,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     // Usar detalles guardados antes del pago si están disponibles
     if (this.detallesParaImprimir?.length > 0) {
-      console.log('Usando detalles guardados antes del pago:', this.detallesParaImprimir.length);
+      console.log(
+        'Usando detalles guardados antes del pago:',
+        this.detallesParaImprimir.length
+      );
       const detallesTemporales = [...this.detallesParaImprimir];
       this.detallesParaImprimir = []; // Limpiar después de usar
       this.ejecutarImpresionConDetalles(detallesTemporales);
@@ -3195,7 +3685,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     // Si no hay detalles pero hay recibo, recargar los detalles primero
     if (!this.detalles?.length && this.recibo.id) {
-      console.log('Detalles vacíos, recargando detalles del recibo...', { reciboId: this.recibo.id });
+      console.log('Detalles vacíos, recargando detalles del recibo...', {
+        reciboId: this.recibo.id
+      });
       this.reciboDetalleService.getDetallesByRecibo(this.recibo.id).subscribe({
         next: (detalles) => {
           console.log('Detalles cargados:', detalles?.length);
@@ -3215,7 +3707,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     if (!this.detalles?.length) {
-      console.log('No hay detalles para imprimir', { detalles: this.detalles?.length });
+      console.log('No hay detalles para imprimir', {
+        detalles: this.detalles?.length
+      });
       return;
     }
 
@@ -3227,7 +3721,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   private ejecutarImpresionConDetalles(detalles: ReciboDetalleDto[]): void {
-    console.log('Generando impresión del recibo...', { detalles: detalles?.length });
+    console.log('Generando impresión del recibo...', {
+      detalles: detalles?.length
+    });
     if (this.recibo?.id && detalles?.length) {
       this.reciboPrintService.registerRecentRecibo(
         this.recibo,
@@ -3236,14 +3732,18 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         this.ticketImpresionExtras
       );
     }
-    const printed = this.reciboPrintService.printRecibo(this.opcionesImpresionRecibo(detalles));
+    const printed = this.reciboPrintService.printRecibo(
+      this.opcionesImpresionRecibo(detalles)
+    );
 
     if (!printed) {
-      console.error('No se pudo abrir la ventana de impresión - ventanas emergentes bloqueadas');
+      console.error(
+        'No se pudo abrir la ventana de impresión - ventanas emergentes bloqueadas'
+      );
       alert('Por favor, permite ventanas emergentes para imprimir');
       return;
     }
-    
+
     // Enfocar el input de búsqueda después de que la ventana de impresión se cierre
     // Usamos un delay más largo para asegurar que la ventana de impresión se haya cerrado completamente
     // La ventana se cierra en window.onafterprint después de 100ms, así que esperamos un poco más
@@ -3266,7 +3766,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   /**
    * Genera el HTML del recibo y lo abre en nueva pestaña (para menú Descargar recibo).
    */
-  private abrirReciboEnNuevaPestana(recibo: ReciboDto, detalles: ReciboDetalleDto[]): void {
+  private abrirReciboEnNuevaPestana(
+    recibo: ReciboDto,
+    detalles: ReciboDetalleDto[]
+  ): void {
     const cuerpo = this.reciboPrintService.buildReciboHtmlFromOpciones({
       detalles: this.reciboPrintService.toPrintableDetalles(detalles),
       fechaCreacion: recibo.fechaCreacion,
@@ -3275,7 +3778,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     });
     const htmlCompleto = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Recibo</title>
 <style>${ReciboPrintService.standalonePrintCss()}</style></head><body>${cuerpo}</body></html>`;
-    const dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(htmlCompleto);
+    const dataUri =
+      'data:text/html;charset=utf-8,' + encodeURIComponent(htmlCompleto);
     const link = document.createElement('a');
     link.href = dataUri;
     link.target = '_blank';
@@ -3290,6 +3794,4 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     div.textContent = text;
     return div.innerHTML;
   }
-
 }
-

@@ -25,35 +25,33 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { NgClass, NgFor, NgIf } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { VexScrollbarComponent } from '@vex/components/vex-scrollbar/vex-scrollbar.component';
 
 @Component({
-    selector: 'vex-tipos-data-table',
-    templateUrl: './tipos-data-table.component.html',
-    styleUrls: ['./tipos-data-table.component.scss'],
-    providers: [
-        {
-            provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
-            useValue: {
-                appearance: 'fill'
-            } as MatFormFieldDefaultOptions
-        }
-    ],
-    animations: [stagger20ms, fadeInUp400ms, scaleFadeIn400ms],
-    imports: [
-        VexScrollbarComponent,
-        MatTableModule,
-        MatSortModule,
-        NgFor,
-        NgIf,
-        NgClass,
-        MatCheckboxModule,
-        MatButtonModule,
-        MatIconModule,
-        MatMenuModule,
-        MatPaginatorModule
-    ]
+  selector: 'vex-tipos-data-table',
+  templateUrl: './tipos-data-table.component.html',
+  styleUrls: ['./tipos-data-table.component.scss'],
+  providers: [
+    {
+      provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
+      useValue: {
+        appearance: 'fill'
+      } as MatFormFieldDefaultOptions
+    }
+  ],
+  animations: [stagger20ms, fadeInUp400ms, scaleFadeIn400ms],
+  imports: [
+    VexScrollbarComponent,
+    MatTableModule,
+    MatSortModule,
+    NgClass,
+    MatCheckboxModule,
+    MatButtonModule,
+    MatIconModule,
+    MatMenuModule,
+    MatPaginatorModule
+  ]
 })
 export class TiposDataTableComponent<T>
   implements OnInit, OnChanges, AfterViewInit
@@ -98,4 +96,4 @@ export class TiposDataTableComponent<T>
       this.dataSource.sort = this.sort;
     }
   }
-} 
+}

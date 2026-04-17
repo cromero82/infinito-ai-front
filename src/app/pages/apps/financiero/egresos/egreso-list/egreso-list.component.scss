@@ -1,4 +1,4 @@
-@import '../../../../../core/table-viewport/table-viewport.scss';
+@use '../../../../../core/table-viewport/table-viewport.scss' as *;
 
 :host {
   display: flex;

@@ -9,34 +9,45 @@
     (blur)="onClienteInputBlur()"
     [disabled]="loadingClientes || disabled || creatingCliente"
     placeholder="Escriba para buscar o presione Enter para crear nuevo cliente" />
-  <button
-    *ngIf="mostrarBotonCrearCliente && !loadingClientes && !creatingCliente"
-    mat-button
-    matSuffix
-    type="button"
-    (click)="crearClienteDesdeBoton()"
-    class="btn-crear-cliente"
-    aria-label="Crear nuevo cliente">
-    <mat-icon class="icon-sm" svgIcon="mat:add"></mat-icon>
-    <span class="btn-crear-text">Enter o click aquí para crear</span>
-  </button>
-  <button
-    *ngIf="clienteCtrl.value && !loadingClientes && !creatingCliente"
-    mat-icon-button
-    matSuffix
-    type="button"
-    (click)="limpiarCliente()"
-    aria-label="Limpiar cliente">
-    <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
-  </button>
-  <mat-progress-spinner *ngIf="loadingClientes || creatingCliente" matSuffix diameter="20" mode="indeterminate"></mat-progress-spinner>
+  @if (mostrarBotonCrearCliente && !loadingClientes && !creatingCliente) {
+    <button
+      mat-button
+      matSuffix
+      type="button"
+      (click)="crearClienteDesdeBoton()"
+      class="btn-crear-cliente"
+      aria-label="Crear nuevo cliente">
+      <mat-icon class="icon-sm" svgIcon="mat:add"></mat-icon>
+      <span class="btn-crear-text">Enter o click aquí para crear</span>
+    </button>
+  }
+  @if (clienteCtrl.value && !loadingClientes && !creatingCliente) {
+    <button
+      mat-icon-button
+      matSuffix
+      type="button"
+      (click)="limpiarCliente()"
+      aria-label="Limpiar cliente">
+      <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+    </button>
+  }
+  @if (loadingClientes || creatingCliente) {
+    <mat-progress-spinner
+      matSuffix
+      diameter="20"
+      mode="indeterminate"></mat-progress-spinner>
+  }
   <mat-autocomplete
     #auto="matAutocomplete"
     [displayWith]="displayCliente"
     (optionSelected)="onClienteSelected($event.option.value)">
-    <mat-option *ngFor="let cliente of filteredClientes$ | async" [value]="cliente">
-      <span>{{ cliente.nombre }}</span>
-      <span *ngIf="cliente.documento" class="cliente-documento"> - {{ cliente.documento }}</span>
-    </mat-option>
+    @for (cliente of filteredClientes$ | async; track cliente) {
+      <mat-option [value]="cliente">
+        <span>{{ cliente.nombre }}</span>
+        @if (cliente.documento) {
+          <span class="cliente-documento"> - {{ cliente.documento }}</span>
+        }
+      </mat-option>
+    }
   </mat-autocomplete>
 </mat-form-field>

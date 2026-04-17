@@ -1,10 +1,26 @@
-import { Component, Inject, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  Component,
+  Inject,
+  OnInit,
+  AfterViewInit,
+  ViewChild,
+  ElementRef
+} from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import {
+  MatDialogModule,
+  MatDialogRef,
+  MAT_DIALOG_DATA
+} from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { NgIf, NgFor } from '@angular/common';
+
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { FormsModule } from '@angular/forms';
@@ -13,8 +29,16 @@ import { AsyncPipe } from '@angular/common';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { DragDropModule, CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
-import { ProveedorService, ProveedorDto, CreateProveedorRequest, isUuidDocumento } from '../service/proveedor.service';
-import { TipoEgresoService, TipoEgresoDto } from '../../egresos/service/tipo-egreso.service';
+import {
+  ProveedorService,
+  ProveedorDto,
+  CreateProveedorRequest,
+  isUuidDocumento
+} from '../service/proveedor.service';
+import {
+  TipoEgresoService,
+  TipoEgresoDto
+} from '../../egresos/service/tipo-egreso.service';
 
 export interface ProveedorErrorItem {
   descripcionError: string;
@@ -22,26 +46,24 @@ export interface ProveedorErrorItem {
 }
 
 @Component({
-    selector: 'vex-proveedor-edit',
-    imports: [
-        ReactiveFormsModule,
-        FormsModule,
-        MatDialogModule,
-        NgIf,
-        NgFor,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        MatIconModule,
-        MatDividerModule,
-        MatAutocompleteModule,
-        AsyncPipe,
-        DragDropModule,
-        CdkDrag,
-        CdkDragHandle
-    ],
-    templateUrl: './proveedor-edit.component.html',
-    styleUrl: './proveedor-edit.component.scss'
+  selector: 'vex-proveedor-edit',
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatDividerModule,
+    MatAutocompleteModule,
+    AsyncPipe,
+    DragDropModule,
+    CdkDrag,
+    CdkDragHandle
+  ],
+  templateUrl: './proveedor-edit.component.html',
+  styleUrl: './proveedor-edit.component.scss'
 })
 export class ProveedorEditComponent implements OnInit, AfterViewInit {
   form: FormGroup;
@@ -59,7 +81,8 @@ export class ProveedorEditComponent implements OnInit, AfterViewInit {
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<ProveedorEditComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: ProveedorDto | { initialNombre?: string } | null,
+    @Inject(MAT_DIALOG_DATA)
+    public data: ProveedorDto | { initialNombre?: string } | null,
     private proveedorService: ProveedorService,
     private tipoEgresoService: TipoEgresoService
   ) {
@@ -72,7 +95,12 @@ export class ProveedorEditComponent implements OnInit, AfterViewInit {
     });
 
     const dataObj = data as ProveedorDto | { initialNombre?: string } | null;
-    if (dataObj && typeof dataObj === 'object' && 'id' in dataObj && (dataObj as ProveedorDto).id) {
+    if (
+      dataObj &&
+      typeof dataObj === 'object' &&
+      'id' in dataObj &&
+      (dataObj as ProveedorDto).id
+    ) {
       const d = dataObj as ProveedorDto;
       const docValue = d.documento || '';
       if (isUuidDocumento(docValue)) {
@@ -82,7 +110,13 @@ export class ProveedorEditComponent implements OnInit, AfterViewInit {
           documento: '(Autogenerado)',
           telefono: d.telefono || '',
           correo: d.correo || '',
-          tipoEgreso: d.tipoEgreso ? { id: d.tipoEgreso.id, nombre: d.tipoEgreso.nombre, descripcion: d.tipoEgreso.descripcion } : null
+          tipoEgreso: d.tipoEgreso
+            ? {
+                id: d.tipoEgreso.id,
+                nombre: d.tipoEgreso.nombre,
+                descripcion: d.tipoEgreso.descripcion
+              }
+            : null
         });
       } else {
         this.form.patchValue({
@@ -90,10 +124,21 @@ export class ProveedorEditComponent implements OnInit, AfterViewInit {
           documento: docValue,
           telefono: d.telefono || '',
           correo: d.correo || '',
-          tipoEgreso: d.tipoEgreso ? { id: d.tipoEgreso.id, nombre: d.tipoEgreso.nombre, descripcion: d.tipoEgreso.descripcion } : null
+          tipoEgreso: d.tipoEgreso
+            ? {
+                id: d.tipoEgreso.id,
+                nombre: d.tipoEgreso.nombre,
+                descripcion: d.tipoEgreso.descripcion
+              }
+            : null
         });
       }
-    } else if (dataObj && typeof dataObj === 'object' && 'initialNombre' in dataObj && (dataObj as { initialNombre?: string }).initialNombre) {
+    } else if (
+      dataObj &&
+      typeof dataObj === 'object' &&
+      'initialNombre' in dataObj &&
+      (dataObj as { initialNombre?: string }).initialNombre
+    ) {
       this.form.patchValue({
         nombre: (dataObj as { initialNombre: string }).initialNombre.trim()
       });
@@ -121,17 +166,20 @@ export class ProveedorEditComponent implements OnInit, AfterViewInit {
     const dataObj = this.data as ProveedorDto | null;
     if (!dataObj || typeof dataObj !== 'object' || !('id' in dataObj)) return;
     const d = dataObj as ProveedorDto;
-    const tipo = this.tiposEgreso.find(t => t.id === d.tipoEgreso?.id);
+    const tipo = this.tiposEgreso.find((t) => t.id === d.tipoEgreso?.id);
     if (tipo) this.form.patchValue({ tipoEgreso: tipo }, { emitEvent: false });
   }
 
   private filterTipos(value: TipoEgresoDto | string | null): TipoEgresoDto[] {
-    if (typeof value === 'object' && value !== null) return [...this.tiposEgreso];
-    const filterValue = typeof value === 'string' ? value.toLowerCase().trim() : '';
+    if (typeof value === 'object' && value !== null)
+      return [...this.tiposEgreso];
+    const filterValue =
+      typeof value === 'string' ? value.toLowerCase().trim() : '';
     if (!filterValue) return [...this.tiposEgreso];
-    return this.tiposEgreso.filter(t =>
-      t.nombre.toLowerCase().includes(filterValue) ||
-      (t.descripcion && t.descripcion.toLowerCase().includes(filterValue))
+    return this.tiposEgreso.filter(
+      (t) =>
+        t.nombre.toLowerCase().includes(filterValue) ||
+        (t.descripcion && t.descripcion.toLowerCase().includes(filterValue))
     );
   }
 
@@ -164,7 +212,12 @@ export class ProveedorEditComponent implements OnInit, AfterViewInit {
       const documentoValue = this.form.controls['documento'].value;
       const telefonoValue = this.form.controls['telefono'].value;
 
-      if ((nombreValue === null || nombreValue === '' || (typeof nombreValue === 'string' && !nombreValue.trim())) && this.nombreInput?.nativeElement) {
+      if (
+        (nombreValue === null ||
+          nombreValue === '' ||
+          (typeof nombreValue === 'string' && !nombreValue.trim())) &&
+        this.nombreInput?.nativeElement
+      ) {
         this.nombreInput.nativeElement.focus({ preventScroll: true });
         return;
       }
@@ -218,7 +271,13 @@ export class ProveedorEditComponent implements OnInit, AfterViewInit {
 
   get isEditMode(): boolean {
     const d = this.data as ProveedorDto | { initialNombre?: string } | null;
-    return !!(d && typeof d === 'object' && 'id' in d && (d as ProveedorDto).id && (d as ProveedorDto).id !== 0);
+    return !!(
+      d &&
+      typeof d === 'object' &&
+      'id' in d &&
+      (d as ProveedorDto).id &&
+      (d as ProveedorDto).id !== 0
+    );
   }
 
   get buttonLabel(): string {
@@ -226,7 +285,7 @@ export class ProveedorEditComponent implements OnInit, AfterViewInit {
   }
 
   getErrorForCampo(campo: string): string | undefined {
-    const item = this.errores.find(e => e.campo === campo);
+    const item = this.errores.find((e) => e.campo === campo);
     return item?.descripcionError;
   }
 
@@ -250,10 +309,12 @@ export class ProveedorEditComponent implements OnInit, AfterViewInit {
 
     if (this.isEditMode && this.data && 'id' in this.data) {
       const proveedorId = (this.data as ProveedorDto).id;
-      this.proveedorService.updateProveedor(proveedorId, proveedorRequest).subscribe({
-        next: (result) => this.dialogRef.close({ ...result, _edit: true }),
-        error: (err) => this.handleError(err)
-      });
+      this.proveedorService
+        .updateProveedor(proveedorId, proveedorRequest)
+        .subscribe({
+          next: (result) => this.dialogRef.close({ ...result, _edit: true }),
+          error: (err) => this.handleError(err)
+        });
     } else {
       this.proveedorService.createProveedor(proveedorRequest).subscribe({
         next: (result) => this.dialogRef.close(result),
@@ -262,15 +323,23 @@ export class ProveedorEditComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private handleError(err: { error?: { errores?: ProveedorErrorItem[]; message?: string }; message?: string }) {
+  private handleError(err: {
+    error?: { errores?: ProveedorErrorItem[]; message?: string };
+    message?: string;
+  }) {
     const errores = err?.error?.errores;
     if (Array.isArray(errores) && errores.length > 0) {
       this.errores = errores;
     } else {
-      this.errores = [{
-        campo: '_general',
-        descripcionError: err?.error?.message ?? err?.message ?? 'Error al procesar la solicitud'
-      }];
+      this.errores = [
+        {
+          campo: '_general',
+          descripcionError:
+            err?.error?.message ??
+            err?.message ??
+            'Error al procesar la solicitud'
+        }
+      ];
     }
   }
 

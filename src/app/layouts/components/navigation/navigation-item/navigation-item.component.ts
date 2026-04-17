@@ -10,29 +10,21 @@ import { trackByRoute } from '@vex/utils/track-by';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatRippleModule } from '@angular/material/core';
-import {
-  AsyncPipe,
-  NgClass,
-  NgFor,
-  NgIf,
-  NgTemplateOutlet
-} from '@angular/common';
+import { AsyncPipe, NgClass, NgTemplateOutlet } from '@angular/common';
 
 @Component({
-    selector: 'vex-navigation-item',
-    templateUrl: './navigation-item.component.html',
-    styleUrls: ['./navigation-item.component.scss'],
-    imports: [
-        NgIf,
-        MatRippleModule,
-        NgClass,
-        RouterLink,
-        MatMenuModule,
-        NgFor,
-        MatIconModule,
-        NgTemplateOutlet,
-        AsyncPipe
-    ]
+  selector: 'vex-navigation-item',
+  templateUrl: './navigation-item.component.html',
+  styleUrls: ['./navigation-item.component.scss'],
+  imports: [
+    MatRippleModule,
+    NgClass,
+    RouterLink,
+    MatMenuModule,
+    MatIconModule,
+    NgTemplateOutlet,
+    AsyncPipe
+  ]
 })
 export class NavigationItemComponent implements OnInit {
   @Input({ required: true }) item!: NavigationItem;

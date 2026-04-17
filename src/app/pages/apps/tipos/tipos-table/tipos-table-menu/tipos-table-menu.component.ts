@@ -2,14 +2,14 @@ import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { Tipo } from '../../interfaces/tipo.interface';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { NgFor, NgClass } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { TiposService } from '../../service/tipos-service';
 
 @Component({
-    selector: 'vex-tipos-table-menu',
-    templateUrl: './tipos-table-menu.component.html',
-    styleUrls: ['./tipos-table-menu.component.scss'],
-    imports: [MatButtonModule, MatIconModule, NgFor, NgClass]
+  selector: 'vex-tipos-table-menu',
+  templateUrl: './tipos-table-menu.component.html',
+  styleUrls: ['./tipos-table-menu.component.scss'],
+  imports: [MatButtonModule, MatIconModule, NgClass]
 })
 export class TiposTableMenuComponent implements OnInit {
   @Output() filterChange = new EventEmitter<Tipo[]>();
@@ -70,14 +70,18 @@ export class TiposTableMenuComponent implements OnInit {
 
   updateCategoryCounts() {
     this.categories[0].count = this.allTipos.length; // All
-    this.categories[1].count = this.allTipos.filter((t: Tipo) => 
-      t.name.toLowerCase().includes('electrónicos')).length;
-    this.categories[2].count = this.allTipos.filter((t: Tipo) => 
-      t.name.toLowerCase().includes('ropa')).length;
-    this.categories[3].count = this.allTipos.filter((t: Tipo) => 
-      t.name.toLowerCase().includes('alimentos')).length;
-    this.categories[4].count = this.allTipos.filter((t: Tipo) => 
-      t.name.toLowerCase().includes('hogar')).length;
+    this.categories[1].count = this.allTipos.filter((t: Tipo) =>
+      t.name.toLowerCase().includes('electrónicos')
+    ).length;
+    this.categories[2].count = this.allTipos.filter((t: Tipo) =>
+      t.name.toLowerCase().includes('ropa')
+    ).length;
+    this.categories[3].count = this.allTipos.filter((t: Tipo) =>
+      t.name.toLowerCase().includes('alimentos')
+    ).length;
+    this.categories[4].count = this.allTipos.filter((t: Tipo) =>
+      t.name.toLowerCase().includes('hogar')
+    ).length;
   }
 
   setFilter(category: string) {
@@ -87,16 +91,24 @@ export class TiposTableMenuComponent implements OnInit {
 
     switch (category) {
       case 'electronics':
-        filteredData = this.allTipos.filter((t: Tipo) => t.name.toLowerCase().includes('electrónicos'));
+        filteredData = this.allTipos.filter((t: Tipo) =>
+          t.name.toLowerCase().includes('electrónicos')
+        );
         break;
       case 'clothing':
-        filteredData = this.allTipos.filter((t: Tipo) => t.name.toLowerCase().includes('ropa'));
+        filteredData = this.allTipos.filter((t: Tipo) =>
+          t.name.toLowerCase().includes('ropa')
+        );
         break;
       case 'food':
-        filteredData = this.allTipos.filter((t: Tipo) => t.name.toLowerCase().includes('alimentos'));
+        filteredData = this.allTipos.filter((t: Tipo) =>
+          t.name.toLowerCase().includes('alimentos')
+        );
         break;
       case 'home':
-        filteredData = this.allTipos.filter((t: Tipo) => t.name.toLowerCase().includes('hogar'));
+        filteredData = this.allTipos.filter((t: Tipo) =>
+          t.name.toLowerCase().includes('hogar')
+        );
         break;
       default:
         filteredData = this.allTipos;
@@ -108,4 +120,4 @@ export class TiposTableMenuComponent implements OnInit {
   addNew() {
     this.openAddNew.emit();
   }
-} 
+}

@@ -2,9 +2,12 @@
   <!-- Left side -->
   <div class="left-side">
     <h2 class="title mt-0 mb-4">Historial de Ventas</h2>
-    
+
     <div class="filter-section">
-      <mat-button-toggle-group [value]="selectedFilter" (valueChange)="selectFilter($event)">
+      <mat-button-toggle-group
+        appearance="legacy"
+        [value]="selectedFilter"
+        (valueChange)="selectFilter($event)">
         <mat-button-toggle value="todos">Todos</mat-button-toggle>
         <mat-button-toggle value="pagado">Pagado</mat-button-toggle>
         <mat-button-toggle value="anulados">Anulados</mat-button-toggle>
@@ -24,42 +27,63 @@
       </mat-form-field>
     </div>
 
-    <div *ngIf="sesionIdFromUrl" class="filter-labels">
-      <div *ngIf="userInfoLoading" class="text-secondary text-sm">Cargando usuario...</div>
-      <div *ngIf="!userInfoLoading && userInfo" class="flex flex-wrap gap-2 items-center">
-        <span class="filter-label filter-label--normal">sesion de:</span>
-        <span class="filter-label filter-label--success">{{ userInfo.nombre }}</span>
-        <span class="filter-label filter-label--normal">{{ userInfo.correoElectronico }}</span>
+    @if (sesionIdFromUrl) {
+      <div class="filter-labels">
+        @if (userInfoLoading) {
+          <div class="text-secondary text-sm">Cargando usuario...</div>
+        }
+        @if (!userInfoLoading && userInfo) {
+          <div class="flex flex-wrap gap-2 items-center">
+            <span class="filter-label filter-label--normal">sesion de:</span>
+            <span class="filter-label filter-label--success">{{
+              userInfo.nombre
+            }}</span>
+            <span class="filter-label filter-label--normal">{{
+              userInfo.correoElectronico
+            }}</span>
+          </div>
+        }
       </div>
-    </div>
+    }
 
     <div class="recibos-list-container">
-      <div class="loading" *ngIf="loading">Cargando...</div>
-      <div class="error" *ngIf="!loading && error">{{ error }}</div>
-      
-      <div 
-        class="recibos-list" 
-        #recibosList
-        (scroll)="onRecibosListScroll()"
-        *ngIf="!loading && !error">
-        <div
-          *ngFor="let recibo of historialRecibos"
-          class="recibo-item"
-          [class.selected]="selectedReciboId === recibo.id"
-          (click)="selectRecibo(recibo)">
-          <span class="recibo-total" [innerHTML]="formatCurrencyWithBold(recibo.total)"></span>
-          <div class="recibo-fecha-cliente-row">
-            <span class="recibo-fecha">{{ formatDate(recibo.fechaCreacion) }}</span>
-            <span class="recibo-cliente" *ngIf="getClienteNombre(recibo.clienteId)">{{ getClienteNombre(recibo.clienteId) }}</span>
-          </div>
+      @if (loading) {
+        <div class="loading">Cargando...</div>
+      }
+      @if (!loading && error) {
+        <div class="error">{{ error }}</div>
+      }
+
+      @if (!loading && !error) {
+        <div class="recibos-list" #recibosList (scroll)="onRecibosListScroll()">
+          @for (recibo of historialRecibos; track recibo) {
+            <div
+              class="recibo-item"
+              [class.selected]="selectedReciboId === recibo.id"
+              (click)="selectRecibo(recibo)">
+              <span
+                class="recibo-total"
+                [innerHTML]="formatCurrencyWithBold(recibo.total)"></span>
+              <div class="recibo-fecha-cliente-row">
+                <span class="recibo-fecha">{{
+                  formatDate(recibo.fechaCreacion)
+                }}</span>
+                @if (getClienteNombre(recibo.clienteId)) {
+                  <span class="recibo-cliente">{{
+                    getClienteNombre(recibo.clienteId)
+                  }}</span>
+                }
+              </div>
+            </div>
+          }
+          @if (loadingMore) {
+            <div class="loading-more">Cargando más...</div>
+          }
+          @if (historialRecibos.length === 0 && !loadingMore) {
+            <div class="empty-message">No hay recibos disponibles</div>
+          }
         </div>
-        <div class="loading-more" *ngIf="loadingMore">
-          Cargando más...
-        </div>
-        <div class="empty-message" *ngIf="historialRecibos.length === 0 && !loadingMore">
-          No hay recibos disponibles
-        </div>
-      </div>
+      }
     </div>
   </div>
 
@@ -68,99 +92,145 @@
     <div class="p-6">
       <div class="right-header">
         <h2 class="title mt-0 mb-4">Detalles</h2>
-        <div class="action-section" *ngIf="selectedReciboId">
-          <button
-            mat-flat-button
-            color="primary"
-            type="button"
-            class="editar-button"
-            [disabled]="volviendoAEditar || isReciboAnulado()"
-            (click)="volverAEditar()">
-            {{ volviendoAEditar ? 'Editando...' : 'Editar en Ventas' }}
-          </button>
-          <button
-            mat-flat-button
-            color="warn"
-            type="button"
-            class="anular-button"
-            [disabled]="anulandoRecibo || isReciboAnulado()"
-            (click)="anularFactura()">
-            {{ anulandoRecibo ? 'Anulando...' : 'Anular factura' }}
-          </button>
-          <button
-            mat-flat-button
-            color="basic"
-            type="button"
-            class="imprimir-button"
-            [disabled]="imprimiendoRecibo || !detalles || detalles.length === 0"
-            (click)="imprimirReciboSeleccionado()">
-            <mat-icon class="ltr:mr-2 rtl:ml-2 icon-sm" svgIcon="mat:print"></mat-icon>
-            {{ imprimiendoRecibo ? 'Imprimiendo...' : 'Imprimir recibo' }}
-          </button>
+        @if (selectedReciboId) {
+          <div class="action-section">
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              class="editar-button"
+              [disabled]="volviendoAEditar || isReciboAnulado()"
+              (click)="volverAEditar()">
+              {{ volviendoAEditar ? "Editando..." : "Editar en Ventas" }}
+            </button>
+            <button
+              mat-flat-button
+              color="warn"
+              type="button"
+              class="anular-button"
+              [disabled]="anulandoRecibo || isReciboAnulado()"
+              (click)="anularFactura()">
+              {{ anulandoRecibo ? "Anulando..." : "Anular factura" }}
+            </button>
+            <button
+              mat-flat-button
+              color="basic"
+              type="button"
+              class="imprimir-button"
+              [disabled]="
+                imprimiendoRecibo || !detalles || detalles.length === 0
+              "
+              (click)="imprimirReciboSeleccionado()">
+              <mat-icon
+                class="ltr:mr-2 rtl:ml-2 icon-sm"
+                svgIcon="mat:print"></mat-icon>
+              {{ imprimiendoRecibo ? "Imprimiendo..." : "Imprimir recibo" }}
+            </button>
+          </div>
+        }
+      </div>
+
+      @if (!selectedReciboId) {
+        <div class="text-secondary">
+          Seleccione un recibo para ver los detalles
         </div>
-      </div>
-      
-      <div *ngIf="!selectedReciboId" class="text-secondary">
-        Seleccione un recibo para ver los detalles
-      </div>
+      }
 
-      <div *ngIf="selectedReciboId && detallesLoading" class="loading">
-        Cargando detalles...
-      </div>
+      @if (selectedReciboId && detallesLoading) {
+        <div class="loading">Cargando detalles...</div>
+      }
 
-      <div *ngIf="selectedReciboId && detallesError" class="error">
-        {{ detallesError }}
-      </div>
+      @if (selectedReciboId && detallesError) {
+        <div class="error">
+          {{ detallesError }}
+        </div>
+      }
 
-      <div *ngIf="selectedReciboId && !detallesLoading && !detallesError" class="detalle-content">
-        <div class="detalle-container">
-          <div class="detalle-wrapper">
-            <div class="detalle-header">
-              <span class="detalle-col producto">Producto</span>
-              <span class="detalle-col unitario">Valor unitario</span>
-              <span class="detalle-col cantidad">Cantidad</span>
-              <span class="detalle-col subtotal">Subtotal</span>
-            </div>
-            <div class="detalle-list">
-              <div
-                class="detalle-row"
-                *ngFor="let detalle of detalles">
-                <span class="detalle-col producto">
-                  {{ detalle.producto ? detalle.producto.nombre : ('Producto ' + detalle.productoId) }}
-                </span>
-                <span class="detalle-col unitario">
-                  {{ formatCurrency(detalle.producto?.precio ?? (detalle.cantidad ? detalle.subtotal / detalle.cantidad : 0)) }}
-                </span>
-                <span class="detalle-col cantidad">
-                  {{ detalle.cantidad }}
-                </span>
-                <span class="detalle-col subtotal">
-                  {{ formatCurrency(detalle.subtotal) }}
-                </span>
+      @if (selectedReciboId && !detallesLoading && !detallesError) {
+        <div class="detalle-content">
+          <div class="detalle-container">
+            <div class="detalle-wrapper">
+              <div class="detalle-header">
+                <span class="detalle-col producto">Producto</span>
+                <span class="detalle-col unitario">Valor unitario</span>
+                <span class="detalle-col cantidad">Cantidad</span>
+                <span class="detalle-col subtotal">Subtotal</span>
+              </div>
+              <div class="detalle-list">
+                @for (detalle of detalles; track detalle) {
+                  <div class="detalle-row">
+                    <span class="detalle-col producto">
+                      {{
+                        detalle.producto
+                          ? detalle.producto.nombre
+                          : "Producto " + detalle.productoId
+                      }}
+                    </span>
+                    <span class="detalle-col unitario">
+                      {{
+                        formatCurrency(
+                          detalle.producto?.precio ??
+                            (detalle.cantidad
+                              ? detalle.subtotal / detalle.cantidad
+                              : 0)
+                        )
+                      }}
+                    </span>
+                    <span class="detalle-col cantidad">
+                      {{ detalle.cantidad }}
+                    </span>
+                    <span class="detalle-col subtotal">
+                      {{ formatCurrency(detalle.subtotal) }}
+                    </span>
+                  </div>
+                }
               </div>
             </div>
-          </div>
-          <div class="detalle-footer" *ngIf="detalles.length > 0">
-            <div class="detalle-footer-left">
-              <div class="metodo-pago-container" *ngIf="getSelectedRecibo() && getMetodoPago(getSelectedRecibo()!.metodoPagoId)">
-                <span class="metodo-pago-label">Pago con:</span>
-                <img 
-                  [src]="'assets/img/icons/payments/' + getMetodoPago(getSelectedRecibo()!.metodoPagoId)!.file"
-                  [alt]="getMetodoPago(getSelectedRecibo()!.metodoPagoId)!.descripcion"
-                  class="metodo-pago-icon" />
-                <span class="monto-recibido-label" *ngIf="isMetodoPagoEfectivo(getSelectedRecibo()!.metodoPagoId) && getMontoRecibido(getSelectedRecibo()!) !== null">
-                  {{ formatCurrency(getMontoRecibido(getSelectedRecibo()!)!) }}
+            @if (detalles.length > 0) {
+              <div class="detalle-footer">
+                <div class="detalle-footer-left">
+                  @if (
+                    getSelectedRecibo() &&
+                    getMetodoPago(getSelectedRecibo()!.metodoPagoId)
+                  ) {
+                    <div class="metodo-pago-container">
+                      <span class="metodo-pago-label">Pago con:</span>
+                      <img
+                        [src]="
+                          'assets/img/icons/payments/' +
+                          getMetodoPago(getSelectedRecibo()!.metodoPagoId)!.file
+                        "
+                        [alt]="
+                          getMetodoPago(getSelectedRecibo()!.metodoPagoId)!
+                            .descripcion
+                        "
+                        class="metodo-pago-icon" />
+                      @if (
+                        isMetodoPagoEfectivo(
+                          getSelectedRecibo()!.metodoPagoId
+                        ) && getMontoRecibido(getSelectedRecibo()!) !== null
+                      ) {
+                        <span class="monto-recibido-label">
+                          {{
+                            formatCurrency(
+                              getMontoRecibido(getSelectedRecibo()!)!
+                            )
+                          }}
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+                <span class="detalle-col cantidad">TOTAL</span>
+                <span
+                  class="detalle-col subtotal total-value total-value--highlight">
+                  {{ formatCurrency(getTotalDetalles()) }}
                 </span>
               </div>
-            </div>
-            <span class="detalle-col cantidad">TOTAL</span>
-            <span class="detalle-col subtotal total-value total-value--highlight">
-              {{ formatCurrency(getTotalDetalles()) }}
-            </span>
+            }
           </div>
         </div>
-      </div>
+      }
     </div>
   </div>
 </div>
-

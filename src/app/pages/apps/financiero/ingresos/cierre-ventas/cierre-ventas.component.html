@@ -10,15 +10,20 @@
       <div class="fecha-input-group">
         <mat-form-field appearance="outline" class="fecha-field">
           <mat-label>Fecha Inicio</mat-label>
-          <input matInput [matDatepicker]="pickerInicio" [formControl]="fechaInicioCtrl">
-          <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+          <input
+            matInput
+            [matDatepicker]="pickerInicio"
+            [formControl]="fechaInicioCtrl" />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="pickerInicio"></mat-datepicker-toggle>
           <mat-datepicker #pickerInicio></mat-datepicker>
         </mat-form-field>
         <input
           type="time"
           class="hora-input"
           [formControl]="horaInicioCtrl"
-          [class.disabled]="horaInicioCtrl.disabled">
+          [class.disabled]="horaInicioCtrl.disabled" />
       </div>
     </div>
 
@@ -30,15 +35,20 @@
       <div class="fecha-input-group">
         <mat-form-field appearance="outline" class="fecha-field">
           <mat-label>Fecha Fin</mat-label>
-          <input matInput [matDatepicker]="pickerFin" [formControl]="fechaFinCtrl">
-          <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
+          <input
+            matInput
+            [matDatepicker]="pickerFin"
+            [formControl]="fechaFinCtrl" />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="pickerFin"></mat-datepicker-toggle>
           <mat-datepicker #pickerFin></mat-datepicker>
         </mat-form-field>
         <input
           type="time"
           class="hora-input"
           [formControl]="horaFinCtrl"
-          [class.disabled]="horaFinCtrl.disabled">
+          [class.disabled]="horaFinCtrl.disabled" />
       </div>
     </div>
 
@@ -49,92 +59,140 @@
         type="button"
         (click)="consultar()"
         [disabled]="consultando">
-        <mat-spinner diameter="20" *ngIf="consultando" class="button-spinner"></mat-spinner>
-        <span *ngIf="!consultando">Consultar</span>
-        <span *ngIf="consultando">Consultando...</span>
+        @if (consultando) {
+          <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+        }
+        @if (!consultando) {
+          <span>Consultar</span>
+        }
+        @if (consultando) {
+          <span>Consultando...</span>
+        }
       </button>
     </div>
   </div>
 
-  <div class="table-container" *ngIf="datosConsultados">
-    <table mat-table [dataSource]="corteVentasRows" class="corte-table">
-      <ng-container matColumnDef="metodoPago">
-        <th mat-header-cell *matHeaderCellDef class="header-cell">Método de Pago</th>
-        <td mat-cell *matCellDef="let row" class="cell metodo-pago-cell">
-          <span class="metodo-pago-nombre">{{ row.metodoPago.descripcion }}</span>
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="totalSistema">
-        <th mat-header-cell *matHeaderCellDef class="header-cell">Total Sistema</th>
-        <td mat-cell *matCellDef="let row" class="cell total-sistema-cell">
-          <div class="total-sistema-container">
-            <span class="total-sistema-value">{{ formatCurrency(row.totalSistema) }}</span>
-          </div>
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="totalReal">
-        <th mat-header-cell *matHeaderCellDef class="header-cell">Total Físico / Real</th>
-        <td mat-cell *matCellDef="let row; let i = index" class="cell total-real-cell">
-          <div class="total-real-container">
-            <mat-form-field appearance="outline" class="total-real-field">
-              <span matPrefix class="currency-prefix">$</span>
-              <input
-                matInput
-                type="text"
-                [formControl]="row.totalRealCtrl"
-                placeholder="0"
-                (input)="onTotalRealInput($event, row)"
-                (focus)="onTotalRealFocus($event, row)"
-                (blur)="onTotalRealBlur($event, row)"
-                (keydown)="onTotalRealKeydown($event, row, i)">
-              <mat-error *ngIf="row.totalRealCtrl.hasError('required')">Requerido</mat-error>
-              <mat-error *ngIf="row.totalRealCtrl.hasError('min')">Debe ser >= 0</mat-error>
-            </mat-form-field>
-            <span class="desfase-texto" [ngClass]="getDesfaseClass(row.desfase)">
-              {{ getDesfaseTexto(row.desfase) }}
-            </span>
-          </div>
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="displayedColumns" class="header-row"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"
-          class="data-row" [class.row-alt]="i % 2 !== 0"></tr>
-    </table>
-
-    <div class="totales-container">
-      <div class="total-row">
-        <span class="total-label">TOTAL</span>
-        <span class="total-value">{{ formatCurrency(totalSistema) }}</span>
-        <span class="total-value total-real-final">{{ formatCurrency(totalReal) }}</span>
-      </div>
-      <div class="total-row desfases-row">
-        <span class="total-label">TOTAL DESFASES</span>
-        <span class="total-desfases-value" [ngClass]="getTotalDesfaseClass()">{{ formatCurrency(totalDesfases) }}</span>
+  @if (datosConsultados) {
+    <div class="table-container">
+      <table mat-table [dataSource]="corteVentasRows" class="corte-table">
+        <ng-container matColumnDef="metodoPago">
+          <th mat-header-cell *matHeaderCellDef class="header-cell">
+            Método de Pago
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell metodo-pago-cell">
+            <span class="metodo-pago-nombre">{{
+              row.metodoPago.descripcion
+            }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="totalSistema">
+          <th mat-header-cell *matHeaderCellDef class="header-cell">
+            Total Sistema
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell total-sistema-cell">
+            <div class="total-sistema-container">
+              <span class="total-sistema-value">{{
+                formatCurrency(row.totalSistema)
+              }}</span>
+            </div>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="totalReal">
+          <th mat-header-cell *matHeaderCellDef class="header-cell">
+            Total Físico / Real
+          </th>
+          <td
+            mat-cell
+            *matCellDef="let row; let i = index"
+            class="cell total-real-cell">
+            <div class="total-real-container">
+              <mat-form-field appearance="outline" class="total-real-field">
+                <span matPrefix class="currency-prefix">$</span>
+                <input
+                  matInput
+                  type="text"
+                  [formControl]="row.totalRealCtrl"
+                  placeholder="0"
+                  (input)="onTotalRealInput($event, row)"
+                  (focus)="onTotalRealFocus($event, row)"
+                  (blur)="onTotalRealBlur($event, row)"
+                  (keydown)="onTotalRealKeydown($event, row, i)" />
+                @if (row.totalRealCtrl.hasError("required")) {
+                  <mat-error>Requerido</mat-error>
+                }
+                @if (row.totalRealCtrl.hasError("min")) {
+                  <mat-error>Debe ser >= 0</mat-error>
+                }
+              </mat-form-field>
+              <span
+                class="desfase-texto"
+                [ngClass]="getDesfaseClass(row.desfase)">
+                {{ getDesfaseTexto(row.desfase) }}
+              </span>
+            </div>
+          </td>
+        </ng-container>
+        <tr
+          mat-header-row
+          *matHeaderRowDef="displayedColumns"
+          class="header-row"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumns; let i = index"
+          class="data-row"
+          [class.row-alt]="i % 2 !== 0"></tr>
+      </table>
+      <div class="totales-container">
+        <div class="total-row">
+          <span class="total-label">TOTAL</span>
+          <span class="total-value">{{ formatCurrency(totalSistema) }}</span>
+          <span class="total-value total-real-final">{{
+            formatCurrency(totalReal)
+          }}</span>
+        </div>
+        <div class="total-row desfases-row">
+          <span class="total-label">TOTAL DESFASES</span>
+          <span
+            class="total-desfases-value"
+            [ngClass]="getTotalDesfaseClass()"
+            >{{ formatCurrency(totalDesfases) }}</span
+          >
+        </div>
       </div>
     </div>
-  </div>
+  }
 
-  <div class="loading-container" *ngIf="cargaInicial && consultando">
-    <mat-spinner diameter="40"></mat-spinner>
-    <p class="loading-text">Cargando datos...</p>
-  </div>
+  @if (cargaInicial && consultando) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p class="loading-text">Cargando datos...</p>
+    </div>
+  }
 
-  <div class="loading-container" *ngIf="!cargaInicial && consultando">
-    <mat-spinner diameter="40"></mat-spinner>
-    <p class="loading-text">Consultando ventas...</p>
-  </div>
+  @if (!cargaInicial && consultando) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p class="loading-text">Consultando ventas...</p>
+    </div>
+  }
 
-  <div class="mensaje-inicial" *ngIf="!datosConsultados && !consultando && !cargaInicial">
-    <mat-icon svgIcon="mat:info" class="info-icon"></mat-icon>
-    <p>Seleccione el rango de fechas y presione "Consultar" para cargar los datos.</p>
-  </div>
+  @if (!datosConsultados && !consultando && !cargaInicial) {
+    <div class="mensaje-inicial">
+      <mat-icon svgIcon="mat:info" class="info-icon"></mat-icon>
+      <p>
+        Seleccione el rango de fechas y presione "Consultar" para cargar los
+        datos.
+      </p>
+    </div>
+  }
 </div>
 
 <div mat-dialog-actions align="end" class="dialog-actions">
-  <button mat-stroked-button type="button" (click)="cancelar()" [disabled]="loading">
+  <button
+    mat-stroked-button
+    type="button"
+    (click)="cancelar()"
+    [disabled]="loading">
     Cancelar
   </button>
   <button
@@ -143,8 +201,14 @@
     type="button"
     (click)="registrar()"
     [disabled]="!esFormularioValido() || loading">
-    <mat-spinner diameter="20" *ngIf="loading" class="button-spinner"></mat-spinner>
-    <span *ngIf="!loading">Registrar cierre</span>
-    <span *ngIf="loading">Registrando...</span>
+    @if (loading) {
+      <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+    }
+    @if (!loading) {
+      <span>Registrar cierre</span>
+    }
+    @if (loading) {
+      <span>Registrando...</span>
+    }
   </button>
 </div>

@@ -1,7 +1,17 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import {
+  MatDialogModule,
+  MatDialogRef,
+  MAT_DIALOG_DATA
+} from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDividerModule } from '@angular/material/divider';
@@ -14,7 +24,7 @@ import {
   DateAdapter,
   NativeDateAdapter
 } from '@angular/material/core';
-import { NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
+
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { EstadisticaFinancieraService } from '../service/estadistica-financiera.service';
 import { httpErrorMessage } from '../http-error.util';
@@ -47,40 +57,37 @@ class DateAdapterDDMMYYYY extends NativeDateAdapter {
 }
 
 @Component({
-    selector: 'gm-utilidad-edit',
-    providers: [
-        { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
-        { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
-        {
-            provide: MAT_DATE_FORMATS,
-            useValue: {
-                parse: { dateInput: 'dd/MM/yyyy' },
-                display: {
-                    dateInput: 'dd/MM/yyyy',
-                    monthYearLabel: 'MMM yyyy',
-                    dateA11yLabel: 'dd/MM/yyyy',
-                    monthYearA11yLabel: 'MMMM yyyy'
-                }
-            }
+  selector: 'gm-utilidad-edit',
+  providers: [
+    { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
+    { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
+    {
+      provide: MAT_DATE_FORMATS,
+      useValue: {
+        parse: { dateInput: 'dd/MM/yyyy' },
+        display: {
+          dateInput: 'dd/MM/yyyy',
+          monthYearLabel: 'MMM yyyy',
+          dateA11yLabel: 'dd/MM/yyyy',
+          monthYearA11yLabel: 'MMMM yyyy'
         }
-    ],
-    imports: [
-        ReactiveFormsModule,
-        MatDialogModule,
-        MatButtonModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatDividerModule,
-        MatIconModule,
-        MatDatepickerModule,
-        MatNativeDateModule,
-        MonthYearPickerComponent,
-        NgIf,
-        NgSwitch,
-        NgSwitchCase
-    ],
-    templateUrl: './utilidad-edit.component.html',
-    styleUrl: './utilidad-edit.component.scss'
+      }
+    }
+  ],
+  imports: [
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatDividerModule,
+    MatIconModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MonthYearPickerComponent
+  ],
+  templateUrl: './utilidad-edit.component.html',
+  styleUrl: './utilidad-edit.component.scss'
 })
 export class UtilidadEditComponent implements OnInit {
   form: FormGroup;
@@ -106,7 +113,11 @@ export class UtilidadEditComponent implements OnInit {
 
   ngOnInit() {
     const today = new Date();
-    const fechaHoy = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const fechaHoy = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
 
     if (this.periodo === 'dia') {
       this.fechaDiaCtrl.setValidators([Validators.required]);
@@ -127,7 +138,13 @@ export class UtilidadEditComponent implements OnInit {
       this.fechaDiaCtrl.setValue(null);
       this.valorMesCtrl.clearValidators();
       this.valorMesCtrl.setValue(null);
-      this.form.get('valorAnio')!.setValidators([Validators.required, Validators.min(2000), Validators.max(2100)]);
+      this.form
+        .get('valorAnio')!
+        .setValidators([
+          Validators.required,
+          Validators.min(2000),
+          Validators.max(2100)
+        ]);
     }
     this.form.updateValueAndValidity();
     this.fechaDiaCtrl.updateValueAndValidity();

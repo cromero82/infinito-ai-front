@@ -1,4 +1,5 @@
-<div class="container pt-2 pb-1 financiero-page flex flex-col flex-1 min-h-0 min-w-0">
+<div
+  class="container pt-2 pb-1 financiero-page flex flex-col flex-1 min-h-0 min-w-0">
   <div class="card overflow-hidden flex-shrink-0">
     <div class="h-10 relative overflow-hidden">
       <img
@@ -20,24 +21,27 @@
 
       <div class="max-w-full flex-auto sm:ltr:ml-6 sm:rtl:mr-6">
         <div class="h-10 flex items-end">
-          <h1 @fadeInRight class="headline text-white pb-2 m-0">{{ tituloSeccion }}</h1>
+          <h1 @fadeInRight class="headline text-white pb-2 m-0">
+            {{ tituloSeccion }}
+          </h1>
         </div>
 
         <nav [tabPanel]="tabPanel" class="border-0" mat-tab-nav-bar>
-          <a
-            #rla="routerLinkActive"
-            *ngFor="let link of links"
-            [active]="rla.isActive"
-            [disabled]="link.disabled ?? false"
-            [routerLinkActiveOptions]="
-              link.routerLinkActiveOptions || { exact: false }
-            "
-            [routerLink]="link.route"
-            mat-tab-link
-            queryParamsHandling="preserve"
-            routerLinkActive>
-            {{ link.label }}
-          </a>
+          @for (link of links; track link) {
+            <a
+              #rla="routerLinkActive"
+              [active]="rla.isActive"
+              [disabled]="link.disabled ?? false"
+              [routerLinkActiveOptions]="
+                link.routerLinkActiveOptions || { exact: false }
+              "
+              [routerLink]="link.route"
+              mat-tab-link
+              queryParamsHandling="preserve"
+              routerLinkActive>
+              {{ link.label }}
+            </a>
+          }
         </nav>
         <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
       </div>

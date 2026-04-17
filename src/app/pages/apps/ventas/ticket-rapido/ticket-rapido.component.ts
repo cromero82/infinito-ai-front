@@ -1,7 +1,19 @@
-import { Component, Inject, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  Inject,
+  OnInit,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+  ChangeDetectorRef
+} from '@angular/core';
+
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import {
+  MatDialogModule,
+  MatDialogRef,
+  MAT_DIALOG_DATA
+} from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,8 +21,14 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ClienteDto } from '../service/cliente.service';
-import { MetodoPagoService, MetodoPagoDto } from '../service/metodo-pago.service';
-import { HistorialReciboService, QuickReciboRequest } from '../service/historial-recibo.service';
+import {
+  MetodoPagoService,
+  MetodoPagoDto
+} from '../service/metodo-pago.service';
+import {
+  HistorialReciboService,
+  QuickReciboRequest
+} from '../service/historial-recibo.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ClienteSelectorComponent } from '../cliente-selector/cliente-selector.component';
@@ -20,21 +38,20 @@ export interface TicketRapidoData {
 }
 
 @Component({
-    selector: 'ticket-rapido',
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        MatDialogModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        MatTooltipModule,
-        MatIconModule,
-        MatProgressSpinnerModule,
-        ClienteSelectorComponent
-    ],
-    templateUrl: './ticket-rapido.component.html',
-    styleUrls: ['./ticket-rapido.component.scss']
+  selector: 'ticket-rapido',
+  imports: [
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    ClienteSelectorComponent
+  ],
+  templateUrl: './ticket-rapido.component.html',
+  styleUrls: ['./ticket-rapido.component.scss']
 })
 export class TicketRapidoComponent implements OnInit, OnDestroy {
   @ViewChild('totalInput') totalInputRef?: ElementRef<HTMLInputElement>;
@@ -72,19 +89,31 @@ export class TicketRapidoComponent implements OnInit, OnDestroy {
     this.loadMetodosPago();
 
     // Configurar el cálculo del cambio cuando cambia "Paga con"
-    this.pagaConCtrl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.calcularCambio();
-    });
+    this.pagaConCtrl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.calcularCambio();
+      });
 
     // También recalcular cuando cambia el total (si es efectivo)
     this.totalCtrl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
       if (this.selectedMetodoPagoId === 1) {
-        const totalValue = this.parseCurrencyToNumber(this.totalCtrl.value || '');
-        const pagaConValue = this.parseCurrencyToNumber(this.pagaConCtrl.value || '');
+        const totalValue = this.parseCurrencyToNumber(
+          this.totalCtrl.value || ''
+        );
+        const pagaConValue = this.parseCurrencyToNumber(
+          this.pagaConCtrl.value || ''
+        );
 
         if (totalValue > 0) {
-          if (pagaConValue === 0 || pagaConValue === this.parseCurrencyToNumber(this.totalCtrl.value || '')) {
-            this.pagaConCtrl.setValue(this.formatCurrency(totalValue), { emitEvent: false });
+          if (
+            pagaConValue === 0 ||
+            pagaConValue ===
+              this.parseCurrencyToNumber(this.totalCtrl.value || '')
+          ) {
+            this.pagaConCtrl.setValue(this.formatCurrency(totalValue), {
+              emitEvent: false
+            });
           }
         }
         this.calcularCambio();
@@ -114,16 +143,21 @@ export class TicketRapidoComponent implements OnInit, OnDestroy {
 
   private loadMetodosPago(): void {
     this.loadingMetodos = true;
-    this.metodoPagoService.obtenerMetodosPago().pipe(takeUntil(this.destroy$)).subscribe({
-      next: (metodos) => {
-        this.metodosPago = (metodos ?? []).slice().sort((a, b) => a.id - b.id);
-        this.loadingMetodos = false;
-      },
-      error: (err) => {
-        console.error('Error loading métodos de pago', err);
-        this.loadingMetodos = false;
-      }
-    });
+    this.metodoPagoService
+      .obtenerMetodosPago()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (metodos) => {
+          this.metodosPago = (metodos ?? [])
+            .slice()
+            .sort((a, b) => a.id - b.id);
+          this.loadingMetodos = false;
+        },
+        error: (err) => {
+          console.error('Error loading métodos de pago', err);
+          this.loadingMetodos = false;
+        }
+      });
   }
 
   seleccionarMetodoPago(metodo: MetodoPagoDto): void {
@@ -131,17 +165,19 @@ export class TicketRapidoComponent implements OnInit, OnDestroy {
       return;
     }
     this.selectedMetodoPagoId = metodo.id;
-    
+
     // Si se selecciona efectivo (id: 1), inicializar "Paga con" con el valor del total
     if (metodo.id === 1) {
       const totalValue = this.parseCurrencyToNumber(this.totalCtrl.value || '');
       if (totalValue > 0) {
-        this.pagaConCtrl.setValue(this.formatCurrency(totalValue), { emitEvent: false });
+        this.pagaConCtrl.setValue(this.formatCurrency(totalValue), {
+          emitEvent: false
+        });
         this.calcularCambio();
-        
+
         // Forzar detección de cambios para que el campo se muestre
         this.cdr.detectChanges();
-        
+
         // Enfocar el campo "Paga con" y seleccionar todo el texto
         // Usar requestAnimationFrame para asegurar que el DOM esté listo
         requestAnimationFrame(() => {
@@ -175,13 +211,13 @@ export class TicketRapidoComponent implements OnInit, OnDestroy {
     const value = input.value;
     // Permitir solo números
     const cleaned = value.replace(/[^\d]/g, '');
-    
+
     if (cleaned === '') {
       this.pagaConCtrl.setValue('', { emitEvent: false });
       this.calcularCambio();
       return;
     }
-    
+
     // Guardar el valor numérico sin formato para permitir edición fluida
     this.pagaConCtrl.setValue(cleaned, { emitEvent: false });
     this.calcularCambio();
@@ -192,13 +228,19 @@ export class TicketRapidoComponent implements OnInit, OnDestroy {
     if (value) {
       const numericValue = this.parseCurrencyToNumber(value);
       if (numericValue > 0) {
-        this.pagaConCtrl.setValue(this.formatCurrency(numericValue), { emitEvent: false });
+        this.pagaConCtrl.setValue(this.formatCurrency(numericValue), {
+          emitEvent: false
+        });
         this.calcularCambio();
       } else {
         // Si el valor es 0 o inválido, establecer el total como valor por defecto
-        const totalValue = this.parseCurrencyToNumber(this.totalCtrl.value || '');
+        const totalValue = this.parseCurrencyToNumber(
+          this.totalCtrl.value || ''
+        );
         if (totalValue > 0) {
-          this.pagaConCtrl.setValue(this.formatCurrency(totalValue), { emitEvent: false });
+          this.pagaConCtrl.setValue(this.formatCurrency(totalValue), {
+            emitEvent: false
+          });
           this.calcularCambio();
         }
       }
@@ -206,7 +248,9 @@ export class TicketRapidoComponent implements OnInit, OnDestroy {
       // Si está vacío, establecer el total como valor por defecto
       const totalValue = this.parseCurrencyToNumber(this.totalCtrl.value || '');
       if (totalValue > 0) {
-        this.pagaConCtrl.setValue(this.formatCurrency(totalValue), { emitEvent: false });
+        this.pagaConCtrl.setValue(this.formatCurrency(totalValue), {
+          emitEvent: false
+        });
         this.calcularCambio();
       }
     }
@@ -250,7 +294,9 @@ export class TicketRapidoComponent implements OnInit, OnDestroy {
   canPagar(): boolean {
     const tieneCliente = this.selectedClienteId !== null;
     const tieneMetodoPago = this.selectedMetodoPagoId !== null;
-    const tieneTotal = this.totalCtrl.value !== '' && this.parseCurrencyToNumber(this.totalCtrl.value ?? '') > 0;
+    const tieneTotal =
+      this.totalCtrl.value !== '' &&
+      this.parseCurrencyToNumber(this.totalCtrl.value ?? '') > 0;
     const noEstaCargando = !this.loading;
 
     // Si es efectivo (id: 1), validar que el pago sea suficiente
@@ -258,7 +304,13 @@ export class TicketRapidoComponent implements OnInit, OnDestroy {
       const pagaCon = this.parseCurrencyToNumber(this.pagaConCtrl.value || '');
       const total = this.parseCurrencyToNumber(this.totalCtrl.value || '');
       const pagoSuficiente = pagaCon >= total && pagaCon > 0;
-      return tieneCliente && tieneMetodoPago && tieneTotal && pagoSuficiente && noEstaCargando;
+      return (
+        tieneCliente &&
+        tieneMetodoPago &&
+        tieneTotal &&
+        pagoSuficiente &&
+        noEstaCargando
+      );
     }
 
     return tieneCliente && tieneMetodoPago && tieneTotal && noEstaCargando;
@@ -352,12 +404,12 @@ export class TicketRapidoComponent implements OnInit, OnDestroy {
     const value = input.value;
     // Remove all non-numeric characters except decimal point
     const cleaned = value.replace(/[^\d]/g, '');
-    
+
     if (cleaned === '') {
       this.totalCtrl.setValue('', { emitEvent: false });
       return;
     }
-    
+
     // Parse as number
     const numericValue = Number(cleaned);
     if (!isNaN(numericValue) && numericValue >= 0) {
@@ -376,9 +428,10 @@ export class TicketRapidoComponent implements OnInit, OnDestroy {
     if (value) {
       const numericValue = this.parseCurrencyToNumber(value);
       if (numericValue > 0) {
-        this.totalCtrl.setValue(this.formatCurrency(numericValue), { emitEvent: false });
+        this.totalCtrl.setValue(this.formatCurrency(numericValue), {
+          emitEvent: false
+        });
       }
     }
   }
 }
-

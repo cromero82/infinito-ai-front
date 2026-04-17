@@ -18,7 +18,7 @@ import { ToolbarUserComponent } from './toolbar-user/toolbar-user.component';
 import { NavigationItemComponent } from '../navigation/navigation-item/navigation-item.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
-import { AsyncPipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, NgClass } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { NavigationItem } from '../../../core/navigation/navigation-item.interface';
@@ -26,22 +26,20 @@ import { checkRouterChildsData } from '@vex/utils/check-router-childs-data';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-    selector: 'vex-toolbar',
-    templateUrl: './toolbar.component.html',
-    styleUrls: ['./toolbar.component.scss'],
-    imports: [
-        MatButtonModule,
-        MatIconModule,
-        NgIf,
-        RouterLink,
-        MatMenuModule,
-        NgClass,
-        NgFor,
-        NavigationItemComponent,
-        ToolbarUserComponent,
-        NavigationComponent,
-        AsyncPipe
-    ]
+  selector: 'vex-toolbar',
+  templateUrl: './toolbar.component.html',
+  styleUrls: ['./toolbar.component.scss'],
+  imports: [
+    MatButtonModule,
+    MatIconModule,
+    RouterLink,
+    MatMenuModule,
+    NgClass,
+    NavigationItemComponent,
+    ToolbarUserComponent,
+    NavigationComponent,
+    AsyncPipe
+  ]
 })
 export class ToolbarComponent implements OnInit {
   @HostBinding('class.shadow-b')
