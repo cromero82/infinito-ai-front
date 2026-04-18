@@ -35,8 +35,8 @@
               </button>
             </div>
 
-            <div class="flex flex-col gap-3">
-              <mat-form-field appearance="outline">
+            <div class="ingresos-filtros-fields flex flex-col">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
                 <mat-label>Fecha Inicio</mat-label>
                 <input
                   matInput
@@ -48,7 +48,7 @@
                 <mat-datepicker #pickerInicio></mat-datepicker>
               </mat-form-field>
 
-              <mat-form-field appearance="outline">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
                 <mat-label>Fecha Fin</mat-label>
                 <input
                   matInput
@@ -112,22 +112,10 @@
           }
         </div>
 
-        <div class="split-pane-right flex flex-col">
-          @if (loading) {
-            <div class="text-secondary py-8 text-center">
-              Cargando ventas...
-            </div>
-          }
-
-          @if (!loading && error) {
-            <div class="text-warn py-8 text-center">
-              {{ error }}
-            </div>
-          }
-
+        <div class="split-pane-right flex flex-col min-h-0">
           @if (!loading && !error) {
             <div
-              class="ingresos-toolbar-panel flex flex-col items-center gap-1 mt-0 mb-1">
+              class="ingresos-toolbar-panel flex flex-col items-center gap-1 mt-0 mb-1 flex-shrink-0">
               <div class="flex justify-center items-center gap-6">
                 <button
                   mat-flat-button
@@ -194,58 +182,71 @@
             </div>
           }
 
-          @if (!loading && !error && ventasPorFecha.length === 0) {
-            <div class="text-secondary py-8 text-center">
-              No hay ventas disponibles para el período seleccionado.
-            </div>
-          }
-
-          @if (!loading && !error && ventasPorFecha.length > 0) {
-            <div class="ingresos-content-panel flex flex-col flex-1 min-h-0">
-              <div class="ingresos-chart-panel">
-                <vex-chart
-                  [options]="chartOptions"
-                  [series]="chartSeries"></vex-chart>
+          <div class="ingresos-right-scroll min-h-0">
+            @if (loading) {
+              <div class="text-secondary py-8 text-center">
+                Cargando ventas...
               </div>
-              <div
-                class="ingresos-details-panel mt-4 flex flex-col flex-1 min-h-0">
-                <h3 class="title font-medium mb-3 flex-shrink-0">
-                  Detalles por Fecha
-                </h3>
-                <div class="ingresos-details-table overflow-x-auto">
-                  <table class="w-full border-collapse">
-                    <thead>
-                      <tr class="border-b">
-                        <th class="text-left py-2 px-4">Fecha</th>
-                        <th class="text-right py-2 px-4">Total</th>
-                        <th class="text-left py-2 px-4">Métodos de Pago</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for (venta of ventasPorFechaVisibles; track venta) {
-                        <tr class="border-b hover:bg-gray-50">
-                          <td class="py-2 px-4">{{ venta.fecha }}</td>
-                          <td class="text-right py-2 px-4 font-medium">
-                            {{ formatCurrency(venta.total) }}
-                          </td>
-                          <td class="py-2 px-4">
-                            <div class="flex flex-col gap-1">
-                              @for (detalle of venta.detalles; track detalle) {
-                                <span class="text-sm">
-                                  {{ detalle.metodoPagoNombre }}:
-                                  {{ formatCurrency(detalle.total) }}
-                                </span>
-                              }
-                            </div>
-                          </td>
+            }
+
+            @if (!loading && error) {
+              <div class="text-warn py-8 text-center">
+                {{ error }}
+              </div>
+            }
+
+            @if (!loading && !error && ventasPorFecha.length === 0) {
+              <div class="text-secondary py-8 text-center">
+                No hay ventas disponibles para el período seleccionado.
+              </div>
+            }
+
+            @if (!loading && !error && ventasPorFecha.length > 0) {
+              <div class="ingresos-content-panel flex flex-col">
+                <div class="ingresos-chart-panel">
+                  <vex-chart
+                    [options]="chartOptions"
+                    [series]="chartSeries"></vex-chart>
+                </div>
+                <div class="ingresos-details-panel mt-4 flex flex-col">
+                  <h3 class="title font-medium mb-3">
+                    Detalles por Fecha
+                  </h3>
+                  <div class="ingresos-details-table">
+                    <table class="w-full border-collapse">
+                      <thead>
+                        <tr class="border-b">
+                          <th class="text-left py-2 px-4">Fecha</th>
+                          <th class="text-right py-2 px-4">Total</th>
+                          <th class="text-left py-2 px-4">Métodos de Pago</th>
                         </tr>
-                      }
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        @for (venta of ventasPorFechaVisibles; track venta) {
+                          <tr class="border-b hover:bg-gray-50">
+                            <td class="py-2 px-4">{{ venta.fecha }}</td>
+                            <td class="text-right py-2 px-4 font-medium">
+                              {{ formatCurrency(venta.total) }}
+                            </td>
+                            <td class="py-2 px-4">
+                              <div class="flex flex-col gap-1">
+                                @for (detalle of venta.detalles; track detalle) {
+                                  <span class="text-sm">
+                                    {{ detalle.metodoPagoNombre }}:
+                                    {{ formatCurrency(detalle.total) }}
+                                  </span>
+                                }
+                              </div>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-            </div>
-          }
+            }
+          </div>
         </div>
       </div>
     </div>

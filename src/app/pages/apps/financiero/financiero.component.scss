@@ -7,12 +7,20 @@
 }
 
 .financiero-page {
-  flex: 1 1 auto;
+  flex: 1 1 0%;
+  min-height: 0;
 }
 
 .financiero-outlet {
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+// Igual que vex-main-route-host: el host de la ruta hija participa en el flex del outlet (si no, altura = contenido y no hay scroll interno en Ingresos)
+.financiero-outlet > router-outlet {
+  display: contents;
 }
 
 // Tabs Egresos/Proveedores más compactos
