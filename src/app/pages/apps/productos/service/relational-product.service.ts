@@ -49,6 +49,14 @@ export class RelationalProductService {
   }
 
   /**
+   * Obtiene un producto por ID (GET /products/{id})
+   */
+  getProductById(productId: number): Observable<Producto> {
+    const headers = new HttpHeaders({ Accept: 'application/json' });
+    return this.http.get<Producto>(`${this.apiUrl}/${productId}`, { headers });
+  }
+
+  /**
    * Updates an existing product
    * @param productId The ID of the product to update
    * @param product The product data to update

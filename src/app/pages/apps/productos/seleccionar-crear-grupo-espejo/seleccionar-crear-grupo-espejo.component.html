@@ -1,0 +1,125 @@
+<div
+  class="grupo-espejo-dialog-root"
+  cdkDrag
+  cdkDragRootElement=".cdk-overlay-pane">
+<div
+  class="grupo-espejo-dialog-header flex items-center gap-2"
+  mat-dialog-title
+  cdkDragHandle>
+  <h2 class="headline m-0 flex-auto">Grupo espejo de productos</h2>
+  <button
+    type="button"
+    mat-icon-button
+    mat-dialog-close
+    class="text-secondary shrink-0"
+    aria-label="Cerrar">
+    <mat-icon svgIcon="mat:close"></mat-icon>
+  </button>
+</div>
+<mat-divider class="text-border"></mat-divider>
+
+<mat-dialog-content class="dialog-body">
+  <p class="producto-actual-line m-0 mb-2">
+    <span class="producto-actual-label">Producto actual:</span>
+    <strong class="producto-actual-nombre">{{ producto.nombre }}</strong>
+    <span *ngIf="producto.barcode" class="producto-actual-barcode">({{ producto.barcode }})</span>
+  </p>
+
+  <div class="section section-shrink">
+    <h3 class="section-title">Crear nuevo grupo</h3>
+    <div class="flex flex-wrap gap-2 items-start">
+      <mat-form-field appearance="outline" class="flex-1 min-w-[200px]">
+        <mat-label>Nombre del grupo</mat-label>
+        <input
+          #nuevoGrupoNombreInput
+          matInput
+          [formControl]="nuevoGrupoNombreCtrl"
+          placeholder="Ej. COCTEL LOS CUATES"
+          (input)="onNuevoGrupoNombreUserInput()" />
+      </mat-form-field>
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        class="mt-1"
+        [disabled]="loadingAccion"
+        (click)="crearNuevoGrupo()">
+        Crear y asociar
+      </button>
+    </div>
+  </div>
+
+  <mat-divider class="section-divider"></mat-divider>
+
+  <div class="section section-grow">
+    <h3 class="section-title">Buscar grupo existente</h3>
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Buscar por nombre o código de barras</mat-label>
+      <input
+        #searchGrupoInput
+        matInput
+        [formControl]="searchCtrl"
+        placeholder="Escriba para filtrar" />
+    </mat-form-field>
+    <div *ngIf="loadingBusqueda" class="flex items-center gap-2 buscando-row mb-2">
+      <mat-progress-spinner diameter="22" mode="indeterminate"></mat-progress-spinner>
+      Buscando…
+    </div>
+
+    <div class="two-col">
+      <div class="col-list">
+        <div class="list-caption">Grupos</div>
+        <div class="scroll-list scroll-list--grupos border rounded">
+          <button
+            type="button"
+            *ngFor="let g of resultados; trackBy: trackByGrupoId"
+            class="grupo-row w-full text-left"
+            [class.selected]="selectedGrupo?.id === g.id"
+            (click)="seleccionarGrupo(g)">
+            <span class="grupo-nombre">{{ g.nombre }}</span>
+            <span class="grupo-meta">#{{ g.id }}</span>
+          </button>
+          <div *ngIf="!loadingBusqueda && resultados.length === 0" class="px-2 py-2 empty-hint">
+            No hay resultados. Ajuste la búsqueda o cree un grupo nuevo.
+          </div>
+        </div>
+      </div>
+
+      <div class="col-detail" *ngIf="selectedGrupo">
+        <div class="list-caption">Productos en "{{ selectedGrupo.nombre }}"</div>
+        <div class="scroll-list scroll-list--productos border rounded">
+          <table
+            class="w-full product-table product-table--dialog"
+            *ngIf="selectedGrupo.productos?.length; else sinProductos">
+            <thead>
+              <tr>
+                <th class="text-left">Producto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of selectedGrupo.productos">
+                <td>{{ p.nombre }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <ng-template #sinProductos>
+            <div class="px-2 py-2 empty-hint">Sin productos listados en la respuesta.</div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="gap-2">
+  <button mat-button type="button" (click)="cancelar()" [disabled]="loadingAccion">Cancelar</button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    [disabled]="loadingAccion || !selectedGrupo"
+    (click)="agregarAGrupoSeleccionado()">
+    Agregar a grupo
+  </button>
+</mat-dialog-actions>
+</div>

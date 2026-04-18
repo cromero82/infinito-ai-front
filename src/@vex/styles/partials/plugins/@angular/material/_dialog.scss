@@ -3,8 +3,36 @@
     @apply rounded-lg;
   }
 
-  .mat-mdc-dialog-title {
-    @apply pt-3;
+  /* Cabecera de diálogo: un poco más compacta (permite títulos con menos aire vertical) */
+  .mat-mdc-dialog-container .mat-mdc-dialog-title {
+    @apply pt-2 pb-2;
+  }
+
+  /**
+   * Botón cerrar (X) en la cabecera: más pequeño que el icon-button estándar (48px),
+   * coherente en toda la app cuando el template usa mat-icon-button junto al título.
+   */
+  .mat-mdc-dialog-container .mat-mdc-dialog-title .mat-mdc-icon-button.mat-mdc-button-base {
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+
+    .mat-mdc-button-touch-target {
+      width: 32px !important;
+      height: 32px !important;
+    }
+
+    .mat-mdc-button-persistent-ripple {
+      border-radius: 50%;
+    }
+
+    mat-icon.mat-icon,
+    .mat-icon {
+      width: 18px !important;
+      height: 18px !important;
+      font-size: 18px !important;
+    }
   }
 
   /** Reset default height placeholder */

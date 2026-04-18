@@ -82,3 +82,9 @@ html {
   padding-left: 12px !important;
   padding-right: 12px !important;
 }
+
+/* Listados POS (mat-table MDC): hover de fila más visible que el default casi blanco */
+:root {
+  /* Tono primario (#3f51b5) muy suave: menos “gris negro”, ligero matiz azul */
+  --pos-mat-table-row-hover: rgba(63, 81, 181, 0.055);
+}

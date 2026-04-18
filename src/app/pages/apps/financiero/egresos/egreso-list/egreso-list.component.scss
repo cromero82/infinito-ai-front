@@ -264,7 +264,7 @@
       }
 
       &:hover {
-        background-color: rgba(0, 0, 0, 0.01) !important;
+        background-color: var(--pos-mat-table-row-hover) !important;
       }
 
       &.selected-row {
@@ -294,7 +294,7 @@
   }
 
   table.egresos-table-compact tr.mat-mdc-row:hover td.col-valor {
-    background-color: rgba(76, 175, 80, 0.12) !important;
+    background-color: rgba(76, 175, 80, 0.16) !important;
   }
 
   .egresos-active-filters .mdc-evolution-chip-set__chips {

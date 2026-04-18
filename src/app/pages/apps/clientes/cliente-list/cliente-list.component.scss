@@ -141,9 +141,8 @@ table.mat-mdc-table {
       background-color: transparent !important;
     }
     
-    // Hover effect (almost white, very subtle)
     &:hover {
-      background-color: rgba(0, 0, 0, 0.01) !important;
+      background-color: var(--pos-mat-table-row-hover) !important;
     }
   }
   

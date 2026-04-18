@@ -1,3 +1,5 @@
+import { GrupoEspejoEnProducto } from './grupo-espejo';
+
 export interface Company {
   id: number;
   name: string;
@@ -21,6 +23,8 @@ export interface Producto {
   fechaCreacion?: string | null;
   fecha_ultima_venta?: string | null;
   porcentaje_ganancia?: number | null;
+  /** Grupo espejo (mismo producto en distintas presentaciones); null si no aplica */
+  grupoEspejo?: GrupoEspejoEnProducto | null;
 }
 
 export interface ProductPage {

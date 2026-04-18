@@ -57,7 +57,14 @@ vex-page-layout-header .container {
   min-height: 0;
 }
 
-:host ::ng-deep .products-card .bg-app-bar {
+// Cabecera, barra de filtros y panel grupo espejo: no roban flex a la tabla
+.products-card > div.bg-app-bar,
+.products-card > div.grupo-espejo-panel {
+  flex-shrink: 0;
+}
+
+:host ::ng-deep .products-card .bg-app-bar,
+:host ::ng-deep .products-card .grupo-espejo-panel {
   padding-top: 14px;
   padding-bottom: 14px;
 }
@@ -74,14 +81,16 @@ vex-page-layout-header .container {
   overflow: hidden;
 }
 
-// Crece para llenar el espacio disponible (como ticket-panel + recibo en tickets-recibo)
+// Con pocas filas encoge con la tabla; con muchas, max-height limita y el scroll queda en .products-list
 .products-container {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
+  align-self: stretch;
+  width: 100%;
   min-height: 0;
+  max-height: 100%;
   overflow: hidden;
-  /* min-height se establece dinámicamente desde el componente */
 }
 
 .loading-more {
@@ -94,20 +103,24 @@ vex-page-layout-header .container {
 // Similar a ::ng-deep .detalle-list en tickets-recibo
 // scrollbar-gutter: stable evita que el ancho cambie al aparecer/desaparecer el scrollbar (evita recorte de iconos)
 .products-list {
-  flex: 1 1 auto !important;
+  // fit-content evita el bloque blanco enorme bajo pocas filas; max-height limita y activa scroll con muchas
+  flex: 0 1 auto !important;
+  align-self: stretch !important;
+  width: 100% !important;
   min-height: 0 !important;
+  height: fit-content !important;
   max-height: 100% !important;
   overflow-y: auto !important;
   overflow-x: auto !important;
-  scrollbar-gutter: stable !important; // Reserva espacio para scrollbar (evita recorte al cargar más filas)
+  scrollbar-gutter: stable !important;
   margin-bottom: 0 !important;
-  padding-bottom: 150px !important; // Espacio extra para que las últimas filas sean visibles al hacer scroll
+  padding-bottom: 28px !important;
   -webkit-overflow-scrolling: touch !important;
 }
 
-// Espaciador al final para que las últimas filas sean visibles al hacer scroll
+// Antes 120px añadía gran franja vacía al final del scroll
 .products-list-spacer {
-  min-height: 120px;
+  min-height: 12px;
   flex-shrink: 0;
 }
 
@@ -126,17 +139,19 @@ vex-page-layout-header .container {
 }
 
 // Table font size
-// min-width: max-content permite que la tabla crezca con el contenido; scroll horizontal muestra todo
+// table-layout fixed + anchos en columnas: la tabla usa el ancho del contenedor (sin min-width:max-content que
+// repartía el espacio en columnas "vacías" y anulaba el ahorro al estrechar código barras / precios).
 table.mat-mdc-table {
   font-size: 15px !important;
   width: 100% !important;
-  min-width: max-content !important;
+  table-layout: fixed !important;
+  min-width: 0 !important;
   
-  // Table header cells
+  // Table header cells (padding lateral algo menor para ganar ancho sin apretar texto)
   th.mat-mdc-header-cell {
     font-size: 16px !important;
     font-weight: 600 !important;
-    padding: 2px 12px !important;
+    padding: 2px 10px !important;
     line-height: 1.2 !important;
     height: 36px !important;
   }
@@ -144,10 +159,33 @@ table.mat-mdc-table {
   // Table data cells - min-height permite que filas crezcan cuando producto tiene 2 líneas
   td.mat-mdc-cell {
     font-size: 15px !important;
-    padding: 2px 12px !important;
+    padding: 2px 10px !important;
     line-height: 1.2 !important;
     min-height: 36px !important;
     height: auto !important;
+  }
+
+  // Código barras: 1 pt menor que el resto de celdas (15px → 13px)
+  td.mat-mdc-cell.col-barcode {
+    font-size: 13px !important;
+  }
+
+  th.mat-mdc-header-cell.col-barcode {
+    font-size: 15px !important;
+  }
+
+  // Menos espacio entre Código barras y Producto (evita scroll horizontal; antes ~12px+12px en la junta)
+  th.mat-mdc-header-cell.col-barcode,
+  td.mat-mdc-cell.col-barcode {
+    padding-right: 4px !important;
+  }
+  th.mat-mdc-header-cell.col-producto,
+  td.mat-mdc-cell.col-producto {
+    padding-left: 4px !important;
+  }
+
+  td.mat-mdc-cell.col-producto {
+    font-size: 14px !important;
   }
   
   // Table rows - min-height permite filas más altas cuando producto hace wrap
@@ -166,9 +204,8 @@ table.mat-mdc-table {
       background-color: transparent !important;
     }
     
-    // Hover effect (almost white, very subtle)
     &:hover {
-      background-color: rgba(0, 0, 0, 0.01) !important;
+      background-color: var(--pos-mat-table-row-hover) !important;
     }
 
     // Selected row style
@@ -211,8 +248,9 @@ table.mat-mdc-table {
   }
 }
 
-// Columna Edit (iconos de acción) - última columna, sticky a la derecha al hacer scroll horizontal
-$edit-col-width: 126px;
+// Columna Edit (iconos de acción) - última columna, sticky a la derecha si hubiera overflow
+// 3–4 iconos 36px + flecha menú ~26px → ~140px cómodo
+$edit-col-width: 140px;
 
 .edit-col-header.edit-col-sticky {
   position: sticky !important;
@@ -295,13 +333,33 @@ $edit-col-width: 126px;
 }
 
 :host ::ng-deep .products-list table tr:hover td.edit-col-cell {
-  background: rgba(0, 0, 0, 0.01) !important;
+  background: var(--pos-mat-table-row-hover) !important;
 }
 
-// Columna Precio: fondo verde suave para diferenciar de Precio compra
+// Columna Precio: ancho suficiente para "$999,999.99" sin ellipsis en condiciones normales
+$col-precio-width: 112px;
+
 th.col-precio,
 td.col-precio {
   background-color: rgba(76, 175, 80, 0.08) !important;
+  width: $col-precio-width !important;
+  min-width: $col-precio-width !important;
+  max-width: $col-precio-width !important;
+  box-sizing: border-box !important;
+  text-align: right !important;
+  padding-left: 4px !important;
+  padding-right: 6px !important;
+  vertical-align: middle !important;
+}
+
+th.col-precio {
+  overflow: visible !important;
+}
+
+td.col-precio {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
 :host ::ng-deep .products-list table tr:hover td.col-precio {
@@ -312,12 +370,20 @@ td.col-precio {
   background-color: rgba(76, 175, 80, 0.05) !important;
 }
 
-// Columna Código barras: más ancho, font 1px menor
+// Encabezados ordenables alineados a la derecha en columnas numéricas
+:host ::ng-deep .products-list table th.col-precio .mat-sort-header-container,
+:host ::ng-deep .products-list table th.col-precio-unidad .mat-sort-header-container,
+:host ::ng-deep .products-list table th.col-precio-compra .mat-sort-header-container,
+:host ::ng-deep .products-list table th.col-total-ventas .mat-sort-header-container,
+:host ::ng-deep .products-list table th.col-pct-ganancia .mat-sort-header-container {
+  justify-content: flex-end !important;
+}
+
+// Columna Código barras: ancho acotado + fuente compacta (evita scroll horizontal innecesario)
 .col-barcode {
-  width: 135px !important;
-  min-width: 135px !important;
-  max-width: 135px !important;
-  font-size: 14px !important;
+  width: 108px !important;
+  min-width: 108px !important;
+  max-width: 108px !important;
 }
 
 // Wrapper para código de barras con icono copiar al hover
@@ -346,9 +412,9 @@ td.col-precio {
     padding: 0 !important;
 
     .mat-icon {
-      font-size: 14px !important;
-      width: 14px !important;
-      height: 14px !important;
+      font-size: 13px !important;
+      width: 13px !important;
+      height: 13px !important;
     }
   }
 
@@ -358,15 +424,18 @@ td.col-precio {
   }
 }
 
-// Columna Producto: más ancho, permite 2 líneas, font 1px menor, tooltip en hover
+// Columna Producto: ancho FIJO (no auto). En table-layout:fixed, width:auto + max-width no limita
+// bien la columna y absorbe todo el espacio sobrante; fijamos 210px como antes.
 .col-producto {
+  width: 210px !important;
+  min-width: 210px !important;
   max-width: 210px !important;
-  min-width: 140px !important;
   white-space: normal !important;
   word-wrap: break-word !important;
   line-height: 1.2 !important;
   vertical-align: middle !important;
-  font-size: 14px !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
 
   span {
     display: -webkit-box;
@@ -376,6 +445,15 @@ td.col-precio {
     overflow: hidden;
     word-wrap: break-word;
   }
+}
+
+// Refuerzo frente a estilos de Material en mat-column-nombre
+:host ::ng-deep .products-list table th.mat-column-nombre,
+:host ::ng-deep .products-list table td.mat-column-nombre {
+  width: 210px !important;
+  min-width: 210px !important;
+  max-width: 210px !important;
+  box-sizing: border-box !important;
 }
 
 // Botones: menos espacio entre ellos
@@ -419,18 +497,120 @@ td.col-precio {
   }
 }
 
-// Fecha creación: ancho para nombre completo
+// Fecha creación
 .col-fecha {
-  width: 110px !important;
-  min-width: 110px !important;
-  max-width: 110px !important;
+  width: 96px !important;
+  min-width: 96px !important;
+  max-width: 96px !important;
 }
 
-// Actualización precio y Última venta: más ancho para nombres completos
+// Actualización precio y Última venta
 .col-fecha-wide {
-  width: 140px !important;
-  min-width: 140px !important;
-  max-width: 140px !important;
+  width: 124px !important;
+  min-width: 124px !important;
+  max-width: 124px !important;
+}
+
+// Precio unidad: casi siempre "-" o monto corto — ancho mínimo real
+th.col-precio-unidad,
+td.col-precio-unidad {
+  width: 64px !important;
+  min-width: 64px !important;
+  max-width: 64px !important;
+  box-sizing: border-box !important;
+  text-align: right !important;
+  padding-left: 2px !important;
+  padding-right: 4px !important;
+  vertical-align: middle !important;
+}
+
+td.col-precio-unidad {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+th.col-precio-unidad {
+  white-space: normal !important;
+  line-height: 1.1 !important;
+  font-size: 12px !important;
+  hyphens: auto !important;
+  overflow: visible !important;
+}
+
+// Precio compra
+th.col-precio-compra,
+td.col-precio-compra {
+  width: 104px !important;
+  min-width: 104px !important;
+  max-width: 104px !important;
+  box-sizing: border-box !important;
+  text-align: right !important;
+  padding-left: 4px !important;
+  padding-right: 6px !important;
+  vertical-align: middle !important;
+}
+
+td.col-precio-compra {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+th.col-precio-compra {
+  white-space: normal !important;
+  line-height: 1.1 !important;
+  font-size: 12px !important;
+  overflow: visible !important;
+}
+
+// Total ventas / % ganancia: numéricos compactos
+th.col-total-ventas,
+td.col-total-ventas {
+  width: 68px !important;
+  min-width: 68px !important;
+  max-width: 68px !important;
+  box-sizing: border-box !important;
+  text-align: right !important;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+}
+
+td.col-total-ventas {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+th.col-total-ventas {
+  white-space: normal !important;
+  line-height: 1.1 !important;
+  font-size: 12px !important;
+  overflow: visible !important;
+}
+
+th.col-pct-ganancia,
+td.col-pct-ganancia {
+  width: 72px !important;
+  min-width: 72px !important;
+  max-width: 72px !important;
+  box-sizing: border-box !important;
+  text-align: right !important;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+}
+
+td.col-pct-ganancia {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+th.col-pct-ganancia {
+  white-space: normal !important;
+  line-height: 1.1 !important;
+  font-size: 12px !important;
+  overflow: visible !important;
 }
 
 .icon-placeholder {
@@ -517,4 +697,287 @@ td.col-precio {
       align-items: center !important;
     }
   }
+}
+
+// Modo edición grupo espejo: tinte primario Vex (vs. cabecera/filtros en bg-app-bar gris)
+.grupo-espejo-panel {
+  background: rgb(var(--vex-color-primary-500) / 0.09);
+  border-bottom: 1px solid rgb(var(--vex-color-primary-600) / 0.14) !important;
+}
+
+:host-context(.dark) .grupo-espejo-panel {
+  background: rgb(var(--vex-color-primary-400) / 0.12);
+  border-bottom-color: rgb(var(--vex-color-primary-300) / 0.2) !important;
+}
+
+.grupo-espejo-panel-header-actions {
+  align-items: center;
+}
+
+// Estilo cercano a "Ticket rápido" (tickets): accent flat + icono + texto
+.grupo-espejo-corregir-precio-btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: auto;
+  padding-inline: 10px 12px;
+}
+
+.grupo-espejo-corregir-precio-icon {
+  margin: 0 !important;
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+:host ::ng-deep .grupo-espejo-corregir-precio-btn .mdc-button__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+// Productos con tupla de precios distinta al resto del grupo
+.grupo-espejo-prod-row--precio-conflicto {
+  border-color: rgba(211, 47, 47, 0.55) !important;
+  background: rgba(211, 47, 47, 0.09) !important;
+}
+
+:host-context(.dark) .grupo-espejo-prod-row--precio-conflicto {
+  border-color: rgba(239, 83, 80, 0.55) !important;
+  background: rgba(239, 83, 80, 0.12) !important;
+}
+
+// Grupo espejo: grid 4 columnas + scroll; iconos compactos como columna acciones tabla
+.grupo-espejo-productos-section {
+  width: 100%;
+  max-width: 100%;
+}
+
+.grupo-espejo-productos-scroll {
+  max-height: min(44vh, 320px);
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+  scrollbar-gutter: stable;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--vex-background-card, rgba(255, 255, 255, 0.5));
+  padding: 10px;
+}
+
+.grupo-espejo-productos {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  align-items: start;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (max-width: 820px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.grupo-espejo-prod-row {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 6px 4px !important;
+}
+
+// Bloque interno: detalle de precios (popover / menú flotante)
+.grupo-espejo-prod-precios-interno {
+  margin-top: 2px;
+  padding: 8px 8px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.grupo-espejo-prod-precios-interno--popover {
+  margin-top: 0;
+  min-width: 220px;
+  max-width: min(280px, 92vw);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+  background: var(--vex-background-card, #fff);
+}
+
+:host-context(.dark) .grupo-espejo-prod-precios-interno--popover {
+  box-shadow:
+    0 4px 18px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+// Menú Material: sin padding para que el recuadro llene el panel
+:host ::ng-deep .grupo-espejo-precio-mat-menu .mat-mdc-menu-content {
+  padding: 0 !important;
+}
+
+:host-context(.dark) .grupo-espejo-prod-precios-interno {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.grupo-espejo-prod-precios-interno-head {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--vex-text-secondary, rgba(0, 0, 0, 0.55));
+  margin-bottom: 2px;
+}
+
+.grupo-espejo-prod-precio-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  padding: 2px 0;
+  border-radius: 4px;
+  margin: 0 -4px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.grupo-espejo-prod-precio-line--principal {
+  margin-top: 2px;
+  padding: 6px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  background: rgba(var(--vex-color-primary-600-rgb, 25 118 210) / 0.1);
+  border: 1px solid rgba(var(--vex-color-primary-600-rgb, 25 118 210) / 0.22);
+}
+
+:host-context(.dark) .grupo-espejo-prod-precio-line--principal {
+  background: rgba(var(--vex-color-primary-400-rgb, 100 181 246) / 0.12);
+  border-color: rgba(var(--vex-color-primary-400-rgb, 100 181 246) / 0.28);
+}
+
+.grupo-espejo-prod-precio-line--principal .grupo-espejo-prod-precio-valor {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.grupo-espejo-prod-precio-line--principal.grupo-espejo-prod-precio-line--difiere {
+  border-color: rgba(211, 47, 47, 0.45);
+}
+
+.grupo-espejo-prod-precio-label {
+  flex: 0 1 auto;
+  color: var(--vex-text-secondary, rgba(0, 0, 0, 0.6));
+  min-width: 0;
+}
+
+.grupo-espejo-prod-precio-valor {
+  flex: 0 0 auto;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--vex-text-color, inherit);
+}
+
+.grupo-espejo-prod-precio-line--difiere {
+  background: rgba(211, 47, 47, 0.1);
+}
+
+.grupo-espejo-prod-precio-line--difiere .grupo-espejo-prod-precio-label,
+.grupo-espejo-prod-precio-line--difiere .grupo-espejo-prod-precio-valor {
+  color: #c62828;
+}
+
+:host-context(.dark) .grupo-espejo-prod-precio-line--difiere {
+  background: rgba(239, 83, 80, 0.15);
+}
+
+:host-context(.dark) .grupo-espejo-prod-precio-line--difiere .grupo-espejo-prod-precio-label,
+:host-context(.dark) .grupo-espejo-prod-precio-line--difiere .grupo-espejo-prod-precio-valor {
+  color: #ffab91;
+}
+
+// Una sola línea: nombre (izq.) + iconos (der.)
+.grupo-espejo-prod-top {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+}
+
+.grupo-espejo-prod-nombre {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.grupo-espejo-prod-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+// Mismo criterio que .edit-col-icons en la tabla (36px, iconos ~18px)
+:host ::ng-deep .grupo-espejo-prod-actions button.mat-mdc-icon-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+  min-width: 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+}
+
+:host ::ng-deep .grupo-espejo-prod-actions button.mat-mdc-icon-button .mat-icon {
+  margin: 0 !important;
+  width: 18px !important;
+  height: 18px !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.grupo-espejo-precio-field-block {
+  width: 100% !important;
+  max-width: 100%;
+}
+
+// Campo precio al editar: más compacto
+:host ::ng-deep .grupo-espejo-precio-field-block.mat-mdc-form-field {
+  font-size: 0.8125rem;
+}
+
+:host ::ng-deep .grupo-espejo-precio-field-block .mat-mdc-form-field-infix {
+  min-height: 36px;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
 }

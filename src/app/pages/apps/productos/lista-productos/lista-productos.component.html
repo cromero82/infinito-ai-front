@@ -273,9 +273,213 @@
           {{ (percentFromTotal * 100) | number:'1.1-1' }}% del total
         </span>
       </div>
+
+      <!-- Modo edición: grupo espejo -->
+      <div class="grupo-espejo-panel w-full px-6 py-3 flex flex-col gap-3" *ngIf="grupoEspejoEdicion">
+        <div class="flex flex-wrap items-start justify-between gap-2">
+          <div class="flex flex-col gap-2 flex-1 min-w-[220px]">
+            <div class="flex items-center gap-2 text-primary">
+              <mat-icon svgIcon="mat:tune" class="icon-sm"></mat-icon>
+              <span class="text-sm font-medium">Espejo de productos</span>
+            </div>
+            <div class="flex flex-wrap items-end gap-1">
+              <mat-form-field *ngIf="!grupoEspejoEditandoNombre" appearance="outline" class="grupo-espejo-nombre-field w-full max-w-md mb-[-1.25em]">
+                <mat-label>Nombre</mat-label>
+                <input matInput [value]="grupoEspejoEdicion.nombre" readonly />
+              </mat-form-field>
+              <mat-form-field *ngIf="grupoEspejoEditandoNombre" appearance="outline" class="grupo-espejo-nombre-field w-full max-w-md mb-[-1.25em]">
+                <mat-label>Nombre del grupo</mat-label>
+                <input matInput [formControl]="grupoEspejoNombreCtrl"
+                  (keydown.enter)="guardarNombreGrupoEspejo()"
+                  (keydown.escape)="cancelarEdicionNombreGrupoEspejo()" />
+              </mat-form-field>
+              <button
+                *ngIf="!grupoEspejoEditandoNombre"
+                mat-icon-button
+                type="button"
+                matTooltip="Editar nombre del grupo"
+                [disabled]="grupoEspejoBusy || grupoEspejoGuardandoNombre"
+                (click)="iniciarEdicionNombreGrupoEspejo()">
+                <mat-icon svgIcon="mat:edit"></mat-icon>
+              </button>
+              <button
+                *ngIf="grupoEspejoEditandoNombre"
+                mat-icon-button
+                type="button"
+                color="primary"
+                matTooltip="Guardar nombre"
+                [disabled]="grupoEspejoGuardandoNombre"
+                (click)="guardarNombreGrupoEspejo()">
+                <mat-icon svgIcon="mat:check"></mat-icon>
+              </button>
+              <button
+                *ngIf="grupoEspejoEditandoNombre"
+                mat-icon-button
+                type="button"
+                matTooltip="Cancelar"
+                [disabled]="grupoEspejoGuardandoNombre"
+                (click)="cancelarEdicionNombreGrupoEspejo()">
+                <mat-icon svgIcon="mat:close"></mat-icon>
+              </button>
+            </div>
+          </div>
+          <div class="grupo-espejo-panel-header-actions flex flex-wrap items-center justify-end gap-2 shrink-0">
+            <button
+              *ngIf="mostrarBotonCorregirPrecioGrupoEspejo()"
+              mat-flat-button
+              type="button"
+              color="accent"
+              class="grupo-espejo-corregir-precio-btn"
+              matTooltip="Editar el producto con precio más bajo (o nulo) para alinear el grupo"
+              [disabled]="grupoEspejoBusy || grupoEspejoGuardandoPrecio"
+              (click)="abrirCorregirPrecioGrupoEspejo()">
+              <mat-icon class="grupo-espejo-corregir-precio-icon" svgIcon="mat:bolt"></mat-icon>
+              <span>Corregir precio</span>
+            </button>
+            <button mat-stroked-button type="button" color="primary" (click)="salirModoGrupoEspejoEdicion()">
+              Salir del modo edición
+            </button>
+          </div>
+        </div>
+        <div class="grupo-espejo-productos-section">
+          <span class="text-xs font-medium text-secondary block mb-2">Productos del grupo</span>
+          <div class="grupo-espejo-productos-scroll">
+            <div class="grupo-espejo-productos">
+            <div
+              *ngFor="let p of grupoEspejoEdicion.productos; trackBy: trackByProductoPanelId"
+              class="grupo-espejo-prod-row border border-black/10 rounded px-2 py-1.5 bg-card"
+              [class.grupo-espejo-prod-row--precio-conflicto]="esProductoGrupoEspejoPrecioDesalineado(p)">
+              <div class="grupo-espejo-prod-top">
+                <span
+                  class="grupo-espejo-prod-nombre"
+                  [matTooltip]="p.nombre"
+                  [matTooltipDisabled]="(p.nombre || '').trim().length <= 32">
+                  {{ nombreGrupoEspejoVisible(p.nombre) }}
+                </span>
+                <div class="grupo-espejo-prod-actions">
+                  <button
+                    *ngIf="grupoEspejoPrecioEditProductoId !== p.id"
+                    mat-icon-button
+                    type="button"
+                    class="grupo-espejo-icon-sm"
+                    matTooltip="Editar precio"
+                    [disabled]="grupoEspejoBusy || grupoEspejoGuardandoPrecio"
+                    (click)="iniciarEdicionPrecioGrupoEspejo(p); $event.stopPropagation()">
+                    <mat-icon svgIcon="mat:edit" class="icon-sm"></mat-icon>
+                  </button>
+                  <ng-container *ngIf="hayConflictoPreciosGrupoEspejo()">
+                    <button
+                      mat-icon-button
+                      type="button"
+                      class="grupo-espejo-icon-sm"
+                      [matMenuTriggerFor]="precioDetalleMenu"
+                      #precioPopoverTr="matMenuTrigger"
+                      (mouseenter)="onPrecioPopoverTriggerEnter(precioPopoverTr)"
+                      (mouseleave)="onPrecioPopoverTriggerLeave()"
+                      matTooltip="Ver desglose de precios"
+                      [disabled]="grupoEspejoBusy || grupoEspejoGuardandoPrecio"
+                      (click)="$event.stopPropagation()">
+                      <mat-icon svgIcon="mat:attach_money" class="icon-sm"></mat-icon>
+                    </button>
+                    <mat-menu
+                      #precioDetalleMenu="matMenu"
+                      [hasBackdrop]="false"
+                      class="grupo-espejo-precio-mat-menu"
+                      yPosition="below"
+                      xPosition="before">
+                      <div
+                        class="grupo-espejo-prod-precios-interno grupo-espejo-prod-precios-interno--popover"
+                        (mouseenter)="onPrecioPopoverPanelEnter()"
+                        (mouseleave)="onPrecioPopoverPanelLeave()"
+                        (click)="$event.stopPropagation()">
+                        <div class="grupo-espejo-prod-precios-interno-head">
+                          <span>Valores de precio</span>
+                        </div>
+                        <div
+                          class="grupo-espejo-prod-precio-line grupo-espejo-prod-precio-line--principal"
+                          [class.grupo-espejo-prod-precio-line--difiere]="campoPrecioGrupoEspejoDifiereReferencia(p, 'precio')">
+                          <span class="grupo-espejo-prod-precio-label">Precio</span>
+                          <span class="grupo-espejo-prod-precio-valor">{{
+                            tieneValorNumericoPrecioPanel(p.precio) ? (p.precio | number:'1.2-2') : '—'
+                          }}</span>
+                        </div>
+                        <div
+                          class="grupo-espejo-prod-precio-line"
+                          [class.grupo-espejo-prod-precio-line--difiere]="campoPrecioGrupoEspejoDifiereReferencia(p, 'precioUnidad')">
+                          <span class="grupo-espejo-prod-precio-label">Precio unidad</span>
+                          <span class="grupo-espejo-prod-precio-valor">{{
+                            tieneValorNumericoPrecioPanel(p.precioUnidad) ? (p.precioUnidad | number:'1.2-4') : '—'
+                          }}</span>
+                        </div>
+                        <div
+                          class="grupo-espejo-prod-precio-line"
+                          [class.grupo-espejo-prod-precio-line--difiere]="campoPrecioGrupoEspejoDifiereReferencia(p, 'precioCompra')">
+                          <span class="grupo-espejo-prod-precio-label">Precio compra</span>
+                          <span class="grupo-espejo-prod-precio-valor">{{
+                            tieneValorNumericoPrecioPanel(p.precioCompra) ? (p.precioCompra | number:'1.2-2') : '—'
+                          }}</span>
+                        </div>
+                        <div
+                          class="grupo-espejo-prod-precio-line"
+                          [class.grupo-espejo-prod-precio-line--difiere]="campoPrecioGrupoEspejoDifiereReferencia(p, 'porcentajeGanancia')">
+                          <span class="grupo-espejo-prod-precio-label">% Ganancia</span>
+                          <span class="grupo-espejo-prod-precio-valor">{{
+                            tieneValorNumericoPrecioPanel(p.porcentajeGanancia)
+                              ? (p.porcentajeGanancia | number:'1.1-1') + ' %'
+                              : '—'
+                          }}</span>
+                        </div>
+                      </div>
+                    </mat-menu>
+                  </ng-container>
+                  <button
+                    *ngIf="grupoEspejoPrecioEditProductoId === p.id"
+                    mat-icon-button
+                    type="button"
+                    color="primary"
+                    class="grupo-espejo-icon-sm"
+                    matTooltip="Guardar precio"
+                    [disabled]="grupoEspejoGuardandoPrecio"
+                    (click)="guardarPrecioProductoGrupoEspejo(p)">
+                    <mat-icon svgIcon="mat:check" class="icon-sm"></mat-icon>
+                  </button>
+                  <button
+                    *ngIf="grupoEspejoPrecioEditProductoId === p.id"
+                    mat-icon-button
+                    type="button"
+                    class="grupo-espejo-icon-sm"
+                    matTooltip="Cancelar"
+                    [disabled]="grupoEspejoGuardandoPrecio"
+                    (click)="cancelarEdicionPrecioGrupoEspejo()">
+                    <mat-icon svgIcon="mat:close" class="icon-sm"></mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    class="grupo-espejo-icon-sm"
+                    color="warn"
+                    matTooltip="Quitar del grupo"
+                    [disabled]="grupoEspejoBusy || grupoEspejoPrecioEditProductoId === p.id"
+                    (click)="quitarProductoDeGrupoEspejo(p); $event.stopPropagation()">
+                    <mat-icon svgIcon="mat:link_off" class="icon-sm"></mat-icon>
+                  </button>
+                </div>
+              </div>
+              <mat-form-field *ngIf="grupoEspejoPrecioEditProductoId === p.id" appearance="outline" class="grupo-espejo-precio-field mb-[-1.25em] w-full grupo-espejo-precio-field-block">
+                <mat-label>Precio</mat-label>
+                <input matInput type="number" min="0" step="0.01" [formControl]="grupoEspejoPrecioCtrl"
+                  (keydown.enter)="guardarPrecioProductoGrupoEspejo(p); $event.preventDefault()"
+                  (keydown.escape)="cancelarEdicionPrecioGrupoEspejo()" />
+              </mat-form-field>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="px-4 products-panel">
-        <div class="products-container" [style.min-height.px]="getMinHeightValue()">
-          <div class="products-list" [style.max-height.px]="getMaxHeightListValue()" (scroll)="onTableScroll($event)">
+        <div class="products-container">
+          <div class="products-list" (scroll)="onTableScroll($event)">
             <table class="w-full" mat-table [dataSource]="dataSource" matSort (matSortChange)="sortData($event)">
               <!-- Barcode Column -->
               <ng-container matColumnDef="id">
@@ -331,16 +535,16 @@
 
               <!-- Precio Unidad Column (personalizable) -->
               <ng-container matColumnDef="precioUnidad">
-                <th *matHeaderCellDef mat-header-cell mat-sort-header>Precio unidad</th>
-                <td *matCellDef="let product" mat-cell>
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-precio-unidad">Precio unidad</th>
+                <td *matCellDef="let product" mat-cell class="col-precio-unidad">
                   {{ product.precioUnidad != null ? ('$' + (product.precioUnidad | number:'1.2-2')) : '-' }}
                 </td>
               </ng-container>
 
               <!-- Precio Compra Column (personalizable) -->
               <ng-container matColumnDef="precioCompra">
-                <th *matHeaderCellDef mat-header-cell mat-sort-header>Precio compra</th>
-                <td *matCellDef="let product" mat-cell>
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-precio-compra">Precio compra</th>
+                <td *matCellDef="let product" mat-cell class="col-precio-compra">
                   {{ product.precioCompra === 0 ? '-' : '$' + ((product.precioCompra || product.precio || 0) | number:'1.2-2') }}
                 </td>
               </ng-container>
@@ -375,13 +579,13 @@
               </ng-container>
               <!-- Total Ventas Column -->
               <ng-container matColumnDef="totalVentas">
-                <th *matHeaderCellDef mat-header-cell mat-sort-header>Total ventas</th>
-                <td *matCellDef="let product" mat-cell>{{ product.totalVentas || 0 }}</td>
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-total-ventas">Total ventas</th>
+                <td *matCellDef="let product" mat-cell class="col-total-ventas">{{ product.totalVentas || 0 }}</td>
               </ng-container>
               <!-- Porcentaje ganancia Column -->
               <ng-container matColumnDef="porcentajeGanancia">
-                <th *matHeaderCellDef mat-header-cell mat-sort-header>% Ganancia</th>
-                <td *matCellDef="let product" mat-cell>{{ (product.porcentaje_ganancia ?? product.porcentajeGanancia) != null ? ((product.porcentaje_ganancia ?? product.porcentajeGanancia) + '%') : '-' }}</td>
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-pct-ganancia">% Ganancia</th>
+                <td *matCellDef="let product" mat-cell class="col-pct-ganancia">{{ (product.porcentaje_ganancia ?? product.porcentajeGanancia) != null ? ((product.porcentaje_ganancia ?? product.porcentajeGanancia) + '%') : '-' }}</td>
               </ng-container>
               <!-- Fecha última venta Column -->
               <ng-container matColumnDef="fechaUltimaVenta">
@@ -409,6 +613,26 @@
                       (searchClicked)="onGoogleSearchClicked($event)">
                     </vex-google-search-button>
                     <button
+                      *ngIf="mostrarBotonEditarGrupoEspejoEnFila(product)"
+                      mat-icon-button
+                      type="button"
+                      color="primary"
+                      matTooltip="Editar grupo espejo"
+                      [disabled]="grupoEspejoBusy"
+                      (click)="entrarModoEdicionGrupoDesdeProducto(product); $event.stopPropagation()">
+                      <mat-icon svgIcon="mat:edit"></mat-icon>
+                    </button>
+                    <button
+                      *ngIf="mostrarBotonGrupoEspejoEnFila(product)"
+                      mat-icon-button
+                      type="button"
+                      color="accent"
+                      [matTooltip]="tooltipVincularGrupoEspejo(product)"
+                      [disabled]="grupoEspejoBusy"
+                      (click)="ejecutarAccionGrupoEspejoEnFila(product); $event.stopPropagation()">
+                      <mat-icon svgIcon="mat:link"></mat-icon>
+                    </button>
+                    <button
                       mat-icon-button
                       type="button"
                       class="row-actions-more-btn"
@@ -434,7 +658,7 @@
                 </ng-template>
               </mat-menu>
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index" (click)="onRowClick(row)"
+              <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index" (click)="onRowClick(row, $event)"
                 (mousedown)="onRowMouseDown(i, $event)" [class.inactive-row]="!isProductActive(row)"
                 [class.selected-row]="isRowSelected(row)"></tr>
             </table>
