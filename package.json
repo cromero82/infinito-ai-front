@@ -8,6 +8,7 @@
   "scripts": {
     "ng": "ng",
     "start": "concurrently \"npm run health:server\" \"npm run start:angular\"",
+    "dev": "ng serve",
     "start:angular": "wait-on http://localhost:3001/health && ng serve",
     "build": "ng build --configuration production",
     "test": "ng test",

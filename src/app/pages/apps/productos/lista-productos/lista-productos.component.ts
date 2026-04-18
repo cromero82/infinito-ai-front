@@ -6,11 +6,11 @@ import {
   ViewChild,
   ElementRef,
   HostListener,
-  ChangeDetectorRef
+  ChangeDetectorRef,
+  afterNextRender,
+  inject,
+  Injector
 } from '@angular/core';
-import { VexPageLayoutComponent } from '@vex/components/vex-page-layout/vex-page-layout.component';
-import { VexPageLayoutHeaderDirective } from '@vex/components/vex-page-layout/vex-page-layout-header.directive';
-import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/vex-page-layout-content.directive';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule, MatSort, Sort } from '@angular/material/sort';
 import { RelationalProductService } from '../service/relational-product.service';
@@ -56,8 +56,10 @@ import { GrupoEspejoService } from '../service/grupo-espejo.service';
 import { GrupoEspejoDto } from '../model/grupo-espejo';
 import {
   SeleccionarCrearGrupoEspejoComponent,
+  SeleccionarCrearGrupoEspejoDialogData,
   SeleccionarCrearGrupoEspejoDialogResult
 } from '../seleccionar-crear-grupo-espejo/seleccionar-crear-grupo-espejo.component';
+import { TableViewportService } from '../../../../core/table-viewport/table-viewport.service';
 
 /** Producto resumido en el panel de grupo espejo */
 export interface GrupoEspejoProductoPanel {
@@ -87,9 +89,6 @@ export interface FilterCondition {
 @Component({
     selector: 'lista-productos',
     imports: [
-        VexPageLayoutComponent,
-        VexPageLayoutHeaderDirective,
-        VexPageLayoutContentDirective,
         MatButtonModule,
         MatTooltipModule,
         MatTableModule,
@@ -117,6 +116,8 @@ export interface FilterCondition {
     styleUrls: ['./lista-productos.component.scss']
 })
 export class ListaProductosComponent implements OnInit, OnDestroy, AfterViewInit {
+  private readonly injector = inject(Injector);
+
   displayedColumns: string[] = [
     'id', 'nombre', 'precio', 'precioUnidad', 'fechaUltimaActualizacionPrecio', 'totalVentas', 'edit'
   ];
@@ -205,11 +206,6 @@ export class ListaProductosComponent implements OnInit, OnDestroy, AfterViewInit
   grupoEspejoNombreCtrl = new FormControl<string>('', { nonNullable: true });
   grupoEspejoGuardandoNombre = false;
 
-  /** Edición inline del precio de un producto del panel (id de fila) */
-  grupoEspejoPrecioEditProductoId: number | null = null;
-  grupoEspejoPrecioCtrl = new FormControl<string>('', { nonNullable: true });
-  grupoEspejoGuardandoPrecio = false;
-
   /** Menú tipo tooltip: desglose de precios al pasar el ratón */
   private precioPopoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
   private precioPopoverTrigger: MatMenuTrigger | null = null;
@@ -220,7 +216,7 @@ export class ListaProductosComponent implements OnInit, OnDestroy, AfterViewInit
   // Reference to the trigger button so we can close the menu programmatically
   @ViewChild('filtersMenuTrigger') filtersMenuTrigger!: MatMenuTrigger;
   @ViewChild('columnVisibilityMenuTrigger') columnVisibilityMenuTrigger!: MatMenuTrigger;
-
+  @ViewChild('tableScroll') tableScroll!: ElementRef<HTMLElement>;
 
   recording = false;
   private recorder: any = null;
@@ -235,12 +231,14 @@ export class ListaProductosComponent implements OnInit, OnDestroy, AfterViewInit
     private fechaUtilService: FechaUtilService,
     private cdr: ChangeDetectorRef,
     private grupoEspejoService: GrupoEspejoService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private tableViewportService: TableViewportService
   ) { }
 
   minHeightPanelProductosValue = 420;
 
   ngOnInit() {
+    this.applyViewport();
     this.configurationService.obtenerTodasConfiguraciones().subscribe({
       next: () => this.loadMinHeightConfiguration(),
       error: () => this.loadMinHeightConfiguration()
@@ -402,12 +400,59 @@ export class ListaProductosComponent implements OnInit, OnDestroy, AfterViewInit
   }
 
   ngAfterViewInit() {
-    // Focus on search input when component loads
-    setTimeout(() => {
-      if (this.searchInput?.nativeElement) {
-        this.searchInput.nativeElement.focus();
+    setTimeout(() => this.applyViewport(), 100);
+    afterNextRender(
+      () => this.focusSearchOnInitialLoad(),
+      { injector: this.injector }
+    );
+  }
+
+  /** Foco en búsqueda al abrir la vista (reintentos: toolbar/layout quitan el foco a veces). */
+  private focusSearchOnInitialLoad(): void {
+    const el = this.searchInput?.nativeElement;
+    if (!el) {
+      return;
+    }
+    const focusOnce = (): void => {
+      try {
+        el.focus({ preventScroll: true });
+      } catch {
+        el.focus();
       }
-    }, 100);
+    };
+    focusOnce();
+    requestAnimationFrame(focusOnce);
+    setTimeout(focusOnce, 0);
+    setTimeout(focusOnce, 120);
+    setTimeout(focusOnce, 400);
+  }
+
+  @HostListener('window:resize')
+  onWindowResize() {
+    this.applyViewport();
+  }
+
+  /**
+   * TableViewportService: pageSize para infinite scroll. El servicio puede proponer pocos ítems
+   * (viewport pequeño); no bajar de 20 filas por página para no “encoger” el listado.
+   */
+  private applyViewport() {
+    const v = this.tableViewportService.calculate({
+      reservedHeight: 388,
+      rowHeight: 28
+    });
+    this.pageSize = Math.max(20, v.pageSize);
+  }
+
+  private maybeLoadMoreIfNoScroll() {
+    if (this.loading || this.loadingMore) return;
+    if (this.totalPages <= 0 || this.pageIndex + 1 >= this.totalPages) return;
+    const el = this.tableScroll?.nativeElement;
+    if (!el) return;
+    const { scrollHeight, clientHeight } = el;
+    if (scrollHeight <= clientHeight + 10) {
+      this.fetchProducts(false);
+    }
   }
 
   ngOnDestroy(): void {
@@ -1035,6 +1080,8 @@ export class ListaProductosComponent implements OnInit, OnDestroy, AfterViewInit
               this.createProduct(q);
             }
           }
+
+          setTimeout(() => this.maybeLoadMoreIfNoScroll(), 50);
         },
         error: () => {
           if (reset) {
@@ -1179,6 +1226,40 @@ export class ListaProductosComponent implements OnInit, OnDestroy, AfterViewInit
     } else {
       this.abrirModalGrupoEspejo(product);
     }
+  }
+
+  /**
+   * IDs de la selección actual en la tabla que aún no están en el grupo en edición.
+   */
+  private obtenerIdsSeleccionPendientesParaGrupo(): number[] {
+    if (!this.grupoEspejoEdicion) {
+      return [];
+    }
+    return [...this.selectedProductIds]
+      .map((sid) => this.dataSource.find((p) => p.id === sid))
+      .filter(
+        (p): p is Producto =>
+          !!p && !this.productoPerteneceAlGrupoEspejoActual(p)
+      )
+      .map((p) => p.id!);
+  }
+
+  /** Panel superior: hay selección con al menos un producto fuera del listado del grupo */
+  mostrarBotonAgregarSeleccionAlGrupoEspejo(): boolean {
+    return (
+      !!this.grupoEspejoEdicion &&
+      !this.grupoEspejoBusy &&
+      this.obtenerIdsSeleccionPendientesParaGrupo().length >= 1
+    );
+  }
+
+  /** Misma acción que el enlace en fila: vincular selección pendiente al grupo actual */
+  agregarSeleccionAlGrupoEspejoDesdePanel(): void {
+    const ids = this.obtenerIdsSeleccionPendientesParaGrupo();
+    if (ids.length === 0) {
+      return;
+    }
+    this.vincularProductosAlGrupoEspejoActual(ids);
   }
 
   /**
@@ -1498,6 +1579,40 @@ export class ListaProductosComponent implements OnInit, OnDestroy, AfterViewInit
     });
   }
 
+  /** Abre el diálogo editar-producto para un ítem del panel; al guardar, sincroniza grupo y tabla */
+  abrirEditarProductoGrupoEspejo(p: GrupoEspejoProductoPanel): void {
+    if (!p?.id || this.grupoEspejoBusy) {
+      return;
+    }
+    this.cancelarEdicionNombreGrupoEspejo();
+    this.relationalProductService.getProductById(p.id).subscribe({
+      next: (product) => {
+        const dialogRef = this.dialog.open(EditarProductoComponent, {
+          width: '600px',
+          data: product
+        });
+        dialogRef.afterClosed().subscribe((result) => {
+          this.justClosedDialog = true;
+          if (result?._edit && this.grupoEspejoEdicion) {
+            const gid = this.grupoEspejoEdicion.id;
+            const nom = this.grupoEspejoEdicion.nombre;
+            this.refrescarPanelGrupoEspejoDesdeApi(gid, nom, () => {
+              this.fetchProducts(true, true);
+              this.focusSearchInput();
+            });
+          } else {
+            this.focusSearchInput();
+          }
+        });
+      },
+      error: () => {
+        this.snackBar.open('No se pudo cargar el producto para editar.', 'Cerrar', {
+          duration: 4000
+        });
+      }
+    });
+  }
+
   private static readonly GRUPO_ESPEJO_NOMBRE_MAX_VISIBLE = 32;
 
   /** Nombre en tarjeta grupo espejo: máx. 32 caracteres + … */
@@ -1515,7 +1630,6 @@ export class ListaProductosComponent implements OnInit, OnDestroy, AfterViewInit
     if (!this.grupoEspejoEdicion) {
       return;
     }
-    this.cancelarEdicionPrecioGrupoEspejo();
     this.grupoEspejoNombreCtrl.setValue(this.grupoEspejoEdicion.nombre);
     this.grupoEspejoEditandoNombre = true;
   }
@@ -1576,90 +1690,37 @@ export class ListaProductosComponent implements OnInit, OnDestroy, AfterViewInit
       });
   }
 
-  iniciarEdicionPrecioGrupoEspejo(p: GrupoEspejoProductoPanel): void {
-    this.cancelarEdicionNombreGrupoEspejo();
-    this.grupoEspejoPrecioEditProductoId = p.id;
-    this.grupoEspejoPrecioCtrl.setValue(
-      p.precio != null && !Number.isNaN(Number(p.precio)) ? String(p.precio) : ''
-    );
+  /**
+   * Muestra el recuadro "Precio homogéneo" cuando todos los ítems comparten la misma tupla de precios
+   * (incl. un solo producto). Si hay conflicto, no se muestra (se usa "Corregir precio" / desglose por fila).
+   */
+  mostrarBloquePrecioHomogeneoGrupoEspejo(): boolean {
+    const g = this.grupoEspejoEdicion;
+    return !!g && g.productos.length >= 1 && !this.hayConflictoPreciosGrupoEspejo();
   }
 
-  cancelarEdicionPrecioGrupoEspejo(): void {
-    this.grupoEspejoPrecioEditProductoId = null;
-    this.grupoEspejoPrecioCtrl.setValue('');
+  /** Precio de venta del primer ítem (todos iguales cuando el bloque es visible) */
+  precioHomogeneoVentaGrupoEspejo(): number | null {
+    const p0 = this.grupoEspejoEdicion?.productos?.[0];
+    return p0 && this.tieneValorNumericoPrecioPanel(p0.precio) ? p0.precio! : null;
   }
 
-  guardarPrecioProductoGrupoEspejo(p: GrupoEspejoProductoPanel): void {
-    const raw = this.grupoEspejoPrecioCtrl.value?.trim().replace(',', '.') ?? '';
-    const nuevo = Number(raw);
-    if (raw === '' || Number.isNaN(nuevo) || nuevo < 0) {
-      this.snackBar.open('Indique un precio válido (≥ 0).', 'Cerrar', { duration: 4000 });
+  /**
+   * Abre editar-producto con un ítem representativo (el primero del grupo).
+   * Cualquier producto sirve para ajustar el precio; el backend unifica el grupo.
+   */
+  abrirEditarPrecioHomogeneoGrupoEspejo(): void {
+    const p0 = this.grupoEspejoEdicion?.productos?.[0];
+    if (!p0) {
       return;
     }
-    if (p.precio === nuevo) {
-      this.cancelarEdicionPrecioGrupoEspejo();
-      return;
-    }
-    const fromList = this.dataSource.find((x) => x.id === p.id) as Producto | undefined;
-    this.grupoEspejoGuardandoPrecio = true;
-    const producto$ = fromList
-      ? of(fromList)
-      : this.relationalProductService.getProductById(p.id);
-    producto$
-      .pipe(
-        switchMap((producto) => {
-          if (!producto?.id) {
-            return throwError(() => new Error('no-producto'));
-          }
-          const update: Producto = {
-            ...producto,
-            precio: nuevo,
-            foto: producto.foto ?? ''
-          };
-          return this.relationalProductService.updateProduct(producto.id, update);
-        }),
-        finalize(() => {
-          this.grupoEspejoGuardandoPrecio = false;
-        })
-      )
-      .subscribe({
-        next: () => {
-          this.snackBar.open('Precio actualizado.', 'Cerrar', { duration: 4000 });
-          this.cancelarEdicionPrecioGrupoEspejo();
-          this.fetchProducts(true, true);
-          if (this.grupoEspejoEdicion) {
-            this.refrescarPanelGrupoEspejoDesdeApi(
-              this.grupoEspejoEdicion.id,
-              this.grupoEspejoEdicion.nombre
-            );
-          }
-        },
-        error: (err: unknown) => {
-          if (err instanceof Error && err.message === 'no-producto') {
-            this.snackBar.open(
-              'No se pudo obtener el producto para actualizar el precio.',
-              'Cerrar',
-              { duration: 5000 }
-            );
-            return;
-          }
-          const he = err as HttpErrorResponse;
-          const msg =
-            (he.error && typeof he.error === 'object' && 'message' in he.error
-              ? (he.error as { message?: string }).message
-              : null) || 'No se pudo actualizar el precio.';
-          this.snackBar.open(msg, 'Cerrar', { duration: 6000 });
-        }
-      });
+    this.abrirEditarProductoGrupoEspejo(p0);
   }
 
   private cancelarEdicionesPanelGrupoEspejo(): void {
     this.grupoEspejoEditandoNombre = false;
     this.grupoEspejoNombreCtrl.setValue('');
     this.grupoEspejoGuardandoNombre = false;
-    this.grupoEspejoPrecioEditProductoId = null;
-    this.grupoEspejoPrecioCtrl.setValue('');
-    this.grupoEspejoGuardandoPrecio = false;
   }
 
   /**
@@ -1737,10 +1798,58 @@ export class ListaProductosComponent implements OnInit, OnDestroy, AfterViewInit
     if (!product?.id) {
       return;
     }
+    this.abrirModalGrupoEspejoConData({
+      producto: product,
+      productoIdsSeleccionados: [product.id]
+    });
+  }
+
+  /**
+   * Barra superior: crear / asociar grupo espejo con la selección actual (1 o varios con Ctrl+clic).
+   */
+  abrirModalGrupoEspejoDesdeBarraSeleccion(): void {
+    if (this.grupoEspejoEdicion) {
+      return;
+    }
+    const ids = [...this.selectedProductIds];
+    const productos = ids
+      .map((id) => this.dataSource.find((p) => p.id === id))
+      .filter((p): p is Producto => !!p);
+    const sinGrupo = productos.filter((p) => !p.grupoEspejo);
+    if (sinGrupo.length === 0) {
+      this.snackBar.open(
+        'Los productos seleccionados ya pertenecen a un grupo espejo. Elija otros o quite la selección.',
+        'Cerrar',
+        { duration: 6000 }
+      );
+      return;
+    }
+    if (sinGrupo.length < productos.length) {
+      this.snackBar.open(
+        'Solo se incluyen productos sin grupo espejo; el resto se omitió.',
+        'Cerrar',
+        { duration: 5000 }
+      );
+    }
+    const anchor = sinGrupo[0];
+    this.abrirModalGrupoEspejoConData({
+      producto: anchor,
+      productoIdsSeleccionados: sinGrupo.map((p) => p.id!)
+    });
+  }
+
+  /** Visible con ≥1 fila seleccionada y sin modo edición de grupo activo en el panel. */
+  mostrarBotonCrearGrupoEspejoBarraSuperior(): boolean {
+    return this.selectedProductIds.size >= 1 && !this.grupoEspejoEdicion;
+  }
+
+  private abrirModalGrupoEspejoConData(
+    data: SeleccionarCrearGrupoEspejoDialogData
+  ): void {
     const dialogRef = this.dialog.open(SeleccionarCrearGrupoEspejoComponent, {
       width: '720px',
       maxWidth: '95vw',
-      data: { producto: product }
+      data
     });
     dialogRef.afterClosed().subscribe((result: SeleccionarCrearGrupoEspejoDialogResult | undefined) => {
       this.justClosedDialog = true;
@@ -1875,16 +1984,20 @@ export class ListaProductosComponent implements OnInit, OnDestroy, AfterViewInit
   }
 
   private focusSearchInput() {
-    // Always focus on search input when dialog closes
-    if (this.searchInput?.nativeElement) {
-      setTimeout(() => {
-        this.searchInput.nativeElement.focus();
-        // If there's text, select all
-        if (this.searchCtrl.value) {
-          this.searchInput.nativeElement.select();
-        }
-      }, 100);
+    const el = this.searchInput?.nativeElement;
+    if (!el) {
+      return;
     }
+    setTimeout(() => {
+      try {
+        el.focus({ preventScroll: true });
+      } catch {
+        el.focus();
+      }
+      if (this.searchCtrl.value) {
+        el.select();
+      }
+    }, 100);
   }
 
   /**
@@ -2015,19 +2128,27 @@ export class ListaProductosComponent implements OnInit, OnDestroy, AfterViewInit
     console.log(`Búsqueda en Google desde product-list: ${event.type} - ${event.query}`);
   }
 
-  searchProductByName(product: Producto): void {
-    const rawName = (product?.nombre || '').trim();
-    if (!rawName) {
+  /**
+   * Búsqueda Google por código de barras (equivalente a vex-google-search-button searchType="barcode").
+   */
+  searchProductByBarcodeInGoogle(product: Producto): void {
+    const barcodeLimpio = (product?.barcode || '').trim();
+    if (!barcodeLimpio) {
       return;
     }
 
-    const cleanName = rawName.includes(';') ? rawName.split(';')[0].trim() : rawName;
-    if (!cleanName) {
+    const esCodigoValido = /^\d{8,13}$/.test(barcodeLimpio);
+    if (!esCodigoValido) {
+      this.snackBar.open('El código de barras no tiene un formato válido', 'Cerrar', {
+        duration: 3000,
+        horizontalPosition: 'right',
+        panelClass: ['error-snackbar']
+      });
       return;
     }
 
-    const query = `${cleanName} PRECIO medellin`;
-    this.onGoogleSearchClicked({ type: 'name', query });
+    const query = `${barcodeLimpio} PRECIO medellin`;
+    this.onGoogleSearchClicked({ type: 'barcode', query });
     window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
   }
 

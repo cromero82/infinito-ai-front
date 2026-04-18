@@ -96,9 +96,11 @@
     );
   }
 
+  /* scrollDisabled: height ya reserva el footer; sin margin-bottom (evita franja vacía sobre footer fijo). */
   &.vex-layout-scroll-disabled .vex-layout-content {
     height: calc(
       100% - var(--vex-toolbar-height) - var(--vex-navigation-height) - var(--vex-footer-height)
     );
+    margin-bottom: 0;
   }
 }

@@ -24,7 +24,9 @@
           [class.dark]="config.layout === 'vertical'"
           class="vex-toolbar"></vex-toolbar>
         <main class="vex-layout-content">
-          <router-outlet></router-outlet>
+          <div class="vex-main-route-host">
+            <router-outlet></router-outlet>
+          </div>
         </main>
         @if (config.footer.visible) {
           <vex-footer

@@ -4,10 +4,11 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Configuración del período de inicialización (en milisegundos)
-const STARTUP_TIME_MS = process.env.STARTUP_TIME_MS 
-  ? parseInt(process.env.STARTUP_TIME_MS, 10) 
-  : 10000; // Por defecto 10 segundos
+// Período antes de marcar /health como listo (503 → 200). En dev, 10s retrasaba innecesariamente
+// el arranque de `ng serve` (wait-on). Subir en CI/prod: STARTUP_TIME_MS=10000 npm run health:server
+const STARTUP_TIME_MS = process.env.STARTUP_TIME_MS
+  ? parseInt(process.env.STARTUP_TIME_MS, 10)
+  : 300;
 
 // Estado del servicio
 let serviceReady = false;

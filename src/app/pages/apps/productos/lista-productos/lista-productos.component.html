@@ -1,27 +1,38 @@
-<vex-page-layout>
-  <vex-page-layout-header class="pb-4 flex flex-col items-start justify-center">
-    <div [class.container]="true" class="w-full flex flex-col sm:flex-row justify-between">
-    </div>
-  </vex-page-layout-header>
-
-  <vex-page-layout-content [class.container]="true" class="products-page-wider -mt-6 pb-0">
-    <div class="card products-card">
-      <div class="bg-app-bar px-6 py-2 border-b sticky left-0 flex flex-wrap items-center gap-4">
-        <h2 class="title my-0 ltr:pr-4 rtl:pl-4 ltr:border-r rtl:border-l hidden sm:block flex-none">
-          Productos
-        </h2>
-
-        <mat-form-field appearance="outline" class="w-[400px] mb-[-1.25em]">
-          <mat-label>Buscar producto</mat-label>
-          <input #searchInput matInput [formControl]="searchCtrl" placeholder="Código o nombre" />
-          <button mat-icon-button matSuffix *ngIf="searchCtrl.value" aria-label="Limpiar búsqueda"
-            (click)="searchCtrl.setValue('')">
-            <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+<div class="productos-page mt-1 flex flex-col flex-1 min-h-0 min-w-0 w-full">
+  <div class="flex flex-col flex-1 min-h-0 w-full">
+    <div class="card products-card flex flex-col flex-1 min-h-0 overflow-hidden">
+      <div
+        class="bg-app-bar px-6 border-b sticky left-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2 class="title m-0">Productos</h2>
+        <div class="flex items-center gap-4 flex-wrap">
+          <button
+            *ngIf="mostrarBotonCrearGrupoEspejoBarraSuperior()"
+            mat-flat-button
+            color="accent"
+            type="button"
+            class="grupo-espejo-bar-btn flex-none"
+            matTooltip="Crear o asociar grupo espejo con los productos seleccionados (Ctrl+clic en filas)"
+            (click)="abrirModalGrupoEspejoDesdeBarraSeleccion()">
+            <mat-icon class="ltr:mr-1.5 rtl:ml-1.5 icon-sm" svgIcon="mat:link"></mat-icon>
+            <span>Grupo espejo</span>
           </button>
-        </mat-form-field>
-
-
-        <div class="ml-auto flex items-center gap-1 flex-wrap header-btns">
+          <mat-form-field
+            appearance="outline"
+            class="search-input"
+            subscriptSizing="dynamic">
+            <mat-label>Buscar producto</mat-label>
+            <input
+              #searchInput
+              matInput
+              autocomplete="off"
+              autofocus
+              [formControl]="searchCtrl"
+              placeholder="Código o nombre" />
+            <button mat-icon-button matSuffix *ngIf="searchCtrl.value" aria-label="Limpiar búsqueda"
+              (click)="searchCtrl.setValue('')">
+              <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+            </button>
+          </mat-form-field>
           <button
             mat-flat-button
             color="primary"
@@ -46,31 +57,33 @@
             <mat-icon class="icon-sm" svgIcon="mat:view_column"></mat-icon>
             <mat-icon class="ltr:ml-0.5 rtl:mr-0.5 icon-sm" svgIcon="mat:arrow_drop_down"></mat-icon>
           </button>
-        <mat-menu #columnVisibilityMenu="matMenu" xPosition="before" yPosition="below" class="column-visibility-menu">
-          <div class="flex flex-col gap-0 min-w-[220px] p-2" (click)="$event.stopPropagation()">
-            <div class="flex items-center gap-2 pb-2 border-b border-primary/30 mb-2">
-              <mat-icon svgIcon="mat:view_column" class="icon-sm text-primary"></mat-icon>
-              <h3 class="m-0 font-medium text-sm">Columnas visibles</h3>
-            </div>
-            <button
-              *ngFor="let col of allTableColumns"
-              mat-button
-              class="column-visibility-item w-full justify-start"
-              (click)="toggleColumnVisibility(col.key)">
-              <mat-icon *ngIf="isColumnSelected(col.key)" class="icon-sm mr-2 text-primary" svgIcon="mat:check"></mat-icon>
-              <span *ngIf="!isColumnSelected(col.key)" class="icon-placeholder mr-2"></span>
-              {{ col.label }}
-            </button>
-            <button mat-flat-button color="primary" class="w-full mt-2" (click)="applyColumnVisibility()" [disabled]="savingColumnConfig">
-              <mat-icon svgIcon="mat:check" class="icon-sm mr-1"></mat-icon>
-              Aplicar
-            </button>
-          </div>
-        </mat-menu>
         </div>
+      </div>
 
-        <!-- Filters Menu Definition - Unified filters (Precio, % Ganancia, Fecha act. precio, Total ventas, Última venta, Fecha creación) -->
-        <mat-menu #filtersMenu="matMenu" class="filters-custom-menu" panelClass="filters-custom-menu" xPosition="before" (menuOpened)="restoreAllFiltersState()">
+      <mat-menu #columnVisibilityMenu="matMenu" xPosition="before" yPosition="below" class="column-visibility-menu">
+        <div class="flex flex-col gap-0 min-w-[220px] p-2" (click)="$event.stopPropagation()">
+          <div class="flex items-center gap-2 pb-2 border-b border-primary/30 mb-2">
+            <mat-icon svgIcon="mat:view_column" class="icon-sm text-primary"></mat-icon>
+            <h3 class="m-0 font-medium text-sm">Columnas visibles</h3>
+          </div>
+          <button
+            *ngFor="let col of allTableColumns"
+            mat-button
+            class="column-visibility-item w-full justify-start"
+            (click)="toggleColumnVisibility(col.key)">
+            <mat-icon *ngIf="isColumnSelected(col.key)" class="icon-sm mr-2 text-primary" svgIcon="mat:check"></mat-icon>
+            <span *ngIf="!isColumnSelected(col.key)" class="icon-placeholder mr-2"></span>
+            {{ col.label }}
+          </button>
+          <button mat-flat-button color="primary" class="w-full mt-2" (click)="applyColumnVisibility()" [disabled]="savingColumnConfig">
+            <mat-icon svgIcon="mat:check" class="icon-sm mr-1"></mat-icon>
+            Aplicar
+          </button>
+        </div>
+      </mat-menu>
+
+      <!-- Filters Menu Definition - Unified filters (Precio, % Ganancia, Fecha act. precio, Total ventas, Última venta, Fecha creación) -->
+      <mat-menu #filtersMenu="matMenu" class="filters-custom-menu" panelClass="filters-custom-menu" xPosition="before" (menuOpened)="restoreAllFiltersState()">
           <div class="flex flex-col gap-4 min-w-[480px] p-3" (click)="$event.stopPropagation()">
             <div class="flex items-center gap-2 pb-2 border-b border-primary/30">
               <mat-icon svgIcon="mat:tune" class="icon-sm text-primary"></mat-icon>
@@ -250,10 +263,9 @@
             </div>
           </div>
         </mat-menu>
-      </div>
 
       <!-- Active Filters Bar -->
-      <div class="w-full px-6 py-3 bg-app-bar flex items-center gap-2 border-b flex-wrap"
+      <div class="productos-active-filters w-full px-6 py-3 border-b flex items-center gap-2 flex-wrap bg-foreground/5"
         *ngIf="activeFilters.length > 0 || filterVerSoloActivosCtrl.value">
         <span class="text-sm font-medium text-secondary">Filtros:</span>
         <mat-chip-set>
@@ -276,18 +288,26 @@
 
       <!-- Modo edición: grupo espejo -->
       <div class="grupo-espejo-panel w-full px-6 py-3 flex flex-col gap-3" *ngIf="grupoEspejoEdicion">
-        <div class="flex flex-wrap items-start justify-between gap-2">
-          <div class="flex flex-col gap-2 flex-1 min-w-[220px]">
-            <div class="flex items-center gap-2 text-primary">
+        <div class="grupo-espejo-panel-toolbar flex flex-wrap items-center gap-x-3 gap-y-2 justify-between">
+          <div class="grupo-espejo-panel-toolbar-main flex flex-wrap items-center gap-2 min-w-0 flex-1">
+            <div class="flex items-center gap-2 text-primary shrink-0">
               <mat-icon svgIcon="mat:tune" class="icon-sm"></mat-icon>
-              <span class="text-sm font-medium">Espejo de productos</span>
+              <span class="text-sm font-medium whitespace-nowrap">Espejo de productos</span>
             </div>
-            <div class="flex flex-wrap items-end gap-1">
-              <mat-form-field *ngIf="!grupoEspejoEditandoNombre" appearance="outline" class="grupo-espejo-nombre-field w-full max-w-md mb-[-1.25em]">
+            <div class="grupo-espejo-nombre-row flex items-center gap-0.5 min-w-0">
+              <mat-form-field
+                *ngIf="!grupoEspejoEditandoNombre"
+                appearance="outline"
+                subscriptSizing="dynamic"
+                class="grupo-espejo-nombre-field">
                 <mat-label>Nombre</mat-label>
                 <input matInput [value]="grupoEspejoEdicion.nombre" readonly />
               </mat-form-field>
-              <mat-form-field *ngIf="grupoEspejoEditandoNombre" appearance="outline" class="grupo-espejo-nombre-field w-full max-w-md mb-[-1.25em]">
+              <mat-form-field
+                *ngIf="grupoEspejoEditandoNombre"
+                appearance="outline"
+                subscriptSizing="dynamic"
+                class="grupo-espejo-nombre-field">
                 <mat-label>Nombre del grupo</mat-label>
                 <input matInput [formControl]="grupoEspejoNombreCtrl"
                   (keydown.enter)="guardarNombreGrupoEspejo()"
@@ -298,6 +318,7 @@
                 mat-icon-button
                 type="button"
                 matTooltip="Editar nombre del grupo"
+                class="shrink-0"
                 [disabled]="grupoEspejoBusy || grupoEspejoGuardandoNombre"
                 (click)="iniciarEdicionNombreGrupoEspejo()">
                 <mat-icon svgIcon="mat:edit"></mat-icon>
@@ -308,6 +329,7 @@
                 type="button"
                 color="primary"
                 matTooltip="Guardar nombre"
+                class="shrink-0"
                 [disabled]="grupoEspejoGuardandoNombre"
                 (click)="guardarNombreGrupoEspejo()">
                 <mat-icon svgIcon="mat:check"></mat-icon>
@@ -317,6 +339,7 @@
                 mat-icon-button
                 type="button"
                 matTooltip="Cancelar"
+                class="shrink-0"
                 [disabled]="grupoEspejoGuardandoNombre"
                 (click)="cancelarEdicionNombreGrupoEspejo()">
                 <mat-icon svgIcon="mat:close"></mat-icon>
@@ -331,23 +354,61 @@
               color="accent"
               class="grupo-espejo-corregir-precio-btn"
               matTooltip="Editar el producto con precio más bajo (o nulo) para alinear el grupo"
-              [disabled]="grupoEspejoBusy || grupoEspejoGuardandoPrecio"
+              [disabled]="grupoEspejoBusy"
               (click)="abrirCorregirPrecioGrupoEspejo()">
               <mat-icon class="grupo-espejo-corregir-precio-icon" svgIcon="mat:bolt"></mat-icon>
               <span>Corregir precio</span>
+            </button>
+            <button
+              *ngIf="mostrarBotonAgregarSeleccionAlGrupoEspejo()"
+              mat-flat-button
+              type="button"
+              color="primary"
+              class="grupo-espejo-agregar-seleccion-btn flex-none"
+              matTooltip="Agregar a este grupo los productos seleccionados en la tabla que aún no están listados arriba"
+              [disabled]="grupoEspejoBusy"
+              (click)="agregarSeleccionAlGrupoEspejoDesdePanel()">
+              <mat-icon class="ltr:mr-1.5 rtl:ml-1.5 icon-sm" svgIcon="mat:link"></mat-icon>
+              <span>Agregar productos al grupo</span>
             </button>
             <button mat-stroked-button type="button" color="primary" (click)="salirModoGrupoEspejoEdicion()">
               Salir del modo edición
             </button>
           </div>
         </div>
+
         <div class="grupo-espejo-productos-section">
-          <span class="text-xs font-medium text-secondary block mb-2">Productos del grupo</span>
-          <div class="grupo-espejo-productos-scroll">
+          <span class="text-xs font-medium text-secondary block mb-1">Productos del grupo</span>
+          <div class="grupo-espejo-productos-panel-wrap">
+            <div
+              *ngIf="mostrarBloquePrecioHomogeneoGrupoEspejo()"
+              class="grupo-espejo-precio-homogeneo-float">
+              <div class="grupo-espejo-precio-homogeneo-box">
+                <span class="grupo-espejo-precio-homogeneo-label">Precio homogéneo:</span>
+                <ng-container *ngIf="precioHomogeneoVentaGrupoEspejo() !== null; else sinPrecioHomog">
+                  <span class="grupo-espejo-precio-homogeneo-valor tabular-nums"
+                    >$ {{ precioHomogeneoVentaGrupoEspejo()! | number:'1.2-2' }}</span
+                  >
+                </ng-container>
+                <ng-template #sinPrecioHomog>
+                  <span class="grupo-espejo-precio-homogeneo-valor">—</span>
+                </ng-template>
+                <button
+                  mat-icon-button
+                  type="button"
+                  class="grupo-espejo-precio-homogeneo-lapiz"
+                  matTooltip="Editar precio (se abre el producto representativo; el servidor alinea el grupo)"
+                  [disabled]="grupoEspejoBusy || grupoEspejoEditandoNombre"
+                  (click)="abrirEditarPrecioHomogeneoGrupoEspejo()">
+                  <mat-icon svgIcon="mat:edit" class="icon-sm"></mat-icon>
+                </button>
+              </div>
+            </div>
+            <div class="grupo-espejo-productos-scroll">
             <div class="grupo-espejo-productos">
             <div
               *ngFor="let p of grupoEspejoEdicion.productos; trackBy: trackByProductoPanelId"
-              class="grupo-espejo-prod-row border border-black/10 rounded px-2 py-1.5 bg-card"
+              class="grupo-espejo-prod-row border border-black/10 rounded px-2 py-1 bg-card"
               [class.grupo-espejo-prod-row--precio-conflicto]="esProductoGrupoEspejoPrecioDesalineado(p)">
               <div class="grupo-espejo-prod-top">
                 <span
@@ -358,13 +419,12 @@
                 </span>
                 <div class="grupo-espejo-prod-actions">
                   <button
-                    *ngIf="grupoEspejoPrecioEditProductoId !== p.id"
                     mat-icon-button
                     type="button"
                     class="grupo-espejo-icon-sm"
-                    matTooltip="Editar precio"
-                    [disabled]="grupoEspejoBusy || grupoEspejoGuardandoPrecio"
-                    (click)="iniciarEdicionPrecioGrupoEspejo(p); $event.stopPropagation()">
+                    matTooltip="Editar producto"
+                    [disabled]="grupoEspejoBusy"
+                    (click)="abrirEditarProductoGrupoEspejo(p); $event.stopPropagation()">
                     <mat-icon svgIcon="mat:edit" class="icon-sm"></mat-icon>
                   </button>
                   <ng-container *ngIf="hayConflictoPreciosGrupoEspejo()">
@@ -377,7 +437,7 @@
                       (mouseenter)="onPrecioPopoverTriggerEnter(precioPopoverTr)"
                       (mouseleave)="onPrecioPopoverTriggerLeave()"
                       matTooltip="Ver desglose de precios"
-                      [disabled]="grupoEspejoBusy || grupoEspejoGuardandoPrecio"
+                      [disabled]="grupoEspejoBusy"
                       (click)="$event.stopPropagation()">
                       <mat-icon svgIcon="mat:attach_money" class="icon-sm"></mat-icon>
                     </button>
@@ -433,53 +493,29 @@
                     </mat-menu>
                   </ng-container>
                   <button
-                    *ngIf="grupoEspejoPrecioEditProductoId === p.id"
-                    mat-icon-button
-                    type="button"
-                    color="primary"
-                    class="grupo-espejo-icon-sm"
-                    matTooltip="Guardar precio"
-                    [disabled]="grupoEspejoGuardandoPrecio"
-                    (click)="guardarPrecioProductoGrupoEspejo(p)">
-                    <mat-icon svgIcon="mat:check" class="icon-sm"></mat-icon>
-                  </button>
-                  <button
-                    *ngIf="grupoEspejoPrecioEditProductoId === p.id"
-                    mat-icon-button
-                    type="button"
-                    class="grupo-espejo-icon-sm"
-                    matTooltip="Cancelar"
-                    [disabled]="grupoEspejoGuardandoPrecio"
-                    (click)="cancelarEdicionPrecioGrupoEspejo()">
-                    <mat-icon svgIcon="mat:close" class="icon-sm"></mat-icon>
-                  </button>
-                  <button
                     mat-icon-button
                     type="button"
                     class="grupo-espejo-icon-sm"
                     color="warn"
                     matTooltip="Quitar del grupo"
-                    [disabled]="grupoEspejoBusy || grupoEspejoPrecioEditProductoId === p.id"
+                    [disabled]="grupoEspejoBusy"
                     (click)="quitarProductoDeGrupoEspejo(p); $event.stopPropagation()">
                     <mat-icon svgIcon="mat:link_off" class="icon-sm"></mat-icon>
                   </button>
                 </div>
               </div>
-              <mat-form-field *ngIf="grupoEspejoPrecioEditProductoId === p.id" appearance="outline" class="grupo-espejo-precio-field mb-[-1.25em] w-full grupo-espejo-precio-field-block">
-                <mat-label>Precio</mat-label>
-                <input matInput type="number" min="0" step="0.01" [formControl]="grupoEspejoPrecioCtrl"
-                  (keydown.enter)="guardarPrecioProductoGrupoEspejo(p); $event.preventDefault()"
-                  (keydown.escape)="cancelarEdicionPrecioGrupoEspejo()" />
-              </mat-form-field>
             </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
 
-      <div class="px-4 products-panel">
-        <div class="products-container">
-          <div class="products-list" (scroll)="onTableScroll($event)">
+      <div class="productos-table-section px-6 py-4 flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div
+            #tableScroll
+            class="products-list table-scroll-container"
+            (scroll)="onTableScroll($event)">
             <table class="w-full" mat-table [dataSource]="dataSource" matSort (matSortChange)="sortData($event)">
               <!-- Barcode Column -->
               <ng-container matColumnDef="id">
@@ -609,8 +645,8 @@
                     <button mat-icon-button color="primary" (click)="editProduct(product); $event.stopPropagation()">
                       <mat-icon svgIcon="mat:edit"></mat-icon>
                     </button>
-                    <vex-google-search-button searchType="barcode" [barcode]="product.barcode" size="small" color="accent"
-                      (searchClicked)="onGoogleSearchClicked($event)">
+                    <vex-google-search-button searchType="name" [productName]="product.nombre" customTooltip="Buscar"
+                      size="small" color="accent" (searchClicked)="onGoogleSearchClicked($event)">
                     </vex-google-search-button>
                     <button
                       *ngIf="mostrarBotonEditarGrupoEspejoEnFila(product)"
@@ -620,7 +656,7 @@
                       matTooltip="Editar grupo espejo"
                       [disabled]="grupoEspejoBusy"
                       (click)="entrarModoEdicionGrupoDesdeProducto(product); $event.stopPropagation()">
-                      <mat-icon svgIcon="mat:edit"></mat-icon>
+                      <mat-icon svgIcon="mat:art_track"></mat-icon>
                     </button>
                     <button
                       *ngIf="mostrarBotonGrupoEspejoEnFila(product)"
@@ -647,9 +683,9 @@
               </ng-container>
               <mat-menu #productActionsMenu="matMenu" xPosition="before">
                 <ng-template matMenuContent let-product="product">
-                  <button mat-menu-item type="button" (click)="searchProductByName(product); $event.stopPropagation()">
-                    <mat-icon svgIcon="mat:search"></mat-icon>
-                    <span>Buscar</span>
+                  <button mat-menu-item type="button" (click)="searchProductByBarcodeInGoogle(product); $event.stopPropagation()">
+                    <mat-icon svgIcon="mat:qr_code"></mat-icon>
+                    <span>Buscar código de barras en Google</span>
                   </button>
                   <button mat-menu-item type="button" (click)="toggleProductActivation(product); $event.stopPropagation()">
                     <mat-icon svgIcon="mat:{{ isProductActive(product) ? 'block' : 'check_circle' }}"></mat-icon>
@@ -665,8 +701,7 @@
             <div class="loading-more" *ngIf="loadingMore">Cargando más productos...</div>
             <div class="products-list-spacer" aria-hidden="true"></div>
           </div>
-        </div>
       </div>
     </div>
-  </vex-page-layout-content>
-</vex-page-layout>
+  </div>
+</div>

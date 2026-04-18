@@ -22,15 +22,29 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged, finalize, startWith } from 'rxjs/operators';
+import { EMPTY, Subscription, from } from 'rxjs';
+import {
+  catchError,
+  concatMap,
+  debounceTime,
+  distinctUntilChanged,
+  finalize,
+  startWith,
+  tap
+} from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Producto } from '../model/producto';
 import { GrupoEspejoDto } from '../model/grupo-espejo';
 import { GrupoEspejoService } from '../service/grupo-espejo.service';
 
 export interface SeleccionarCrearGrupoEspejoDialogData {
+  /** Producto de referencia (nombre sugerido, selección de texto en el input) */
   producto: Producto;
+  /**
+   * Si se abre desde la barra con varios seleccionados: todos los IDs a crear en el nuevo grupo
+   * o a vincular al grupo existente elegido.
+   */
+  productoIdsSeleccionados?: number[];
 }
 
 export interface SeleccionarCrearGrupoEspejoDialogResult {
@@ -75,6 +89,9 @@ export class SeleccionarCrearGrupoEspejoComponent implements OnInit, OnDestroy, 
 
   private searchSub?: Subscription;
 
+  /** IDs incluidos en crear o en “Agregar a grupo existente” */
+  readonly idsOperacion: number[];
+
   constructor(
     private dialogRef: MatDialogRef<
       SeleccionarCrearGrupoEspejoComponent,
@@ -84,6 +101,14 @@ export class SeleccionarCrearGrupoEspejoComponent implements OnInit, OnDestroy, 
     private grupoEspejoService: GrupoEspejoService,
     private snackBar: MatSnackBar
   ) {
+    const sel = this.data?.productoIdsSeleccionados;
+    if (sel?.length) {
+      this.idsOperacion = [...new Set(sel.filter((id): id is number => id != null))];
+    } else if (this.data?.producto?.id != null) {
+      this.idsOperacion = [this.data.producto.id];
+    } else {
+      this.idsOperacion = [];
+    }
     this.nombreProductoInicial = (this.data?.producto?.nombre ?? '').trim();
   }
 
@@ -227,8 +252,8 @@ export class SeleccionarCrearGrupoEspejoComponent implements OnInit, OnDestroy, 
 
   crearNuevoGrupo(): void {
     const nombre = this.nuevoGrupoNombreCtrl.value?.trim();
-    const pid = this.producto.id;
-    if (!nombre || !pid) {
+    const pids = this.idsOperacion;
+    if (!nombre || pids.length === 0) {
       this.snackBar.open('Indique un nombre para el nuevo grupo espejo.', 'Cerrar', {
         duration: 4000
       });
@@ -237,7 +262,7 @@ export class SeleccionarCrearGrupoEspejoComponent implements OnInit, OnDestroy, 
 
     this.loadingAccion = true;
     this.grupoEspejoService
-      .crear({ nombre, productoIds: [pid] })
+      .crear({ nombre, productoIds: pids })
       .pipe(finalize(() => (this.loadingAccion = false)))
       .subscribe({
         next: (grupo) => {
@@ -258,37 +283,92 @@ export class SeleccionarCrearGrupoEspejoComponent implements OnInit, OnDestroy, 
 
   agregarAGrupoSeleccionado(): void {
     const g = this.selectedGrupo;
-    const pid = this.producto.id;
-    if (!g || !pid) {
+    const ids = this.idsOperacion;
+    if (!g || ids.length === 0) {
       this.snackBar.open('Seleccione un grupo espejo de la lista.', 'Cerrar', {
         duration: 4000
       });
       return;
     }
 
-    this.loadingAccion = true;
-    this.grupoEspejoService
-      .agregarProducto(g.id, pid)
-      .pipe(finalize(() => (this.loadingAccion = false)))
-      .subscribe({
-        next: (grupo) => {
-          this.snackBar.open('Producto agregado al grupo espejo.', 'Cerrar', {
-            duration: 4000
-          });
-          this.dialogRef.close({ grupo });
-        },
-        error: (err: HttpErrorResponse) => {
-          let msg = 'No se pudo agregar el producto al grupo.';
-          if (err.status === 404) {
-            msg =
-              'No se encontró el grupo espejo o el producto.';
-          } else if (err.status === 409) {
-            msg =
-              'El producto ya pertenece a otro grupo espejo.';
-          } else {
-            msg = this.messageFromError(err, msg);
+    if (ids.length === 1) {
+      const pid = ids[0];
+      this.loadingAccion = true;
+      this.grupoEspejoService
+        .agregarProducto(g.id, pid)
+        .pipe(finalize(() => (this.loadingAccion = false)))
+        .subscribe({
+          next: (grupo) => {
+            this.snackBar.open('Producto agregado al grupo espejo.', 'Cerrar', {
+              duration: 4000
+            });
+            this.dialogRef.close({ grupo });
+          },
+          error: (err: HttpErrorResponse) => {
+            let msg = 'No se pudo agregar el producto al grupo.';
+            if (err.status === 404) {
+              msg =
+                'No se encontró el grupo espejo o el producto.';
+            } else if (err.status === 409) {
+              msg =
+                'El producto ya pertenece a otro grupo espejo.';
+            } else {
+              msg = this.messageFromError(err, msg);
+            }
+            this.snackBar.open(msg, 'Cerrar', { duration: 6000 });
           }
-          this.snackBar.open(msg, 'Cerrar', { duration: 6000 });
+        });
+      return;
+    }
+
+    this.loadingAccion = true;
+    let ok = 0;
+    let fail = 0;
+    let ultimoGrupo: GrupoEspejoDto | undefined;
+    from(ids)
+      .pipe(
+        concatMap((pid) =>
+          this.grupoEspejoService.agregarProducto(g.id, pid).pipe(
+            tap((grupo) => {
+              ok++;
+              ultimoGrupo = grupo;
+            }),
+            catchError(() => {
+              fail++;
+              return EMPTY;
+            })
+          )
+        ),
+        finalize(() => {
+          this.loadingAccion = false;
+        })
+      )
+      .subscribe({
+        complete: () => {
+          if (ok > 0 && ultimoGrupo) {
+            this.snackBar.open(
+              ok === 1
+                ? 'Producto agregado al grupo espejo.'
+                : `${ok} productos agregados al grupo espejo.`,
+              'Cerrar',
+              { duration: 4000 }
+            );
+            this.dialogRef.close({ grupo: ultimoGrupo });
+          }
+          if (fail > 0) {
+            this.snackBar.open(
+              fail === 1
+                ? 'No se pudo agregar 1 producto (p. ej. ya en otro grupo).'
+                : `No se pudieron agregar ${fail} productos.`,
+              'Cerrar',
+              { duration: 6000 }
+            );
+          }
+          if (ok === 0 && fail === 0) {
+            this.snackBar.open('No hay productos para agregar.', 'Cerrar', {
+              duration: 4000
+            });
+          }
         }
       });
   }

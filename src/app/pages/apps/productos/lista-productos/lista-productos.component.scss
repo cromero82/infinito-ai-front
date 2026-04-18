@@ -1,3 +1,5 @@
+@use '../../../../core/table-viewport/table-viewport.scss' as *;
+
 img.h-10.w-10.object-cover.rounded {
   transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
 }
@@ -8,72 +10,39 @@ img.h-10.w-10.object-cover.rounded:hover {
   position: relative;
 }
 
-// Contenedor más ancho: ocupa más espacio en pantalla (ver flechas rojas en diseño)
-:host ::ng-deep vex-page-layout-content.products-page-wider.container {
-  max-width: 95vw !important;
-  width: 100%;
-}
+// Misma base que proveedor-list: host + página + card + sección tabla (.productos-table-section).
+// Centrado horizontal: admin-productos usa .container como financiero/proveedor-list.
 
-// Llenar altura del viewport (vex-layout-content tiene altura fija con scrollDisabled)
 :host {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-:host ::ng-deep vex-page-layout {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  height: 100%;
-}
-
-:host ::ng-deep vex-page-layout-content {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  height: 100%;
-}
-
-// Custom adjustments based on diff
-vex-page-layout-header {
-  height: 68px !important;
-  padding: 0 24px 32px !important;
-}
-
-vex-page-layout-header .container {
-  padding: 0 24px 0 20px !important;
-}
-
-.products-card {
-  overflow: hidden;
-  margin-top: -90px;
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
+  min-width: 0;
 }
 
-// Cabecera, barra de filtros y panel grupo espejo: no roban flex a la tabla
-.products-card > div.bg-app-bar,
-.products-card > div.grupo-espejo-panel {
+.productos-page {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.products-card {
+  min-height: 0;
+}
+
+/* Misma barra gris que tickets (bg-app-bar): título + búsqueda */
+.products-card > .bg-app-bar,
+.products-card > .productos-active-filters,
+.products-card > .grupo-espejo-panel {
   flex-shrink: 0;
 }
 
-:host ::ng-deep .products-card .bg-app-bar,
-:host ::ng-deep .products-card .grupo-espejo-panel {
+:host ::ng-deep .products-card .bg-app-bar {
   padding-top: 14px;
   padding-bottom: 14px;
 }
 
-// Similar a .ticket-panel en tickets-recibo
-.products-panel {
-  margin-top: 16px;
-  margin-bottom: 0;
-  padding-bottom: 10px;
+.productos-table-section {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
@@ -81,16 +50,11 @@ vex-page-layout-header .container {
   overflow: hidden;
 }
 
-// Con pocas filas encoge con la tabla; con muchas, max-height limita y el scroll queda en .products-list
-.products-container {
-  display: flex;
-  flex-direction: column;
-  flex: 0 1 auto;
-  align-self: stretch;
-  width: 100%;
+.productos-table-section .table-scroll-container {
+  flex: 1 1 auto;
   min-height: 0;
-  max-height: 100%;
-  overflow: hidden;
+  max-height: none;
+  height: 100%;
 }
 
 .loading-more {
@@ -100,21 +64,18 @@ vex-page-layout-header .container {
   font-size: 14px;
 }
 
-// Similar a ::ng-deep .detalle-list en tickets-recibo
-// scrollbar-gutter: stable evita que el ancho cambie al aparecer/desaparecer el scrollbar (evita recorte de iconos)
-.products-list {
-  // fit-content evita el bloque blanco enorme bajo pocas filas; max-height limita y activa scroll con muchas
-  flex: 0 1 auto !important;
+// Scroll vertical (cabecera sticky vía table-viewport.scss). Misma idea que egreso/proveedor: flex + height 100%.
+.products-list.table-scroll-container {
+  flex: 1 1 auto !important;
   align-self: stretch !important;
   width: 100% !important;
   min-height: 0 !important;
-  height: fit-content !important;
-  max-height: 100% !important;
+  height: 100% !important;
   overflow-y: auto !important;
   overflow-x: auto !important;
   scrollbar-gutter: stable !important;
   margin-bottom: 0 !important;
-  padding-bottom: 28px !important;
+  padding-bottom: 8px !important;
   -webkit-overflow-scrolling: touch !important;
 }
 
@@ -124,18 +85,46 @@ vex-page-layout-header .container {
   flex-shrink: 0;
 }
 
-// Search input field height adjustments
-.search-input .mat-mdc-form-field-flex {
-  height: 38px !important;
+.search-input {
+  @apply w-64;
 }
 
-.search-input .mat-mdc-form-field-flex > .mat-mdc-form-field-infix {
-  height: 30px !important;
-}
+// Búsqueda: altura ~40px. Importante: no poner padding-top/bottom a 0 en .mat-mdc-form-field-infix (rompe el label flotante).
+:host ::ng-deep {
+  .search-input.mat-mdc-form-field {
+    font-size: 13px !important;
 
-// Produtos heading font size
-.bg-app-bar h2 {
-  font-size: 25px !important;
+    .mat-mdc-form-field-flex {
+      min-height: 40px !important;
+      align-items: center !important;
+    }
+
+    .mat-mdc-form-field-infix {
+      /* Material calcula el float; solo acotamos altura mínima del área de texto */
+      min-height: 28px !important;
+    }
+
+    .mat-mdc-text-field-wrapper input,
+    .mat-mdc-floating-label {
+      font-size: 13px !important;
+    }
+
+    .mat-mdc-input-element {
+      font-size: 13px !important;
+      line-height: normal !important;
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      min-height: 0 !important;
+    }
+
+    .mat-mdc-text-field-wrapper,
+    .mat-mdc-form-field-flex {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+  }
 }
 
 // Table font size
@@ -146,14 +135,18 @@ table.mat-mdc-table {
   width: 100% !important;
   table-layout: fixed !important;
   min-width: 0 !important;
+  /* Alinear con fila de cabecera compacta (reduce hueco superior en MDC) */
+  --mat-table-header-container-height: 32px;
   
-  // Table header cells (padding lateral algo menor para ganar ancho sin apretar texto)
+  // Encabezados: menos aire arriba (Material añade padding vertical al contenedor de sort)
   th.mat-mdc-header-cell {
     font-size: 16px !important;
     font-weight: 600 !important;
-    padding: 2px 10px !important;
+    padding: 0 10px 4px !important;
     line-height: 1.2 !important;
-    height: 36px !important;
+    height: 32px !important;
+    vertical-align: middle !important;
+    box-sizing: border-box !important;
   }
   
   // Table data cells - min-height permite que filas crezcan cuando producto tiene 2 líneas
@@ -222,7 +215,7 @@ table.mat-mdc-table {
   // Header row - sticky como Excel: siempre visible al hacer scroll vertical
   // Nota: sticky debe aplicarse a cada th, no al tr (limitación CSS)
   tr.mat-mdc-header-row {
-    height: 36px !important;
+    height: 32px !important;
     background-color: white !important;
 
     th.mat-mdc-header-cell {
@@ -245,6 +238,40 @@ table.mat-mdc-table {
     &:hover {
       background-color: rgba(0, 0, 0, 0.02) !important;
     }
+  }
+}
+
+/* Cabeceras: el hueco superior suele venir del min-height ~48px del botón de sort (touch target). */
+:host ::ng-deep .products-list table.mat-mdc-table {
+  th.mat-mdc-header-cell,
+  th.mat-mdc-header-cell.mdc-data-table__header-cell {
+    padding-top: 0 !important;
+    padding-bottom: 2px !important;
+    vertical-align: middle !important;
+  }
+
+  th.mat-mdc-header-cell .mat-sort-header-container {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    align-items: center !important;
+  }
+
+  th.mat-mdc-header-cell .mat-sort-header-content {
+    align-items: center !important;
+  }
+
+  /* Causa principal del “gap” arriba del texto */
+  th.mat-mdc-header-cell .mat-sort-header-button {
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0 4px !important;
+    line-height: 1.15 !important;
+  }
+
+  th.mat-mdc-header-cell .mat-sort-header-arrow {
+    margin: 0 0 0 4px !important;
   }
 }
 
@@ -456,17 +483,13 @@ td.col-precio {
   box-sizing: border-box !important;
 }
 
-// Botones: menos espacio entre ellos
-.header-btns {
-  .add-product-btn,
-  .column-visibility-btn {
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-    min-width: 0 !important;
-  }
+.add-product-btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
 }
 
-.add-product-btn {
+.grupo-espejo-bar-btn {
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
@@ -699,7 +722,7 @@ th.col-pct-ganancia {
   }
 }
 
-// Modo edición grupo espejo: tinte primario Vex (vs. cabecera/filtros en bg-app-bar gris)
+// Modo edición grupo espejo: tinte primario Vex
 .grupo-espejo-panel {
   background: rgb(var(--vex-color-primary-500) / 0.09);
   border-bottom: 1px solid rgb(var(--vex-color-primary-600) / 0.14) !important;
@@ -710,7 +733,129 @@ th.col-pct-ganancia {
   border-bottom-color: rgb(var(--vex-color-primary-300) / 0.2) !important;
 }
 
+.grupo-espejo-panel-toolbar {
+  width: 100%;
+  align-items: center;
+}
+
+.grupo-espejo-panel-toolbar-main {
+  align-items: center;
+}
+
+/** Una sola línea: título + nombre + iconos; ancho del nombre ampliable */
+.grupo-espejo-nombre-row {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: min(480px, 52vw);
+}
+
+@media (max-width: 900px) {
+  .grupo-espejo-nombre-row {
+    max-width: min(380px, 58vw);
+  }
+}
+
+@media (max-width: 720px) {
+  .grupo-espejo-nombre-row {
+    max-width: min(320px, 72vw);
+  }
+}
+
+@media (max-width: 520px) {
+  .grupo-espejo-panel-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .grupo-espejo-panel-toolbar-main {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .grupo-espejo-nombre-row {
+    max-width: 100%;
+  }
+
+  .grupo-espejo-panel-header-actions {
+    justify-content: flex-end;
+  }
+}
+
+:host ::ng-deep .grupo-espejo-nombre-field.mat-mdc-form-field {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+:host ::ng-deep .grupo-espejo-nombre-field .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+:host ::ng-deep .grupo-espejo-nombre-field .mat-mdc-text-field-wrapper {
+  padding-bottom: 0;
+}
+
+:host ::ng-deep .grupo-espejo-nombre-field .mat-mdc-form-field-infix {
+  min-height: 38px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
 .grupo-espejo-panel-header-actions {
+  align-items: center;
+}
+
+.grupo-espejo-productos-panel-wrap {
+  position: relative;
+}
+
+// Recuadro flotante pegado al borde superior del panel con scroll (sin ocupar fila extra en el flujo)
+.grupo-espejo-precio-homogeneo-float {
+  position: absolute;
+  right: 2px;
+  top: 0;
+  z-index: 2;
+  transform: translateY(calc(-100% - 0.8px));
+  pointer-events: auto;
+}
+
+.grupo-espejo-precio-homogeneo-box {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  padding: 2px 10px 2px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+:host-context(.dark) .grupo-espejo-precio-homogeneo-box {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.grupo-espejo-precio-homogeneo-label {
+  font-size: 0.8125rem;
+  color: var(--vex-text-secondary, rgba(0, 0, 0, 0.62));
+}
+
+.grupo-espejo-precio-homogeneo-valor {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.grupo-espejo-precio-homogeneo-lapiz {
+  margin-left: 0;
+  width: 30px !important;
+  height: 30px !important;
+  padding: 0 !important;
+}
+
+.grupo-espejo-agregar-seleccion-btn {
+  white-space: nowrap;
+  display: inline-flex;
   align-items: center;
 }
 
@@ -795,8 +940,8 @@ th.col-pct-ganancia {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 6px 6px 4px !important;
+  gap: 4px;
+  padding: 4px 6px 3px !important;
 }
 
 // Bloque interno: detalle de precios (popover / menú flotante)
@@ -922,6 +1067,8 @@ th.col-pct-ganancia {
   gap: 4px;
   min-width: 0;
   width: 100%;
+  /* Menos “aire” vertical que el alto por defecto de fila + icon-buttons */
+  margin-block: -1px;
 }
 
 .grupo-espejo-prod-nombre {
@@ -943,16 +1090,24 @@ th.col-pct-ganancia {
   flex-shrink: 0;
 }
 
-// Mismo criterio que .edit-col-icons en la tabla (36px, iconos ~18px)
+// Compacto: más altura útil para la lista / tabla principal
 :host ::ng-deep .grupo-espejo-prod-actions button.mat-mdc-icon-button {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding-left: 2px !important;
-  padding-right: 2px !important;
-  min-width: 32px !important;
-  width: 32px !important;
-  height: 32px !important;
+  padding-left: 1px !important;
+  padding-right: 1px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  min-width: 28px !important;
+  width: 28px !important;
+  height: 28px !important;
+  line-height: 1 !important;
+}
+
+:host ::ng-deep .grupo-espejo-prod-actions .mat-mdc-button-touch-target {
+  height: 28px !important;
+  width: 28px !important;
 }
 
 :host ::ng-deep .grupo-espejo-prod-actions button.mat-mdc-icon-button .mat-icon {
@@ -964,20 +1119,4 @@ th.col-pct-ganancia {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-}
-
-.grupo-espejo-precio-field-block {
-  width: 100% !important;
-  max-width: 100%;
-}
-
-// Campo precio al editar: más compacto
-:host ::ng-deep .grupo-espejo-precio-field-block.mat-mdc-form-field {
-  font-size: 0.8125rem;
-}
-
-:host ::ng-deep .grupo-espejo-precio-field-block .mat-mdc-form-field-infix {
-  min-height: 36px;
-  padding-top: 6px !important;
-  padding-bottom: 6px !important;
 }

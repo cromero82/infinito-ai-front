@@ -19,10 +19,15 @@
 <mat-divider class="text-border"></mat-divider>
 
 <mat-dialog-content class="dialog-body">
-  <p class="producto-actual-line m-0 mb-2">
+  <p *ngIf="idsOperacion.length === 1" class="producto-actual-line m-0 mb-2">
     <span class="producto-actual-label">Producto actual:</span>
     <strong class="producto-actual-nombre">{{ producto.nombre }}</strong>
     <span *ngIf="producto.barcode" class="producto-actual-barcode">({{ producto.barcode }})</span>
+  </p>
+  <p *ngIf="idsOperacion.length > 1" class="producto-actual-line m-0 mb-2">
+    <span class="producto-actual-label">Productos en la selección:</span>
+    <strong class="producto-actual-nombre">{{ idsOperacion.length }} ítems</strong>
+    <span class="producto-actual-barcode">(referencia: {{ producto.nombre }})</span>
   </p>
 
   <div class="section section-shrink">
