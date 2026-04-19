@@ -1,3 +1,20 @@
+.cierre-ventas-draggable-root {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cierre-ventas-drag-header {
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+  flex-shrink: 0;
+
+  .dialog-title {
+    margin-bottom: 0;
+  }
+}
+
 .dialog-title {
   font-size: 20px;
   font-weight: 600;

@@ -109,9 +109,39 @@ export class CorteVentaService {
   }
 
   /**
+   * Agrupa cortes que comparten el mismo día de calendario (según `fechaIni`), **sin** separar por usuario.
+   * Suma totales y fusiona `ventasTipo` por `metodoPagoId`. Sirve para vistas tipo dashboard: un solo valor por día.
+   */
+  agruparPorFechaCalendario(
+    cortes: CorteVentaSearchItemDto[]
+  ): CorteVentaSearchItemDto[] {
+    if (!cortes?.length) {
+      return [];
+    }
+
+    const grupos = new Map<string, CorteVentaSearchItemDto[]>();
+    for (const c of cortes) {
+      const dia = CorteVentaService.fechaCalendarioDesdeIso(c.fechaIni);
+      const arr = grupos.get(dia);
+      if (arr) {
+        arr.push(c);
+      } else {
+        grupos.set(dia, [c]);
+      }
+    }
+
+    const resultado: CorteVentaSearchItemDto[] = [];
+    for (const [, items] of grupos) {
+      resultado.push(this.combinarCortesMismoDiaUsuario(items));
+    }
+
+    return resultado.sort((a, b) => a.fechaIni.localeCompare(b.fechaIni));
+  }
+
+  /**
    * Agrupa cortes que comparten el mismo día de calendario y el mismo usuario.
    * Suma totales y fusiona `ventasTipo` por `metodoPagoId`.
-   * Útil cuando el API devuelve varios registros el mismo día (distinta hora) para un mismo usuario.
+   * Más granular que {@link agruparPorFechaCalendario} (mantiene un registro por día y usuario).
    */
   agruparPorFechaYUsuario(
     cortes: CorteVentaSearchItemDto[]
@@ -277,5 +307,15 @@ export class CorteVentaService {
       Accept: 'application/json'
     });
     return this.http.post(this.apiUrl, dto, { headers });
+  }
+
+  /**
+   * Elimina un corte de venta por id.
+   */
+  eliminar(id: number): Observable<void> {
+    const headers = new HttpHeaders({
+      Accept: 'application/json'
+    });
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers });
   }
 }

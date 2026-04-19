@@ -1,6 +1,15 @@
-<h2 mat-dialog-title class="dialog-title">Cierre de Ventas</h2>
+<div
+  class="cierre-ventas-draggable-root"
+  cdkDrag
+  cdkDragRootElement=".cdk-overlay-pane">
+  <div
+    class="cierre-ventas-drag-header"
+    mat-dialog-title
+    cdkDragHandle>
+    <h2 class="dialog-title m-0">Cierre de Ventas</h2>
+  </div>
 
-<div mat-dialog-content class="dialog-content">
+  <div mat-dialog-content class="dialog-content">
   <div class="fechas-container">
     <div class="fecha-grupo">
       <span class="fecha-label">Desde:</span>
@@ -204,30 +213,31 @@
         </div>
       </div>
     </div>
-</div>
+  </div>
 
-<div mat-dialog-actions align="end" class="dialog-actions">
-  <button
-    mat-stroked-button
-    type="button"
-    (click)="cancelar()"
-    [disabled]="loading">
-    Cancelar
-  </button>
-  <button
-    mat-flat-button
-    color="primary"
-    type="button"
-    (click)="registrar()"
-    [disabled]="!esFormularioValido() || loading || consultando">
-    @if (loading) {
-      <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
-    }
-    @if (!loading) {
-      <span>Registrar cierre</span>
-    }
-    @if (loading) {
-      <span>Registrando...</span>
-    }
-  </button>
+  <div mat-dialog-actions align="end" class="dialog-actions">
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="cancelar()"
+      [disabled]="loading">
+      Cancelar
+    </button>
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      (click)="registrar()"
+      [disabled]="!esFormularioValido() || loading || consultando">
+      @if (loading) {
+        <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+      }
+      @if (!loading) {
+        <span>Registrar cierre</span>
+      }
+      @if (loading) {
+        <span>Registrando...</span>
+      }
+    </button>
+  </div>
 </div>

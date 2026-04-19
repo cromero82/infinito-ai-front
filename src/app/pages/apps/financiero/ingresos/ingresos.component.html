@@ -2,16 +2,26 @@
   <div class="flex flex-col flex-1 min-h-0 w-full pb-1">
     <div
       class="card ingresos-card flex flex-col flex-1 min-h-0 overflow-hidden">
-      <div class="border-b py-2 px-6 flex items-center flex-shrink-0">
-        <h2 class="m-0 title flex-auto">Ingresos</h2>
-
+      <div class="border-b py-2 px-6 flex items-center flex-shrink-0 gap-2">
+        <h2 class="m-0 title flex-auto min-w-0">Ingresos</h2>
+        <mat-button-toggle-group
+          [formControl]="vistaCtrl"
+          appearance="legacy"
+          class="ingresos-vista-toggle shrink-0">
+          <mat-button-toggle value="dashboard" matTooltip="Dashboard">
+            <mat-icon svgIcon="mat:insights" class="align-middle"></mat-icon>
+          </mat-button-toggle>
+          <mat-button-toggle value="corte" matTooltip="Datos corte de ventas">
+            <mat-icon svgIcon="mat:receipt_long" class="align-middle"></mat-icon>
+          </mat-button-toggle>
+        </mat-button-toggle-group>
         <button
           mat-flat-button
           color="primary"
           type="button"
           (click)="abrirModalCierreVentas()"
           matTooltip="Cierre de ventas"
-          class="mr-2">
+          class="shrink-0">
           <mat-icon svgIcon="mat:add"></mat-icon>
           <span class="ml-1">Cierre de ventas</span>
         </button>
@@ -140,18 +150,34 @@
                     }
                   </div>
                   <div class="text-secondary text-xs mt-1">
-                    @if (ventasPorFecha.length > 0) {
-                      <span>
-                        {{ ventasPorFecha.length }} día{{
-                          ventasPorFecha.length !== 1 ? "s" : ""
-                        }}
-                        con ventas
-                      </span>
+                    @if (vistaCtrl.value === "dashboard") {
+                      @if (ventasPorFecha.length > 0) {
+                        <span>
+                          {{ ventasPorFecha.length }} día{{
+                            ventasPorFecha.length !== 1 ? "s" : ""
+                          }}
+                          con ventas
+                        </span>
+                      }
+                      @if (ventasPorFecha.length === 0) {
+                        <span class="text-warn">
+                          No hay ventas en este período
+                        </span>
+                      }
                     }
-                    @if (ventasPorFecha.length === 0) {
-                      <span class="text-warn">
-                        No hay ventas en este período
-                      </span>
+                    @if (vistaCtrl.value === "corte") {
+                      @if (cortesVentaListado.length > 0) {
+                        <span>
+                          {{ cortesVentaListado.length }} corte{{
+                            cortesVentaListado.length !== 1 ? "s" : ""
+                          }}
+                        </span>
+                      }
+                      @if (cortesVentaListado.length === 0) {
+                        <span class="text-warn">
+                          No hay cortes en este período
+                        </span>
+                      }
                     }
                   </div>
                 </div>
@@ -195,13 +221,34 @@
               </div>
             }
 
-            @if (!loading && !error && ventasPorFecha.length === 0) {
+            @if (
+              !loading &&
+              !error &&
+              vistaCtrl.value === "dashboard" &&
+              ventasPorFecha.length === 0
+            ) {
               <div class="text-secondary py-8 text-center">
                 No hay ventas disponibles para el período seleccionado.
               </div>
             }
 
-            @if (!loading && !error && ventasPorFecha.length > 0) {
+            @if (
+              !loading &&
+              !error &&
+              vistaCtrl.value === "corte" &&
+              cortesVentaListado.length === 0
+            ) {
+              <div class="text-secondary py-8 text-center">
+                No hay cortes de ventas en el período seleccionado.
+              </div>
+            }
+
+            @if (
+              !loading &&
+              !error &&
+              vistaCtrl.value === "dashboard" &&
+              ventasPorFecha.length > 0
+            ) {
               <div class="ingresos-content-panel flex flex-col">
                 <div class="ingresos-chart-panel">
                   <vex-chart
@@ -209,9 +256,7 @@
                     [series]="chartSeries"></vex-chart>
                 </div>
                 <div class="ingresos-details-panel mt-4 flex flex-col">
-                  <h3 class="title font-medium mb-3">
-                    Detalles por Fecha
-                  </h3>
+                  <h3 class="title font-medium mb-3">Detalles por Fecha</h3>
                   <div class="ingresos-details-table">
                     <table class="w-full border-collapse">
                       <thead>
@@ -237,6 +282,87 @@
                                   </span>
                                 }
                               </div>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (
+              !loading &&
+              !error &&
+              vistaCtrl.value === "corte" &&
+              cortesVentaListado.length > 0
+            ) {
+              <div class="ingresos-content-panel flex flex-col">
+                <div class="ingresos-details-panel flex flex-col">
+                  <h3 class="title font-medium mb-3">Detalles por Fecha</h3>
+                  <div
+                    class="ingresos-details-table overflow-x-auto -mx-1 px-1">
+                    <table class="w-full border-collapse text-sm min-w-[920px]">
+                      <thead>
+                        <tr class="border-b">
+                          <th class="text-left py-2 px-2">Usuario</th>
+                          <th class="text-left py-2 px-2">Fecha inicio</th>
+                          <th class="text-left py-2 px-2">Fecha fin</th>
+                          <th class="text-right py-2 px-2">Total</th>
+                          <th class="text-right py-2 px-2">Total sistema</th>
+                          <th class="text-left py-2 px-2">Métodos de pago</th>
+                          <th class="text-center py-2 px-2 w-12"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (corte of cortesVentaListado; track corte.id) {
+                          <tr class="border-b hover:bg-gray-50 align-top">
+                            <td class="py-2 px-2">
+                              {{ nombreUsuarioDesdeCache(corte.usuarioId) }}
+                            </td>
+                            <td class="py-2 px-2 whitespace-nowrap">
+                              {{ formatearFechaHora(corte.fechaIni) }}
+                            </td>
+                            <td class="py-2 px-2 whitespace-nowrap">
+                              {{ formatearFechaHora(corte.fechaFin) }}
+                            </td>
+                            <td class="text-right py-2 px-2 font-medium">
+                              {{ formatCurrency(corte.total) }}
+                            </td>
+                            <td class="text-right py-2 px-2">
+                              {{ formatCurrency(corte.totalSistema) }}
+                            </td>
+                            <td class="py-2 px-2">
+                              <div class="flex flex-col gap-1">
+                                @for (
+                                  vt of corte.ventasTipo;
+                                  track vt.id ?? vt.metodoPagoId
+                                ) {
+                                  <span>
+                                    {{ metodoPagoDescripcion(vt.metodoPagoId) }}:
+                                    {{ formatCurrency(vt.total) }}
+                                  </span>
+                                }
+                              </div>
+                            </td>
+                            <td class="py-2 px-1 text-center">
+                              <button
+                                mat-icon-button
+                                type="button"
+                                color="warn"
+                                [disabled]="eliminandoCorteId === corte.id"
+                                (click)="eliminarCorteVenta(corte, $event)"
+                                matTooltip="Eliminar corte">
+                                @if (eliminandoCorteId === corte.id) {
+                                  <mat-icon
+                                    class="animate-spin"
+                                    svgIcon="mat:hourglass_empty"></mat-icon>
+                                } @else {
+                                  <mat-icon
+                                    svgIcon="mat:delete_forever"></mat-icon>
+                                }
+                              </button>
                             </td>
                           </tr>
                         }

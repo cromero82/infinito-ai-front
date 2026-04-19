@@ -12,6 +12,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 import { Subject, merge } from 'rxjs';
 import { takeUntil, finalize, debounceTime, filter } from 'rxjs/operators';
 import { MetodoPagoService, MetodoPagoDto } from '../../../ventas/service/metodo-pago.service';
@@ -46,6 +47,7 @@ interface CorteVentaRow {
         MatProgressSpinnerModule,
         MatSnackBarModule,
         MatCheckboxModule,
+        DragDropModule,
         ReactiveFormsModule
     ],
     templateUrl: './cierre-ventas.component.html',

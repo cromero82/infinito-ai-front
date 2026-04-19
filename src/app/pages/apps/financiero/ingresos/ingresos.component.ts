@@ -10,6 +10,8 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { AuthService } from '../../../../auth/service/auth.service';
 import {
   ApexOptions,
   VexChartComponent
@@ -50,6 +52,7 @@ interface VentasPorFecha {
     MatIconModule,
     MatTooltipModule,
     MatDialogModule,
+    MatSnackBarModule,
     VexChartComponent
   ],
   templateUrl: './ingresos.component.html',
@@ -59,9 +62,14 @@ export class IngresosComponent implements OnInit, OnDestroy {
   fechaInicioCtrl = new FormControl<Date | null>(null);
   fechaFinCtrl = new FormControl<Date | null>(null);
   periodoCtrl = new FormControl<string>('semanal');
+  /** Vista del panel derecho: gráfico + detalle por fecha, o listado crudo de cortes. */
+  vistaCtrl = new FormControl<'dashboard' | 'corte'>('dashboard');
 
   ventasPorFecha: VentasPorFecha[] = [];
   ventasPorFechaVisibles: VentasPorFecha[] = [];
+  /** Respuesta cruda de search (sin agrupar); modo "Datos corte de ventas". */
+  cortesVentaListado: CorteVentaSearchItemDto[] = [];
+  eliminandoCorteId: number | null = null;
   loading = false;
   error: string | null = null;
 
@@ -181,7 +189,9 @@ export class IngresosComponent implements OnInit, OnDestroy {
   constructor(
     private corteVentaService: CorteVentaService,
     private metodoPagoService: MetodoPagoService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private authService: AuthService,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
@@ -228,7 +238,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (cortes) => {
-          this.procesarRespuestaSearch(cortes);
+          this.aplicarRespuestaSearch(cortes);
           this.loading = false;
         },
         error: (err) => {
@@ -337,7 +347,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (cortes) => {
-          this.procesarRespuestaSearch(cortes);
+          this.aplicarRespuestaSearch(cortes);
           this.loading = false;
         },
         error: (err) => {
@@ -356,11 +366,24 @@ export class IngresosComponent implements OnInit, OnDestroy {
         maxWidth: '95vw'
       })
       .afterClosed()
+      .pipe(takeUntil(this.destroy$))
       .subscribe((result) => {
         if (result?.success) {
-          this.cargarVentasUltimos7Dias();
+          this.refrescarDatosIngresosMismoRango();
         }
       });
+  }
+
+  /**
+   * Vuelve a ejecutar `search` con el rango de fechas actualmente mostrado
+   * (Dashboard o Datos) sin resetear la ventana al período por defecto.
+   */
+  private refrescarDatosIngresosMismoRango(): void {
+    if (this.fechaInicioActual && this.fechaFinActual) {
+      this.cargarVentasPorRango(this.fechaInicioActual, this.fechaFinActual);
+    } else {
+      this.cargarVentasUltimos7Dias();
+    }
   }
 
   private cargarVentasPorRango(fechaInicio: Date, fechaFin: Date): void {
@@ -375,7 +398,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (cortes) => {
-          this.procesarRespuestaSearch(cortes);
+          this.aplicarRespuestaSearch(cortes);
           this.loading = false;
         },
         error: (err) => {
@@ -407,7 +430,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (cortes) => {
-          this.procesarRespuestaSearch(cortes);
+          this.aplicarRespuestaSearch(cortes);
           this.loading = false;
         },
         error: (err) => {
@@ -418,9 +441,21 @@ export class IngresosComponent implements OnInit, OnDestroy {
       });
   }
 
-  private procesarRespuestaSearch(cortes: CorteVentaSearchItemDto[]): void {
+  /**
+   * Guarda la respuesta cruda para el modo listado (orden descendente por fechaIni)
+   * y construye el agregado solo para el dashboard.
+   */
+  private aplicarRespuestaSearch(cortes: CorteVentaSearchItemDto[]): void {
+    const lista = cortes ?? [];
+    this.cortesVentaListado = [...lista].sort((a, b) =>
+      b.fechaIni.localeCompare(a.fechaIni)
+    );
+    this.procesarRespuestaDashboardDesdeCortes(lista);
+  }
+
+  private procesarRespuestaDashboardDesdeCortes(cortes: CorteVentaSearchItemDto[]): void {
     const agrupados =
-      this.corteVentaService.agruparPorFechaYUsuario(cortes || []);
+      this.corteVentaService.agruparPorFechaCalendario(cortes || []);
 
     this.ventasPorFecha = agrupados.map((item) => {
       const fechaLabel = this.formatearFechaParaLabel(item.fechaIni);
@@ -458,6 +493,66 @@ export class IngresosComponent implements OnInit, OnDestroy {
     }
 
     this.prepararDatosGrafico();
+  }
+
+  nombreUsuarioDesdeCache(usuarioId: string): string {
+    const u = this.authService
+      .obtenerTodosUsuariosCache()
+      .find((x) => x.id === usuarioId);
+    return u?.nombre ?? usuarioId;
+  }
+
+  metodoPagoDescripcion(metodoPagoId: number): string {
+    const m = this.metodosPago.find((x) => x.id === metodoPagoId);
+    return m?.descripcion ?? `Método ${metodoPagoId}`;
+  }
+
+  formatearFechaHora(iso: string): string {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) {
+      return iso;
+    }
+    return d.toLocaleString('es-CO', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  eliminarCorteVenta(corte: CorteVentaSearchItemDto, event?: Event): void {
+    event?.stopPropagation();
+    if (
+      !confirm(
+        `¿Eliminar el corte #${corte.id}? Esta acción no se puede deshacer.`
+      )
+    ) {
+      return;
+    }
+    this.eliminandoCorteId = corte.id;
+    this.corteVentaService
+      .eliminar(corte.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.eliminandoCorteId = null;
+          this.snackBar.open('Corte eliminado', 'Cerrar', { duration: 3000 });
+          this.cortesVentaListado = this.cortesVentaListado.filter(
+            (c) => c.id !== corte.id
+          );
+          this.aplicarRespuestaSearch(this.cortesVentaListado);
+        },
+        error: (err) => {
+          this.eliminandoCorteId = null;
+          console.error('Error eliminando corte', err);
+          this.snackBar.open(
+            'No se pudo eliminar el corte. Intente de nuevo.',
+            'Cerrar',
+            { duration: 5000 }
+          );
+        }
+      });
   }
 
   private formatearFechaParaLabel(fechaIso: string): string {
