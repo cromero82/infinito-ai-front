@@ -7,13 +7,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule, MAT_DATE_LOCALE, MAT_DATE_FORMATS, DateAdapter, NativeDateAdapter } from '@angular/material/core';
+import { MatNativeDateModule } from '@angular/material/core';
 import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { Subject } from 'rxjs';
-import { takeUntil, finalize } from 'rxjs/operators';
+import { Subject, merge } from 'rxjs';
+import { takeUntil, finalize, debounceTime, filter } from 'rxjs/operators';
 import { MetodoPagoService, MetodoPagoDto } from '../../../ventas/service/metodo-pago.service';
 import { CorteVentaService, ConsultarRangoCorteDto } from '../../../ventas/service/corte-venta.service';
 
@@ -31,43 +31,8 @@ interface CorteVentaRow {
   desfase: number;
 }
 
-class DateAdapterDDMMYYYY extends NativeDateAdapter {
-  override format(date: Date, displayFormat: object): string {
-    const d = String(date.getDate()).padStart(2, '0');
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const y = date.getFullYear();
-    return `${d}/${m}/${y}`;
-  }
-
-  override parse(value: any): Date | null {
-    if (typeof value === 'string' && value.includes('/')) {
-      const [d, m, y] = value.split('/').map(Number);
-      if (d && m && y) {
-        return new Date(y, m - 1, d);
-      }
-    }
-    return super.parse(value);
-  }
-}
-
 @Component({
     selector: 'vex-cierre-ventas',
-    providers: [
-        { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
-        { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
-        {
-            provide: MAT_DATE_FORMATS,
-            useValue: {
-                parse: { dateInput: 'dd/MM/yyyy' },
-                display: {
-                    dateInput: 'dd/MM/yyyy',
-                    monthYearLabel: 'MMM yyyy',
-                    dateA11yLabel: 'dd/MM/yyyy',
-                    monthYearA11yLabel: 'MMMM yyyy'
-                }
-            }
-        }
-    ],
     imports: [
         CommonModule,
         MatDialogModule,
@@ -96,7 +61,7 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
   hastaActualmenteCtrl = new FormControl<boolean>(true);
 
   corteVentasRows: CorteVentaRow[] = [];
-  displayedColumns: string[] = ['metodoPago', 'totalSistema', 'totalReal'];
+  displayedColumns: string[] = ['metodoPago', 'totalSistema', 'totalReal', 'desfase'];
 
   loading = false;
   consultando = false;
@@ -154,6 +119,19 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
       this.horaFinCtrl.disable();
     }
 
+    merge(
+      this.fechaInicioCtrl.valueChanges,
+      this.horaInicioCtrl.valueChanges,
+      this.fechaFinCtrl.valueChanges,
+      this.horaFinCtrl.valueChanges
+    )
+      .pipe(
+        debounceTime(450),
+        filter(() => !this.cargaInicial),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => this.consultar());
+
     this.consultarInicial();
   }
 
@@ -185,7 +163,6 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
 
   consultar(): void {
     this.consultando = true;
-    this.datosConsultados = false;
 
     this.metodoPagoService.obtenerMetodosPago()
       .pipe(takeUntil(this.destroy$))
@@ -236,8 +213,13 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
     this.fechaIniRespuesta = respuesta.fechaIni;
     this.fechaFinRespuesta = respuesta.fechaFin;
 
-    this.setearFechaHoraDesdeISO(respuesta.fechaIni, this.fechaInicioCtrl, this.horaInicioCtrl);
-    this.setearFechaHoraDesdeISO(respuesta.fechaFin, this.fechaFinCtrl, this.horaFinCtrl);
+    // Solo reflejar en los inputs lo que el backend resolvió cuando ese extremo no lo edita el usuario.
+    if (this.desdeUltimoCorteCtrl.value) {
+      this.setearFechaHoraDesdeISO(respuesta.fechaIni, this.fechaInicioCtrl, this.horaInicioCtrl);
+    }
+    if (this.hastaActualmenteCtrl.value) {
+      this.setearFechaHoraDesdeISO(respuesta.fechaFin, this.fechaFinCtrl, this.horaFinCtrl);
+    }
 
     const totalesPorMetodo = new Map<number, number>();
     respuesta.ventasTipo.forEach(vt => {
@@ -345,6 +327,14 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(value).replace('COP', '$').trim();
+  }
+
+  /** Valor mostrado dentro del input: solo número formateado (el $ va en matPrefix). */
+  private formatMontoInput(value: number): string {
+    return new Intl.NumberFormat('es-CO', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
   }
 
   parseCurrency(value: string | null | undefined): number {
@@ -459,7 +449,7 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
       const numValue = Number(value);
       if (!isNaN(numValue) && numValue >= 0) {
         row.totalRealCtrl.setValue(numValue, { emitEvent: false });
-        input.value = this.formatCurrency(numValue);
+        input.value = this.formatMontoInput(numValue);
       }
     } else {
       input.value = '';
@@ -490,5 +480,9 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
 
   cancelar(): void {
     this.dialogRef.close(null);
+  }
+
+  trackByMetodoPagoId(_index: number, row: CorteVentaRow): number {
+    return row.metodoPago.id;
   }
 }

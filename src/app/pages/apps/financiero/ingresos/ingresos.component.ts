@@ -419,7 +419,10 @@ export class IngresosComponent implements OnInit, OnDestroy {
   }
 
   private procesarRespuestaSearch(cortes: CorteVentaSearchItemDto[]): void {
-    this.ventasPorFecha = (cortes || []).map((item) => {
+    const agrupados =
+      this.corteVentaService.agruparPorFechaYUsuario(cortes || []);
+
+    this.ventasPorFecha = agrupados.map((item) => {
       const fechaLabel = this.formatearFechaParaLabel(item.fechaIni);
       const detalles = (item.ventasTipo || []).map((vt) => {
         const metodoPago = this.metodosPago.find(
@@ -445,7 +448,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
     );
     this.ventasDiaActual = this.totalGeneral;
 
-    const numItems = (cortes || []).length;
+    const numItems = agrupados.length;
     this.promedioVentas = numItems > 0 ? this.totalGeneral / numItems : 0;
 
     this.ventasPorFechaVisibles = this.ventasPorFecha;

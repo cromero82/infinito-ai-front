@@ -94,6 +94,138 @@ export class CorteVentaService {
   constructor(private http: HttpClient) {}
 
   /**
+   * Fecha de calendario local (YYYY-MM-DD) a partir de un ISO, ignorando la hora.
+   * Sirve para agrupar cortes que caen el mismo día aunque `fechaIni`/`fechaFin` difieran en hora.
+   */
+  static fechaCalendarioDesdeIso(iso: string): string {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) {
+      return '';
+    }
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  /**
+   * Agrupa cortes que comparten el mismo día de calendario y el mismo usuario.
+   * Suma totales y fusiona `ventasTipo` por `metodoPagoId`.
+   * Útil cuando el API devuelve varios registros el mismo día (distinta hora) para un mismo usuario.
+   */
+  agruparPorFechaYUsuario(
+    cortes: CorteVentaSearchItemDto[]
+  ): CorteVentaSearchItemDto[] {
+    if (!cortes?.length) {
+      return [];
+    }
+
+    const grupos = new Map<string, CorteVentaSearchItemDto[]>();
+    for (const c of cortes) {
+      const dia = CorteVentaService.fechaCalendarioDesdeIso(c.fechaIni);
+      const uid = String(c.usuarioId ?? '');
+      const key = `${dia}\u0000${uid}`;
+      const arr = grupos.get(key);
+      if (arr) {
+        arr.push(c);
+      } else {
+        grupos.set(key, [c]);
+      }
+    }
+
+    const resultado: CorteVentaSearchItemDto[] = [];
+    for (const [, items] of grupos) {
+      resultado.push(this.combinarCortesMismoDiaUsuario(items));
+    }
+
+    return resultado.sort((a, b) => {
+      const cmpF = a.fechaIni.localeCompare(b.fechaIni);
+      if (cmpF !== 0) {
+        return cmpF;
+      }
+      return String(a.usuarioId).localeCompare(String(b.usuarioId));
+    });
+  }
+
+  private combinarCortesMismoDiaUsuario(
+    items: CorteVentaSearchItemDto[]
+  ): CorteVentaSearchItemDto {
+    if (items.length === 1) {
+      return { ...items[0] };
+    }
+
+    let fechaIniMin = items[0].fechaIni;
+    let fechaFinMax = items[0].fechaFin;
+    let total = 0;
+    let totalSistema = 0;
+    let idMin = items[0].id;
+
+    const ventasPorMetodo = new Map<
+      number,
+      { total: number; totalSistema: number; corteVentaId?: number; id?: number }
+    >();
+
+    for (const it of items) {
+      if (it.fechaIni < fechaIniMin) {
+        fechaIniMin = it.fechaIni;
+      }
+      if (it.fechaFin > fechaFinMax) {
+        fechaFinMax = it.fechaFin;
+      }
+      total += Number(it.total) || 0;
+      totalSistema += Number(it.totalSistema) || 0;
+      idMin = Math.min(idMin, it.id);
+
+      for (const vt of it.ventasTipo || []) {
+        const mid = vt.metodoPagoId;
+        const prev = ventasPorMetodo.get(mid);
+        const t = Number(vt.total) || 0;
+        const ts = Number(vt.totalSistema) || 0;
+        if (prev) {
+          prev.total += t;
+          prev.totalSistema += ts;
+        } else {
+          ventasPorMetodo.set(mid, {
+            total: t,
+            totalSistema: ts,
+            corteVentaId: vt.corteVentaId,
+            id: vt.id
+          });
+        }
+      }
+    }
+
+    const ventasTipo: VentaTipoSearchDto[] = [];
+    for (const [metodoPagoId, agg] of ventasPorMetodo) {
+      ventasTipo.push({
+        metodoPagoId,
+        total: agg.total,
+        totalSistema: agg.totalSistema,
+        corteVentaId: agg.corteVentaId,
+        id: agg.id
+      });
+    }
+    ventasTipo.sort((a, b) => a.metodoPagoId - b.metodoPagoId);
+
+    const ultimoCorte = items.some((i) => i.ultimoCorte);
+    const actual = items.some((i) => i.actual);
+
+    const base = items[0];
+    return {
+      id: idMin,
+      usuarioId: base.usuarioId,
+      fechaIni: fechaIniMin,
+      fechaFin: fechaFinMax,
+      ultimoHistorialReciboId: base.ultimoHistorialReciboId,
+      total,
+      totalSistema,
+      ventasTipo,
+      ultimoCorte,
+      actual
+    };
+  }
+
+  /**
    * Consulta los totales por método de pago en un rango de fechas
    * @param params Parámetros de consulta (fechaIni, fechaFin, ultimoCorte, actual)
    * @returns Observable con los datos del corte

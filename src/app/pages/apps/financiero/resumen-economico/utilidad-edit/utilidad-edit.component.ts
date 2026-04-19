@@ -17,13 +17,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import {
-  MatNativeDateModule,
-  MAT_DATE_LOCALE,
-  MAT_DATE_FORMATS,
-  DateAdapter,
-  NativeDateAdapter
-} from '@angular/material/core';
+import { MatNativeDateModule } from '@angular/material/core';
 
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { EstadisticaFinancieraService } from '../service/estadistica-financiera.service';
@@ -36,44 +30,8 @@ export interface UtilidadEditDialogData {
   periodo: UtilidadEditPeriodo;
 }
 
-/** DateAdapter: muestra y parsea fechas como dd/MM/yyyy (solo UI; el API recibe yyyy-mm-dd) */
-class DateAdapterDDMMYYYY extends NativeDateAdapter {
-  override format(date: Date, displayFormat: object): string {
-    const d = String(date.getDate()).padStart(2, '0');
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const y = date.getFullYear();
-    return `${d}/${m}/${y}`;
-  }
-
-  override parse(value: unknown): Date | null {
-    if (typeof value === 'string' && value.includes('/')) {
-      const [d, m, y] = value.split('/').map(Number);
-      if (d && m && y) {
-        return new Date(y, m - 1, d);
-      }
-    }
-    return super.parse(value);
-  }
-}
-
 @Component({
   selector: 'gm-utilidad-edit',
-  providers: [
-    { provide: MAT_DATE_LOCALE, useValue: 'es-CO' },
-    { provide: DateAdapter, useClass: DateAdapterDDMMYYYY },
-    {
-      provide: MAT_DATE_FORMATS,
-      useValue: {
-        parse: { dateInput: 'dd/MM/yyyy' },
-        display: {
-          dateInput: 'dd/MM/yyyy',
-          monthYearLabel: 'MMM yyyy',
-          dateA11yLabel: 'dd/MM/yyyy',
-          monthYearA11yLabel: 'MMMM yyyy'
-        }
-      }
-    }
-  ],
   imports: [
     ReactiveFormsModule,
     MatDialogModule,
