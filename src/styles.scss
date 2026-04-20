@@ -89,3 +89,54 @@ html {
   --pos-mat-table-row-hover: rgba(63, 81, 181, 0.055);
 }
 
+/*
+  Autocomplete "Tipo de egreso" (proveedor-edit):
+  En Material 21 la clase del panel es el input `class` en <mat-autocomplete> (ya no panelClass en overlay).
+  Vex :root .mat-mdc-option (h-10/min-h-10) fijaba ~40px; con overflow:visible el texto invadía la fila siguiente.
+*/
+.mat-mdc-autocomplete-panel.proveedor-tipo-egreso-autocomplete-panel {
+  .proveedor-tipo-egreso-option-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 2px 12px 2px 0;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mat-mdc-option.mdc-list-item {
+    align-items: flex-start !important;
+    height: auto !important;
+    min-height: 3rem !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    line-height: 1.45 !important;
+    margin-top: 6px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .mat-mdc-option.mdc-list-item:first-child {
+    margin-top: 0 !important;
+  }
+
+  .mat-mdc-option.mdc-list-item:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  .mat-mdc-option .mdc-list-item__primary-text {
+    white-space: normal !important;
+    text-overflow: clip !important;
+    line-height: 1.45 !important;
+    word-break: break-word;
+    flex: 1 1 auto;
+    min-width: 0;
+    align-self: stretch;
+  }
+
+  .mat-mdc-option .mat-pseudo-checkbox-minimal {
+    margin-top: 4px;
+  }
+}
+

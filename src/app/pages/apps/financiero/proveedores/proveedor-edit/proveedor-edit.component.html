@@ -84,15 +84,18 @@
       <mat-icon matIconPrefix svgIcon="mat:category"></mat-icon>
       <mat-autocomplete
         #autoTipo="matAutocomplete"
+        class="proveedor-tipo-egreso-autocomplete-panel"
         [displayWith]="displayTipoEgreso">
         @for (tipo of filteredTipos$ | async; track tipo) {
           <mat-option [value]="tipo">
-            <span>{{ tipo.nombre }}</span>
-            @if (tipo.descripcion) {
-              <span class="text-secondary text-sm">
-                - {{ tipo.descripcion }}</span
-              >
-            }
+            <div class="proveedor-tipo-egreso-option-lines">
+              <span class="font-medium">{{ tipo.nombre }}</span>
+              @if (tipo.descripcion) {
+                <span class="text-secondary text-sm block">{{
+                  tipo.descripcion
+                }}</span>
+              }
+            </div>
           </mat-option>
         }
       </mat-autocomplete>
