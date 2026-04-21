@@ -57,6 +57,8 @@ export interface SelectorProductosResult {
 export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDestroy {
   searchCtrl = new FormControl('', { nonNullable: true });
   products: Producto[] = [];
+  /** Índice visual en la tabla (flechas / Enter); el foco permanece en #searchInput. */
+  selectedProductIndex = -1;
   loading = false;
   loadingMore = false;
   error: string | null = null;
@@ -66,6 +68,7 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
   totalPages = 0;
   private destroy$ = new Subject<void>();
   @ViewChild('searchInput') searchInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('tableContainer') tableContainer?: ElementRef<HTMLElement>;
 
   modoPrecioElegidoPorProducto: Record<number, ModoPrecioLista> = {};
   modoPrecioExplicitoPorProducto: Record<number, boolean> = {};
@@ -93,6 +96,8 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
           this.error = null;
           this.page = 0;
           this.totalPages = 0;
+          this.selectedProductIndex = -1;
+          this.cdr.markForCheck();
           return;
         }
         this.fetchProducts(term, true);
@@ -156,6 +161,100 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
     this.error = null;
     this.page = 0;
     this.totalPages = 0;
+    this.selectedProductIndex = -1;
+    setTimeout(() => this.focusSearchInput(), 0);
+  }
+
+  onSearchKeydown(event: KeyboardEvent): void {
+    const len = this.products.length;
+    if (event.key === 'ArrowDown') {
+      if (len === 0 || this.loading) {
+        return;
+      }
+      event.preventDefault();
+      this.navigateProductDown();
+      this.afterSelectionChangedByKeyboard();
+      return;
+    }
+    if (event.key === 'ArrowUp') {
+      if (len === 0 || this.loading) {
+        return;
+      }
+      event.preventDefault();
+      this.navigateProductUp();
+      this.afterSelectionChangedByKeyboard();
+      return;
+    }
+    if (event.key === 'Enter') {
+      if (len === 0 || this.loading) {
+        return;
+      }
+      const idx = this.selectedProductIndex;
+      if (idx >= 0 && idx < len) {
+        event.preventDefault();
+        this.selectProduct(this.products[idx]);
+      }
+    }
+  }
+
+  onProductRowClick(index: number, event: MouseEvent): void {
+    if ((event.target as HTMLElement).closest('button')) {
+      return;
+    }
+    this.selectedProductIndex = index;
+    this.cdr.markForCheck();
+    this.focusSearchInput();
+  }
+
+  private navigateProductUp(): void {
+    if (this.products.length === 0) {
+      return;
+    }
+    if (this.selectedProductIndex <= 0) {
+      return;
+    }
+    this.selectedProductIndex -= 1;
+  }
+
+  private navigateProductDown(): void {
+    if (this.products.length === 0) {
+      return;
+    }
+    if (this.selectedProductIndex >= this.products.length - 1) {
+      return;
+    }
+    this.selectedProductIndex += 1;
+  }
+
+  private afterSelectionChangedByKeyboard(): void {
+    this.cdr.markForCheck();
+    setTimeout(() => {
+      this.scrollToSelectedProduct();
+      this.focusSearchInput();
+    }, 0);
+  }
+
+  private scrollToSelectedProduct(): void {
+    const idx = this.selectedProductIndex;
+    if (idx < 0 || idx >= this.products.length) {
+      return;
+    }
+    const host = this.tableContainer?.nativeElement;
+    if (!host) {
+      return;
+    }
+    const row = host.querySelector(
+      `[data-selector-row="${idx}"]`
+    ) as HTMLElement | null;
+    row?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+
+  private focusSearchInput(): void {
+    const el = this.searchInput?.nativeElement;
+    if (!el) {
+      return;
+    }
+    el.focus({ preventScroll: true });
   }
 
   get canCreateProduct(): boolean {
@@ -220,6 +319,7 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
       this.page = 0;
       this.totalPages = 0;
       this.products = [];
+      this.selectedProductIndex = -1;
       this.loading = true;
       this.loadingMore = false;
     } else {
@@ -240,8 +340,16 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
 
         if (reset) {
           this.products = content;
+          this.selectedProductIndex =
+            this.products.length > 0 ? 0 : -1;
         } else {
           this.products = this.products.concat(content);
+          if (this.selectedProductIndex >= this.products.length) {
+            this.selectedProductIndex = Math.max(
+              0,
+              this.products.length - 1
+            );
+          }
         }
 
         if (this.products.length === 0) {
@@ -249,15 +357,19 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
         }
         this.loading = false;
         this.loadingMore = false;
+        this.cdr.markForCheck();
+        setTimeout(() => this.focusSearchInput(), 0);
       },
       error: (err) => {
         console.error('Error fetching products', err);
         if (reset) {
           this.products = [];
           this.error = 'Error al cargar productos.';
+          this.selectedProductIndex = -1;
         }
         this.loading = false;
         this.loadingMore = false;
+        this.cdr.markForCheck();
       }
     });
   }

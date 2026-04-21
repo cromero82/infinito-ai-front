@@ -8,7 +8,10 @@
 
   <div mat-dialog-content class="dialog-content">
     <div class="search-field-wrapper">
-      <mat-form-field appearance="outline" class="search-input">
+      <mat-form-field
+        appearance="outline"
+        class="search-input"
+        subscriptSizing="dynamic">
         <mat-label>Nombre o código de barras</mat-label>
         <input
           #searchInput
@@ -16,7 +19,8 @@
           id="searchInput"
           [formControl]="searchCtrl"
           placeholder="Ej. código de barras o nombre"
-          autocomplete="off" />
+          autocomplete="off"
+          (keydown)="onSearchKeydown($event)" />
         <div matSuffix class="search-suffix-actions">
           @if (searchCtrl.value) {
             <button
@@ -42,7 +46,10 @@
       </mat-form-field>
     </div>
 
-    <div class="table-container" (scroll)="onTableScroll($event)">
+    <div
+      #tableContainer
+      class="table-container"
+      (scroll)="onTableScroll($event)">
       @if (loading) {
         <div class="loading">Cargando productos...</div>
       }
@@ -140,7 +147,14 @@
             </td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; columns: displayedColumns; let i = index"
+            [class.selector-product-row-selected]="
+              selectedProductIndex === i
+            "
+            [attr.data-selector-row]="i"
+            (click)="onProductRowClick(i, $event)"></tr>
         </table>
       }
     </div>
