@@ -68,20 +68,35 @@
   flex: 1 1 auto;
   overflow: hidden; /* Contener el scroll dentro de la lista de productos */
 
-  /* Solo en edición existe edicion-ticket: más alto para la lista; edición acotada con scroll interno */
+  /* Solo en edición: el bloque detalle no crece con flex:1 (evita franja vacía entre lista y métodos de pago) */
   &.recibo-edicion-activa {
-    /* Con 3 hijos en columna, margin-top:auto en el footer se come el flex del detalle (~1 fila visible) */
     .detalle-footer-wrapper {
       margin-top: 0;
-      padding: 4px 0 2px; /* menos aire entre métodos de pago / total y edicion-ticket */
+      padding: 4px 0 2px;
     }
 
+    /* El panel inferior usa el alto sobrante; scroll interno en .edicion-recibo-container */
     > edicion-ticket {
-      flex: 0 1 auto;
+      flex: 1 1 0%;
       min-height: 0;
-      max-height: min(26vh, 280px);
+      max-height: none;
       overflow: hidden;
       width: 100%;
+    }
+
+    .detalle-container,
+    .detalle-wrapper,
+    .detalle-content,
+    .detalle-list-wrapper {
+      flex: 0 1 auto;
+      min-height: 0;
+    }
+
+    /* Lista acotada con scroll; sin height:0 para que el wrapper no reserve hueco extra */
+    .detalle-list {
+      flex: 0 1 auto;
+      height: auto;
+      max-height: min(8.25rem, 36vh);
     }
   }
 }

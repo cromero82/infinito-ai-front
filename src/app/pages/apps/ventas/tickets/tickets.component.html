@@ -4,8 +4,14 @@
       [class.container]="true"
       class="w-full flex flex-col sm:flex-row justify-between"></div>
   </vex-page-layout-header>
-  <vex-page-layout-content [class.container]="true" class="-mt-6 pb-0">
-    <div class="card tickets-card">
+  <vex-page-layout-content
+    [class.container]="true"
+    class="-mt-6 !pb-1 flex flex-col flex-1 min-h-0 min-w-0 w-full">
+    <!-- Misma cadena que lista-productos: página → columna flex → card con min-h-0 (sin franja sobre el footer) -->
+    <div class="tickets-page flex flex-col flex-1 min-h-0 min-w-0 w-full">
+      <div class="flex flex-col flex-1 min-h-0 w-full">
+        <div
+          class="card tickets-card flex flex-col flex-1 min-h-0 overflow-hidden">
       <div class="bg-app-bar px-6 border-b sticky left-0 flex items-center">
         <div class="header-row">
           <h2 class="title my-0">Tickets</h2>
@@ -58,7 +64,8 @@
           }
         </div>
       </div>
-      <div class="px-4 content-area">
+      <div
+        class="px-4 content-area flex flex-col flex-1 min-h-0 overflow-hidden">
         @if (tickets.length) {
           <div class="tabs-container">
             <div class="tabs-row">
@@ -266,6 +273,8 @@
         } @else {
           <div class="text-secondary">No hay tickets para esta sesión.</div>
         }
+      </div>
+        </div>
       </div>
     </div>
   </vex-page-layout-content>

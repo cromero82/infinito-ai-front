@@ -20,6 +20,16 @@
   flex: 1;
   min-height: 0;
   height: 100%;
+  /* Anula py-6 abajo; deja un respiro como admin-productos (.container pb-1) sobre el footer fijo */
+  padding-bottom: theme('spacing.1') !important;
+}
+
+/* Misma idea que .productos-page en lista-productos (cadena flex-1 min-h-0 hasta la card) */
+.tickets-page {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
 }
 
 :host ::ng-deep .tickets-card {
@@ -533,11 +543,35 @@ vex-page-layout-header .container {
     -webkit-overflow-scrolling: touch !important;
   }
 
-  /* Scroll interno en edición; tope menor para dejar más viewport a la tabla de productos */
-  ::ng-deep edicion-ticket {
+  ::ng-deep
+    .recibo-container.recibo-edicion-activa
+    .detalle-container,
+  ::ng-deep
+    .recibo-container.recibo-edicion-activa
+    .detalle-wrapper,
+  ::ng-deep
+    .recibo-container.recibo-edicion-activa
+    .detalle-content,
+  ::ng-deep
+    .detalle-ticket-host
+    .recibo-container.recibo-edicion-activa
+    .detalle-list-wrapper {
     flex: 0 1 auto !important;
+  }
+
+  ::ng-deep
+    .detalle-ticket-host
+    .recibo-container.recibo-edicion-activa
+    .detalle-list {
+    flex: 0 1 auto !important;
+    height: auto !important;
+    max-height: min(8.25rem, 36vh) !important;
+  }
+
+  ::ng-deep .recibo-container.recibo-edicion-activa > edicion-ticket {
+    flex: 1 1 0% !important;
     min-height: 0 !important;
-    max-height: min(26vh, 280px) !important;
+    max-height: none !important;
     overflow: hidden !important;
     width: 100%;
   }
