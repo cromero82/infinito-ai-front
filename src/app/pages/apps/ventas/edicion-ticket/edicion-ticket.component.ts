@@ -223,12 +223,11 @@ export class EdicionTicketComponent implements OnInit, OnChanges, OnDestroy {
   onMetodoPagoSeleccionado(metodo: MetodoPagoDto): void {
     this.metodoPagoSeleccionado.emit({
       metodo,
-      valorReferencia: this.diferencia
+      valorReferencia: this.diferencia > 0 ? this.diferencia : null
     });
   }
 
   onFinalizar(): void {
-    console.log('onFinalizar called in edicion-recibo component');
     this.finalizar.emit();
   }
 }

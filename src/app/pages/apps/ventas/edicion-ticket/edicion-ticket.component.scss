@@ -221,3 +221,22 @@
   border-radius: 4px;
 }
 
+.metodos-pago-hint {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: rgba(0, 0, 0, 0.65);
+  text-align: center;
+}
+
+.finalizar-sin-cambios {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.finalizar-sin-cambios-btn {
+  width: 100%;
+  max-width: 320px;
+}
+

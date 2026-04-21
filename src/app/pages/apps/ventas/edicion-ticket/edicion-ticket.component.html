@@ -147,17 +147,37 @@
           {{ formatCurrency(diferencia) }}
         </div>
       }
-      <!-- Métodos de pago (solo si diferencia > 0) -->
-      @if (diferencia > 0) {
+      <!-- Métodos de pago: cobro adicional (diferencia > 0) o mismo total (p. ej. solo cambio de método) -->
+      @if (diferencia >= 0) {
         <div class="metodos-pago-section">
+          @if (cambios.length === 0 && diferencia === 0) {
+            <p class="metodos-pago-hint">
+              Puede cambiar el método de pago o confirmar que no hubo cambios en
+              los productos.
+            </p>
+          }
           <metodos-pago
             [recibo]="recibo"
             [detalles]="detalles"
             [disabled]="false"
-            [valorReferencia]="diferencia"
+            [valorReferencia]="diferencia > 0 ? diferencia : null"
             [permitirReSeleccionar]="true"
             (metodoPagoSeleccionado)="onMetodoPagoSeleccionado($event)">
           </metodos-pago>
+          @if (cambios.length === 0 && diferencia === 0) {
+            <div class="finalizar-sin-cambios">
+              <button
+                mat-stroked-button
+                type="button"
+                color="primary"
+                class="finalizar-sin-cambios-btn"
+                (click)="
+                  onFinalizar(); $event.stopPropagation(); $event.preventDefault()
+                ">
+                Sin cambios en productos
+              </button>
+            </div>
+          }
         </div>
       }
     </div>
