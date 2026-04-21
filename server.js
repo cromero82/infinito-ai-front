@@ -86,23 +86,38 @@ app.get('/actuator/info', (req, res) => {
   });
 });
 
-// Iniciar servidor - escuchar en todas las interfaces (0.0.0.0) para permitir conexiones desde otras aplicaciones
+// Iniciar servidor de health check en puerto 3001
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Health check server running on http://localhost:${PORT}`);
   console.log(`Health endpoint: http://localhost:${PORT}/actuator/health`);
   console.log(`Simple health: http://localhost:${PORT}/health`);
-  console.log(`Server listening on all interfaces (0.0.0.0:${PORT}) - accessible from other applications`);
-  console.log(`Startup time: ${STARTUP_TIME_MS}ms - Service will return 503 until ready`);
-  
-  // Simular inicialización del servicio
-  // Aquí podrías agregar lógica real de inicialización (conexiones a BD, carga de configuración, etc.)
-  
-  // Después del período de inicialización, marcar el servicio como listo
+
   setTimeout(() => {
     serviceReady = true;
     console.log(`Service is now READY (startup time: ${STARTUP_TIME_MS}ms elapsed)`);
   }, STARTUP_TIME_MS);
 });
+
+// Modo producción: servir el build estático de Angular en puerto 4200
+if (process.argv.includes('--serve-static')) {
+  const DIST_BROWSER = path.join(__dirname, 'dist', 'vex', 'browser');
+  const DIST_FALLBACK = path.join(__dirname, 'dist', 'vex');
+  const fs = require('fs');
+  const distPath = fs.existsSync(DIST_BROWSER) ? DIST_BROWSER : DIST_FALLBACK;
+  const FRONT_PORT = 4200;
+
+  const frontApp = express();
+  frontApp.use(express.static(distPath));
+  // Angular routing: devolver index.html para cualquier ruta no encontrada
+  frontApp.get('*', (_req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+
+  frontApp.listen(FRONT_PORT, '0.0.0.0', () => {
+    console.log(`Frontend (prod build) serving at http://localhost:${FRONT_PORT}`);
+    console.log(`Serving from: ${distPath}`);
+  });
+}
 
 
 

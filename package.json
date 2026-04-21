@@ -14,6 +14,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
+    "serve:prod": "node server.js --serve-static",
     "health:server": "node server.js",
     "health:dev": "node server.js"
   },
