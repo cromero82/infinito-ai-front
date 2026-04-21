@@ -1,21 +1,38 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: min(26vh, 280px);
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .edicion-recibo-container {
-  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 8px 12px 10px;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-top: 16px;
+  margin-top: 6px;
 }
 
 .title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin: 0 0 6px;
   color: #333;
 }
 
 .loading-message,
 .error-message {
-  padding: 16px;
+  padding: 10px 12px;
   text-align: center;
   color: #666;
 }
@@ -27,21 +44,21 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 12px;
 }
 
 .cambios-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
 }
 
 .section-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  padding: 8px 12px;
+  padding: 4px 10px;
   border-radius: 4px;
-  margin-bottom: 8px;
+  margin: 0;
 
   &.agregado {
     background-color: rgba(76, 175, 80, 0.1);
@@ -69,14 +86,14 @@
   }
 
   th {
-    padding: 12px;
+    padding: 6px 10px;
     text-align: left;
     font-weight: 600;
     border-bottom: 2px solid rgba(0, 0, 0, 0.1);
   }
 
   td {
-    padding: 12px;
+    padding: 6px 10px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   }
 
@@ -110,20 +127,20 @@
 }
 
 .no-cambios {
-  padding: 24px;
+  padding: 12px;
   text-align: center;
   color: #666;
   font-style: italic;
 }
 
 .totales-section {
-  margin-top: 24px;
-  padding: 16px;
+  margin-top: 12px;
+  padding: 10px 12px;
   background-color: rgba(0, 0, 0, 0.02);
   border-radius: 4px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .total-row {
@@ -133,7 +150,7 @@
   font-size: 15px;
 
   &.diferencia {
-    padding-top: 12px;
+    padding-top: 8px;
     border-top: 2px solid rgba(0, 0, 0, 0.1);
     font-weight: 600;
     font-size: 16px;
@@ -154,14 +171,14 @@
 }
 
 .devolucion-section {
-  margin-top: 16px;
+  margin-top: 10px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .devolucion-message {
-  padding: 16px;
+  padding: 10px 12px;
   background-color: rgba(211, 47, 47, 0.1);
   border-left: 4px solid #d32f2f;
   border-radius: 4px;
@@ -185,8 +202,8 @@
 }
 
 .pago-adicional-message {
-  margin-top: 16px;
-  padding: 16px;
+  margin-top: 10px;
+  padding: 10px 12px;
   background-color: rgba(76, 175, 80, 0.1);
   border-left: 4px solid #4caf50;
   border-radius: 4px;
@@ -197,8 +214,8 @@
 }
 
 .metodos-pago-section {
-  margin-top: 16px;
-  padding: 16px;
+  margin-top: 10px;
+  padding: 8px 10px;
   background-color: rgba(0, 0, 0, 0.02);
   border-radius: 4px;
 }

@@ -1,4 +1,4 @@
-<div class="recibo-container">
+<div class="recibo-container" [class.recibo-edicion-activa]="estaEnEdicion">
   @if (reciboId !== null) {
     @if (loading) {
       <div class="text-secondary">Cargando recibo...</div>
@@ -19,6 +19,7 @@
               @if (detalles.length > 0) {
                 <div class="detalle-list-wrapper">
                   <div
+                    #detalleHeader
                     class="detalle-header"
                     [class.has-atendido]="mostrarColumnaAtendido">
                     <span class="detalle-col producto">Producto</span>

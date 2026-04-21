@@ -67,19 +67,37 @@
   min-height: 0;
   flex: 1 1 auto;
   overflow: hidden; /* Contener el scroll dentro de la lista de productos */
+
+  /* Solo en edición existe edicion-ticket: más alto para la lista; edición acotada con scroll interno */
+  &.recibo-edicion-activa {
+    /* Con 3 hijos en columna, margin-top:auto en el footer se come el flex del detalle (~1 fila visible) */
+    .detalle-footer-wrapper {
+      margin-top: 0;
+      padding: 4px 0 2px; /* menos aire entre métodos de pago / total y edicion-ticket */
+    }
+
+    > edicion-ticket {
+      flex: 0 1 auto;
+      min-height: 0;
+      max-height: min(26vh, 280px);
+      overflow: hidden;
+      width: 100%;
+    }
+  }
 }
 
 .detalle-container {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
+  /* 0%: el bloque del recibo cede espacio frente al footer y edicion-ticket; la lista hace scroll dentro */
+  flex: 1 1 0%;
   min-height: 0;
 }
 
 .detalle-wrapper {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-height: 0;
   margin: 0;
   padding: 0;
@@ -90,16 +108,20 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-height: 0;
 }
 
-/* Contenedor flex para que detalle-list tenga altura limitada y pueda hacer scroll */
+/*
+  Columna flex: cabecera fija + lista con flex:1 y min-height:0 para que overflow-y sea interno
+  (evita grid 1fr con altura indefinida, que crece con el contenido y recorta sin scroll).
+*/
 .detalle-list-wrapper {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
 }
 
@@ -147,10 +169,14 @@
 }
 
 .detalle-list {
-  flex: 1 1 auto;
-  min-height: 0; /* Permite encogerse cuando el contenedor tiene espacio limitado */
+  flex: 1 1 0%;
+  /* min-height:0 + height:0: el ítem flex toma solo el hueco asignado y overflow-y recorre todo el contenido */
+  min-height: 0;
+  height: 0;
+  min-width: 0;
   overflow-y: auto !important;
   overflow-x: hidden !important;
+  overscroll-behavior: contain;
   margin: 0;
   padding: 0;
   /* Asegurar que el scrollbar sea visible */

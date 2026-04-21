@@ -115,6 +115,9 @@ interface TargetDetalleRollback {
 
 @Component({
   selector: 'detalle-ticket',
+  host: {
+    class: 'detalle-ticket-host'
+  },
   imports: [
     ReactiveFormsModule,
     MatFormFieldModule,
@@ -179,8 +182,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   private dialogAbierto = false;
   private destroy$ = new Subject<void>();
   @ViewChild('detalleList') detalleListRef?: ElementRef<HTMLDivElement>;
+  @ViewChild('detalleHeader') detalleHeaderRef?: ElementRef<HTMLDivElement>;
   @ViewChild('detalleContextMenuTrigger')
   detalleContextMenuTrigger?: MatMenuTrigger;
+
   private readonly currencyFormatter = new Intl.NumberFormat('es-CO', {
     style: 'currency',
     currency: 'COP',
@@ -850,28 +855,41 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   private async procesarDetallesCargados(
     detalles: ReciboDetalleDto[]
   ): Promise<void> {
-    try {
-      await this.sincronizarCacheUsuariosHistorico(detalles);
-    } catch (error) {
-      console.warn(
-        'No se pudo sincronizar la caché de usuarios para el histórico:',
-        error
-      );
-    }
-
     this.detalles = detalles;
     this.depurarHistoricosExpandidos();
     this.detallesLoading = false;
     this.recalculateTotal();
     this.setSelectedDetalles(this.detalles.length ? [0] : [], 0, false);
     this.actualizarMostrarColumnaAtendido();
+    this.cdr.markForCheck();
+
+    try {
+      await this.sincronizarCacheUsuariosHistorico(this.detalles);
+    } catch (error) {
+      console.warn(
+        'No se pudo sincronizar la caché de usuarios para el histórico:',
+        error
+      );
+    }
+    this.cdr.markForCheck();
   }
 
   private async sincronizarCacheUsuariosHistorico(
     detalles: ReciboDetalleDto[]
   ): Promise<void> {
     this.cargarUsuariosDesdeStorage();
-    const faltantes = this.obtenerUsuarioIdsFaltantesEnHistorico(detalles);
+    let faltantes = this.obtenerUsuarioIdsFaltantesEnHistorico(detalles);
+    if (!faltantes.length) {
+      return;
+    }
+
+    try {
+      await firstValueFrom(this.authService.cargarTodosUsuariosEnStorage(false));
+    } finally {
+      this.cargarUsuariosDesdeStorage();
+    }
+
+    faltantes = this.obtenerUsuarioIdsFaltantesEnHistorico(detalles);
     if (!faltantes.length) {
       return;
     }
@@ -1281,13 +1299,13 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    // Prevenir selección si estamos en modo de edición, iniciando edición o doble click activo
+    // Prevenir selección si hay edición en línea de celda, moviendo líneas o doble clic activo.
+    // En edición de recibo (estaEnEdicion) sí debe poder seleccionarse para cantidad +/- o borrado.
     if (
       this.startingEdit ||
       this.editingProductoIndex !== -1 ||
       this.editingUnitarioIndex !== -1 ||
       this.editingDetalleIndex !== -1 ||
-      this.estaEnEdicion ||
       this.movingDetalles ||
       this.isDoubleClickActive
     ) {
@@ -1701,6 +1719,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
   onDetalleDoubleClick(index: number, event: MouseEvent): void {
     event.stopPropagation();
+    if (this.estaEnEdicion) {
+      return;
+    }
     if (index < 0 || index >= this.detalles.length) {
       return;
     }
@@ -1747,6 +1768,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
   onUnitarioDoubleClick(index: number, event: MouseEvent): void {
     event.stopPropagation();
+    if (this.estaEnEdicion) {
+      return;
+    }
     if (index < 0 || index >= this.detalles.length) {
       return;
     }
@@ -2145,6 +2169,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
   onProductoDoubleClick(index: number, event: MouseEvent): void {
     event.stopPropagation();
+    if (this.estaEnEdicion) {
+      return;
+    }
     if (index < 0 || index >= this.detalles.length) {
       return;
     }
@@ -2183,6 +2210,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
   onCantidadDoubleClick(index: number, event: MouseEvent): void {
     event.stopPropagation();
+    if (this.estaEnEdicion) {
+      return;
+    }
     if (index < 0 || index >= this.detalles.length) {
       return;
     }
