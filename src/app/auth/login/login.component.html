@@ -20,14 +20,12 @@
           <input
             formControlName="email"
             matInput
-            type="text"
+            type="email"
             required
-            autocomplete="chrome-off"
+            autocomplete="on"
             readonly
             onfocus="this.removeAttribute('readonly')"
             onkeydown="this.removeAttribute('readonly')"
-            data-lpignore="true"
-            data-form-type="other"
             [id]="'login-email-' + fieldId"
             [name]="'login-email-' + fieldId" />
           @if (form.controls.email.hasError("required")) {
