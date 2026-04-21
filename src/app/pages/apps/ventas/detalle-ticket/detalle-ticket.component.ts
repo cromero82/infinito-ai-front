@@ -244,11 +244,11 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   private updateSearchDisabled(): void {
+    // No usar searchingProduct aquí: deshabilitar el input durante la consulta
+    // hace que se pierdan pulsaciones si el usuario sigue escribiendo mientras
+    // se abre el selector (término desactualizado / foco al modal).
     const disabled =
-      !this.reciboId ||
-      this.searchingProduct ||
-      this.loading ||
-      this.movingDetalles;
+      !this.reciboId || this.loading || this.movingDetalles;
     if (disabled !== this.lastSearchDisabled) {
       this.lastSearchDisabled = disabled;
       if (disabled) {
@@ -1054,6 +1054,16 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.updateSearchDisabled();
     this.relationalProductService.getProducts(term, 0, 1, true).subscribe({
       next: (page: ProductPage) => {
+        const latestTerm = (this.productSearchCtrl.value ?? '').trim();
+        if (latestTerm !== term) {
+          this.searchingProduct = false;
+          this.updateSearchDisabled();
+          if (latestTerm) {
+            this.performProductSearch(latestTerm, triggeredAutomatically);
+          }
+          return;
+        }
+
         const total = page?.totalElements ?? page?.content?.length ?? 0;
         const products = page?.content ?? [];
         if (total === 1 && products[0]) {
@@ -1065,18 +1075,20 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         this.searchingProduct = false;
         this.updateSearchDisabled();
 
+        const termForSelector = (this.productSearchCtrl.value ?? '').trim() || term;
+
         if (total === 0) {
-          this.showCreateProductFromSearchButton = term.trim().length > 0;
+          this.showCreateProductFromSearchButton = termForSelector.length > 0;
           if (triggeredAutomatically) {
             this.focusSearchInputRequest.emit();
             return;
           }
 
-          this.openSelectorProductosDialog(term);
+          this.openSelectorProductosDialog(termForSelector);
           return;
         }
 
-        this.openSelectorProductosDialog(term);
+        this.openSelectorProductosDialog(termForSelector);
       },
       error: (err: unknown) => {
         console.error('Error searching product', err);
