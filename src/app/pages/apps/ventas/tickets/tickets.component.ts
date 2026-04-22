@@ -124,6 +124,12 @@ export class TicketsComponent
   private forcedSelectionTicketId: number | null = null;
   private recentPrintedRecibosSubscription?: Subscription;
 
+  /**
+   * Tras doble clic en un tab se abre EditarTabTicket; los click previos ya
+   * programaron focusProductSearch — se suprime el foco al buscador hasta esta marca.
+   */
+  private suppressProductSearchFocusUntil = 0;
+
   /** Cantidad de productos movidos acumulados por ticket dividido. */
   private splitTicketProductCounts: Record<number, number> = {};
 
@@ -272,20 +278,39 @@ export class TicketsComponent
     }
   }
 
+  /**
+   * Enfoca #productSearchInput. Usa doble requestAnimationFrame + reintentos
+   * porque mat-tab-nav suele devolver el foco al tab activo unos ms después
+   * del clic, y al cambiar de ticket el reciboId se aplica en un tick distinto.
+   */
   focusProductSearch(select: boolean = true): void {
-    setTimeout(() => {
-      const input = this.productSearchInput?.nativeElement;
-      console.log('focusProductSearch llamado, input:', input);
-      if (input) {
-        input.focus();
-        console.log('Focus aplicado al input de búsqueda');
-        if (select) {
-          input.select();
-        }
-      } else {
-        console.warn('No se encontró el input de búsqueda para hacer focus');
+    const applyFocus = (): boolean => {
+      if (Date.now() < this.suppressProductSearchFocusUntil) {
+        return false;
       }
-    }, 100);
+      const input = this.productSearchInput?.nativeElement;
+      if (!input) {
+        return false;
+      }
+      input.focus({ preventScroll: true });
+      if (select) {
+        input.select();
+      }
+      return document.activeElement === input;
+    };
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          applyFocus();
+        }, 100);
+        setTimeout(() => {
+          if (!applyFocus()) {
+            setTimeout(() => applyFocus(), 220);
+          }
+        }, 320);
+      });
+    });
   }
 
   getTicketLabel(ticket: TicketDto): string {
@@ -662,6 +687,10 @@ export class TicketsComponent
       return;
     }
 
+    // Evitar que los focusProductSearch ya programados por los click del doble clic
+    // quiten el foco al modal (MatDialog con autoFocus: false).
+    this.suppressProductSearchFocusUntil = Date.now() + 1200;
+
     const dialogRef = this.dialog.open<
       EditarTabTicketComponent,
       EditarTabTicketData,
@@ -669,10 +698,13 @@ export class TicketsComponent
     >(EditarTabTicketComponent, {
       width: '560px',
       data: { ticket },
-      autoFocus: false
+      // Con supresión del foco en #productSearchInput, el primer control del modal puede enfocarse.
+      autoFocus: true
     });
 
     dialogRef.afterClosed().subscribe((result) => {
+      this.suppressProductSearchFocusUntil = 0;
+
       if (result && this.sessionId !== null) {
         // Recargar tickets para reflejar el cambio de cliente
         this.loadTickets(this.sessionId);
@@ -685,6 +717,14 @@ export class TicketsComponent
         }, 100);
       }
     });
+  }
+
+  /** Clic en tab de ticket: el segundo click de un doble clic tiene detail === 2 (no re-enfocar buscador). */
+  onTicketTabClick(index: number, event: MouseEvent): void {
+    this.selectTicket(index);
+    if (event.detail === 1) {
+      this.focusProductSearch(false);
+    }
   }
 
   onSearchInputKeydown(event: KeyboardEvent): void {
@@ -731,7 +771,7 @@ export class TicketsComponent
 
     console.log('📋 selectTicket: seleccionando ticket:', ticket);
     this.saveLastTicketId(ticket.id);
-    this.fetchReciboForTicket(ticket.id);
+    this.fetchReciboForTicket(ticket.id, false, true);
   }
 
   onTicketDrop(event: CdkDragDrop<TicketDto[]>): void {
@@ -1225,7 +1265,9 @@ export class TicketsComponent
 
   private fetchReciboForTicket(
     ticketId: number,
-    forceReload: boolean = false
+    forceReload: boolean = false,
+    /** Tras aplicar reciboId (siguiente tick), volver a enfocar búsqueda (cambio de tab). */
+    scheduleSearchFocusAfterApply: boolean = false
   ): void {
     console.log('🔍 fetchReciboForTicket llamado:', {
       ticketId,
@@ -1260,8 +1302,9 @@ export class TicketsComponent
             nuevoReciboId
           );
           this.currentReciboId = nuevoReciboId;
-          // No enfocar automáticamente el input de búsqueda aquí
-          // Los métodos que llaman a fetchReciboForTicket se encargarán de restaurar el foco si es necesario
+          if (scheduleSearchFocusAfterApply) {
+            this.focusProductSearch(false);
+          }
         };
         if (
           forceReload &&

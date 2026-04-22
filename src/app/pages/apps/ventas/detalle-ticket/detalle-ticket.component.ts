@@ -473,6 +473,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     this.sincronizarActualizacionHistorico();
+    // El botón recibe el foco al clic; devolverlo al buscador del ticket (lector / nombre).
+    setTimeout(() => this.focusSearchInputRequest.emit(), 0);
   }
 
   private sincronizarActualizacionHistorico(): void {
