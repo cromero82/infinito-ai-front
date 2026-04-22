@@ -437,6 +437,22 @@ export class TicketsComponent
     }
   }
 
+  /**
+   * keydown.enter (no keyup): si el usuario confirma con Enter en el modal
+   * selector-productos, el keyup puede llegar a este input tras cerrar el overlay
+   * y disparar otra búsqueda / reabrir el modal.
+   */
+  onProductSearchEnterKeydown(event: Event): void {
+    if (!(event instanceof KeyboardEvent)) {
+      return;
+    }
+    if (event.isComposing) {
+      return;
+    }
+    event.preventDefault();
+    this.triggerProductSearch();
+  }
+
   triggerProductSearch(): void {
     this.reciboComponent?.searchAndAddProduct();
     this.focusProductSearch(false);

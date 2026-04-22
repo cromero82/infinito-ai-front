@@ -1125,6 +1125,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       this.showCreateProductFromSearchButton = false;
       this.updateSearchDisabled();
       if (selected) {
+        // Limpia de inmediato para que un keyup tardío u otra acción no relance
+        // búsqueda con el mismo término mientras createDetalle sigue en curso.
+        this.productSearchCtrl.setValue('', { emitEvent: false });
         this.addProductToRecibo(selected.product, selected.modoPrecio);
       } else {
         this.focusSearchInputRequest.emit();

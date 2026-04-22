@@ -52,10 +52,17 @@ export class LoginComponent {
     password: ['', Validators.required]
   });
 
-  passwordInputType: string = 'text';
+  /** Alineado con `visible`: oculta = password, muestra = text. */
+  passwordInputType: 'password' | 'text' = 'password';
   visible = false;
   loading = false;
-  readonly fieldId = Math.random().toString(36).substring(7);
+
+  /** Correos usados en inicios exitosos (este navegador); sugeridos vía datalist. */
+  recentEmails: string[] = [];
+  readonly recentEmailsDatalistId = 'login-recent-emails-datalist';
+
+  private static readonly RECENT_EMAILS_STORAGE_KEY = 'login-recent-emails';
+  private static readonly RECENT_EMAILS_MAX = 30;
 
   constructor(
     private router: Router,
@@ -67,20 +74,26 @@ export class LoginComponent {
     private configurationService: ConfigurationService,
     private bitacoraUsuarioService: BitacoraUsuarioService,
     private usuarioPerfilService: UsuarioPerfilService
-  ) {}
+  ) {
+    this.loadRecentEmailsFromStorage();
+  }
 
-  onPasswordFocus(event: any): void {
-    event.target.removeAttribute('readonly');
+  onPasswordFocus(event: Event): void {
+    const el = event.target as HTMLInputElement;
+    el.removeAttribute('readonly');
     if (this.passwordInputType === 'text') {
       this.passwordInputType = 'password';
+      this.visible = false;
       this.cd.markForCheck();
     }
   }
 
-  onPasswordInput(event: any): void {
-    event.target.removeAttribute('readonly');
+  onPasswordInput(event: Event): void {
+    const el = event.target as HTMLInputElement;
+    el.removeAttribute('readonly');
     if (this.passwordInputType === 'text') {
       this.passwordInputType = 'password';
+      this.visible = false;
       this.cd.markForCheck();
     }
   }
@@ -173,6 +186,8 @@ export class LoginComponent {
       )
       .subscribe({
         next: () => {
+          this.rememberSuccessfulLoginEmail(email!);
+
           const redirectUrl = this.resolvePostLoginUrl();
 
           this.snackbar.open('Inicio de sesión exitoso', 'Cerrar', {
@@ -239,15 +254,52 @@ export class LoginComponent {
     localStorage.removeItem(this.previousReloginUserKey);
   }
 
-  toggleVisibility() {
+  toggleVisibility(event?: Event): void {
+    event?.stopPropagation();
+    event?.preventDefault();
     if (this.visible) {
       this.passwordInputType = 'password';
       this.visible = false;
-      this.cd.markForCheck();
     } else {
       this.passwordInputType = 'text';
       this.visible = true;
-      this.cd.markForCheck();
     }
+    this.cd.markForCheck();
+  }
+
+  private loadRecentEmailsFromStorage(): void {
+    try {
+      const raw = localStorage.getItem(
+        LoginComponent.RECENT_EMAILS_STORAGE_KEY
+      );
+      const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+      this.recentEmails = Array.isArray(parsed)
+        ? parsed.filter((e): e is string => typeof e === 'string' && e.length > 0)
+        : [];
+    } catch {
+      this.recentEmails = [];
+    }
+  }
+
+  private rememberSuccessfulLoginEmail(email: string): void {
+    const trimmed = email.trim();
+    if (!trimmed) {
+      return;
+    }
+    const lower = trimmed.toLowerCase();
+    const next = [
+      trimmed,
+      ...this.recentEmails.filter((e) => e.toLowerCase() !== lower)
+    ].slice(0, LoginComponent.RECENT_EMAILS_MAX);
+    this.recentEmails = next;
+    try {
+      localStorage.setItem(
+        LoginComponent.RECENT_EMAILS_STORAGE_KEY,
+        JSON.stringify(this.recentEmails)
+      );
+    } catch {
+      /* ignore quota / private mode */
+    }
+    this.cd.markForCheck();
   }
 }

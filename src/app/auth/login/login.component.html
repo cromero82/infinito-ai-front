@@ -13,7 +13,17 @@
       </h4>
     </div>
 
-    <div [formGroup]="form" class="p-6 flex flex-col gap-4">
+    <form
+      [formGroup]="form"
+      class="p-6 flex flex-col gap-4"
+      (ngSubmit)="send()"
+      autocomplete="on"
+      novalidate>
+      <datalist [attr.id]="recentEmailsDatalistId">
+        @for (e of recentEmails; track e) {
+          <option [value]="e"></option>
+        }
+      </datalist>
       <div class="flex flex-col">
         <mat-form-field class="flex-1">
           <mat-label>Correo Electrónico</mat-label>
@@ -21,13 +31,11 @@
             formControlName="email"
             matInput
             type="email"
+            name="username"
+            id="login-email"
             required
-            autocomplete="on"
-            readonly
-            onfocus="this.removeAttribute('readonly')"
-            onkeydown="this.removeAttribute('readonly')"
-            [id]="'login-email-' + fieldId"
-            [name]="'login-email-' + fieldId" />
+            autocomplete="username"
+            [attr.list]="recentEmails.length ? recentEmailsDatalistId : null" />
           @if (form.controls.email.hasError("required")) {
             <mat-error>Se requiere un correo electrónico </mat-error>
           }
@@ -47,17 +55,16 @@
             readonly
             (focus)="onPasswordFocus($event)"
             (input)="onPasswordInput($event)"
-            (keydown.enter)="send()"
             data-lpignore="true"
             data-form-type="other"
-            [id]="'login-password-' + fieldId"
-            [name]="'login-password-' + fieldId" />
+            id="login-password"
+            name="password" />
           <button
-            (click)="toggleVisibility()"
+            type="button"
+            (click)="toggleVisibility($event)"
             mat-icon-button
             matIconSuffix
-            matTooltip="Mostrar/Ocultar contraseña"
-            type="button">
+            matTooltip="Mostrar/Ocultar contraseña">
             @if (visible) {
               <mat-icon svgIcon="mat:visibility"></mat-icon>
             }
@@ -82,10 +89,9 @@
       </div>
 
       <button
-        (click)="send()"
         color="primary"
         mat-raised-button
-        type="button"
+        type="submit"
         [disabled]="loading">
         @if (loading) {
           <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
@@ -102,6 +108,6 @@
         ¿No tienes una cuenta?<br />
         <a [routerLink]="['/register']">Haz clic aquí para crear una</a>
       </p>
-    </div>
+    </form>
   </div>
 </div>

@@ -192,6 +192,7 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
       const idx = this.selectedProductIndex;
       if (idx >= 0 && idx < len) {
         event.preventDefault();
+        event.stopPropagation();
         this.selectProduct(this.products[idx]);
       }
     }

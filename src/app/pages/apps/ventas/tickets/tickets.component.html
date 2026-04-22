@@ -26,7 +26,7 @@
                     #productSearchInput
                     matInput
                     [formControl]="recibo.productSearchCtrl"
-                    (keyup.enter)="triggerProductSearch()"
+                    (keydown.enter)="onProductSearchEnterKeydown($event)"
                     (keydown)="onSearchInputKeydown($event)"
                     placeholder="Ej. código de barras o nombre" />
                   <div matSuffix class="search-suffix-actions">
