@@ -13,56 +13,56 @@
         <span class="value">{{ formatCurrency(total) }}</span>
       </div>
       @if (estado === "entrada") {
-        <div class="total-a-pagar">
-          <span class="label">Paga con:</span>
-          <mat-form-field appearance="outline" class="paga-con-field">
-            <input
-              matInput
-              #pagaConInput
-              class="paga-con-input"
-              type="text"
-              [formControl]="pagaConCtrl"
-              (keydown)="onPagaConKeydown($event)" />
-          </mat-form-field>
-        </div>
-      }
-      @if (estado === "entrada") {
-        <div class="billetes-grid">
-          @for (billete of billetes; track billete) {
-            <button
-              type="button"
-              class="billete"
-              [class.selected]="esBilleteSeleccionado(billete.valor)"
-              [class.billete-modo-dual]="modoSumaRestaBilletes"
-              (click)="onBilleteButtonClick($event, billete.valor)">
-              <div class="billete-contenido">
-                <div class="billete-visual">
-                  <img [src]="billete.imagen" [alt]="billete.label" />
+        <div class="paga-con-y-billetes">
+          <div class="total-a-pagar">
+            <span class="label">Paga con:</span>
+            <mat-form-field appearance="outline" class="paga-con-field">
+              <input
+                matInput
+                #pagaConInput
+                class="paga-con-input"
+                type="text"
+                [formControl]="pagaConCtrl"
+                (keydown)="onPagaConKeydown($event)" />
+            </mat-form-field>
+          </div>
+          <div class="billetes-grid">
+            @for (billete of billetes; track billete) {
+              <button
+                type="button"
+                class="billete"
+                [class.selected]="esBilleteSeleccionado(billete.valor)"
+                [class.billete-modo-dual]="modoSumaRestaBilletes"
+                (click)="onBilleteButtonClick($event, billete.valor)">
+                <div class="billete-contenido">
+                  <div class="billete-visual">
+                    <img [src]="billete.imagen" [alt]="billete.label" />
+                  </div>
+                  <span class="billete-label">{{ billete.label }}</span>
                 </div>
-                <span class="billete-label">{{ billete.label }}</span>
-              </div>
-              @if (modoSumaRestaBilletes) {
-                <div
-                  class="billete-zona billete-zona-sumar"
-                  role="button"
-                  [attr.aria-label]="'Sumar ' + billete.label + ' a Paga con'"
-                  (click)="onZonaSumarBillete($event, billete.valor)"></div>
-                <div
-                  class="billete-zona billete-zona-restar"
-                  role="button"
-                  [attr.aria-label]="'Restar ' + billete.label + ' de Paga con'"
-                  (click)="onZonaRestarBillete($event, billete.valor)"></div>
-                <mat-icon
-                  class="billete-flecha billete-flecha--sup"
-                  svgIcon="mat:keyboard_arrow_up"
-                  aria-hidden="true"></mat-icon>
-                <mat-icon
-                  class="billete-flecha billete-flecha--inf"
-                  svgIcon="mat:keyboard_arrow_down"
-                  aria-hidden="true"></mat-icon>
-              }
-            </button>
-          }
+                @if (modoSumaRestaBilletes) {
+                  <div
+                    class="billete-zona billete-zona-sumar"
+                    role="button"
+                    [attr.aria-label]="'Sumar ' + billete.label + ' a Paga con'"
+                    (click)="onZonaSumarBillete($event, billete.valor)"></div>
+                  <div
+                    class="billete-zona billete-zona-restar"
+                    role="button"
+                    [attr.aria-label]="'Restar ' + billete.label + ' de Paga con'"
+                    (click)="onZonaRestarBillete($event, billete.valor)"></div>
+                  <mat-icon
+                    class="billete-flecha billete-flecha--sup"
+                    svgIcon="mat:keyboard_arrow_up"
+                    aria-hidden="true"></mat-icon>
+                  <mat-icon
+                    class="billete-flecha billete-flecha--inf"
+                    svgIcon="mat:keyboard_arrow_down"
+                    aria-hidden="true"></mat-icon>
+                }
+              </button>
+            }
+          </div>
         </div>
       }
       @if (estado === "entrada") {
@@ -95,46 +95,62 @@
     }
   </div>
 
-  <div mat-dialog-actions align="end" class="dialog-actions">
+  <div
+    mat-dialog-actions
+    class="dialog-actions"
+    [class.dialog-actions--entrada]="estado === 'entrada'">
     @if (estado === "entrada") {
-      <button mat-stroked-button type="button" (click)="cancelar()">
-        Cancelar
-      </button>
-      <button
-        mat-flat-button
-        color="primary"
-        type="button"
-        (click)="confirmar()"
-        [disabled]="!pagaConCtrl.value || pagoInsuficiente">
-        Confirmar
-      </button>
-    }
-    @if (estado === "exito") {
-      @if (data.imprimirRecibo) {
+      <div class="imprimir-luego-preferencia">
+        <mat-checkbox
+          [checked]="imprimirSoloEsteRecibo"
+          (change)="onImprimirSoloEsteReciboChange($event.checked)">
+          {{ imprimirTicketLuegoDePagarLabel }}
+        </mat-checkbox>
+      </div>
+      <div class="dialog-actions-buttons">
+        <button mat-stroked-button type="button" (click)="cancelar()">
+          Cancelar
+        </button>
         <button
           mat-flat-button
           color="primary"
           type="button"
-          (click)="onImprimirRecibo()">
-          <mat-icon>print</mat-icon>
-          Imprimir recibo
+          (click)="confirmar()"
+          [disabled]="!pagaConCtrl.value || pagoInsuficiente">
+          Confirmar
         </button>
-      }
-      <button mat-stroked-button type="button" (click)="onCerrarExito()">
-        Cerrar
-      </button>
+      </div>
+    }
+    @if (estado === "exito") {
+      <div class="dialog-actions-buttons">
+        @if (data.imprimirRecibo) {
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            (click)="onImprimirRecibo()">
+            <mat-icon>print</mat-icon>
+            Imprimir recibo
+          </button>
+        }
+        <button mat-stroked-button type="button" (click)="onCerrarExito()">
+          Cerrar
+        </button>
+      </div>
     }
     @if (estado === "error") {
-      <button mat-stroked-button type="button" (click)="cancelar()">
-        Cerrar
-      </button>
-      <button
-        mat-flat-button
-        color="primary"
-        type="button"
-        (click)="onReintentar()">
-        Reintentar
-      </button>
+      <div class="dialog-actions-buttons">
+        <button mat-stroked-button type="button" (click)="cancelar()">
+          Cerrar
+        </button>
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          (click)="onReintentar()">
+          Reintentar
+        </button>
+      </div>
     }
   </div>
 </div>

@@ -61,8 +61,10 @@ import {
   RecentPrintedReciboItem,
   ReciboPrintService
 } from '../service/recibo-print.service';
-
-const IMPRIMIR_RECIBO_KEY = 'imprimir-recibo';
+import {
+  IMPRIMIR_RECIBO_KEY,
+  IMPRIMIR_TICKET_LUEGO_DE_PAGAR_LABEL
+} from '../imprimir-recibo-preference.constants';
 const LAST_TICKET_ID_KEY = 'last-ticket-id';
 const FORCED_SELECTION_TICKET_ID_KEY = 'forced-selection-ticket-id';
 
@@ -112,6 +114,8 @@ export class TicketsComponent
 
   /** Preferencia de usuario: imprimir recibo tras pago (persistida en localStorage). Por defecto false. */
   imprimirReciboActivo = false;
+  /** Etiqueta compartida con pago-efectivo-cambio (misma preferencia en localStorage). */
+  readonly imprimirTicketLuegoDePagarLabel = IMPRIMIR_TICKET_LUEGO_DE_PAGAR_LABEL;
   recentPrintedRecibos: RecentPrintedReciboItem[] = [];
 
   /** True cuando los tickets con cliente personalizado (no ANONIMO) están visibles en la barra de tabs. */

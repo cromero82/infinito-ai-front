@@ -194,9 +194,9 @@
                   mat-menu-item
                   class="opciones-recibo-menu-item-toggle"
                   (click)="$event.stopPropagation()">
-                  <span class="opciones-recibo-label"
-                    >Imprimir ticket luego de pagar</span
-                  >
+                  <span class="opciones-recibo-label">{{
+                    imprimirTicketLuegoDePagarLabel
+                  }}</span>
                   <mat-slide-toggle
                     class="opciones-recibo-toggle"
                     [checked]="imprimirReciboActivo"

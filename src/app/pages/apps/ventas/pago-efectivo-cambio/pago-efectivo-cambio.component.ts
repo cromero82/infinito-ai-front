@@ -19,16 +19,29 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { DragDropModule, CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
+import {
+  IMPRIMIR_RECIBO_KEY,
+  IMPRIMIR_TICKET_LUEGO_DE_PAGAR_LABEL
+} from '../imprimir-recibo-preference.constants';
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
+
+/** Opciones al invocar la impresión desde el modal de efectivo (no persiste preferencia global). */
+export interface ImprimirReciboTrasPagoOpciones {
+  /**
+   * Si true, imprime aunque `IMPRIMIR_RECIBO_KEY` sea false (solo este recibo o clic explícito en el modal).
+   */
+  omitirPreferenciaGlobal?: boolean;
+}
 
 export interface PagoEfectivoCambioData {
   total: number;
   /** Si se proporciona, el modal ejecuta el pago al confirmar y muestra estado éxito/error. */
   ejecutarPago?: (montoRecibido: number) => Observable<number>;
-  /** Se llama tras éxito si "imprimir recibo al pagar" está activo. Usado en el botón Imprimir recibo. */
-  imprimirRecibo?: () => void;
+  /** Imprime el recibo; el modal puede pedir omitir la preferencia global solo para esta impresión. */
+  imprimirRecibo?: (opciones?: ImprimirReciboTrasPagoOpciones) => void;
   /** Se llama al cerrar tras éxito (para snackbar). */
   mostrarSnackbarExito?: (totalGuardado: number) => void;
   /** Antes de snackbar / impresión: guarda monto recibido y cambio en el componente padre para la tirilla. */
@@ -60,6 +73,7 @@ interface BilleteOption {
     MatFormFieldModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    MatCheckboxModule,
     ReactiveFormsModule,
     DragDropModule,
     CdkDrag,
@@ -128,6 +142,17 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
   modoSumaRestaBilletes = false;
 
   readonly data: PagoEfectivoCambioData;
+  /**
+   * Preferencia global (`IMPRIMIR_RECIBO_KEY`), solo lectura en este modal.
+   * Si es false, el checkbox va deshabilitado y no se imprime tras pagar.
+   */
+  readonly preferenciaGlobalImprimirRecibo: boolean;
+  /**
+   * Solo para este pago/cierre del modal: no persiste en localStorage.
+   * Si la global es false, permanece false. Si es true, inicia en true y el usuario puede desmarcar.
+   */
+  imprimirSoloEsteRecibo = false;
+  readonly imprimirTicketLuegoDePagarLabel = IMPRIMIR_TICKET_LUEGO_DE_PAGAR_LABEL;
 
   constructor(
     private readonly dialogRef: MatDialogRef<
@@ -138,6 +163,9 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
     private readonly cdr: ChangeDetectorRef
   ) {
     this.data = data;
+    this.preferenciaGlobalImprimirRecibo =
+      localStorage.getItem(IMPRIMIR_RECIBO_KEY) === 'true';
+    this.imprimirSoloEsteRecibo = this.preferenciaGlobalImprimirRecibo;
     this.total = data.total ?? 0;
     this.conteosPorDenominacion = this.descomponerGreedy(this.total);
     const formattedTotal = this.formatCurrency(this.total);
@@ -170,6 +198,26 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
       inputEl.focus();
       inputEl.select();
     });
+  }
+
+  /** Solo afecta a este pago; no escribe `IMPRIMIR_RECIBO_KEY` en localStorage. */
+  onImprimirSoloEsteReciboChange(checked: boolean): void {
+    this.imprimirSoloEsteRecibo = checked;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Tras pagar con el checkbox marcado: si la global es false, hay que saltar la comprobación
+   * de localStorage en el padre para imprimir solo este ticket.
+   */
+  private opcionesImpresionTrasPago(): ImprimirReciboTrasPagoOpciones | undefined {
+    if (!this.imprimirSoloEsteRecibo) {
+      return undefined;
+    }
+    if (!this.preferenciaGlobalImprimirRecibo) {
+      return { omitirPreferenciaGlobal: true };
+    }
+    return undefined;
   }
 
   seleccionarBillete(valor: number): void {
@@ -295,8 +343,8 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
       this.estado = 'procesando';
       this.cdr.markForCheck();
 
-      // Verificar si debe imprimir automáticamente después del pago
-      const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
+      const debeImprimir =
+        this.imprimirSoloEsteRecibo && !!this.data.imprimirRecibo;
 
       this.data.ejecutarPago!(pagaCon)
         .pipe(finalize(() => this.cdr.markForCheck()))
@@ -311,7 +359,7 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
             if (debeImprimir && this.data.imprimirRecibo) {
               console.log('Pago exitoso, imprimiendo automáticamente...');
               try {
-                this.data.imprimirRecibo();
+                this.data.imprimirRecibo(this.opcionesImpresionTrasPago());
               } catch (e) {
                 console.error('Error al imprimir recibo', e);
               }
@@ -339,7 +387,7 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
     });
     this.data.mostrarSnackbarExito?.(this.totalGuardado);
     try {
-      this.data.imprimirRecibo?.();
+      this.data.imprimirRecibo?.({ omitirPreferenciaGlobal: true });
     } catch (e) {
       console.error('Error al imprimir recibo', e);
     }
@@ -352,12 +400,12 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
   onCerrarExito(): void {
     console.log('=== CERRAR EXITO LLAMADO ===');
     console.log(
-      'localStorage imprimir-recibo:',
-      localStorage.getItem('imprimir-recibo')
+      'localStorage imprimir recibo:',
+      localStorage.getItem(IMPRIMIR_RECIBO_KEY)
     );
 
-    // Verificar localStorage antes de cerrar
-    const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
+    const debeImprimir =
+      this.imprimirSoloEsteRecibo && !!this.data.imprimirRecibo;
     console.log('debeImprimir:', debeImprimir);
 
     // Cerrar el modal primero
@@ -377,13 +425,15 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
       setTimeout(() => {
         console.log('Ejecutando impresión ahora...');
         try {
-          this.data.imprimirRecibo?.();
+          this.data.imprimirRecibo?.(this.opcionesImpresionTrasPago());
         } catch (e) {
           console.error('Error al imprimir recibo', e);
         }
       }, 300);
     } else {
-      console.log('No se imprimirá porque imprimir-recibo no está en true');
+      console.log(
+        'No se imprimirá porque la preferencia de imprimir tras pagar está desactivada'
+      );
     }
   }
 

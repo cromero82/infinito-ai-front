@@ -39,15 +39,6 @@
   background-color: #f9f9f9;
   border-radius: 8px;
   align-items: flex-start;
-
-  /**
-   * MDC checkbox (Material 3 tokens) + tema M2: sin --mat-sys-* de estado, el foco inicial
-   * en el primer mat-checkbox (diálogo) puede dejar la capa circular (.mdc-checkbox__ripple)
-   * casi opaca (naranja primary). Fijamos opacidades acordes a Material.
-   */
-  --mat-sys-hover-state-layer-opacity: 0.08;
-  --mat-sys-focus-state-layer-opacity: 0.12;
-  --mat-sys-pressed-state-layer-opacity: 0.12;
 }
 
 .fecha-grupo {

@@ -83,8 +83,10 @@ import { EditarProductoComponent } from '../../productos/editar-producto/editar-
 import {
   PagoEfectivoCambioComponent,
   PagoEfectivoCambioData,
-  PagoEfectivoCambioResultado
+  PagoEfectivoCambioResultado,
+  ImprimirReciboTrasPagoOpciones
 } from '../pago-efectivo-cambio/pago-efectivo-cambio.component';
+import { IMPRIMIR_RECIBO_KEY } from '../imprimir-recibo-preference.constants';
 import { EdicionTicketComponent } from '../edicion-ticket/edicion-ticket.component';
 import { MetodosPagoComponent } from '../metodos-pago/metodos-pago.component';
 
@@ -2732,10 +2734,6 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     const totalARegistrar = Number(this.recibo!.total ?? 0);
 
     if (metodo.id === 1 && !omitirDialogoEfectivo) {
-      const quiereImprimir =
-        localStorage.getItem('imprimir-recibo') === 'true' &&
-        !!this.recibo &&
-        !!this.detalles?.length;
       this.snapshotDetallesAntesDelPago();
       this.actualizandoMetodoPago = true;
       const dialogRef = this.dialog.open<
@@ -2748,9 +2746,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           total: totalARegistrar,
           ejecutarPago: (montoRecibido: number) =>
             this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
-          imprimirRecibo: quiereImprimir
-            ? () => this.imprimirRecibo()
-            : undefined,
+          imprimirRecibo:
+            this.recibo && this.detalles?.length
+              ? (o) => this.imprimirRecibo(o)
+              : undefined,
           mostrarSnackbarExito: (tg) =>
             this.mostrarSnackbarPagoExitosoSinImpresion(tg),
           registrarDatosImpresion: (d) => {
@@ -2780,7 +2779,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
+    const debeImprimir = localStorage.getItem(IMPRIMIR_RECIBO_KEY) === 'true';
     this.snapshotDetallesAntesDelPago();
 
     const preProceso$: Observable<void> = of(void 0);
@@ -2957,10 +2956,6 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         : totalARegistrar;
 
     if (metodo.id === 1) {
-      const quiereImprimir =
-        localStorage.getItem('imprimir-recibo') === 'true' &&
-        !!this.recibo &&
-        !!this.detalles?.length;
       this.snapshotDetallesAntesDelPago();
       this.actualizandoMetodoPago = true;
       const dialogRef = this.dialog.open<
@@ -2973,9 +2968,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           total: valorParaDialogo,
           ejecutarPago: (montoRecibido: number) =>
             this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
-          imprimirRecibo: quiereImprimir
-            ? () => this.imprimirRecibo()
-            : undefined,
+          imprimirRecibo:
+            this.recibo && this.detalles?.length
+              ? (o) => this.imprimirRecibo(o)
+              : undefined,
           mostrarSnackbarExito: (tg) =>
             this.mostrarSnackbarPagoExitosoSinImpresion(tg),
           registrarDatosImpresion: (d) => {
@@ -3005,7 +3001,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
+    const debeImprimir = localStorage.getItem(IMPRIMIR_RECIBO_KEY) === 'true';
     this.snapshotDetallesAntesDelPago();
 
     const preProceso$: Observable<void> = of(void 0);
@@ -3247,10 +3243,6 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     const totalARegistrar = Number(this.recibo!.total ?? 0);
 
     if (metodo.id === 1) {
-      const quiereImprimir =
-        localStorage.getItem('imprimir-recibo') === 'true' &&
-        !!this.recibo &&
-        !!this.detalles?.length;
       this.snapshotDetallesAntesDelPago();
       this.actualizandoMetodoPago = true;
       const dialogRef = this.dialog.open<
@@ -3263,9 +3255,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           total: totalARegistrar,
           ejecutarPago: (montoRecibido: number) =>
             this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
-          imprimirRecibo: quiereImprimir
-            ? () => this.imprimirRecibo()
-            : undefined,
+          imprimirRecibo:
+            this.recibo && this.detalles?.length
+              ? (o) => this.imprimirRecibo(o)
+              : undefined,
           mostrarSnackbarExito: (tg) =>
             this.mostrarSnackbarPagoExitosoSinImpresion(tg),
           registrarDatosImpresion: (d) => {
@@ -3295,7 +3288,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
+    const debeImprimir = localStorage.getItem(IMPRIMIR_RECIBO_KEY) === 'true';
     this.snapshotDetallesAntesDelPago();
 
     const preProceso$: Observable<void> = of(void 0);
@@ -3609,7 +3602,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.cacheRecentReciboForReprint();
     const totalFormateado = this.formatCurrency(totalGuardado);
     const quiereImprimir =
-      localStorage.getItem('imprimir-recibo') === 'true' &&
+      localStorage.getItem(IMPRIMIR_RECIBO_KEY) === 'true' &&
       this.recibo &&
       this.detalles?.length;
     let limpiarRecibo: (() => void) | null = null;
@@ -3696,17 +3689,19 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
   /**
    * Imprime el recibo actual usando window.open() como en el ejemplo funcional.
-   * Verifica localStorage antes de imprimir.
+   * Por defecto respeta `IMPRIMIR_RECIBO_KEY`; el modal de efectivo puede pasar
+   * `omitirPreferenciaGlobal` para imprimir solo ese ticket sin cambiar la clave.
    */
-  imprimirRecibo(): void {
+  imprimirRecibo(opciones?: ImprimirReciboTrasPagoOpciones): void {
     console.log('=== IMPRIMIR RECIBO LLAMADO ===');
     console.log(
       'localStorage imprimir-recibo:',
-      localStorage.getItem('imprimir-recibo')
+      localStorage.getItem(IMPRIMIR_RECIBO_KEY)
     );
 
-    // Verificar localStorage antes de imprimir
-    const debeImprimir = localStorage.getItem('imprimir-recibo') === 'true';
+    const debeImprimir =
+      opciones?.omitirPreferenciaGlobal === true ||
+      localStorage.getItem(IMPRIMIR_RECIBO_KEY) === 'true';
 
     if (!debeImprimir) {
       console.log('Impresión deshabilitada: imprimir-recibo no está en true');

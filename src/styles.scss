@@ -83,6 +83,16 @@ html {
   padding-right: 12px !important;
 }
 
+/**
+ * mat-checkbox (MDC + tema Vex/M2): sin --mat-sys-* de capa de estado, hover/focus/pressed
+ * pueden verse casi opacos (ripple oscuro). Misma corrección que antes en cierre-ventas.
+ */
+mat-checkbox.mat-mdc-checkbox {
+  --mat-sys-hover-state-layer-opacity: 0.08;
+  --mat-sys-focus-state-layer-opacity: 0.12;
+  --mat-sys-pressed-state-layer-opacity: 0.12;
+}
+
 /* Listados POS (mat-table MDC): hover de fila más visible que el default casi blanco */
 :root {
   /* Tono primario (#3f51b5) muy suave: menos “gris negro”, ligero matiz azul */
