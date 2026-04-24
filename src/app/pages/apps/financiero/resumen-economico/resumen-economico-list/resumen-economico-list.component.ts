@@ -863,7 +863,8 @@ export class ResumenEconomicoListComponent
 
   /**
    * Totales sobre las filas visibles (Diaria: paginación + recalcular; Mensual/Anual: lista completa + recalcular).
-   * % utilidad = margen global: sum(utilidad) / sum(ventas) × 100 cuando hay ventas.
+   * Utilidad del footer = ventas − egresos por fila (null tratado como 0), sin depender de que el API rellene `utilidad`.
+   * % utilidad: sumUtilidad / sum(ventas) × 100 si hay ventas; si no hay ventas pero sí egresos (solo pérdidas), sumUtilidad / sum(egresos) × 100.
    */
   private actualizarFooterPorFilas(
     labelPeriodo: 'Días' | 'Meses' | 'Años',
@@ -878,12 +879,18 @@ export class ResumenEconomicoListComponent
     let sumEgresos = 0;
     let sumUtilidad = 0;
     for (const r of rows) {
-      sumVentas += r.totalVentas ?? 0;
-      sumEgresos += r.totalEgresos ?? 0;
-      sumUtilidad += r.utilidad ?? 0;
+      const v = r.totalVentas ?? 0;
+      const e = r.totalEgresos ?? 0;
+      sumVentas += v;
+      sumEgresos += e;
+      sumUtilidad += v - e;
     }
     const pctUtilidad =
-      sumVentas !== 0 ? (sumUtilidad / sumVentas) * 100 : null;
+      sumVentas !== 0
+        ? (sumUtilidad / sumVentas) * 100
+        : sumEgresos !== 0
+          ? (sumUtilidad / sumEgresos) * 100
+          : null;
     const pctStr =
       pctUtilidad === null || Number.isNaN(pctUtilidad)
         ? '—'
