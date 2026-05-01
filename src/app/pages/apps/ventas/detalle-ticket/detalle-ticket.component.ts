@@ -92,6 +92,7 @@ import { EdicionTicketComponent } from '../edicion-ticket/edicion-ticket.compone
 import { MetodosPagoComponent } from '../metodos-pago/metodos-pago.component';
 import { FrontendActivityBufferService } from '../../../../core/monitoring/frontend-activity-buffer.service';
 import { sanitizeActividadTexto } from '../../../../core/monitoring/frontend-ui-activity.util';
+import { FooterService } from '../../../../layouts/services/footer.service';
 
 const ESTADOS_RECIBO = {
   PENDIENTE_PAGO: 1,
@@ -227,7 +228,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     private authService: AuthService,
     private cdr: ChangeDetectorRef,
     private fechaUtilService: FechaUtilService,
-    private reciboPrintService: ReciboPrintService
+    private reciboPrintService: ReciboPrintService,
+    private footerService: FooterService
   ) {}
 
   ngOnInit(): void {
@@ -275,6 +277,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.footerService.clearFooterItems();
     this.detenerActualizacionHistorico();
     this.destroy$.next();
     this.destroy$.complete();
@@ -843,6 +846,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         this.detalles = [];
         this.detallesError = null;
         this.detallesLoading = false;
+        this.setSelectedDetalles([], null, false);
       }
     });
   }
@@ -1154,6 +1158,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
   private recalculateTotal(): number {
     if (!this.recibo) {
+      this.actualizarFooterSeleccion();
       return 0;
     }
     const sum = this.detalles.reduce(
@@ -1164,6 +1169,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       ...this.recibo,
       total: sum
     };
+    this.actualizarFooterSeleccion();
     return sum;
   }
 
@@ -2585,6 +2591,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     if (!nextSelection.length) {
       this.selectedDetalleIndex = -1;
+      this.actualizarFooterSeleccion();
       return;
     }
 
@@ -2597,6 +2604,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     if (scrollToSelection) {
       this.scrollToSelectedDetalle();
     }
+
+    this.actualizarFooterSeleccion();
   }
 
   private calculateDetallesTotal(detalles: ReciboDetalleDto[]): number {
@@ -3220,6 +3229,34 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     const numericValue = Number(value ?? 0);
     const formatted = this.currencyFormatter.format(numericValue);
     return formatted.replace('COP', '$').trim();
+  }
+
+  /** Sincroniza el pie global con la suma de subtotales de la multiselección. */
+  private actualizarFooterSeleccion(): void {
+    if (this.selectedDetalleIndices.length < 2) {
+      this.footerService.clearFooterItems();
+      return;
+    }
+    const sum = this.selectedDetalleIndices.reduce((acc, idx) => {
+      const det = this.detalles[idx];
+      return acc + Number(det?.subtotal ?? 0);
+    }, 0);
+    const count = this.selectedDetalleIndices.length;
+    this.footerService.setFooterItems(
+      [
+        {
+          textoClave: 'Selección',
+          valorClave: this.formatCurrency(sum),
+          estiloCssClave: ''
+        },
+        {
+          textoClave: 'Items seleccionados',
+          valorClave: String(count),
+          estiloCssClave: ''
+        }
+      ],
+      { itemsFlow: 'rtl' }
+    );
   }
 
   /** Formatea una fecha ISO (e.g. "2026-02-11T21:00:48") a formato legible con hora. */

@@ -31,7 +31,8 @@
         @if (config.footer.visible) {
           <vex-footer
             class="vex-footer"
-            [footerItems]="(footerItems$ | async) ?? []"></vex-footer>
+            [footerItems]="(footerItems$ | async) ?? []"
+            [itemsFlow]="(footerItemsFlow$ | async) ?? 'ltr'"></vex-footer>
         }
       </mat-sidenav-content>
     </mat-sidenav-container>

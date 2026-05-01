@@ -60,6 +60,7 @@ export class LayoutComponent {
   configPanelOpen$: Observable<boolean> = this.layoutService.configPanelOpen$;
   quickpanelOpen$: Observable<boolean> = this.layoutService.quickpanelOpen$;
   footerItems$ = this.footerService.items$;
+  footerItemsFlow$ = this.footerService.itemsFlow$;
 
   constructor(
     private readonly layoutService: VexLayoutService,

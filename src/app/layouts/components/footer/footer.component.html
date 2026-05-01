@@ -1,6 +1,8 @@
-<div class="footer-inner">
+<div class="footer-inner" [class.footer-inner--flow-rtl]="itemsFlow === 'rtl'">
   @if (footerItems.length) {
-    <div class="footer-items-horizontal">
+    <div
+      class="footer-items-horizontal"
+      [class.footer-items-horizontal--flow-rtl]="itemsFlow === 'rtl'">
       @for (item of footerItems; track trackByTextoClave($index, item)) {
         <span class="footer-item" [ngClass]="item.estiloCssClave">
           <span class="footer-item-key">{{ item.textoClave }}</span>
