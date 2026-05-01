@@ -1,0 +1,27 @@
+@use '../logs-list-common.scss' as *;
+
+:host ::ng-deep {
+  td.col-extra.col-extra--error-level {
+    background-color: rgba(248, 187, 208, 0.55) !important;
+  }
+
+  tr.mat-mdc-row:hover td.col-extra.col-extra--error-level {
+    background-color: rgba(244, 143, 177, 0.5) !important;
+  }
+
+  tr.mat-mdc-row.selected-row td.col-extra.col-extra--error-level {
+    background-color: rgba(244, 143, 177, 0.42) !important;
+  }
+
+  td.col-extra.col-extra--warn-level {
+    background-color: rgba(255, 249, 196, 0.85) !important;
+  }
+
+  tr.mat-mdc-row:hover td.col-extra.col-extra--warn-level {
+    background-color: rgba(255, 245, 157, 0.95) !important;
+  }
+
+  tr.mat-mdc-row.selected-row td.col-extra.col-extra--warn-level {
+    background-color: rgba(255, 241, 118, 0.55) !important;
+  }
+}

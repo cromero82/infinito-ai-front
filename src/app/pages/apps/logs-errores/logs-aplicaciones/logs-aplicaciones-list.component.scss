@@ -1,0 +1,12 @@
+@use '../logs-list-common.scss' as *;
+
+:host ::ng-deep {
+  td.col-extra.col-extra-readable {
+    white-space: pre-line;
+    word-break: break-word;
+    vertical-align: top;
+    line-height: 1.4;
+    max-width: 480px;
+    min-width: 12rem;
+  }
+}

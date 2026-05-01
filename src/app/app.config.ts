@@ -1,9 +1,11 @@
-import { ApplicationConfig, importProvidersFrom } from '@angular/core';
+import { ApplicationConfig, ErrorHandler, importProvidersFrom } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { appRoutes } from './app.routes';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideHttpClient, withInterceptorsFromDi, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { frontendMonitorInterceptor } from './core/monitoring/frontend-monitor.interceptor';
+import { FrontendMonitorErrorHandler } from './core/monitoring/frontend-monitor.error-handler';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatBottomSheetModule } from '@angular/material/bottom-sheet';
@@ -19,6 +21,7 @@ import { provideMaterialDateDDMMYYYY } from './core/material/material-date-ddmmy
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    { provide: ErrorHandler, useClass: FrontendMonitorErrorHandler },
     ...provideMaterialDateDDMMYYYY(),
     importProvidersFrom(
       BrowserModule,
@@ -38,7 +41,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     provideHttpClient(
       withInterceptorsFromDi(),
-      withInterceptors([authInterceptor])
+      withInterceptors([authInterceptor, frontendMonitorInterceptor])
     ),
 
     provideVex({

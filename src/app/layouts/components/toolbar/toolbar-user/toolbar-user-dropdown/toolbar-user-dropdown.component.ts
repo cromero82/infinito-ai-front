@@ -132,6 +132,15 @@ export class ToolbarUserDropdownComponent implements OnInit {
       });
 
       this.items.push({
+        id: '7',
+        icon: 'mat:bug_report',
+        label: 'Logs y errores',
+        description: 'Consultar logs del servidor y del frontend',
+        colorClass: 'text-amber-700',
+        route: '/apps/logs-errores'
+      });
+
+      this.items.push({
         id: '6',
         icon: 'mat:backup',
         label: 'Copias de seguridad',

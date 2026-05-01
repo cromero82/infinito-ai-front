@@ -8,7 +8,8 @@ import {
   AfterViewChecked,
   ChangeDetectorRef,
   ChangeDetectionStrategy,
-  ApplicationRef
+  ApplicationRef,
+  inject
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -65,6 +66,8 @@ import {
   IMPRIMIR_RECIBO_KEY,
   IMPRIMIR_TICKET_LUEGO_DE_PAGAR_LABEL
 } from '../imprimir-recibo-preference.constants';
+import { FrontendActivityBufferService } from '../../../../core/monitoring/frontend-activity-buffer.service';
+import { sanitizeActividadTexto } from '../../../../core/monitoring/frontend-ui-activity.util';
 const LAST_TICKET_ID_KEY = 'last-ticket-id';
 const FORCED_SELECTION_TICKET_ID_KEY = 'forced-selection-ticket-id';
 
@@ -140,6 +143,8 @@ export class TicketsComponent
   /** Ticket destino asociado al comentario local del ticket origen. */
   private splitCommentsByTicketId: Record<number, number> = {};
 
+  private readonly actividadUi = inject(FrontendActivityBufferService);
+
   constructor(
     private ticketsService: TicketsService,
     private ticketReciboService: TicketReciboService,
@@ -195,6 +200,9 @@ export class TicketsComponent
   }
 
   toggleImprimirRecibo(event: { checked: boolean }): void {
+    this.actividadUi.record(
+      `botón acción: preferencia imprimir ticket tras pago (${event.checked ? 'activada' : 'desactivada'})`
+    );
     this.imprimirReciboActivo = event.checked;
     localStorage.setItem(
       IMPRIMIR_RECIBO_KEY,
@@ -269,6 +277,9 @@ export class TicketsComponent
   }
 
   printRecentRecibo(item: RecentPrintedReciboItem): void {
+    this.actividadUi.record(
+      `botón acción: imprimir recibo reciente (reciboId: ${item.reciboId ?? '?'})`
+    );
     const printed = this.reciboPrintService.printRecentRecibo(item);
     if (!printed) {
       this.snackBar.open(
@@ -434,6 +445,9 @@ export class TicketsComponent
 
   /** Alterna la visibilidad de los tabs de tickets con cliente personalizado. */
   toggleTicketsConCliente(): void {
+    this.actividadUi.record(
+      'botón acción: alternar visibilidad de tabs con cuenta de cliente'
+    );
     this.ticketsConClienteVisibles = !this.ticketsConClienteVisibles;
 
     if (!this.ticketsConClienteVisibles) {
@@ -483,11 +497,22 @@ export class TicketsComponent
   }
 
   triggerProductSearch(): void {
+    const term = this.reciboComponent?.productSearchCtrl?.value?.trim() ?? '';
+    if (term) {
+      this.actividadUi.record(
+        `Enter / buscar producto (#productSearchInput): "${sanitizeActividadTexto(term, 120)}"`
+      );
+    } else {
+      this.actividadUi.record(
+        'Enter en #productSearchInput (búsqueda vacía → validación en detalle-ticket)'
+      );
+    }
     this.reciboComponent?.searchAndAddProduct();
     this.focusProductSearch(false);
   }
 
   clearProductSearch(): void {
+    this.actividadUi.record('botón acción: limpiar búsqueda (#productSearchInput)');
     if (this.reciboComponent) {
       this.reciboComponent.productSearchCtrl.setValue('');
       this.focusProductSearch(false);
@@ -499,6 +524,9 @@ export class TicketsComponent
       return;
     }
 
+    this.actividadUi.record(
+      'acción: mover líneas a nuevo ticket (desde detalle-ticket)'
+    );
     const nextNumber = this.getNextTicketNumber();
     const nombre = `Ticket ${nextNumber}`;
     const reciboIdPadre = this.currentReciboId ?? undefined;
@@ -532,6 +560,9 @@ export class TicketsComponent
       return;
     }
 
+    this.actividadUi.record(
+      `acción: mover líneas a ticket existente (ticket destino id ${ticketId})`
+    );
     const targetTicket = this.tickets.find((ticket) => ticket.id === ticketId);
     if (!targetTicket) {
       return;
@@ -602,6 +633,7 @@ export class TicketsComponent
     }
     const nextNumber = this.getNextTicketNumber();
     const nombre = `Ticket ${nextNumber}`;
+    this.actividadUi.record('botón acción: Nuevo ticket');
     this.headerActionsBusy = true;
     this.loading = true;
     this.ticketsService.createTicket(this.sessionId, nombre).subscribe({
@@ -656,6 +688,7 @@ export class TicketsComponent
     if (this.sessionId === null) {
       return;
     }
+    this.actividadUi.record('despliega modal: ticket-rapido');
     const dialogRef = this.dialog.open<
       TicketRapidoComponent,
       TicketRapidoData,
@@ -695,6 +728,9 @@ export class TicketsComponent
     // quiten el foco al modal (MatDialog con autoFocus: false).
     this.suppressProductSearchFocusUntil = Date.now() + 1200;
 
+    this.actividadUi.record(
+      `despliega modal: editar-tab-ticket (ticket: ${ticket.id}, ${sanitizeActividadTexto(ticket.nombre ?? '', 60)})`
+    );
     const dialogRef = this.dialog.open<
       EditarTabTicketComponent,
       EditarTabTicketData,
@@ -787,6 +823,10 @@ export class TicketsComponent
       return;
     }
 
+    this.actividadUi.record(
+      `acción: reordenar tabs de tickets (índice ${event.previousIndex} → ${event.currentIndex})`
+    );
+
     // Preservar el ticket actualmente seleccionado
     const selectedTicket = this.tickets[this.selectedIndex];
 
@@ -872,6 +912,9 @@ export class TicketsComponent
         mensaje: `Esta cuenta fue personalizada para el cliente: <b>${this.getTicketLabel(ticket)}</b>, ¿está seguro que desea eliminar este ticket?`,
         titulo: 'Confirmar eliminación'
       };
+      this.actividadUi.record(
+        `despliega modal: confirmar eliminación de ticket (con cliente, id ${ticket.id})`
+      );
       const dialogRef = this.dialog.open(ConfirmDialogComponent, {
         data: dialogData,
         width: '400px',
@@ -899,6 +942,9 @@ export class TicketsComponent
               mensaje: `Esta cuenta tiene productos asignados, ¿está seguro que desea eliminar este ticket?`,
               titulo: 'Confirmar eliminación'
             };
+            this.actividadUi.record(
+              `despliega modal: confirmar eliminación de ticket (con productos, id ${ticket.id})`
+            );
             const dialogRef = this.dialog.open(ConfirmDialogComponent, {
               data: dialogData,
               width: '400px',

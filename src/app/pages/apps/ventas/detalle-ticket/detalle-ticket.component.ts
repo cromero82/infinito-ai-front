@@ -10,7 +10,8 @@ import {
   EventEmitter,
   ViewChild,
   ElementRef,
-  ChangeDetectorRef
+  ChangeDetectorRef,
+  inject
 } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -89,6 +90,8 @@ import {
 import { IMPRIMIR_RECIBO_KEY } from '../imprimir-recibo-preference.constants';
 import { EdicionTicketComponent } from '../edicion-ticket/edicion-ticket.component';
 import { MetodosPagoComponent } from '../metodos-pago/metodos-pago.component';
+import { FrontendActivityBufferService } from '../../../../core/monitoring/frontend-activity-buffer.service';
+import { sanitizeActividadTexto } from '../../../../core/monitoring/frontend-ui-activity.util';
 
 const ESTADOS_RECIBO = {
   PENDIENTE_PAGO: 1,
@@ -208,6 +211,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   private usuariosCachePorId = new Map<string, string>();
   private historicoRefreshIntervalId: ReturnType<typeof setInterval> | null =
     null;
+
+  private readonly actividadUi = inject(FrontendActivityBufferService);
 
   constructor(
     private reciboService: ReciboService,
@@ -621,6 +626,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     this.dialogAbierto = true;
     this.updateSearchDisabled();
+
+    this.actividadUi.record(
+      `despliega modal: editar-producto (nuevo desde búsqueda, ref: "${sanitizeActividadTexto(searchTerm, 80)}")`
+    );
 
     const dialogRef = this.dialog.open(EditarProductoComponent, {
       width: '600px',
@@ -1113,6 +1122,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     this.dialogAbierto = true;
+    const termLog = sanitizeActividadTexto(term, 120);
+    this.actividadUi.record(
+      `despliega modal: selector-productos (#productSearchInput, búsqueda: "${termLog}")`
+    );
     const dialogRef = this.dialog.open<
       SelectorProductosComponent,
       SelectorProductosData,
@@ -2736,6 +2749,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     if (metodo.id === 1 && !omitirDialogoEfectivo) {
       this.snapshotDetallesAntesDelPago();
       this.actualizandoMetodoPago = true;
+      this.actividadUi.record('despliega modal: pago-efectivo-cambio (ejecutarPago)');
       const dialogRef = this.dialog.open<
         PagoEfectivoCambioComponent,
         PagoEfectivoCambioData,
@@ -2958,6 +2972,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     if (metodo.id === 1) {
       this.snapshotDetallesAntesDelPago();
       this.actualizandoMetodoPago = true;
+      this.actividadUi.record(
+        'despliega modal: pago-efectivo-cambio (método pago desde edición ticket)'
+      );
       const dialogRef = this.dialog.open<
         PagoEfectivoCambioComponent,
         PagoEfectivoCambioData,
@@ -3245,6 +3262,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     if (metodo.id === 1) {
       this.snapshotDetallesAntesDelPago();
       this.actualizandoMetodoPago = true;
+      this.actividadUi.record(
+        'despliega modal: pago-efectivo-cambio (seleccionar método pago en barra)'
+      );
       const dialogRef = this.dialog.open<
         PagoEfectivoCambioComponent,
         PagoEfectivoCambioData,

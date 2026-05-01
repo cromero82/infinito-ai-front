@@ -172,6 +172,36 @@ export const appRoutes: VexRoutes = [
             ]
           },
           {
+            path: 'logs-errores',
+            loadComponent: () =>
+              import('./pages/apps/logs-errores/logs-errores.component').then(
+                (m) => m.LogsErroresComponent
+              ),
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                redirectTo: 'logs-servidor'
+              },
+              {
+                path: 'logs-servidor',
+                loadComponent: () =>
+                  import(
+                    './pages/apps/logs-errores/logs-servidor/logs-servidor-list.component'
+                  ).then((m) => m.LogsServidorListComponent),
+                data: { scrollDisabled: true }
+              },
+              {
+                path: 'logs-aplicaciones',
+                loadComponent: () =>
+                  import(
+                    './pages/apps/logs-errores/logs-aplicaciones/logs-aplicaciones-list.component'
+                  ).then((m) => m.LogsAplicacionesListComponent),
+                data: { scrollDisabled: true }
+              }
+            ]
+          },
+          {
             path: 'tipos',
             loadChildren: () => import('./pages/apps/tipos/tipos.routes')
           },

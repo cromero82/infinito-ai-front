@@ -29,7 +29,8 @@
 }
 
 .dropdown-content {
-  max-height: 300px;
+  /* Altura suficiente para todas las entradas de admin sin scroll interno habitual */
+  max-height: min(100vh - 120px, 640px);
   overflow-x: hidden;
   overflow-y: auto;
 }

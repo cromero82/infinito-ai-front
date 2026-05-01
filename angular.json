@@ -58,7 +58,8 @@
               "lodash.throttle",
               "luxon",
               "quill",
-              "seedrandom"
+              "seedrandom",
+              "exceljs"
             ],
             "vendorChunk": true,
             "extractLicenses": false,

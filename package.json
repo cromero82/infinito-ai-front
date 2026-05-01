@@ -36,6 +36,7 @@
     "angular-calendar": "~0.31.0",
     "apexcharts": "~3.44.0",
     "date-fns": "~2.30.0",
+    "exceljs": "^4.4.0",
     "express": "^4.22.1",
     "highlight.js": "~11.9.0",
     "luxon": "~3.4.3",
