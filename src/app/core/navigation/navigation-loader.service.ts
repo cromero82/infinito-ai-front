@@ -42,7 +42,8 @@ export class NavigationLoaderService {
         type: 'link',
         label: 'Financiero',
         route: '/apps/financiero',
-        icon: 'mat:dashboard'
+        icon: 'mat:dashboard',
+        routerLinkActiveOptions: { exact: false }
       },
     ]);
   }

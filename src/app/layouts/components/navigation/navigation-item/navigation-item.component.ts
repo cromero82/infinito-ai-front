@@ -47,9 +47,17 @@ export class NavigationItemComponent implements OnInit {
 
   ngOnInit() {}
 
+  private isRouteActive(
+    route: string,
+    link?: NavigationLink
+  ): boolean {
+    const exact = link?.routerLinkActiveOptions?.exact !== false;
+    return this.router.isActive(route, exact);
+  }
+
   hasActiveChilds(parent: NavigationItem): boolean {
     if (this.isLink(parent)) {
-      return this.router.isActive(parent.route as string, true);
+      return this.isRouteActive(parent.route as string, parent);
     }
 
     if (this.isDropdown(parent) || this.isSubheading(parent)) {
@@ -59,7 +67,7 @@ export class NavigationItemComponent implements OnInit {
         }
 
         if (this.isLink(child) && !this.isFunction(child.route)) {
-          return this.router.isActive(child.route as string, true);
+          return this.isRouteActive(child.route as string, child);
         }
 
         return false;
