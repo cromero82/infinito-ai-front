@@ -192,3 +192,51 @@ mat-checkbox.mat-mdc-checkbox {
   max-height: none !important;
 }
 
+/* Modal pago en efectivo: alto según contenido (sin franja vacía bajo mat-dialog-actions) */
+.cdk-overlay-pane.pago-efectivo-dialog-panel {
+  .mat-mdc-dialog-container {
+    display: flex;
+    flex-direction: column;
+    max-height: 100vh;
+    height: auto !important;
+  }
+
+  .mat-mdc-dialog-surface {
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 auto;
+    min-height: 0;
+    height: auto !important;
+  }
+
+  .mat-mdc-dialog-inner-container {
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 auto;
+    min-height: 0;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* MDC aplica padding generoso; aquí se compacta de forma visible */
+  .mat-mdc-dialog-title {
+    padding-bottom: 8px !important;
+  }
+
+  .mat-mdc-dialog-content {
+    padding-top: 8px !important;
+    padding-bottom: 5px !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    margin: 0 !important;
+  }
+
+  .mat-mdc-dialog-actions {
+    padding-top: 4px !important;
+    padding-bottom: 8px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    margin-top: 0 !important;
+  }
+}
+

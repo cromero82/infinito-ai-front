@@ -3,7 +3,15 @@
   cdkDrag
   cdkDragRootElement=".cdk-overlay-pane">
   <div class="pago-efectivo-dialog-header" mat-dialog-title cdkDragHandle>
-    <h2 class="dialog-title">Pago en efectivo</h2>
+    <div class="pago-efectivo-header-row">
+      <mat-button-toggle-group
+        [formControl]="modoPagoCtrl"
+        appearance="legacy"
+        class="pago-efectivo-modo-toggle shrink-0">
+        <mat-button-toggle value="solo-efectivo">Pago en Efectivo</mat-button-toggle>
+        <mat-button-toggle value="mixto">Mixto</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
   </div>
 
   <div mat-dialog-content class="dialog-content extra-spacing">
@@ -14,8 +22,8 @@
       </div>
       @if (estado === "entrada") {
         <div class="paga-con-y-billetes">
-          <div class="total-a-pagar">
-            <span class="label">Paga con:</span>
+          <div class="paga-con-row">
+            <span class="label">Paga con: Efectivo</span>
             <mat-form-field appearance="outline" class="paga-con-field">
               <input
                 matInput
@@ -63,13 +71,81 @@
               </button>
             }
           </div>
+          @if (modoPagoCtrl.value === "mixto") {
+            <div class="otros-metodos-section">
+              <div class="otros-metodos-titulo">Pago con: Otros medios de pago</div>
+              <div class="otros-metodos-grid">
+                @for (metodo of metodosOtros; track metodo.id) {
+                  <div
+                    class="otro-metodo-card"
+                    [matTooltip]="metodo.descripcion"
+                    matTooltipPosition="above">
+                    <div class="otro-metodo-contenido">
+                      <div class="otro-metodo-visual">
+                        <img
+                          [src]="
+                            'assets/img/icons/payments/' + metodo.file
+                          "
+                          [alt]="metodo.descripcion" />
+                        @if (metodo.estado !== "activo") {
+                          <mat-icon
+                            class="otro-metodo-warning"
+                            svgIcon="mat:warning"
+                            aria-hidden="true"></mat-icon>
+                        }
+                      </div>
+                      <mat-form-field
+                        appearance="outline"
+                        class="otro-metodo-monto-field"
+                        subscriptSizing="dynamic">
+                        <input
+                          matInput
+                          type="text"
+                          inputmode="numeric"
+                          autocomplete="off"
+                          [value]="montosMixtosPorId[metodo.id]"
+                          (input)="
+                            onMontoMixtoInput(
+                              metodo.id,
+                              $any($event.target).value
+                            )
+                          " />
+                      </mat-form-field>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
         </div>
       }
       @if (estado === "entrada") {
-        <div class="cambio" [class.cambio-insuficiente]="pagoInsuficiente">
-          <span class="label">Cambio:</span>
-          <span class="value">{{ formatCurrency(cambioParaMostrar) }}</span>
-        </div>
+        @if (modoPagoCtrl.value === "mixto") {
+          <div class="mixto-resumen-cambio-fila">
+            <fieldset class="mixto-resumen-fieldset">
+              <legend class="resumen-metodos-pago-legend">
+                Resumen metodos pago
+              </legend>
+              <span class="cambio-desglose" aria-live="polite">
+                {{ formatCurrency(montoEfectivoPagaCon) }} (Efectivo) +
+                {{ formatCurrency(montoOtrosMediosPagaCon) }} (Otros medios)
+              </span>
+            </fieldset>
+            <div
+              class="cambio cambio--mixto-en-fila"
+              [class.cambio-insuficiente]="pagoInsuficiente">
+              <span class="label">Cambio:</span>
+              <span class="value">{{ formatCurrency(cambioParaMostrar) }}</span>
+            </div>
+          </div>
+        } @else {
+          <div
+            class="cambio"
+            [class.cambio-insuficiente]="pagoInsuficiente">
+            <span class="label">Cambio:</span>
+            <span class="value">{{ formatCurrency(cambioParaMostrar) }}</span>
+          </div>
+        }
       }
       @if (estado === "procesando") {
         <div class="estado-procesando">
@@ -116,7 +192,7 @@
           color="primary"
           type="button"
           (click)="confirmar()"
-          [disabled]="!pagaConCtrl.value || pagoInsuficiente">
+          [disabled]="confirmarDeshabilitado">
           Confirmar
         </button>
       </div>

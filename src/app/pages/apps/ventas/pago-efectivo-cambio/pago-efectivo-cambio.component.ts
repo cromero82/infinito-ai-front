@@ -3,6 +3,7 @@ import {
   ElementRef,
   Inject,
   OnInit,
+  OnDestroy,
   ViewChild,
   AfterViewInit,
   ChangeDetectorRef
@@ -20,13 +21,19 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { DragDropModule, CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
+import {
+  MetodoPagoService,
+  MetodoPagoDto
+} from '../service/metodo-pago.service';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil, finalize, take } from 'rxjs/operators';
 import {
   IMPRIMIR_RECIBO_KEY,
   IMPRIMIR_TICKET_LUEGO_DE_PAGAR_LABEL
 } from '../imprimir-recibo-preference.constants';
-import { Observable } from 'rxjs';
-import { finalize } from 'rxjs/operators';
 
 /** Opciones al invocar la impresión desde el modal de efectivo (no persiste preferencia global). */
 export interface ImprimirReciboTrasPagoOpciones {
@@ -51,12 +58,25 @@ export interface PagoEfectivoCambioData {
   }) => void;
 }
 
+/** `pagaCon` es el total abonado (efectivo + otros métodos en modo mixto). */
 export interface PagoEfectivoCambioResultado {
   pagaCon: number;
   cambio: number;
 }
 
 type EstadoModal = 'entrada' | 'procesando' | 'exito' | 'error';
+
+type ModoPagoEfectivo = 'solo-efectivo' | 'mixto';
+
+/** Clase en el overlay pane: estilos en `styles.scss` (padding MDC, alto según contenido). */
+const PAGO_EFECTIVO_DIALOG_PANEL_CLASS = 'pago-efectivo-dialog-panel';
+
+/** Al abrir el diálogo desde detalle-ticket se usa `width: '640px'`; en mixto se suma `PAGO_EFECTIVO_MIXTO_ANCHO_EXTRA_PX`. */
+const PAGO_EFECTIVO_DIALOG_WIDTH_BASE_PX = 640;
+const PAGO_EFECTIVO_MIXTO_ANCHO_EXTRA_PX = 20;
+
+/** Al pasar a modo mixto, el `top` del overlay es la posición inicial menos este valor (px). */
+const PAGO_EFECTIVO_MIXTO_TOP_OFFSET_PX = 70;
 
 interface BilleteOption {
   label: string;
@@ -74,6 +94,8 @@ interface BilleteOption {
     MatInputModule,
     MatProgressSpinnerModule,
     MatCheckboxModule,
+    MatButtonToggleModule,
+    MatTooltipModule,
     ReactiveFormsModule,
     DragDropModule,
     CdkDrag,
@@ -82,9 +104,19 @@ interface BilleteOption {
   templateUrl: './pago-efectivo-cambio.component.html',
   styleUrls: ['./pago-efectivo-cambio.component.scss']
 })
-export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
+export class PagoEfectivoCambioComponent
+  implements OnInit, OnDestroy, AfterViewInit
+{
   @ViewChild('pagaConInput') pagaConInputRef?: ElementRef<HTMLInputElement>;
   readonly pagaConCtrl = new FormControl<string>('');
+  readonly modoPagoCtrl = new FormControl<ModoPagoEfectivo>('solo-efectivo', {
+    nonNullable: true
+  });
+  /** Métodos distintos de efectivo (id 1), mismo criterio que `metodos-pago` (no inactivos). */
+  metodosOtros: MetodoPagoDto[] = [];
+  readonly montosMixtosPorId: Record<number, string> = {};
+  private readonly destroy$ = new Subject<void>();
+
   pagoInsuficiente = false;
   private cambioNegativo = 0;
 
@@ -118,6 +150,11 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
       label: '$ 5.000',
       valor: 5000,
       imagen: 'assets/img/cash/billete-5-mil-medium.png'
+    },
+    {
+      label: '$ 2.000',
+      valor: 2000,
+      imagen: 'assets/img/cash/billete-2-mil-small.png'
     }
   ];
 
@@ -154,13 +191,17 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
   imprimirSoloEsteRecibo = false;
   readonly imprimirTicketLuegoDePagarLabel = IMPRIMIR_TICKET_LUEGO_DE_PAGAR_LABEL;
 
+  /** `top` del overlay (viewport) al abrir en solo efectivo; en mixto se usa `top − 40px`. */
+  private overlayTopPxInicial: number | null = null;
+
   constructor(
     private readonly dialogRef: MatDialogRef<
       PagoEfectivoCambioComponent,
       PagoEfectivoCambioResultado | null
     >,
     @Inject(MAT_DIALOG_DATA) data: PagoEfectivoCambioData,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly metodoPagoService: MetodoPagoService
   ) {
     this.data = data;
     this.preferenciaGlobalImprimirRecibo =
@@ -173,23 +214,195 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.pagaConCtrl.valueChanges.subscribe((valor) => {
-      const pagaCon = this.parseCurrency(valor);
-      const diferencia = pagaCon - this.total;
-      this.cambio = Math.max(0, diferencia);
-      this.pagoInsuficiente = diferencia < 0;
-      this.cambioNegativo = diferencia < 0 ? Math.abs(diferencia) : 0;
-      const sumaConteos = this.sumaConteos();
-      if (pagaCon !== sumaConteos) {
-        this.conteosPorDenominacion = this.descomponerGreedy(pagaCon);
+    this.dialogRef.addPanelClass(PAGO_EFECTIVO_DIALOG_PANEL_CLASS);
+
+    this.dialogRef
+      .afterOpened()
+      .pipe(take(1), takeUntil(this.destroy$))
+      .subscribe(() => {
+        const intentarCaptura = (): void => {
+          setTimeout(() => {
+            requestAnimationFrame(() => this.capturarPosicionVerticalInicialOverlay());
+          }, 0);
+        };
+        intentarCaptura();
+        setTimeout(intentarCaptura, 50);
+      });
+
+    this.metodoPagoService
+      .obtenerMetodosPago()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (metodos) => {
+          const sorted = (metodos ?? [])
+            .filter((m) => m.id !== 1 && m.estado !== 'inactivo')
+            .sort((a, b) => a.id - b.id);
+          this.metodosOtros = sorted;
+          for (const m of sorted) {
+            if (this.montosMixtosPorId[m.id] === undefined) {
+              this.montosMixtosPorId[m.id] = '0';
+            }
+          }
+          this.cdr.markForCheck();
+          if (this.modoPagoCtrl.value === 'mixto') {
+            this.aplicarAnchoDialogSegunModo();
+            this.restaurarPosicionVerticalInicial();
+          }
+        },
+        error: (err) => console.error('Error cargando métodos de pago', err)
+      });
+
+    this.pagaConCtrl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.aplicarTotales());
+
+    this.modoPagoCtrl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((modo) => {
+        if (modo === 'solo-efectivo') {
+          for (const m of this.metodosOtros) {
+            this.montosMixtosPorId[m.id] = '0';
+          }
+        }
+        this.aplicarTotales();
+        this.aplicarAnchoDialogSegunModo();
+        if (modo === 'mixto') {
+          this.restaurarPosicionVerticalInicial();
+        }
+      });
+
+    this.aplicarTotales();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Ancho del overlay: base (coincide con `open` en detalle-ticket) o base + 100px en modo mixto.
+   */
+  private aplicarAnchoDialogSegunModo(): void {
+    const w =
+      this.modoPagoCtrl.value === 'mixto'
+        ? PAGO_EFECTIVO_DIALOG_WIDTH_BASE_PX + PAGO_EFECTIVO_MIXTO_ANCHO_EXTRA_PX
+        : PAGO_EFECTIVO_DIALOG_WIDTH_BASE_PX;
+    try {
+      this.dialogRef.updateSize(`${w}px`);
+    } catch {
+      /* noop */
+    }
+  }
+
+  /**
+   * Guarda el `top` del panel (coordenadas de viewport) la primera vez, con el layout inicial.
+   */
+  private capturarPosicionVerticalInicialOverlay(): void {
+    if (this.overlayTopPxInicial !== null) {
+      return;
+    }
+    if (this.modoPagoCtrl.value !== 'solo-efectivo') {
+      return;
+    }
+    const pane = document.querySelector(
+      `.cdk-overlay-pane.${PAGO_EFECTIVO_DIALOG_PANEL_CLASS}`
+    ) as HTMLElement | null;
+    if (!pane) {
+      return;
+    }
+    this.overlayTopPxInicial = Math.round(pane.getBoundingClientRect().top);
+  }
+
+  /**
+   * Tras pasar a mixto el panel crece; reaplica `top` = posición inicial al abrir menos
+   * `PAGO_EFECTIVO_MIXTO_TOP_OFFSET_PX`.
+   */
+  private restaurarPosicionVerticalInicial(): void {
+    if (this.overlayTopPxInicial === null) {
+      return;
+    }
+    const topPx = Math.max(
+      0,
+      this.overlayTopPxInicial - PAGO_EFECTIVO_MIXTO_TOP_OFFSET_PX
+    );
+    const aplicar = (): void => {
+      try {
+        this.dialogRef.updatePosition({ top: `${topPx}px` });
+      } catch {
+        /* noop */
       }
-      if (pagaCon === 0) {
-        this.modoSumaRestaBilletes = false;
-      }
-    });
+    };
+    setTimeout(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          aplicar();
+          setTimeout(aplicar, 64);
+        });
+      });
+    }, 0);
+  }
+
+  get montoEfectivoPagaCon(): number {
+    return this.parseCurrency(this.pagaConCtrl.value);
+  }
+
+  get montoOtrosMediosPagaCon(): number {
+    return this.modoPagoCtrl.value === 'mixto' ? this.sumaMontosMixtos() : 0;
+  }
+
+  private sumaMontosMixtos(): number {
+    let sumaOtros = 0;
+    for (const m of this.metodosOtros) {
+      sumaOtros += this.parseCurrency(this.montosMixtosPorId[m.id]);
+    }
+    return sumaOtros;
+  }
+
+  /** Total abonado: efectivo ("Paga con") + suma de montos en modo mixto. */
+  calcularTotalPagado(): number {
+    const efectivo = this.montoEfectivoPagaCon;
+    if (this.modoPagoCtrl.value !== 'mixto') {
+      return efectivo;
+    }
+    return efectivo + this.sumaMontosMixtos();
+  }
+
+  get confirmarDeshabilitado(): boolean {
+    const tp = this.calcularTotalPagado();
+    return tp <= 0 || this.pagoInsuficiente;
+  }
+
+  onMontoMixtoInput(id: number, raw: string): void {
+    const digits = String(raw ?? '')
+      .replace(/\s+/g, '')
+      .replace(/[^\d]/g, '');
+    this.montosMixtosPorId[id] = digits === '' ? '0' : digits;
+    this.aplicarTotales();
+  }
+
+  private aplicarTotales(): void {
+    const totalPagado = this.calcularTotalPagado();
+    const diferencia = totalPagado - this.total;
+    this.cambio = Math.max(0, diferencia);
+    this.pagoInsuficiente = diferencia < 0;
+    this.cambioNegativo = diferencia < 0 ? Math.abs(diferencia) : 0;
+
+    const pagaCon = this.parseCurrency(this.pagaConCtrl.value);
+    const sumaConteos = this.sumaConteos();
+    if (pagaCon !== sumaConteos) {
+      this.conteosPorDenominacion = this.descomponerGreedy(pagaCon);
+    }
+    if (pagaCon === 0) {
+      this.modoSumaRestaBilletes = false;
+    }
+    this.cdr.markForCheck();
   }
 
   ngAfterViewInit(): void {
+    setTimeout(() => {
+      this.capturarPosicionVerticalInicialOverlay();
+    }, 0);
+
     const inputEl = this.pagaConInputRef?.nativeElement;
     if (!inputEl) {
       return;
@@ -316,7 +529,7 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    if (this.pagoInsuficiente || !this.pagaConCtrl.value) {
+    if (this.confirmarDeshabilitado) {
       return;
     }
 
@@ -326,13 +539,13 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
   }
 
   confirmar(): void {
-    const pagaCon = this.parseCurrency(this.pagaConCtrl.value);
-    if (Number.isNaN(pagaCon) || pagaCon <= 0 || this.pagoInsuficiente) {
+    const totalPagado = this.calcularTotalPagado();
+    if (Number.isNaN(totalPagado) || totalPagado <= 0 || this.pagoInsuficiente) {
       return;
     }
 
-    const cambio = Math.max(0, pagaCon - this.total);
-    this.pagaConResultado = pagaCon;
+    const cambio = Math.max(0, totalPagado - this.total);
+    this.pagaConResultado = totalPagado;
     this.cambioResultado = cambio;
     this.data.registrarDatosImpresion?.({
       montoRecibido: this.pagaConResultado,
@@ -346,7 +559,7 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
       const debeImprimir =
         this.imprimirSoloEsteRecibo && !!this.data.imprimirRecibo;
 
-      this.data.ejecutarPago!(pagaCon)
+      this.data.ejecutarPago!(totalPagado)
         .pipe(finalize(() => this.cdr.markForCheck()))
         .subscribe({
           next: (tg) => {
@@ -376,7 +589,7 @@ export class PagoEfectivoCambioComponent implements OnInit, AfterViewInit {
           }
         });
     } else {
-      this.dialogRef.close({ pagaCon, cambio });
+      this.dialogRef.close({ pagaCon: totalPagado, cambio });
     }
   }
 
