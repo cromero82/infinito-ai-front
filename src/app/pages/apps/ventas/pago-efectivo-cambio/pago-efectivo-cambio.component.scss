@@ -6,6 +6,8 @@
   min-height: 0;
   width: 100%;
   box-sizing: border-box;
+  /* Misma anchura exterior para total (badge) y campo efectivo (outline). */
+  --pago-efectivo-monto-caja-ancho: 176px;
 }
 
 .pago-efectivo-dialog-shell {
@@ -100,7 +102,7 @@
 
 .total-a-pagar {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   font-size: 18px;
   font-weight: 600;
@@ -119,29 +121,46 @@
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
-    min-width: 140px;
+    box-sizing: border-box;
+
+    &.pago-efectivo-monto-caja {
+      width: var(--pago-efectivo-monto-caja-ancho);
+      min-width: var(--pago-efectivo-monto-caja-ancho);
+      max-width: var(--pago-efectivo-monto-caja-ancho);
+    }
   }
 }
 
-/* Menos hueco entre fila "Paga con" y la rejilla de billetes (el gap del diálogo no aplica entre ambos). */
+/* Bloque efectivo + billetes: aire claro entre el outline del input (foco) y la rejilla; sin márgenes negativos que los peguen. */
 .paga-con-y-billetes {
   display: flex;
   flex-direction: column;
   gap: 0;
+  margin-top: -2px;
+
+  /* Separación respecto al borde inferior del mat-form-field (incl. anillo de foco MDC). */
+  > .paga-con-row {
+    margin-bottom: 0;
+    padding-bottom: 12px;
+  }
 
   > .billetes-grid {
-    margin-top: -4px;
+    margin-top: 0;
+    row-gap: 8px;
   }
 }
 
-.paga-con-row {
+/* Etiqueta + monto/input alineados al borde derecho del modal (bloque RL). */
+.pago-efectivo-fila-rl {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: flex-end;
   flex-wrap: wrap;
   gap: 8px 10px;
   width: 100%;
   min-width: 0;
+  box-sizing: border-box;
 
   > .label {
     flex-shrink: 0;
@@ -149,6 +168,11 @@
     font-weight: 600;
     color: var(--text-secondary, rgba(0, 0, 0, 0.6));
   }
+}
+
+.paga-con-row {
+  width: 100%;
+  min-width: 0;
 }
 
 .paga-con-field {
@@ -171,16 +195,60 @@
   }
 }
 
-/* Input de efectivo: ancho acotado; alineado a la derecha (antes el desglose ocupaba el centro). */
-.paga-con-y-billetes .paga-con-row .paga-con-field {
-  flex: 0 0 auto;
-  width: 128px;
-  max-width: 36vw;
-  min-width: 96px;
-  margin-left: auto;
+/* Input de efectivo: mismo ancho que el badge del total; label + outline en un solo flex para alinear en cruz. */
+.pago-efectivo-efectivo-grupo {
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  min-width: 0;
+
+  > .label {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+    /* Centrado óptico con el outline MDC (el notch sin mat-label suele desplazar el centro visual). */
+    transform: translateY(-4px);
+  }
+}
+
+.paga-con-y-billetes .paga-con-row .paga-con-field.pago-efectivo-monto-caja {
+  flex: 0 0 var(--pago-efectivo-monto-caja-ancho);
+  width: var(--pago-efectivo-monto-caja-ancho);
+  min-width: var(--pago-efectivo-monto-caja-ancho);
+  max-width: var(--pago-efectivo-monto-caja-ancho);
+  margin: 0;
 
   .paga-con-input {
     font-size: 16px;
+  }
+
+  ::ng-deep .mat-mdc-form-field {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    display: block;
+  }
+
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    width: 100%;
+  }
+
+  ::ng-deep .mat-mdc-form-field-flex {
+    align-items: center;
+  }
+
+  /* Outline sin mat-label: padding simétrico para que el centro visual coincida con el label. */
+  ::ng-deep .mat-mdc-form-field-infix {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    min-height: 0;
   }
 }
 
@@ -370,10 +438,28 @@
   margin-top: 4px;
 }
 
+.otros-metodos-cabecera {
+  width: 100%;
+}
+
 .otros-metodos-titulo {
   font-size: 15px;
   font-weight: 600;
   color: rgba(0, 0, 0, 0.65);
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.otros-metodos-subtotal {
+  flex-shrink: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.85);
+  background-color: rgba(0, 0, 0, 0.06);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
 }
 
 .otros-metodos-grid {

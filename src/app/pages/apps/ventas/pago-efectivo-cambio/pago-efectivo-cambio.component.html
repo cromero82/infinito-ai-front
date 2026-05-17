@@ -17,22 +17,31 @@
   <div mat-dialog-content class="dialog-content extra-spacing">
     @if (estado === "entrada" || estado === "procesando") {
       <div class="total-a-pagar">
-        <span class="label">Total a pagar:</span>
-        <span class="value">{{ formatCurrency(total) }}</span>
+        <div class="pago-efectivo-fila-rl">
+          <span class="label">Total a pagar:</span>
+          <span class="value pago-efectivo-monto-caja">{{ formatCurrency(total) }}</span>
+        </div>
       </div>
       @if (estado === "entrada") {
         <div class="paga-con-y-billetes">
           <div class="paga-con-row">
-            <span class="label">Paga con: Efectivo</span>
-            <mat-form-field appearance="outline" class="paga-con-field">
-              <input
-                matInput
-                #pagaConInput
-                class="paga-con-input"
-                type="text"
-                [formControl]="pagaConCtrl"
-                (keydown)="onPagaConKeydown($event)" />
-            </mat-form-field>
+            <div class="pago-efectivo-fila-rl">
+              <div class="pago-efectivo-efectivo-grupo">
+                <span class="label">Paga con: Efectivo</span>
+                <mat-form-field
+                  appearance="outline"
+                  class="paga-con-field pago-efectivo-monto-caja"
+                  subscriptSizing="dynamic">
+                  <input
+                    matInput
+                    #pagaConInput
+                    class="paga-con-input"
+                    type="text"
+                    [formControl]="pagaConCtrl"
+                    (keydown)="onPagaConKeydown($event)" />
+                </mat-form-field>
+              </div>
+            </div>
           </div>
           <div class="billetes-grid">
             @for (billete of billetes; track billete) {
@@ -73,7 +82,12 @@
           </div>
           @if (modoPagoCtrl.value === "mixto") {
             <div class="otros-metodos-section">
-              <div class="otros-metodos-titulo">Pago con: Otros medios de pago</div>
+              <div class="otros-metodos-cabecera pago-efectivo-fila-rl">
+                <span class="otros-metodos-titulo">Pago con: Otros medios de pago</span>
+                <span class="otros-metodos-subtotal" aria-live="polite">{{
+                  formatCurrency(montoOtrosMediosPagaCon)
+                }}</span>
+              </div>
               <div class="otros-metodos-grid">
                 @for (metodo of metodosOtros; track metodo.id) {
                   <div
