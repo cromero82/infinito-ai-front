@@ -1,0 +1,147 @@
+---
+description: Mecanismo de scroll de tabs en TicketsComponent (mat-tab-nav-bar) — offsetLeft manual + scrollDistance del MatTabNav, toggle de clientes, y supresión por transiciones CSS
+globs: src/app/pages/apps/ventas/tickets/tickets.component.{ts,html}
+alwaysApply: false
+---
+
+# Tickets Tab Scroll Mechanism
+
+## Problema
+
+`TicketsComponent` usa `<nav mat-tab-nav-bar>` para los tabs de tickets. A diferencia de `mat-tab-group`, este componente **no** hace scroll automático al cambiar `selectedIndex`. Además, el botón `toggle-clientes-btn` colapsa/expande tabs de clientes con una transición CSS de 0.35s, desplazando la posición del tab activo.
+
+## Arquitectura DOM del nav
+
+```
+nav#ticketTabNav.mat-mdc-tab-nav-bar (host, position: relative)
+  div.mat-mdc-tab-link-container (viewport, overflow: hidden)
+    div.mat-mdc-tab-list (transform: translateX(Npx) para scroll)
+      div.mat-mdc-tab-links
+        div.tab-item (position: relative) ← wrapper nuestro
+          a.mat-mdc-tab-link ([active] binding)
+```
+
+El scroll lo gestiona `MatPaginatedTabHeader` internamente vía `transform: translateX()` en `.mat-mdc-tab-list`. Los botones `<` y `>` del paginador MDC actualizan `_scrollDistance` que controla ese transform.
+
+## Por qué NO funcionan otros enfoques
+
+| Enfoque | Problema |
+|---------|----------|
+| `element.scrollIntoView()` | Desplaza el contenedor equivocado mediante `scrollLeft`, desincronizando el `_scrollDistance` interno del MDC — los botones `<` y `>` dejan de funcionar |
+| `updateActiveLink()` → `_scrollToLabel()` | Usa `offsetLeft` del `<a mat-tab-link>`, pero al tener `.tab-item` con `position:relative`, el `offsetParent` del `<a>` es `.tab-item` (~12px), no el `<nav>` — el cálculo de scroll queda incorrecto |
+
+## Solución implementada
+
+### 1. `selectedIndex` getter/setter (`tickets.component.ts:102-117`)
+
+```typescript
+private _selectedIndex = 0;
+get selectedIndex(): number { return this._selectedIndex; }
+set selectedIndex(value: number) {
+  if (this._selectedIndex !== value) {
+    this._selectedIndex = value;
+    const suppressedUntil = this._suppressAutoScrollUntil;
+    setTimeout(() => {
+      if (Date.now() >= suppressedUntil) {
+        this.scrollSelectedTabIntoView();
+      }
+    }, 0);
+  }
+}
+private _suppressAutoScrollUntil = 0;
+```
+
+- Cada cambio de `selectedIndex` programa `scrollSelectedTabIntoView()` en el siguiente ciclo
+- Consulta `_suppressAutoScrollUntil` para no ejecutar el scroll durante una animación toggle (las posiciones intermedias darían un scroll incorrecto)
+
+### 2. `scrollSelectedTabIntoView()` (`tickets.component.ts:359-393`)
+
+```typescript
+private scrollSelectedTabIntoView(): void {
+  setTimeout(() => {
+    const navEl = this.ticketTabNavEl?.nativeElement;
+    if (!navEl || this._selectedIndex < 0 || !this.matTabNav) return;
+    const container = navEl.querySelector('.mat-mdc-tab-link-container') as HTMLElement;
+    if (!container) return;
+    const tabItems = navEl.querySelectorAll('.tab-item');
+    const targetEl = tabItems[this._selectedIndex] as HTMLElement | undefined;
+    if (!targetEl) return;
+
+    const viewLength = container.offsetWidth;
+    const currentScroll = this.matTabNav.scrollDistance;
+    let newScroll = currentScroll;
+
+    if (targetEl.offsetLeft < currentScroll) {
+      newScroll = targetEl.offsetLeft;                     // off-left → alinear borde izq
+    } else if (targetEl.offsetLeft + targetEl.offsetWidth > currentScroll + viewLength) {
+      newScroll = targetEl.offsetLeft + targetEl.offsetWidth - viewLength;  // off-right → alinear borde der
+    } else {
+      return;  // ya visible
+    }
+    this.matTabNav.scrollDistance = newScroll;
+  }, 0);
+}
+```
+
+**Clave**: usa `offsetLeft` de `.tab-item`, NO del `<a>`. Como `.tab-item` tiene `position: relative` y el `<nav>` también (`position: relative` de Material), el `offsetLeft` de `.tab-item` es su posición real dentro del `<nav>` — la correcta para el cálculo de scroll.
+
+**Por qué `matTabNav.scrollDistance`**: El setter público de `MatPaginatedTabHeader.scrollDistance` llama internamente a `_scrollTo()` que:
+1. Clampa el valor a `[0, maxScrollDistance]`
+2. Actualiza `_scrollDistance` (mantiene sincronizado)
+3. Activa `_scrollDistanceChanged = true`
+4. Llama a `_checkScrollingControls()` (actualiza estado de botones `<` y `>`)
+5. En el siguiente `ngAfterContentChecked()` → `_updateTabScrollPosition()` → aplica el `transform: translateX()`
+
+### 3. `toggleTicketsConCliente()` (`tickets.component.ts:511-538`)
+
+```typescript
+toggleTicketsConCliente(): void {
+  const showing = !this.ticketsConClienteVisibles;
+  this.ticketsConClienteVisibles = showing;
+  this._suppressAutoScrollUntil = Date.now() + 400; // suprime scroll inmediato
+
+  if (!showing) {
+    // ocultando: si el seleccionado es cliente, saltar al primer no-cliente
+    ...
+  }
+  // reposicionar scroll tras la transición CSS en ambos sentidos
+  setTimeout(() => this.scrollSelectedTabIntoView(), 400);
+}
+```
+
+**Ambos sentidos** requieren scroll diferido:
+- **Ocultar** (`showing=false`): los tabs de cliente colapsan (`max-width: 220→0`). El tab activo se desplaza a la izquierda y puede quedar fuera de vista.
+- **Mostrar** (`showing=true`): los tabs de cliente se expanden (`max-width: 0→220`). El tab activo se desplaza a la derecha y puede quedar oculto.
+
+La supresión (`_suppressAutoScrollUntil = Date.now() + 400`) evita que el `setTimeout(0)` del setter de `selectedIndex` (disparado por `selectTicket()` al cambiar de un ticket-cliente a uno no-cliente) calcule con posiciones intermedias de la transición CSS.
+
+### 4. ViewChilds (`tickets.component.ts:132-135`)
+
+```typescript
+@ViewChild('ticketTabNav', { read: ElementRef })
+ticketTabNavEl?: ElementRef<HTMLElement>;
+@ViewChild('ticketTabNav', { read: MatTabNav })
+matTabNav?: MatTabNav;
+```
+
+Se necesita **ambos**: `ticketTabNavEl` para las queries DOM (`.tab-item`, `.mat-mdc-tab-link-container`) y `matTabNav` para usar el setter público `scrollDistance`.
+
+## Mapa rápido
+
+| Tema | Archivo:Línea |
+|------|---------------|
+| `#ticketTabNav` template ref | `tickets.component.html:104` |
+| `.tab-item` wrapper | `tickets.component.html:116` |
+| `.tab-collapsed` CSS transition | `tickets.component.scss:325-341` |
+| `selectedIndex` getter/setter | `tickets.component.ts:102-117` |
+| `_suppressAutoScrollUntil` | `tickets.component.ts:117` |
+| `scrollSelectedTabIntoView()` | `tickets.component.ts:359-393` |
+| `toggleTicketsConCliente()` | `tickets.component.ts:511-538` |
+| `@ViewChild` ticketTabNav y matTabNav | `tickets.component.ts:132-135` |
+
+## Reglas para mantenimiento futuro
+
+- Si se modifica el wrapper `.tab-item`, verificar que su `offsetLeft` siga siendo relativo al `<nav>` (i.e. que mantenga `position: relative` o que algún ancestro intermedio no añada un nuevo `positioned` que rompa la cadena).
+- Si se cambia el `max-width` o la duración de la transición CSS de `.tab-collapsed`, actualizar también el `400` ms del `setTimeout` en `toggleTicketsConCliente()`.
+- No reintroducir `scrollIntoView()` ni depender de `updateActiveLink()` para scroll de tabs — ambos producen regresiones en el paginador MDC.
+- El setter público `MatTabNav.scrollDistance` es la única vía correcta: actualiza el `_scrollDistance`, el `_scrollDistanceChanged`, y `_checkScrollingControls()` del paginador.

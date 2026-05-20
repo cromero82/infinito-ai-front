@@ -12,7 +12,7 @@ import {
   inject
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { MatTabsModule } from '@angular/material/tabs';
+import { MatTabsModule, MatTabNav } from '@angular/material/tabs';
 import { MatButtonModule } from '@angular/material/button';
 
 import { MatIconModule } from '@angular/material/icon';
@@ -99,7 +99,22 @@ export class TicketsComponent
   implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy
 {
   tickets: TicketDto[] = [];
-  selectedIndex = 0;
+  private _selectedIndex = 0;
+  get selectedIndex(): number {
+    return this._selectedIndex;
+  }
+  set selectedIndex(value: number) {
+    if (this._selectedIndex !== value) {
+      this._selectedIndex = value;
+      const suppressedUntil = this._suppressAutoScrollUntil;
+      setTimeout(() => {
+        if (Date.now() >= suppressedUntil) {
+          this.scrollSelectedTabIntoView();
+        }
+      }, 0);
+    }
+  }
+  private _suppressAutoScrollUntil = 0;
   sessionId: number | null = null;
   loading = false;
   headerActionsBusy = false;
@@ -114,6 +129,10 @@ export class TicketsComponent
   @ViewChild('productSearchInput')
   productSearchInput?: ElementRef<HTMLInputElement>;
   @ViewChild('reciboCmp') reciboComponent?: DetalleTicketComponent;
+  @ViewChild('ticketTabNav', { read: ElementRef })
+  ticketTabNavEl?: ElementRef<HTMLElement>;
+  @ViewChild('ticketTabNav', { read: MatTabNav })
+  matTabNav?: MatTabNav;
 
   /** Preferencia de usuario: imprimir recibo tras pago (persistida en localStorage). Por defecto false. */
   imprimirReciboActivo = false;
@@ -328,6 +347,51 @@ export class TicketsComponent
     });
   }
 
+  /**
+   * Desplaza la barra de tabs para que el tab activo quede visible.
+   * Calcula la posición manualmente usando offsetLeft del .tab-item
+   * (que es relativo al <nav>, el offsetParent correcto) y delega
+   * en MatTabNav.scrollDistance para mantener sincronizado el
+   * paginador MDC — a diferencia de _scrollToLabel() que usa
+   * offsetLeft del <a> que queda mal por el position:relative
+   * del wrapper .tab-item.
+   */
+  private scrollSelectedTabIntoView(): void {
+    setTimeout(() => {
+      const navEl = this.ticketTabNavEl?.nativeElement;
+      if (!navEl || this._selectedIndex < 0 || !this.matTabNav) return;
+
+      const container = navEl.querySelector(
+        '.mat-mdc-tab-link-container'
+      ) as HTMLElement;
+      if (!container) return;
+
+      const tabItems = navEl.querySelectorAll('.tab-item');
+      const targetEl = tabItems[this._selectedIndex] as
+        | HTMLElement
+        | undefined;
+      if (!targetEl) return;
+
+      const viewLength = container.offsetWidth;
+      const currentScroll = this.matTabNav.scrollDistance;
+
+      let newScroll = currentScroll;
+      if (targetEl.offsetLeft < currentScroll) {
+        newScroll = targetEl.offsetLeft;
+      } else if (
+        targetEl.offsetLeft + targetEl.offsetWidth >
+        currentScroll + viewLength
+      ) {
+        newScroll =
+          targetEl.offsetLeft + targetEl.offsetWidth - viewLength;
+      } else {
+        return;
+      }
+
+      this.matTabNav.scrollDistance = newScroll;
+    }, 0);
+  }
+
   getTicketLabel(ticket: TicketDto): string {
     if (ticket.cliente?.nombre) {
       return this.getBaseTicketLabel(ticket);
@@ -448,9 +512,16 @@ export class TicketsComponent
     this.actividadUi.record(
       'botón acción: alternar visibilidad de tabs con cuenta de cliente'
     );
-    this.ticketsConClienteVisibles = !this.ticketsConClienteVisibles;
+    const showing = !this.ticketsConClienteVisibles;
+    this.ticketsConClienteVisibles = showing;
 
-    if (!this.ticketsConClienteVisibles) {
+    // Suprimir el auto-scroll durante la transición CSS (0.35s),
+    // el scroll inmediato calcularía mal porque offsetLeft aún no refleja
+    // la posición final tras colapsar/expandir los tabs de clientes
+    this._suppressAutoScrollUntil = Date.now() + 400;
+
+    if (!showing) {
+      // Ocultando clientes: si el seleccionado es cliente, saltar al primer no-cliente
       const selectedTicket = this.tickets[this.selectedIndex];
       if (selectedTicket && this.isTicketConCliente(selectedTicket)) {
         const firstNonClientIndex = this.tickets.findIndex(
@@ -461,6 +532,9 @@ export class TicketsComponent
         }
       }
     }
+
+    // Reposicionar el scroll tras la transición CSS en ambos sentidos
+    setTimeout(() => this.scrollSelectedTabIntoView(), 400);
   }
 
   /**
