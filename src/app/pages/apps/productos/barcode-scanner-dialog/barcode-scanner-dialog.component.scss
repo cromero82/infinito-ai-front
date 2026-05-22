@@ -1,0 +1,73 @@
+.scanner-dialog-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0;
+  padding-right: 0.25rem;
+}
+
+.scanner-dialog-content {
+  min-width: min(480px, 95vw);
+  max-width: 95vw;
+  padding-top: 0.5rem !important;
+}
+
+.scanner-hint {
+  font-size: 0.875rem;
+  color: var(--vex-text-secondary, rgba(0, 0, 0, 0.6));
+  margin-bottom: 0.75rem !important;
+}
+
+.scanner-viewport-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 280px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #111;
+}
+
+.scanner-viewport {
+  width: 100%;
+  min-height: 280px;
+
+}
+
+:host ::ng-deep .scanner-viewport video {
+  width: 100% !important;
+  object-fit: cover;
+}
+
+.scanner-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.875rem;
+  pointer-events: none;
+}
+
+.scanner-error {
+  margin-top: 0.75rem !important;
+  font-size: 0.875rem;
+  color: var(--vex-warn, #f44336);
+}
+
+.scanner-dialog-actions {
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.icon-sm {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  vertical-align: middle;
+  margin-right: 0.25rem;
+}

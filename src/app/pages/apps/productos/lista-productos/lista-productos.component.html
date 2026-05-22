@@ -28,10 +28,25 @@
               autofocus
               [formControl]="searchCtrl"
               placeholder="Código o nombre" />
-            <button mat-icon-button matSuffix *ngIf="searchCtrl.value" aria-label="Limpiar búsqueda"
-              (click)="searchCtrl.setValue('')">
-              <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
-            </button>
+            <div matSuffix class="search-suffix-actions">
+              <button
+                mat-icon-button
+                type="button"
+                aria-label="Escanear código de barras con la cámara"
+                matTooltip="Escanear código de barras"
+                (click)="abrirEscannerCodigoBarras(); $event.stopPropagation()">
+                <mat-icon class="icon-sm" svgIcon="mat:photo_camera"></mat-icon>
+              </button>
+              @if (searchCtrl.value) {
+                <button
+                  mat-icon-button
+                  type="button"
+                  aria-label="Limpiar búsqueda"
+                  (click)="searchCtrl.setValue('')">
+                  <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+                </button>
+              }
+            </div>
           </mat-form-field>
           <button
             mat-flat-button

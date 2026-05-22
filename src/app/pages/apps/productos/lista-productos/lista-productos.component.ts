@@ -60,6 +60,7 @@ import {
   SeleccionarCrearGrupoEspejoDialogResult
 } from '../seleccionar-crear-grupo-espejo/seleccionar-crear-grupo-espejo.component';
 import { TableViewportService } from '../../../../core/table-viewport/table-viewport.service';
+import { BarcodeScannerDialogComponent } from '../barcode-scanner-dialog/barcode-scanner-dialog.component';
 
 /** Producto resumido en el panel de grupo espejo */
 export interface GrupoEspejoProductoPanel {
@@ -1152,6 +1153,24 @@ export class ListaProductosComponent implements OnInit, OnDestroy, AfterViewInit
     if (this.totalPages > 0 && this.pageIndex + 1 >= this.totalPages) return;
 
     this.fetchProducts(false);
+  }
+
+  abrirEscannerCodigoBarras(): void {
+    const dialogRef = this.dialog.open(BarcodeScannerDialogComponent, {
+      width: '520px',
+      maxWidth: '95vw',
+      disableClose: true,
+      panelClass: 'barcode-scanner-dialog-panel'
+    });
+
+    dialogRef.afterClosed().subscribe((codigo: string | undefined) => {
+      const trimmed = codigo?.trim();
+      if (trimmed) {
+        this.justClosedDialog = false;
+        this.searchCtrl.setValue(trimmed);
+      }
+      this.focusSearchInput();
+    });
   }
 
   createProduct(barcode?: string) {

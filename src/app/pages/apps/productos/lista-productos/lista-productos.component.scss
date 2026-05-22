@@ -86,7 +86,17 @@ img.h-10.w-10.object-cover.rounded:hover {
 }
 
 .search-input {
-  @apply w-64;
+  min-width: 17.5rem;
+  width: 20rem;
+  max-width: 100%;
+}
+
+.search-suffix-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.125rem;
+  flex-shrink: 0;
 }
 
 // Búsqueda: altura ~40px. Importante: no poner padding-top/bottom a 0 en .mat-mdc-form-field-infix (rompe el label flotante).
@@ -124,6 +134,20 @@ img.h-10.w-10.object-cover.rounded:hover {
       padding-bottom: 0 !important;
     }
 
+    .mat-mdc-form-field-icon-suffix,
+    .search-suffix-actions {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      align-self: center !important;
+      gap: 0.125rem;
+    }
+
+    .search-suffix-actions .mat-mdc-icon-button {
+      width: 32px !important;
+      height: 32px !important;
+      padding: 4px !important;
+    }
   }
 }
 
