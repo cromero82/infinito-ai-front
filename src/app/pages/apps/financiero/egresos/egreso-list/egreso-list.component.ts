@@ -15,6 +15,7 @@ import { MatSelectModule } from '@angular/material/select';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import {
   UntypedFormControl,
   FormControl,
@@ -41,6 +42,10 @@ import {
   ProveedorDto
 } from '../../proveedores/service/proveedor.service';
 import { EgresoEditComponent } from '../egreso-edit/egreso-edit.component';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData
+} from '../../../../../core/components/confirm-dialog/confirm-dialog.component';
 import { TableViewportService } from '../../../../../core/table-viewport/table-viewport.service';
 import { FechaUtilService } from '../../../ventas/service/fecha-util.service';
 import { FooterService } from '../../../../../layouts/services/footer.service';
@@ -50,6 +55,7 @@ import { FooterService } from '../../../../../layouts/services/footer.service';
   imports: [
     MatButtonModule,
     MatTooltipModule,
+    MatSnackBarModule,
     MatTableModule,
     MatIconModule,
     MatFormFieldModule,
@@ -72,11 +78,13 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     'proveedor',
     'tipoEgreso',
     'descripcion',
-    'edit'
+    'edit',
+    'delete'
   ];
   dataSource: EgresoDto[] = [];
   activeFilters: Array<{ label: string; value: string }> = [];
   selectedRowId: number | null = null;
+  eliminandoEgresoId: number | null = null;
   loading = false;
   loadingMore = false;
   descripcionCtrl = new UntypedFormControl('');
@@ -108,7 +116,8 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     private dialog: MatDialog,
     private tableViewportService: TableViewportService,
     private fechaUtilService: FechaUtilService,
-    private footerService: FooterService
+    private footerService: FooterService,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit() {
@@ -282,6 +291,65 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.searchEgresos();
       }
       this.focusSearchInput();
+    });
+  }
+
+  eliminarEgreso(egreso: EgresoDto, event?: Event): void {
+    event?.stopPropagation();
+    if (this.eliminandoEgresoId !== null) return;
+
+    const referencia = this.referenciaEgreso(egreso);
+    const valor = this.formatCurrency(egreso.valor);
+    const dialogData: ConfirmDialogData = {
+      titulo: 'Confirmar eliminación',
+      mensaje: `¿Confirma la acción de eliminar el egreso <b>${referencia}</b> por valor de <b>${valor}</b>?`
+    };
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: dialogData,
+      width: '400px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe((confirmado: boolean) => {
+      if (confirmado) {
+        this.ejecutarEliminarEgreso(egreso);
+      }
+    });
+  }
+
+  private referenciaEgreso(egreso: EgresoDto): string {
+    const proveedor = egreso.proveedor?.nombre?.trim();
+    const descripcion = egreso.descripcion?.trim();
+    if (proveedor && descripcion) {
+      return `${proveedor} — ${descripcion}`;
+    }
+    if (proveedor) return proveedor;
+    if (descripcion) return descripcion;
+    return `egreso #${egreso.id}`;
+  }
+
+  private ejecutarEliminarEgreso(egreso: EgresoDto): void {
+    this.eliminandoEgresoId = egreso.id;
+    this.egresosService.eliminar(egreso.id).subscribe({
+      next: () => {
+        this.eliminandoEgresoId = null;
+        if (this.selectedRowId === egreso.id) {
+          this.selectedRowId = null;
+        }
+        this.dataSource = this.dataSource.filter((e) => e.id !== egreso.id);
+        this.totalElements = Math.max(0, this.totalElements - 1);
+        this.actualizarFooter();
+        this.snackBar.open('Egreso eliminado', 'Cerrar', { duration: 3000 });
+      },
+      error: () => {
+        this.eliminandoEgresoId = null;
+        this.snackBar.open(
+          'No se pudo eliminar el egreso. Intente de nuevo.',
+          'Cerrar',
+          { duration: 5000 }
+        );
+      }
     });
   }
 

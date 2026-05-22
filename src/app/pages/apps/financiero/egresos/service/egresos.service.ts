@@ -92,4 +92,9 @@ export class EgresosService {
     });
     return this.http.put<EgresoDto>(`${this.apiUrl}/${id}`, egreso, { headers });
   }
+
+  eliminar(id: number): Observable<void> {
+    const headers = new HttpHeaders({ Accept: 'application/json' });
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers });
+  }
 }

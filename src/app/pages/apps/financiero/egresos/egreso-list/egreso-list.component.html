@@ -219,6 +219,27 @@
                   </button>
                 </td>
               </ng-container>
+              <ng-container matColumnDef="delete">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let egreso">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    color="warn"
+                    class="edit-btn-compact"
+                    [disabled]="eliminandoEgresoId === egreso.id"
+                    matTooltip="Eliminar egreso"
+                    (click)="eliminarEgreso(egreso, $event)">
+                    @if (eliminandoEgresoId === egreso.id) {
+                      <mat-icon
+                        class="animate-spin"
+                        svgIcon="mat:hourglass_empty"></mat-icon>
+                    } @else {
+                      <mat-icon svgIcon="mat:delete_forever"></mat-icon>
+                    }
+                  </button>
+                </td>
+              </ng-container>
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
               <tr
                 mat-row
