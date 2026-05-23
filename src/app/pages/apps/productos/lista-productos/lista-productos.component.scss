@@ -85,33 +85,74 @@ img.h-10.w-10.object-cover.rounded:hover {
   flex-shrink: 0;
 }
 
-.search-input {
-  min-width: 17.5rem;
-  width: 20rem;
-  max-width: 100%;
-}
-
-.search-suffix-actions {
-  display: flex;
-  flex-direction: row;
+// Buscador con acciones (cámara + limpiar): overlay en grid, estable en cualquier viewport.
+.search-field-shell {
+  --search-actions-width: 2.5rem;
+  display: grid;
   align-items: center;
-  gap: 0.125rem;
-  flex-shrink: 0;
+  width: clamp(16rem, 32vw, 22rem);
+  min-width: 16rem;
+  max-width: 100%;
+  flex: 0 1 auto;
 }
 
-// Búsqueda: altura ~40px. Importante: no poner padding-top/bottom a 0 en .mat-mdc-form-field-infix (rompe el label flotante).
+.search-field-shell--has-clear {
+  --search-actions-width: 5rem;
+}
+
+.search-field-shell > .search-input,
+.search-field-shell > .search-field-actions {
+  grid-area: 1 / 1;
+}
+
+.search-field-actions {
+  z-index: 2;
+  justify-self: end;
+  align-self: center;
+  width: var(--search-actions-width);
+  max-width: var(--search-actions-width);
+  margin-right: 4px;
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+  pointer-events: none;
+}
+
+.search-field-action-btn {
+  pointer-events: auto;
+  flex: 0 0 auto;
+}
+
+// Búsqueda: altura fija; no poner padding-top/bottom a 0 en .mat-mdc-form-field-infix (rompe el label flotante).
 :host ::ng-deep {
-  .search-input.mat-mdc-form-field {
+  .search-field-shell .search-input.mat-mdc-form-field {
+    width: 100%;
+    margin: 0;
     font-size: 13px !important;
 
     .mat-mdc-form-field-flex {
+      height: 40px !important;
       min-height: 40px !important;
+      max-height: 40px !important;
       align-items: center !important;
+      flex-wrap: nowrap !important;
     }
 
     .mat-mdc-form-field-infix {
-      /* Material calcula el float; solo acotamos altura mínima del área de texto */
       min-height: 28px !important;
+      max-height: 40px !important;
+      width: auto !important;
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+    }
+
+    .mat-mdc-text-field-wrapper {
+      height: 40px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
     }
 
     .mat-mdc-text-field-wrapper input,
@@ -119,35 +160,38 @@ img.h-10.w-10.object-cover.rounded:hover {
       font-size: 13px !important;
     }
 
-    .mat-mdc-input-element {
+    .mat-mdc-input-element,
+    .search-input-control {
       font-size: 13px !important;
-      line-height: normal !important;
+      line-height: 1.25 !important;
+      padding-right: calc(var(--search-actions-width) + 0.35rem) !important;
+      box-sizing: border-box !important;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
     }
 
     .mat-mdc-form-field-subscript-wrapper {
-      min-height: 0 !important;
+      display: none !important;
     }
 
-    .mat-mdc-text-field-wrapper,
     .mat-mdc-form-field-flex {
       padding-top: 0 !important;
       padding-bottom: 0 !important;
     }
+  }
 
-    .mat-mdc-form-field-icon-suffix,
-    .search-suffix-actions {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      align-self: center !important;
-      gap: 0.125rem;
-    }
-
-    .search-suffix-actions .mat-mdc-icon-button {
-      width: 32px !important;
-      height: 32px !important;
-      padding: 4px !important;
-    }
+  .search-field-shell .search-field-action-btn.mat-mdc-icon-button {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    padding: 4px !important;
+    line-height: 32px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
   }
 }
 

@@ -21,7 +21,17 @@ alwaysApply: false
 - `productos/lista-productos` -> `ListaProductosComponent`, selector `lista-productos`
 - `productos/editar-producto` -> `EditarProductoComponent`, selector `editar-producto`
 - `productos/comparador-precio-producto` -> `ComparadorPrecioProductoComponent`, selector `comparador-precio-producto`
+- `productos/barcode-scanner-dialog` -> `BarcodeScannerDialogComponent`, selector `gm-barcode-scanner-dialog` (lectura de código de barras con cámara)
 - `productos/admin-productos` funciona como contenedor de `lista-productos`
+
+## Escáner de código de barras (productos)
+
+- **Ruta UI:** `/apps/productos` (admin-productos → `lista-productos`).
+- **Entrada:** botón cámara en el buscador (`#searchInput`); iconos en `.search-field-actions` dentro de `.search-field-shell` (overlay CSS grid, no `matSuffix`; clase `--has-clear` cuando hay texto).
+- **Diálogo:** `BarcodeScannerDialogComponent` (`productos/barcode-scanner-dialog/`).
+- **Orquestación:** `ListaProductosComponent.abrirEscannerCodigoBarras()` abre el modal; al leer un código asigna `searchCtrl` y dispara la búsqueda habitual (`fetchProducts`).
+- **Librería:** `html5-qrcode` (cámara vía `getUserMedia`, formatos EAN/UPC/Code128, etc.).
+- **Reutilizar** este diálogo antes de integrar otra lib o duplicar lógica de cámara en otros módulos POS.
 
 ## Guía rápida
 

@@ -16,22 +16,28 @@
             <mat-icon class="ltr:mr-1.5 rtl:ml-1.5 icon-sm" svgIcon="mat:link"></mat-icon>
             <span>Grupo espejo</span>
           </button>
-          <mat-form-field
-            appearance="outline"
-            class="search-input"
-            subscriptSizing="dynamic">
-            <mat-label>Buscar producto</mat-label>
-            <input
-              #searchInput
-              matInput
-              autocomplete="off"
-              autofocus
-              [formControl]="searchCtrl"
-              placeholder="Código o nombre" />
-            <div matSuffix class="search-suffix-actions">
+          <div
+            class="search-field-shell flex-none"
+            [class.search-field-shell--has-clear]="!!searchCtrl.value">
+            <mat-form-field
+              appearance="outline"
+              class="search-input"
+              subscriptSizing="dynamic">
+              <mat-label>Buscar producto</mat-label>
+              <input
+                #searchInput
+                matInput
+                autocomplete="off"
+                autofocus
+                class="search-input-control"
+                [formControl]="searchCtrl"
+                placeholder="Código o nombre" />
+            </mat-form-field>
+            <div class="search-field-actions">
               <button
                 mat-icon-button
                 type="button"
+                class="search-field-action-btn"
                 aria-label="Escanear código de barras con la cámara"
                 matTooltip="Escanear código de barras"
                 (click)="abrirEscannerCodigoBarras(); $event.stopPropagation()">
@@ -41,13 +47,14 @@
                 <button
                   mat-icon-button
                   type="button"
+                  class="search-field-action-btn"
                   aria-label="Limpiar búsqueda"
                   (click)="searchCtrl.setValue('')">
                   <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
                 </button>
               }
             </div>
-          </mat-form-field>
+          </div>
           <button
             mat-flat-button
             color="primary"
