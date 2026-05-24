@@ -38,6 +38,9 @@
                     class="paga-con-input"
                     type="text"
                     [formControl]="pagaConCtrl"
+                    (focus)="onPagaConFocus($event)"
+                    (blur)="onPagaConBlur()"
+                    (input)="onPagaConInput($event)"
                     (keydown)="onPagaConKeydown($event)" />
                 </mat-form-field>
               </div>
@@ -92,8 +95,16 @@
                 @for (metodo of metodosOtros; track metodo.id) {
                   <div
                     class="otro-metodo-card"
+                    role="button"
+                    tabindex="0"
                     [matTooltip]="metodo.descripcion"
-                    matTooltipPosition="above">
+                    matTooltipPosition="above"
+                    (click)="onOtroMetodoCardClick(metodo.id, $event)"
+                    (keydown.enter)="onOtroMetodoCardClick(metodo.id, $event)"
+                    (keydown.space)="
+                      onOtroMetodoCardClick(metodo.id, $event);
+                      $event.preventDefault()
+                    ">
                     <div class="otro-metodo-contenido">
                       <div class="otro-metodo-visual">
                         <img
@@ -118,6 +129,8 @@
                           inputmode="numeric"
                           autocomplete="off"
                           [value]="montosMixtosPorId[metodo.id]"
+                          (focus)="onMontoMixtoFocus(metodo.id, $event)"
+                          (blur)="onMontoMixtoBlur(metodo.id)"
                           (input)="
                             onMontoMixtoInput(
                               metodo.id,

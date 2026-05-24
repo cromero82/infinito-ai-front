@@ -451,6 +451,14 @@
 }
 
 .otros-metodos-subtotal {
+  flex: 0 0 var(--pago-efectivo-monto-caja-ancho);
+  width: var(--pago-efectivo-monto-caja-ancho);
+  min-width: var(--pago-efectivo-monto-caja-ancho);
+  max-width: var(--pago-efectivo-monto-caja-ancho);
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
   flex-shrink: 0;
   font-size: 18px;
   font-weight: 700;
@@ -484,6 +492,18 @@
   width: 140px;
   min-height: 96px;
   box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: rgba(103, 58, 183, 0.35);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mdc-theme-primary, #673ab7);
+    outline-offset: 2px;
+  }
 }
 
 .otro-metodo-contenido {

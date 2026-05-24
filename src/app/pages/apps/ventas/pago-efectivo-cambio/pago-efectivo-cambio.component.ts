@@ -240,7 +240,7 @@ export class PagoEfectivoCambioComponent
           this.metodosOtros = sorted;
           for (const m of sorted) {
             if (this.montosMixtosPorId[m.id] === undefined) {
-              this.montosMixtosPorId[m.id] = '0';
+              this.montosMixtosPorId[m.id] = this.formatCurrency(0);
             }
           }
           this.cdr.markForCheck();
@@ -261,7 +261,7 @@ export class PagoEfectivoCambioComponent
       .subscribe((modo) => {
         if (modo === 'solo-efectivo') {
           for (const m of this.metodosOtros) {
-            this.montosMixtosPorId[m.id] = '0';
+            this.montosMixtosPorId[m.id] = this.formatCurrency(0);
           }
         }
         this.aplicarTotales();
@@ -372,12 +372,78 @@ export class PagoEfectivoCambioComponent
     return tp <= 0 || this.pagoInsuficiente;
   }
 
+  onPagaConFocus(event: FocusEvent): void {
+    const input = event.target as HTMLInputElement;
+    const numeric = this.parseCurrency(this.pagaConCtrl.value);
+    this.pagaConCtrl.setValue(this.toPlainAmountString(numeric), {
+      emitEvent: false
+    });
+    this.seleccionarTodoInput(input);
+  }
+
+  onPagaConInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    const digits = value.replace(/[^\d]/g, '');
+    this.pagaConCtrl.setValue(digits, { emitEvent: false });
+    this.aplicarTotales();
+  }
+
+  onPagaConBlur(): void {
+    const numeric = this.parseCurrency(this.pagaConCtrl.value);
+    this.pagaConCtrl.setValue(this.formatCurrency(numeric), { emitEvent: false });
+    this.aplicarTotales();
+  }
+
+  onMontoMixtoFocus(id: number, event: FocusEvent): void {
+    const numeric = this.parseCurrency(this.montosMixtosPorId[id]);
+    this.montosMixtosPorId[id] = this.toPlainAmountString(numeric);
+    this.cdr.markForCheck();
+    this.seleccionarTodoInput(event.target as HTMLInputElement);
+  }
+
+  onMontoMixtoBlur(id: number): void {
+    const numeric = this.parseCurrency(this.montosMixtosPorId[id]);
+    this.montosMixtosPorId[id] = this.formatCurrency(numeric);
+    this.aplicarTotales();
+  }
+
   onMontoMixtoInput(id: number, raw: string): void {
     const digits = String(raw ?? '')
       .replace(/\s+/g, '')
       .replace(/[^\d]/g, '');
     this.montosMixtosPorId[id] = digits === '' ? '0' : digits;
     this.aplicarTotales();
+  }
+
+  /**
+   * Clic en el recuadro del medio (no en el input): asigna el faltante para cuadrar con el total.
+   * faltante = total a pagar − efectivo − suma de los demás medios (sin el clicado).
+   */
+  onOtroMetodoCardClick(id: number, event: Event): void {
+    if (this.modoPagoCtrl.value !== 'mixto') {
+      return;
+    }
+    const target = event.target;
+    if (
+      target instanceof HTMLElement &&
+      target.closest('input, .otro-metodo-monto-field, .mat-mdc-form-field')
+    ) {
+      return;
+    }
+    event.preventDefault();
+    const faltante = Math.max(0, this.calcularFaltanteOtroMedio(id));
+    this.montosMixtosPorId[id] = this.formatCurrency(faltante);
+    this.aplicarTotales();
+  }
+
+  private calcularFaltanteOtroMedio(excluirId: number): number {
+    let sumaOtrosMedios = 0;
+    for (const m of this.metodosOtros) {
+      if (m.id !== excluirId) {
+        sumaOtrosMedios += this.parseCurrency(this.montosMixtosPorId[m.id]);
+      }
+    }
+    return this.total - this.montoEfectivoPagaCon - sumaOtrosMedios;
   }
 
   private aplicarTotales(): void {
@@ -409,7 +475,6 @@ export class PagoEfectivoCambioComponent
     }
     requestAnimationFrame(() => {
       inputEl.focus();
-      inputEl.select();
     });
   }
 
@@ -443,7 +508,6 @@ export class PagoEfectivoCambioComponent
     }
     requestAnimationFrame(() => {
       inputEl.focus();
-      inputEl.select();
     });
   }
 
@@ -520,7 +584,19 @@ export class PagoEfectivoCambioComponent
     }
     requestAnimationFrame(() => {
       inputEl.focus();
-      inputEl.select();
+    });
+  }
+
+  private toPlainAmountString(value: number): string {
+    return String(value);
+  }
+
+  private seleccionarTodoInput(input: HTMLInputElement | null | undefined): void {
+    if (!input) {
+      return;
+    }
+    requestAnimationFrame(() => {
+      input.select();
     });
   }
 
