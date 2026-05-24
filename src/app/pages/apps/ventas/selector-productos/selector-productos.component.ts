@@ -24,6 +24,10 @@ import { EditarProductoComponent } from '../../productos/editar-producto/editar-
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ModoPrecioLista } from '../service/producto-desde-lista-ventas.service';
+import {
+  QR_SCAN_REJECTION_MESSAGE,
+  resolveProductSearchTerm
+} from '../util/barcode-scan.util';
 
 export interface SelectorProductosData {
   term: string;
@@ -83,8 +87,12 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
 
   ngOnInit(): void {
     if (this.data?.term) {
-      this.searchCtrl.setValue(this.data.term);
-      this.fetchProducts(this.data.term, true);
+      const initial = this.resolveSearchTerm(this.data.term);
+      if (initial === null) {
+        return;
+      }
+      this.searchCtrl.setValue(initial);
+      this.fetchProducts(initial, true);
     }
 
     this.searchCtrl.valueChanges
@@ -100,8 +108,31 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
           this.cdr.markForCheck();
           return;
         }
-        this.fetchProducts(term, true);
+        const resolved = this.resolveSearchTerm(term);
+        if (resolved === null) {
+          return;
+        }
+        this.fetchProducts(resolved, true);
       });
+  }
+
+  private resolveSearchTerm(raw: string): string | null {
+    const { rejected, term, message } = resolveProductSearchTerm(raw);
+    if (rejected) {
+      this.loading = false;
+      this.loadingMore = false;
+      this.products = [];
+      this.selectedProductIndex = -1;
+      this.error = message ?? QR_SCAN_REJECTION_MESSAGE;
+      this.searchCtrl.setValue('', { emitEvent: false });
+      this.cdr.markForCheck();
+      setTimeout(() => this.focusSearchInput(), 0);
+      return null;
+    }
+    if (term !== raw.trim()) {
+      this.searchCtrl.setValue(term, { emitEvent: false });
+    }
+    return term;
   }
 
   ngAfterViewInit(): void {
@@ -316,6 +347,12 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
   }
 
   private fetchProducts(term: string, reset: boolean): void {
+    const resolved = this.resolveSearchTerm(term);
+    if (resolved === null) {
+      return;
+    }
+    term = resolved;
+
     if (reset) {
       this.page = 0;
       this.totalPages = 0;

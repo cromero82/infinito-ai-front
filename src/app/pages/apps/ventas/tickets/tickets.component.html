@@ -55,11 +55,15 @@
                   </div>
                 </mat-form-field>
               </div>
-              @if (recibo.productSearchError) {
-                <div class="search-error-message">
-                  {{ recibo.productSearchError }}
-                </div>
-              }
+              <div
+                class="search-error-slot"
+                [class.search-error-slot--visible]="!!recibo.productSearchError">
+                @if (recibo.productSearchError) {
+                  <div class="search-error-message" role="alert">
+                    {{ recibo.productSearchError }}
+                  </div>
+                }
+              </div>
             </div>
           }
         </div>

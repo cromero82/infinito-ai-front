@@ -850,8 +850,14 @@ export class TicketsComponent
       event.key === 'NumpadAdd' ||
       event.key === 'NumpadSubtract'
     ) {
+      const hasSearchText =
+        (this.reciboComponent?.productSearchCtrl.value ?? '').length > 0;
+      if (hasSearchText) {
+        // Lectora escribiendo en el campo (p. ej. URL con guiones): no usar +/- como atajos.
+        return;
+      }
       event.preventDefault();
-      // No detener la propagación para que handleKeyboardShortcuts del recibo lo maneje
+      // Sin texto en búsqueda, +/- ajusta cantidad del detalle seleccionado.
     }
   }
 

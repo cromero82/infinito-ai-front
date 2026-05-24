@@ -65,29 +65,37 @@ vex-page-layout-header .container {
 
 .header-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-start;
   width: 100%;
   gap: 24px;
+
+  .title {
+    margin-top: 10px;
+  }
 }
 
 .search-controls {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  max-width: 380px;
-  width: auto;
-  flex: 0 1 380px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  width: min(100%, 580px);
+  min-width: 320px;
+  max-width: 580px;
+  flex: 0 1 580px;
 
   .search-wrapper {
     height: 48px;
     display: flex;
     align-items: center;
-    flex: 1 1 100%;
+    flex: 0 0 auto;
+    width: 100%;
 
     .search-input {
       flex: 1 1 auto;
-      min-width: 240px;
+      width: 100%;
+      min-width: 0;
     }
   }
 
@@ -97,11 +105,33 @@ vex-page-layout-header .container {
     gap: 2px;
   }
 
+  /* Una sola línea ancha: evita que el mensaje envuelva y agrande el header */
+  .search-error-slot {
+    flex: 0 0 0;
+    min-height: 0;
+    max-height: 0;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-error-slot--visible {
+    flex: 0 0 26px;
+    min-height: 26px;
+    max-height: 26px;
+  }
+
   .search-error-message {
+    width: 100%;
+    box-sizing: border-box;
     color: #d32f2f;
     font-size: 12px;
-    margin-top: 4px;
-    padding: 4px 8px;
+    line-height: 18px;
+    padding: 3px 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     background-color: rgba(211, 47, 47, 0.08);
     border-radius: 4px;
     border-left: 3px solid #d32f2f;

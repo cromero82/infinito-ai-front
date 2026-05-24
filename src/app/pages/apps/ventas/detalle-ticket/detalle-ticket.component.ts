@@ -93,6 +93,7 @@ import { MetodosPagoComponent } from '../metodos-pago/metodos-pago.component';
 import { FrontendActivityBufferService } from '../../../../core/monitoring/frontend-activity-buffer.service';
 import { sanitizeActividadTexto } from '../../../../core/monitoring/frontend-ui-activity.util';
 import { FooterService } from '../../../../layouts/services/footer.service';
+import { resolveProductSearchTerm } from '../util/barcode-scan.util';
 
 const ESTADOS_RECIBO = {
   PENDIENTE_PAGO: 1,
@@ -244,7 +245,11 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           return;
         }
         this.showCreateProductFromSearchButton = false;
-        this.performProductSearch(term, true);
+        const resolved = this.resolveProductSearchInput(term);
+        if (resolved === null) {
+          return;
+        }
+        this.performProductSearch(resolved, true);
       });
     this.focusSearchInputRequest.emit();
     this.cargarEstadosRecibos();
@@ -342,6 +347,11 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       (event.code === 'Equal' && event.shiftKey);
 
     if (!isMinusKey && !isPlusKey) {
+      return;
+    }
+
+    // Con texto en el buscador (p. ej. lectora pegando una URL/QR), no usar +/- como atajos.
+    if (isSearchInput && (this.productSearchCtrl.value ?? '').length > 0) {
       return;
     }
 
@@ -614,7 +624,35 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    this.performProductSearch(searchValue, false);
+    const resolved = this.resolveProductSearchInput(searchValue);
+    if (resolved === null) {
+      return;
+    }
+    this.performProductSearch(resolved, false);
+  }
+
+  /**
+   * Rechaza QR/URL o devuelve término listo para buscar (p. ej. EAN extraído del QR).
+   */
+  private resolveProductSearchInput(raw: string): string | null {
+    const { rejected, term, message } = resolveProductSearchTerm(raw);
+    if (rejected) {
+      this.rejectQrOrUrlScan(message ?? '');
+      return null;
+    }
+    if (term !== raw.trim()) {
+      this.productSearchCtrl.setValue(term, { emitEvent: false });
+    }
+    return term;
+  }
+
+  private rejectQrOrUrlScan(message: string): void {
+    this.searchingProduct = false;
+    this.showCreateProductFromSearchButton = false;
+    this.updateSearchDisabled();
+    this.productSearchError = message;
+    this.productSearchCtrl.setValue('', { emitEvent: false });
+    this.focusSearchInputRequest.emit();
   }
 
   get canCreateProductFromSearch(): boolean {
@@ -1064,6 +1102,12 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       this.productSearchError = 'Seleccione un ticket válido.';
       return;
     }
+
+    const resolved = this.resolveProductSearchInput(term);
+    if (resolved === null) {
+      return;
+    }
+    term = resolved;
 
     this.productSearchError = null;
     this.searchingProduct = true;
