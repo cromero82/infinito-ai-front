@@ -1,0 +1,423 @@
+# Contexto de Diseño Frontend para Sistema POS Legal
+
+## Propósito
+Este documento establece las reglas de diseño y patrones de UI para el frontend del sistema POS, enfocándose en:
+1. Cumplimiento legal
+2. Trazabilidad completa
+3. Responsabilidad clara del usuario
+4. Protección del desarrollador
+
+---
+
+## 1. Principios Fundamentales de Diseño
+
+### 1.1 Todo Debe Quedar Registrado
+Ninguna acción del usuario debe ser "invisible" o sin rastro. Cada botón, cada decisión, cada cambio debe:
+- Registrarse en `logs_sistema`
+- Mostrar confirmación del usuario cuando sea sensible
+- No permitir retroceso sin consecuencias documentadas
+
+### 1.2 Responsabilidad Clara y Visible
+El usuario debe entender en TODO MOMENTO qué es su responsabilidad. No puede haber dudas ni "trucos ocultos".
+
+### 1.3 Estados Transparentes
+Cada venta, cada documento, debe mostrar su estado actual de forma clara e inequívoca.
+
+---
+
+## 2. Patrones de UI Obligatorios
+
+### 2.1 Aviso de Responsabilidad para Emisión Diferida
+
+**Cuando el usuario elige "Guardar como Pendiente de Emisión", DEBE aparecer un modal con:**
+
+```
+╔═══════════════════════════════════════════════════════════════╗
+║  ⚠️ AVISO IMPORTANTE SOBRE RESPONSABILIDAD                     ║
+╠═══════════════════════════════════════════════════════════════╣
+║                                                                 ║
+║  Esta venta ha sido REGISTRADA permanentemente en el sistema  ║
+║  y queda consignada en los logs inmodificables.               ║
+║                                                                 ║
+║  Al elegir "Guardar como Pendiente de Emisión", usted         ║
+║  entiende y acepta que:                                        ║
+║                                                                 ║
+║  1. La venta ESTÁ REGISTRADA y no puede ser eliminada ni      ║
+║     ocultada.                                                   ║
+║                                                                 ║
+║  2. La responsabilidad de emitir el documento electrónico      ║
+║     ante la DIAN dentro de los plazos legales es              ║
+║     EXCLUSIVAMENTE suya.                                       ║
+║                                                                 ║
+║  3. El sistema le proporciona la herramienta para emitirla    ║
+║     cuando decida.                                             ║
+║                                                                 ║
+║  El desarrollador del software NO asume responsabilidad por:   ║
+║  • Las decisiones operativas que usted tome                    ║
+║  • El incumplimiento de plazos de emisión                     ║
+║  • Las declaraciones tributarias que usted presente            ║
+║                                                                 ║
+╠═══════════════════════════════════════════════════════════════╣
+║  [ ] He leído y acepto que la responsabilidad de emisión       ║
+║      es mía                                                     ║
+║                                                                 ║
+║          [Cancelar]              [Confirmar - Guardar Pendiente]║
+╚═══════════════════════════════════════════════════════════════╝
+```
+
+**Reglas técnicas para este modal:**
+- El botón [Confirmar] debe estar DESHABILITADO hasta que el usuario marque el checkbox
+- El texto NO debe poder ser "salteado" con Enter o Escape sin confirmar
+- La acción de confirmación debe registrarse en logs con:
+  - `accion: 'CONFIRMACION_RESPONSABILIDAD_PENDIENTE'`
+  - `detalle: {id_venta, usuario_id, timestamp}`
+
+### 2.2 Visualización de Estados de Venta
+
+**Cada venta debe mostrar su estado con colores y etiquetas inequívocos:**
+
+| Estado | Color Etiqueta | Color Fondo | Icono |
+|--------|----------------|-------------|-------|
+| `PENDIENTE_DE_EMISION` | Amarillo `#eab308` | Amarillo claro `#fef9c3` | ⏳ |
+| `EMITIDA` | Verde `#22c55e` | Verde claro `#dcfce7` | ✅ |
+| `ANULADA` | Rojo `#ef4444` | Rojo claro `#fee2e2` | ❌ |
+
+**Ejemplo de Tarjeta de Venta:**
+```
+┌─────────────────────────────────────────────────────┐
+│ Venta #1234                            [⏳ PENDIENTE] │
+├─────────────────────────────────────────────────────┤
+│ Cliente: Consumidor Final                            │
+│ Fecha: 2026-05-23 14:32:15                         │
+│ Cajero: Carlos R.                                    │
+├─────────────────────────────────────────────────────┤
+│ Producto                          Cant.      Total   │
+│ ─────────────────────────────────────────────────── │
+│ Café Americano                      2       $10,000  │
+│ Pan de Queso                        1        $5,000  │
+├─────────────────────────────────────────────────────┤
+│ Total:                                      $15,000  │
+├─────────────────────────────────────────────────────┤
+│ [Emitir Ahora]    [Ver Detalle]    [Historial]     │
+└─────────────────────────────────────────────────────┘
+```
+
+### 2.3 No Existe "Eliminar" - Solo "Anular mediante Nota Crédito"
+
+**NUNCA mostrar botón "Eliminar" o "Cancelar" sin consecuencias.**
+
+**Flujo correcto para anular:**
+1. Usuario clic en "Anular"
+2. Modal aparece explicando:
+   > "Para anular esta venta debe generar una Nota Crédito electrónica.
+   > La venta original NO será eliminada, solo marcada como ANULADA
+   > y ligada a la Nota Crédito."
+3. Usuario debe seleccionar motivo de anulación
+4. Sistema genera Nota Crédito
+5. Venta cambia estado a `ANULADA`
+6. TODO queda registrado en logs
+
+### 2.4 Vista de Ventas Pendientes
+
+**Debe ser una pantalla dedicada que muestre:**
+- Todas las ventas en estado `PENDIENTE_DE_EMISION`
+- Filtros por fecha, cajero, monto
+- Checkboxes para selección múltiple
+- Botón "Emitir Seleccionados" (lote)
+- Botón "Emitir Todas"
+
+**Importante:**
+- Antes de emitir lote, mostrar resumen:
+  > "Está por emitir 15 documentos electrónicos por un total de $450,000.
+  > ¿Desea continuar?"
+- Registrar en logs quién emitió el lote y cuándo
+
+---
+
+## 3. Componentes Reutilizables Obligatorios
+
+### 3.1 Componente: ConfirmationModal
+
+**Props:**
+```typescript
+interface ConfirmationModalProps {
+  title: string;
+  message: string | React.ReactNode;
+  confirmText: string;
+  cancelText: string;
+  requiresCheckbox?: boolean;
+  checkboxLabel?: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  logAction?: string; // Para registrar en logs
+}
+```
+
+**Casos de uso:**
+- Antes de guardar como pendiente (con checkbox)
+- Antes de emitir lote
+- Antes de generar Nota Crédito
+- Antes de acciones administrativas sensibles
+
+### 3.2 Componente: StatusBadge
+
+**Props:**
+```typescript
+type VentaStatus = 'PENDIENTE_DE_EMISION' | 'EMITIDA' | 'ANULADA';
+
+interface StatusBadgeProps {
+  status: VentaStatus;
+  showIcon?: boolean;
+}
+```
+
+**Comportamiento:**
+- Colores consistentes según tabla anterior
+- Tooltip con explicación del estado
+- Clickable para ver historial de cambios de estado
+
+### 3.3 Componente: AuditLogViewer
+
+**Para visualizar logs de una venta o del sistema:**
+```typescript
+interface LogEntry {
+  id: string;
+  timestamp: Date;
+  usuario: string;
+  accion: string;
+  detalle: any;
+  nivel: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'SEGURIDAD';
+}
+```
+
+**Características:**
+- Filtros por fecha, usuario, acción, nivel
+- Exportar a CSV/JSON/PDF
+- NO editable
+- Indicadores de integridad (hash válido/inválido)
+
+---
+
+## 4. Rutas y Navegación
+
+### 4.1 Rutas Obligatorias
+
+| Ruta | Componente | Descripción |
+|------|------------|-------------|
+| `/pos/ventas` | SalesList | Lista de ventas con filtros |
+| `/pos/ventas/nueva` | NewSale | Registro de nueva venta |
+| `/pos/ventas/:id` | SaleDetail | Detalle de venta individual |
+| `/pos/ventas/:id/historial` | SaleHistory | Historial de estados de la venta |
+| `/pos/pendientes` | PendingEmissions | Ventas pendientes de emitir |
+| `/sistema/logs` | SystemLogs | Logs completos del sistema |
+| `/sistema/configuracion` | SystemConfig | Configuración (solo admin) |
+| `/legal/terminos` | LegalTerms | Términos y condiciones |
+
+### 4.2 Menú Lateral
+
+```
+📊 Dashboard
+├── 🛒 Punto de Venta
+├── 📋 Ventas
+├── ⏳ Pendientes de Emisión
+├── 📦 Inventario
+├── 👥 Clientes
+├── 💲 Reportes
+└── ⚙️ Sistema
+    ├── 📜 Logs
+    ├── 👤 Usuarios
+    ├── ⚙️ Configuración
+    └── 📄 Términos Legales
+```
+
+---
+
+## 5. Estilos y Temas
+
+### 5.1 Paleta de Colores para Estados
+
+```scss
+// Variables CSS
+:root {
+  // Estados
+  --status-pending-bg: #fef9c3;
+  --status-pending-text: #eab308;
+  --status-issued-bg: #dcfce7;
+  --status-issued-text: #22c55e;
+  --status-cancelled-bg: #fee2e2;
+  --status-cancelled-text: #ef4444;
+  
+  // Acciones sensibles
+  --action-danger: #ef4444;
+  --action-warning: #f59e0b;
+  --action-primary: #3b82f6;
+  --action-success: #22c55e;
+}
+```
+
+### 5.2 Botones de Acción
+
+```typescript
+// Tipos de botones por nivel de riesgo
+
+// Primario - acciones normales
+<Button variant="primary">
+  Emitir Ahora
+</Button>
+
+// Peligroso - requiere confirmación
+<Button 
+  variant="danger" 
+  requiresConfirmation={true}
+  confirmationMessage="¿Está seguro? Esta acción requiere generar Nota Crédito."
+>
+  Anular Venta
+</Button>
+
+// Warning - acciones con consecuencias
+<Button 
+  variant="warning"
+  requiresConfirmation={true}
+  confirmationModal={ResponsabilidadAvisoModal}
+>
+  Guardar como Pendiente
+</Button>
+```
+
+---
+
+## 6. Reglas de Negocio en Frontend
+
+### 6.1 Una Venta No Puede Ser Modificada
+
+**Regla:** Después de que una venta es creada, sus datos (montos, items, cliente) no pueden ser modificados.
+
+**Sí permitido:**
+- Cambiar estado (Pendiente → Emitida)
+- Generar Nota Crédito para anular
+- Ver detalle
+- Ver historial
+
+**NO permitido:**
+- Editar campos de la venta
+- Eliminar la venta
+- Ocultar la venta de listados
+
+### 6.2 Toda Acción Sensible Requiere Confirmación
+
+**Lista de acciones que NECESITAN modal de confirmación:**
+1. Guardar venta como Pendiente de Emisión → +aviso de responsabilidad
+2. Emitir lote de documentos pendientes
+3. Generar Nota Crédito (anular venta)
+4. Cambiar configuraciones sensibles del sistema
+5. Crear/editar usuarios
+6. Exportar logs completos
+
+### 6.3 Roles y Permisos en UI
+
+**Elementos que deben mostrarse/ocultarse según rol:**
+
+| Elemento | Cajero | Supervisor | Admin |
+|----------|--------|------------|-------|
+| Botón "Anular Venta" | ❌ | ✅ | ✅ |
+| Acceso a Configuración Sistema | ❌ | ❌ | ✅ |
+| Gestionar Usuarios | ❌ | ❌ | ✅ |
+| Ver Logs Sistema | ❌ | ✅ | ✅ |
+| Emitir Lote Documentos | ✅ | ✅ | ✅ |
+| Ver Reportes | ✅ | ✅ | ✅ |
+
+**Importante:**
+- El ocultamiento en UI es UX, NO es seguridad
+- El backend DEBE validar roles en cada endpoint
+- Los botones ocultos no significan que el endpoint no exista
+
+---
+
+## 7. Integración con Backend
+
+### 7.1 Endpoints Sensibles que Deben Registrarse
+
+Toda llamada a estos endpoints debe generar un registro en `logs_sistema`:
+
+| Endpoint | Acción a Registrar |
+|----------|---------------------|
+| `POST /api/ventas` | `VENTA_REGISTRADA` |
+| `POST /api/ventas/:id/emitir` | `VENTA_EMITIDA_DIAN` |
+| `POST /api/ventas/:id/pendiente` | `VENTA_PENDIENTE` + `CONFIRMACION_RESPONSABILIDAD` |
+| `POST /api/ventas/:id/anular` | `VENTA_ANULADA` + `NOTA_CREDITO_GENERADA` |
+| `POST /api/emitir-lote` | `EMISION_LOTE` (con cantidad y total) |
+| `GET /api/logs` | `LOGS_CONSULTADOS` |
+| `PUT /api/configuracion` | `CONFIGURACION_CAMBIADA` |
+
+### 7.2 Estructura de Error para el Usuario
+
+Cuando el backend devuelve error, el frontend debe mostrarlo de forma clara:
+
+```typescript
+interface ApiError {
+  code: string;        // Ej: 'PERMISSION_DENIED', 'VENTA_YA_EMITIDA'
+  message: string;     // Mensaje amigable para usuario
+  technicalDetails?: string;  // Solo para admins/developers
+  logId?: string;      // ID del log para seguimiento
+}
+```
+
+---
+
+## 8. Testing y QA
+
+### 8.1 Casos de Prueba Obligatorios
+
+#### Casos de Seguridad:
+1. **Intentar editar venta ya creada** → Debe fallar
+2. **Intentar eliminar venta** → Debe fallar o redirigir a Nota Crédito
+3. **Acceder a ruta sin permiso** → Debe redirigir o mostrar error
+4. **Saltarse confirmación de responsabilidad** → No debe ser posible
+
+#### Casos de UX:
+1. **Flujo completo: Venta → Pendiente → Emitir después**
+2. **Flujo: Venta → Emitir inmediatamente**
+3. **Flujo: Venta → Anular mediante Nota Crédito**
+4. **Emitir lote de múltiples pendientes**
+5. **Ver historial de estados de una venta**
+
+### 8.2 Logs en Testing
+
+En modo desarrollo, cada acción sensible debe mostrar en consola:
+```
+[LOG REGISTRADO] VENTA_PENDIENTE
+  ID Venta: 1234
+  Usuario: carlos.romero
+  Timestamp: 2026-05-23T14:32:15
+  Hash: abc123...
+```
+
+---
+
+## 9. Resumen de Reglas Doradas
+
+### 🔐 SIEMPRE:
+1. **TODO queda registrado** en logs
+2. **Nada se elimina** físicamente
+3. **Acciones sensibles requieren confirmación**
+4. **Responsabilidad es del usuario** - debe ser visible y aceptada
+5. **Estados son visibles e inequívocos**
+
+### ❌ NUNCA:
+1. **No mostrar botón "Eliminar"** para ventas
+2. **No permitir edición** de ventas ya creadas
+3. **No ocultar estados** o transiciones
+4. **No saltarse confirmaciones** de responsabilidad
+5. **No confiar solo en UI para seguridad** - backend valida TODO
+
+---
+
+## 10. Referencias
+
+- Backend Context: `/pos-relational-data-service/src/main/resources/doc/contextos/contexto-legal-pos-responsabilidad.md`
+- Normativa DIAN: Resolución 000165 de 2023
+- Diseño del sistema existente: `.cursor/rules/pos-app-map.mdc`
+
+---
+
+**Nota:** Este documento define patrones de diseño frontend. La seguridad real depende de la validación en backend. Nada de lo que se haga en UI reemplaza las validaciones del lado del servidor.
