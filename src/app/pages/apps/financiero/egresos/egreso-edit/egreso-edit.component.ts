@@ -7,9 +7,11 @@ import {
   ElementRef
 } from '@angular/core';
 import {
+  AbstractControl,
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
+  ValidationErrors,
   Validators
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -26,7 +28,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { FormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { AsyncPipe } from '@angular/common';
@@ -57,7 +58,6 @@ import { FechaUtilService } from '../../../ventas/service/fecha-util.service';
     MatIconModule,
     MatDividerModule,
     MatAutocompleteModule,
-    MatTooltipModule,
     MatDatepickerModule,
     MatNativeDateModule,
     AsyncPipe,
@@ -72,7 +72,22 @@ export class EgresoEditComponent implements OnInit, AfterViewInit {
   form: FormGroup;
   proveedores: ProveedorDto[] = [];
   filteredProveedores$!: Observable<ProveedorDto[]>;
-  showAddProveedor$!: Observable<boolean>;
+  mostrarBotonCrearProveedor$!: Observable<boolean>;
+  valorEditando = false;
+
+  /** Valor del input al perder foco (sin $; el icono `attach_money` ya lo indica). */
+  private readonly valorDisplayFormatter = new Intl.NumberFormat('es-CO', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+
+  /** Hint gris a la derecha mientras se escribe (con $). */
+  private readonly valorPreviewFormatter = new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
 
   @ViewChild('fechaInput') fechaInput!: ElementRef<HTMLInputElement>;
   @ViewChild('valorInput') valorInput!: ElementRef<HTMLInputElement>;
@@ -88,10 +103,27 @@ export class EgresoEditComponent implements OnInit, AfterViewInit {
   ) {
     this.form = this.fb.group({
       fecha: [new Date() as Date | null, Validators.required],
-      valor: [0, [Validators.required, Validators.min(0)]],
+      valor: ['', [Validators.required, this.validarValorMonto.bind(this)]],
       descripcion: [''],
       proveedor: [null as ProveedorDto | null, Validators.required]
     });
+  }
+
+  get mostrarValorPreviewSuffix(): boolean {
+    if (!this.valorEditando) {
+      return false;
+    }
+    const digits = String(this.form.get('valor')?.value ?? '').replace(
+      /[^\d]/g,
+      ''
+    );
+    return digits.length > 0;
+  }
+
+  get valorPreviewFormateado(): string {
+    return this.formatValorPreview(
+      this.parseCurrency(this.form.get('valor')?.value)
+    );
   }
 
   ngOnInit() {
@@ -102,13 +134,16 @@ export class EgresoEditComponent implements OnInit, AfterViewInit {
       map((value) => this.filterProveedores(value))
     );
 
-    this.showAddProveedor$ = this.filteredProveedores$.pipe(
+    this.mostrarBotonCrearProveedor$ = this.filteredProveedores$.pipe(
       combineLatestWith(
         this.form
           .get('proveedor')!
           .valueChanges.pipe(startWith(this.form.get('proveedor')!.value))
       ),
       map(([filtered, value]) => {
+        if (typeof value === 'object' && value !== null) {
+          return false;
+        }
         const isFiltering =
           typeof value === 'string' && (value || '').trim().length > 0;
         return isFiltering && filtered.length === 0;
@@ -121,13 +156,15 @@ export class EgresoEditComponent implements OnInit, AfterViewInit {
         fecha: this.data.fecha
           ? this.fechaUtilService.parseDateAsLocal(this.data.fecha)
           : null,
-        valor: this.data.valor ?? 0,
+        valor: this.formatValorDisplay(this.data.valor ?? 0),
         descripcion: this.data.descripcion || '',
         proveedor: prov
           ? { id: prov.id, nombre: prov.nombre, tipoEgreso: prov.tipoEgreso }
           : null
       });
       this.patchProveedorAfterLoad();
+    } else {
+      this.form.patchValue({ valor: this.formatValorDisplay(0) });
     }
   }
 
@@ -165,20 +202,42 @@ export class EgresoEditComponent implements OnInit, AfterViewInit {
     return prov ? prov.nombre : '';
   }
 
-  onProveedorKeydown(event: Event) {
+  onProveedorKeydown(event: Event): void {
     const ke = event as KeyboardEvent;
-    if (ke.key !== 'Enter') return;
+    if (ke.key !== 'Enter') {
+      return;
+    }
+
     const value = this.form.get('proveedor')?.value;
-    const filtered = this.filterProveedores(value);
-    const showAdd =
-      typeof value === 'string' &&
-      (value || '').trim().length > 0 &&
-      filtered.length === 0;
-    if (showAdd) {
+    if (typeof value === 'object' && value !== null) {
+      return;
+    }
+
+    const inputValue = typeof value === 'string' ? value.trim() : '';
+    if (!inputValue) {
+      return;
+    }
+
+    const exact = this.proveedores.find(
+      (p) => p.nombre.toLowerCase() === inputValue.toLowerCase()
+    );
+    if (exact) {
       ke.preventDefault();
       ke.stopPropagation();
-      this.openNuevoProveedor(event);
+      this.form.patchValue({ proveedor: exact });
+      return;
     }
+
+    const filtered = this.filterProveedores(value);
+    if (filtered.length === 0) {
+      ke.preventDefault();
+      ke.stopPropagation();
+      this.crearProveedorDesdeBoton();
+    }
+  }
+
+  crearProveedorDesdeBoton(): void {
+    this.openNuevoProveedor();
   }
 
   openNuevoProveedor(event?: Event) {
@@ -221,8 +280,57 @@ export class EgresoEditComponent implements OnInit, AfterViewInit {
     }
   }
 
-  selectValorOnFocus() {
-    setTimeout(() => this.valorInput?.nativeElement?.select(), 0);
+  onValorFocus(event: FocusEvent): void {
+    this.valorEditando = true;
+    const numeric = this.parseCurrency(this.form.get('valor')?.value);
+    this.form.get('valor')!.setValue(String(numeric), { emitEvent: false });
+    const input = event.target as HTMLInputElement;
+    requestAnimationFrame(() => input.select());
+  }
+
+  onValorInput(event: Event): void {
+    const digits = (event.target as HTMLInputElement).value.replace(
+      /[^\d]/g,
+      ''
+    );
+    this.form.get('valor')!.setValue(digits, { emitEvent: true });
+  }
+
+  onValorBlur(): void {
+    this.valorEditando = false;
+    const numeric = this.parseCurrency(this.form.get('valor')?.value);
+    this.form
+      .get('valor')!
+      .setValue(this.formatValorDisplay(numeric), { emitEvent: true });
+  }
+
+  formatValorDisplay(value: number | null | undefined): string {
+    return this.valorDisplayFormatter.format(Number(value ?? 0));
+  }
+
+  formatValorPreview(value: number | null | undefined): string {
+    return this.valorPreviewFormatter.format(Number(value ?? 0));
+  }
+
+  private parseCurrency(value: string | number | null | undefined): number {
+    const digits = String(value ?? '')
+      .replace(/\s+/g, '')
+      .replace(/[^\d]/g, '');
+    if (!digits) {
+      return 0;
+    }
+    return Number(digits);
+  }
+
+  private validarValorMonto(control: AbstractControl): ValidationErrors | null {
+    const raw = control.value;
+    if (raw === null || raw === undefined || String(raw).trim() === '') {
+      return { required: true };
+    }
+    if (this.parseCurrency(raw) < 0) {
+      return { min: true };
+    }
+    return null;
   }
 
   private setInitialFocus() {
@@ -256,7 +364,7 @@ export class EgresoEditComponent implements OnInit, AfterViewInit {
 
     const request: CreateEgresoRequest = {
       fecha: fechaStr,
-      valor: Number(form.valor),
+      valor: this.parseCurrency(form.valor),
       descripcion: form.descripcion || '',
       proveedor: { id: prov.id }
     };

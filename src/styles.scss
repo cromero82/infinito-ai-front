@@ -240,3 +240,39 @@ mat-checkbox.mat-mdc-checkbox {
   }
 }
 
+/* Autocomplete: botón verde "Enter o click aquí para crear" (cliente, proveedor, etc.) */
+.btn-crear-cliente {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background-color: #4caf50 !important;
+  color: white !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  height: 32px !important;
+  min-width: auto !important;
+  margin-right: 4px !important;
+
+  &:hover {
+    background-color: #45a049 !important;
+  }
+
+  .icon-sm {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .btn-crear-text {
+    white-space: nowrap;
+    font-weight: 500;
+  }
+}
+
+.mat-mdc-form-field .mat-mdc-form-field-icon-suffix {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+

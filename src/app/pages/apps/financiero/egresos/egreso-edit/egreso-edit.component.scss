@@ -10,3 +10,33 @@
 .text-sm {
   font-size: 0.875rem;
 }
+
+.valor-field {
+  .valor-preview-suffix {
+    font-style: italic;
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+    /* A la derecha del infix, sin pegarse al borde ni tapar el label flotante */
+    margin-inline-end: 2px;
+    padding-inline-end: 2px;
+    max-width: 7.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &.valor-field--editando {
+    ::ng-deep .mat-mdc-form-field-infix {
+      padding-inline-end: 6.75rem;
+    }
+
+    ::ng-deep .mat-mdc-form-field-text-suffix {
+      align-self: center;
+      padding-inline-start: 0.25rem;
+    }
+  }
+}

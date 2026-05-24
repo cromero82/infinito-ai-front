@@ -27,17 +27,26 @@
       <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
       <mat-datepicker #picker></mat-datepicker>
     </mat-form-field>
-    <mat-form-field class="flex-1">
+    <mat-form-field
+      class="flex-1 valor-field"
+      [class.valor-field--editando]="valorEditando">
       <mat-label>Valor</mat-label>
       <input
         #valorInput
         formControlName="valor"
         matInput
-        type="number"
-        min="0"
-        step="0.01"
-        (focus)="selectValorOnFocus()" />
+        type="text"
+        inputmode="numeric"
+        autocomplete="off"
+        (focus)="onValorFocus($event)"
+        (blur)="onValorBlur()"
+        (input)="onValorInput($event)" />
       <mat-icon matIconPrefix svgIcon="mat:attach_money"></mat-icon>
+      @if (mostrarValorPreviewSuffix) {
+        <span class="valor-preview-suffix" matSuffix aria-hidden="true">{{
+          valorPreviewFormateado
+        }}</span>
+      }
       @if (form.get("valor")?.hasError("required")) {
         <mat-error>Requerido</mat-error>
       }
@@ -45,24 +54,25 @@
         <mat-error>Debe ser mayor o igual a 0</mat-error>
       }
     </mat-form-field>
-    <mat-form-field class="flex-1">
+    <mat-form-field class="flex-1" appearance="outline">
       <mat-label>Proveedor</mat-label>
       <input
         matInput
         formControlName="proveedor"
         [matAutocomplete]="autoProveedor"
-        placeholder="Escriba para filtrar por nombre"
+        placeholder="Escriba para buscar o presione Enter para crear nuevo proveedor"
         (keydown.enter)="onProveedorKeydown($any($event))" />
       <mat-icon matIconPrefix svgIcon="mat:local_shipping"></mat-icon>
-      @if (showAddProveedor$ | async) {
+      @if (mostrarBotonCrearProveedor$ | async) {
         <button
-          mat-icon-button
-          color="primary"
+          mat-button
           matSuffix
           type="button"
-          matTooltip="Nuevo proveedor"
-          (click)="openNuevoProveedor($event)">
-          <mat-icon svgIcon="mat:add"></mat-icon>
+          (click)="crearProveedorDesdeBoton()"
+          class="btn-crear-cliente"
+          aria-label="Crear nuevo proveedor">
+          <mat-icon class="icon-sm" svgIcon="mat:add"></mat-icon>
+          <span class="btn-crear-text">Enter o click aquí para crear</span>
         </button>
       }
       <mat-autocomplete
