@@ -46,10 +46,38 @@ import {
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfigurationService } from '../../../../auth/service/configuration.service';
 import {
+  HistorialPrecioProductoDto,
+  HistorialPrecioProductoService
+} from './service/historial-precio-producto.service';
+import {
   calcularPrecioVentaAjustado,
   calcularPrecioVentaMantenerMargen,
   deltaPrecioCompraPesos
 } from './util/ajustar-precio-venta.util';
+
+export interface HistorialPrecioResumen {
+  eventos: number;
+  compraAnterior: number | null;
+  compraActual: number | null;
+  ventaAnterior: number | null;
+  ventaActual: number | null;
+  variacionCompraPct: number | null;
+  variacionVentaPct: number | null;
+  anosSpan: number | null;
+  comparaUltimasDos: boolean;
+}
+
+export interface HistorialPrecioChartPoint {
+  id: number;
+  fecha: string;
+  compra: number;
+  venta: number;
+  margen: number;
+  ganancia: number | null;
+  ventaPct: number;
+  compraRatio: number;
+  margenRatio: number;
+}
 
 @Component({
   selector: 'gm-entrada-inventario',
@@ -80,6 +108,10 @@ export class EntradaInventarioComponent implements OnInit, OnDestroy {
   previewLoading = false;
   preview: PrecioCompraPreviewDto | null = null;
   modoValorTotal = false;
+  historialPrecio: HistorialPrecioProductoDto[] = [];
+  historialLoading = false;
+  historialVistaPagina = 0;
+  readonly historialVistaTamano = 3;
 
   lineForm: FormGroup;
   searchResults: Producto[] = [];
@@ -112,6 +144,7 @@ export class EntradaInventarioComponent implements OnInit, OnDestroy {
     private router: Router,
     private fb: FormBuilder,
     private entradaService: EntradaInventarioService,
+    private historialPrecioService: HistorialPrecioProductoService,
     private productService: RelationalProductService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
@@ -365,6 +398,148 @@ export class EntradaInventarioComponent implements OnInit, OnDestroy {
     return this.calcGananciaPct(precioVenta, this.precioCompraIngresado);
   }
 
+  get historialPrecioAsc(): HistorialPrecioProductoDto[] {
+    return [...this.historialPrecio].reverse();
+  }
+
+  get historialTotalPaginas(): number {
+    const n = this.historialPrecio.length;
+    if (n === 0) return 1;
+    return Math.max(1, Math.ceil(n / this.historialVistaTamano));
+  }
+
+  /** Índice inicial en orden cronológico (asc) para la ventana visible. Página 0 = últimos 3. */
+  get historialPaginaInicio(): number {
+    const n = this.historialPrecioAsc.length;
+    if (n <= this.historialVistaTamano) return 0;
+    const start =
+      n -
+      this.historialVistaTamano -
+      this.historialVistaPagina * this.historialVistaTamano;
+    return Math.max(0, start);
+  }
+
+  /** Etiqueta de página: 1 = más antiguos, N = más recientes. */
+  get historialPaginaEtiqueta(): number {
+    return this.historialTotalPaginas - this.historialVistaPagina;
+  }
+
+  get historialChartPointsVisibles(): HistorialPrecioChartPoint[] {
+    const start = this.historialPaginaInicio;
+    return this.historialChartPoints.slice(start, start + this.historialVistaTamano);
+  }
+
+  get historialItemsPagina(): HistorialPrecioProductoDto[] {
+    const start = this.historialPaginaInicio;
+    return this.historialPrecioAsc.slice(start, start + this.historialVistaTamano);
+  }
+
+  /** Flecha izquierda: ventana más antigua. */
+  historialPaginaAnterior(): void {
+    if (this.historialVistaPagina < this.historialTotalPaginas - 1) {
+      this.historialVistaPagina++;
+    }
+  }
+
+  /** Flecha derecha: ventana más reciente. */
+  historialPaginaSiguiente(): void {
+    if (this.historialVistaPagina > 0) {
+      this.historialVistaPagina--;
+    }
+  }
+
+  get historialEnPaginaMasAntigua(): boolean {
+    return this.historialVistaPagina >= this.historialTotalPaginas - 1;
+  }
+
+  get historialEnPaginaMasReciente(): boolean {
+    return this.historialVistaPagina === 0;
+  }
+
+  isHistorialItemLatest(item: HistorialPrecioProductoDto): boolean {
+    const asc = this.historialPrecioAsc;
+    return asc.length > 0 && asc[asc.length - 1].id === item.id;
+  }
+
+  itemAnteriorHistorial(
+    item: HistorialPrecioProductoDto
+  ): HistorialPrecioProductoDto | undefined {
+    const asc = this.historialPrecioAsc;
+    const idx = asc.findIndex((h) => h.id === item.id);
+    return idx > 0 ? asc[idx - 1] : undefined;
+  }
+
+  get historialResumen(): HistorialPrecioResumen | null {
+    const rows = this.historialPrecio;
+    if (rows.length === 0) return null;
+
+    const rowsAsc = this.historialPrecioAsc;
+    const first = rowsAsc[0];
+    const last = rowsAsc[rowsAsc.length - 1];
+
+    let anosSpan: number | null = null;
+    if (first.fechaCreacion && last.fechaCreacion) {
+      const t0 = new Date(first.fechaCreacion).getTime();
+      const t1 = new Date(last.fechaCreacion).getTime();
+      if (!isNaN(t0) && !isNaN(t1) && t1 >= t0) {
+        anosSpan = Math.max(1, Math.round((t1 - t0) / (365.25 * 24 * 3600 * 1000)));
+      }
+    }
+
+    const comparaUltimasDos = rows.length >= 2;
+    const ultima = rows[0];
+    const penultima = rows[1];
+
+    const compraAnterior = comparaUltimasDos
+      ? penultima.precioCompra ?? null
+      : ultima.precioCompraAntes ?? null;
+    const compraActual = ultima.precioCompra ?? null;
+    const ventaAnterior = comparaUltimasDos
+      ? penultima.precioVenta ?? null
+      : ultima.precioVentaAntes ?? null;
+    const ventaActual = ultima.precioVenta ?? null;
+
+    return {
+      eventos: rows.length,
+      compraAnterior,
+      compraActual,
+      ventaAnterior,
+      ventaActual,
+      variacionCompraPct: this.calcVariacionPct(compraAnterior, compraActual),
+      variacionVentaPct: this.calcVariacionPct(ventaAnterior, ventaActual),
+      anosSpan,
+      comparaUltimasDos
+    };
+  }
+
+  get historialChartPoints(): HistorialPrecioChartPoint[] {
+    const rows = this.historialPrecioAsc;
+    if (rows.length === 0) return [];
+
+    const ventas = rows.map((r) => r.precioVenta ?? 0);
+    const maxVenta = Math.max(...ventas, 1);
+
+    return rows.map((r) => {
+      const compra = r.precioCompra ?? 0;
+      const venta = r.precioVenta ?? 0;
+      const margen = Math.max(0, venta - compra);
+      const compraRatio = venta > 0 ? (compra / venta) * 100 : 0;
+      const margenRatio = venta > 0 ? (margen / venta) * 100 : 0;
+
+      return {
+        id: r.id,
+        fecha: r.fechaCreacion,
+        compra,
+        venta,
+        margen,
+        ganancia: r.porcentajeGanancia ?? null,
+        ventaPct: (venta / maxVenta) * 100,
+        compraRatio,
+        margenRatio
+      };
+    });
+  }
+
   get nuevaGananciaDisplay(): string {
     return this.formatGananciaPct(this.nuevaGananciaPct);
   }
@@ -529,6 +704,9 @@ export class EntradaInventarioComponent implements OnInit, OnDestroy {
     }
 
     this.preview = null;
+    if (producto.id != null) {
+      this.cargarHistorialPrecio(producto.id);
+    }
     setTimeout(() => {
       this.focusCantidad(true);
       this.triggerPreview();
@@ -538,6 +716,9 @@ export class EntradaInventarioComponent implements OnInit, OnDestroy {
   limpiarProducto(): void {
     this.selectedProduct = null;
     this.preview = null;
+    this.historialPrecio = [];
+    this.historialLoading = false;
+    this.historialVistaPagina = 0;
     this.ocultarResultadosBusqueda();
     this.suppressSearch = true;
     this.lineForm.patchValue(
@@ -780,6 +961,93 @@ export class EntradaInventarioComponent implements OnInit, OnDestroy {
     });
   }
 
+  private cargarHistorialPrecio(productoId: number): void {
+    this.historialLoading = true;
+    this.historialPrecio = [];
+    this.historialPrecioService.findByProductoId(productoId).subscribe({
+      next: (rows) => {
+        this.historialPrecio = rows ?? [];
+        this.historialVistaPagina = 0;
+        this.historialLoading = false;
+      },
+      error: () => {
+        this.historialLoading = false;
+      }
+    });
+  }
+
+  calcVariacionPct(
+    anterior: number | null | undefined,
+    nuevo: number | null | undefined
+  ): number | null {
+    if (
+      anterior == null ||
+      nuevo == null ||
+      anterior <= 0 ||
+      isNaN(anterior) ||
+      isNaN(nuevo)
+    ) {
+      return null;
+    }
+    return ((nuevo - anterior) / anterior) * 100;
+  }
+
+  formatFechaHistorial(iso: string | undefined): string {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    return new Intl.DateTimeFormat('es-CO', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    }).format(d);
+  }
+
+  formatFechaHistorialCorta(iso: string | undefined): string {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return new Intl.DateTimeFormat('es-CO', {
+      month: 'short',
+      year: '2-digit'
+    }).format(d);
+  }
+
+  deltaHistorialDisplay(
+    antes: number | null | undefined,
+    despues: number | null | undefined
+  ): string {
+    if (despues == null) return '—';
+    if (antes == null) return this.formatCurrency(despues);
+    const delta = despues - antes;
+    if (delta === 0) return this.formatCurrency(despues);
+    const sign = delta > 0 ? '+' : '−';
+    return `${this.formatCurrency(despues)} (${sign}${this.formatCurrency(Math.abs(delta))})`;
+  }
+
+  claseDeltaHistorial(
+    antes: number | null | undefined,
+    despues: number | null | undefined
+  ): 'up' | 'down' | 'flat' | 'new' {
+    if (despues == null) return 'flat';
+    if (antes == null) return 'new';
+    if (despues > antes) return 'up';
+    if (despues < antes) return 'down';
+    return 'flat';
+  }
+
+  gananciaHistorialDisplay(item: HistorialPrecioProductoDto): string {
+    const pct = item.porcentajeGanancia;
+    if (pct == null) return '—';
+    const antes = item.porcentajeGananciaAntes;
+    if (antes == null || antes === pct) {
+      return this.formatGananciaPct(pct);
+    }
+    const delta = pct - antes;
+    const sign = delta > 0 ? '+' : '−';
+    return `${this.formatGananciaPct(pct)} (${sign}${Math.abs(delta)} pp)`;
+  }
+
   private isNumericBarcode(value: string): boolean {
     const v = (value ?? '').trim();
     return v.length >= 4 && /^\d+$/.test(v);
@@ -824,6 +1092,40 @@ export class EntradaInventarioComponent implements OnInit, OnDestroy {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(value);
+  }
+
+  formatCurrencyCompact(value: number | null | undefined): string {
+    if (value == null) return '—';
+    if (value >= 1000) {
+      const miles = value / 1000;
+      const dec = miles >= 10 ? 0 : 1;
+      return `$${miles.toFixed(dec)}k`;
+    }
+    return this.formatCurrency(value);
+  }
+
+  diffDesdeAnteriorHistorial(
+    fechaActual: string | undefined,
+    fechaAnterior: string | undefined
+  ): string {
+    if (!fechaActual || !fechaAnterior) return '';
+    const tActual = new Date(fechaActual).getTime();
+    const tAnterior = new Date(fechaAnterior).getTime();
+    if (isNaN(tActual) || isNaN(tAnterior) || tActual < tAnterior) return '';
+
+    const days = Math.floor((tActual - tAnterior) / (24 * 3600 * 1000));
+    if (days === 0) {
+      return '0 días';
+    }
+    if (days < 60) {
+      return `+${days} día${days !== 1 ? 's' : ''}`;
+    }
+    const months = Math.round(days / 30.44);
+    if (months < 24) {
+      return `+${months} mes${months !== 1 ? 'es' : ''}`;
+    }
+    const years = Math.round(days / 365.25);
+    return `+${years} año${years !== 1 ? 's' : ''}`;
   }
 
   nombreProducto(detalle: EntradaInventarioDetalleDto): string {

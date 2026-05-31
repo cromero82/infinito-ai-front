@@ -1,6 +1,7 @@
 <div class="entrada-page mt-1 flex flex-col flex-1 min-h-0 min-w-0 w-full">
-  <div class="card entrada-card flex flex-col flex-1 min-h-0 overflow-hidden">
-    <div class="px-6 py-4 border-b flex flex-col gap-3">
+  <div class="flex flex-col flex-1 min-h-0 w-full pb-1">
+    <div class="card entrada-card flex flex-col flex-1 min-h-0 overflow-hidden w-full">
+    <div class="px-6 py-4 border-b flex flex-col gap-3 flex-shrink-0 entrada-card-header">
       <div class="flex flex-wrap items-center gap-3 justify-between">
         <div class="flex items-center gap-2 min-w-0">
           <a
@@ -60,8 +61,9 @@
     </div>
 
     @if (loading) {
-      <div class="text-center py-10">Cargando entrada...</div>
+      <div class="text-center py-10 flex-shrink-0">Cargando entrada...</div>
     } @else {
+      <div class="entrada-card-body flex-1 min-h-0">
       @if (editable) {
         <div class="px-6 py-4 border-b entrada-form-section">
           <h3 class="section-title">Agregar producto</h3>
@@ -156,26 +158,6 @@
                     step="0.01"
                     (keydown)="onPrecioCompraKeydown($event)" />
                 </mat-form-field>
-                @if (selectedProduct) {
-                  <div class="price-context-compact">
-                    <span class="price-context-compact__label">P. compra</span>
-                    <span class="price-context-compact__label price-context-compact__label--venta"
-                      >Venta</span
-                    >
-                    <span class="price-context-compact__value">{{
-                      tienePrecioCompraActual
-                        ? formatCurrency(selectedProduct.precioCompra)
-                        : 'No registra'
-                    }}</span>
-                    <span class="price-context-compact__arrow" aria-hidden="true"
-                      >→</span
-                    >
-                    <span
-                      class="price-context-compact__value price-context-compact__value--venta"
-                      >{{ formatCurrency(selectedProduct.precio) }}</span
-                    >
-                  </div>
-                }
               </div>
 
               <div class="venta-column">
@@ -238,20 +220,242 @@
 
             @if (selectedProduct) {
               <div class="comparativa-layout">
-                <aside
-                  class="comparativa-historial-placeholder"
-                  aria-label="Historial de precios (próximamente)">
-                  <span class="comparativa-historial-placeholder__title"
-                    >Historial de precios</span
-                  >
-                  <span class="comparativa-historial-placeholder__note"
-                    >Próximamente</span
-                  >
+                <aside class="historial-precios-panel" aria-label="Historial de precios">
+                  <div class="historial-precios-panel__header">
+                    <span class="historial-precios-panel__title">Historial de precios</span>
+                    @if (historialResumen) {
+                      <div class="historial-precios-panel__nav">
+                        @if (historialTotalPaginas > 1) {
+                          <button
+                            mat-icon-button
+                            type="button"
+                            class="historial-precios-panel__nav-btn"
+                            aria-label="Cambios más antiguos"
+                            [disabled]="historialEnPaginaMasAntigua"
+                            (click)="historialPaginaAnterior()">
+                            <mat-icon svgIcon="mat:chevron_left"></mat-icon>
+                          </button>
+                        }
+                        <span class="historial-precios-panel__badge">
+                          {{ historialResumen.eventos }} cambios ·
+                          {{ historialResumen.anosSpan }} años
+                          @if (historialTotalPaginas > 1) {
+                            <span class="historial-precios-panel__pagina">
+                              · {{ historialPaginaEtiqueta }}/{{ historialTotalPaginas }}
+                            </span>
+                          }
+                        </span>
+                        @if (historialTotalPaginas > 1) {
+                          <button
+                            mat-icon-button
+                            type="button"
+                            class="historial-precios-panel__nav-btn"
+                            aria-label="Cambios más recientes"
+                            [disabled]="historialEnPaginaMasReciente"
+                            (click)="historialPaginaSiguiente()">
+                            <mat-icon svgIcon="mat:chevron_right"></mat-icon>
+                          </button>
+                        }
+                      </div>
+                    }
+                  </div>
+
+                  @if (historialLoading) {
+                    <div class="historial-precios-panel__loading">
+                      <mat-spinner diameter="28"></mat-spinner>
+                    </div>
+                  } @else if (historialPrecio.length === 0) {
+                    <div class="historial-precios-panel__empty">
+                      <mat-icon svgIcon="mat:timeline" class="historial-empty-icon"></mat-icon>
+                      <p>Sin cambios registrados aún</p>
+                    </div>
+                  } @else {
+                    @if (historialResumen) {
+                      <div class="historial-resumen">
+                        @if (historialResumen.comparaUltimasDos) {
+                          <span class="historial-resumen__hint">Últimas 2 modificaciones</span>
+                        }
+                        <div class="historial-resumen__stat">
+                          <span class="historial-resumen__label">Compra</span>
+                          <span class="historial-resumen__val">
+                            {{ formatCurrency(historialResumen.compraAnterior) }}
+                            <mat-icon svgIcon="mat:arrow_forward" class="historial-resumen__arrow"></mat-icon>
+                            {{ formatCurrency(historialResumen.compraActual) }}
+                          </span>
+                          @if (historialResumen.variacionCompraPct != null) {
+                            <span
+                              class="historial-resumen__pct"
+                              [class.text-warn]="historialResumen.variacionCompraPct > 0"
+                              [class.text-success]="historialResumen.variacionCompraPct < 0">
+                              {{ historialResumen.variacionCompraPct > 0 ? '+' : '' }}{{
+                                historialResumen.variacionCompraPct.toFixed(1)
+                              }}%
+                            </span>
+                          }
+                        </div>
+                        <div class="historial-resumen__stat">
+                          <span class="historial-resumen__label">Venta</span>
+                          <span class="historial-resumen__val">
+                            {{ formatCurrency(historialResumen.ventaAnterior) }}
+                            <mat-icon svgIcon="mat:arrow_forward" class="historial-resumen__arrow"></mat-icon>
+                            {{ formatCurrency(historialResumen.ventaActual) }}
+                          </span>
+                          @if (historialResumen.variacionVentaPct != null) {
+                            <span
+                              class="historial-resumen__pct"
+                              [class.text-success]="historialResumen.variacionVentaPct > 0">
+                              {{ historialResumen.variacionVentaPct > 0 ? '+' : '' }}{{
+                                historialResumen.variacionVentaPct.toFixed(1)
+                              }}%
+                            </span>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="historial-chart-area">
+                        <div class="historial-chart historial-chart--paged" aria-hidden="true">
+                          @for (pt of historialChartPointsVisibles; track pt.id) {
+                            <div
+                              class="historial-chart__col"
+                              [matTooltip]="
+                                formatFechaHistorial(pt.fecha) +
+                                ' · Compra ' +
+                                formatCurrency(pt.compra) +
+                                ' · Venta ' +
+                                formatCurrency(pt.venta)
+                              ">
+                              <div class="historial-chart__bar-wrap">
+                                <span class="historial-chart__top-label">{{
+                                  formatCurrencyCompact(pt.venta)
+                                }}</span>
+                                <div
+                                  class="historial-chart__stack"
+                                  [style.height.%]="pt.ventaPct">
+                                  <div
+                                    class="historial-chart__segment historial-chart__segment--venta"
+                                    [style.height.%]="pt.margenRatio"></div>
+                                  <div
+                                    class="historial-chart__segment historial-chart__segment--compra"
+                                    [style.height.%]="pt.compraRatio"></div>
+                                </div>
+                              </div>
+                              <span class="historial-chart__lbl">{{
+                                formatFechaHistorialCorta(pt.fecha)
+                              }}</span>
+                            </div>
+                          }
+                        </div>
+                        <div class="historial-chart-legend">
+                          <span><i class="dot dot--compra"></i> Compra</span>
+                          <span><i class="dot dot--venta"></i> Venta</span>
+                        </div>
+                      </div>
+                    }
+
+                    <ol class="historial-timeline historial-timeline--paged">
+                      @for (item of historialItemsPagina; track item.id) {
+                        <li
+                          class="historial-timeline__item"
+                          [class.historial-timeline__item--latest]="
+                            isHistorialItemLatest(item)
+                          ">
+                          <div class="historial-timeline__dot"></div>
+                          <div class="historial-timeline__body">
+                            <time class="historial-timeline__fecha">
+                              {{ formatFechaHistorial(item.fechaCreacion) }}
+                              @if (
+                                diffDesdeAnteriorHistorial(
+                                  item.fechaCreacion,
+                                  itemAnteriorHistorial(item)?.fechaCreacion
+                                )
+                              ) {
+                                <span class="historial-timeline__diff">{{
+                                  diffDesdeAnteriorHistorial(
+                                    item.fechaCreacion,
+                                    itemAnteriorHistorial(item)?.fechaCreacion
+                                  )
+                                }}</span>
+                              }
+                            </time>
+                            <div class="historial-timeline__row">
+                              <mat-icon
+                                svgIcon="mat:local_shipping"
+                                class="historial-timeline__ico historial-timeline__ico--compra"></mat-icon>
+                              <span
+                                class="historial-timeline__precio"
+                                [class.historial-delta--up]="
+                                  claseDeltaHistorial(
+                                    item.precioCompraAntes,
+                                    item.precioCompra
+                                  ) === 'up'
+                                "
+                                [class.historial-delta--down]="
+                                  claseDeltaHistorial(
+                                    item.precioCompraAntes,
+                                    item.precioCompra
+                                  ) === 'down'
+                                ">
+                                {{
+                                  deltaHistorialDisplay(
+                                    item.precioCompraAntes,
+                                    item.precioCompra
+                                  )
+                                }}
+                              </span>
+                            </div>
+                            <div class="historial-timeline__row">
+                              <mat-icon
+                                svgIcon="mat:shopping_cart"
+                                class="historial-timeline__ico historial-timeline__ico--venta"></mat-icon>
+                              <span
+                                class="historial-timeline__precio"
+                                [class.historial-delta--up]="
+                                  claseDeltaHistorial(
+                                    item.precioVentaAntes,
+                                    item.precioVenta
+                                  ) === 'up'
+                                "
+                                [class.historial-delta--down]="
+                                  claseDeltaHistorial(
+                                    item.precioVentaAntes,
+                                    item.precioVenta
+                                  ) === 'down'
+                                ">
+                                {{
+                                  deltaHistorialDisplay(
+                                    item.precioVentaAntes,
+                                    item.precioVenta
+                                  )
+                                }}
+                              </span>
+                            </div>
+                            <div
+                              class="historial-timeline__ganancia"
+                              [class.text-warn]="
+                                esGananciaNegativa(item.porcentajeGanancia)
+                              "
+                              [class.text-success]="
+                                item.porcentajeGanancia != null &&
+                                item.porcentajeGanancia >= 0
+                              ">
+                              {{ gananciaHistorialDisplay(item) }}
+                            </div>
+                          </div>
+                        </li>
+                      }
+                    </ol>
+                  }
                 </aside>
 
                 <div
                   class="comparativa-panel comparativa-panel--main"
                   [class.comparativa-panel--alert]="preview?.alertaPrecioSubio">
+                  <div class="comparativa-panel__venta-actual">
+                    <span class="comparativa-panel__venta-actual-lbl">Precio venta actual:</span>
+                    <span class="comparativa-panel__venta-actual-val">{{
+                      formatCurrency(selectedProduct.precio)
+                    }}</span>
+                  </div>
                   <div class="comparativa-tabla">
                     @if (precioCompraIngresado != null) {
                       <div class="comp-row comp-row--ingreso">
@@ -361,7 +565,7 @@
         </div>
       }
 
-      <div class="px-6 py-4 flex-1 min-h-0 overflow-auto">
+      <div class="entrada-detalles-section px-6 py-4">
         <h3 class="section-title">
           Productos en la entrada ({{ detalles.length }})
         </h3>
@@ -469,6 +673,8 @@
           </table>
         }
       </div>
+      </div>
     }
+    </div>
   </div>
 </div>
