@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../../../environments/environment';
 
 export interface TipoResultadoFinDto {
   id: number;
@@ -78,7 +79,7 @@ export interface EstadisticaAnioFiltro {
 
 @Injectable({ providedIn: 'root' })
 export class EstadisticaFinancieraService {
-  private apiUrl = 'http://localhost:8088/estadistica-financiera';
+  private apiUrl = `${environment.apiUrlRelationalDb}/estadistica-financiera`;
 
   constructor(private http: HttpClient) {}
 

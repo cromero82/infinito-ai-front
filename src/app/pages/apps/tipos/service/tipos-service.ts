@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Tipo } from '../interfaces/tipo.interface';
+import { environment } from '../../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TiposService {
-  private apiUrl = 'http://localhost:8088/api/types';
+  private apiUrl = `${environment.apiUrlRelationalDb}/api/types`;
 
   constructor(private http: HttpClient) {}
 

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 export interface LoginRequest {
   correoElectronico: string;
@@ -61,7 +62,7 @@ export interface UsuarioCacheDto {
 })
 export class AuthService {
   private readonly todosUsuariosStorageKey = 'todos-usuarios';
-  private urlService = 'http://localhost:8081';
+  private urlService = environment.apiUrlAuth;
   private servicePath = '/auth';
   private apiUrl = `${this.urlService}${this.servicePath}`;
 
@@ -108,6 +109,66 @@ export class AuthService {
         return throwError(() => error);
       })
     );
+  }
+
+  /**
+   * Inicia una sesión de invitado (sin credenciales) contra POST /auth/login-guest.
+   * El servidor devuelve un token genérico que se almacena igual que un login normal.
+   * El nombre mostrado se fuerza a "INVITADO" porque el token de invitado no trae perfil.
+   */
+  loginGuest(): Observable<AuthResponse> {
+    return this.http
+      .post(`${this.apiUrl}/login-guest`, {}, { responseType: 'text' })
+      .pipe(
+        map((response: string) => {
+          if (!response || response.trim() === '') {
+            throw new Error('Respuesta vacía del servidor');
+          }
+
+          let token: string | undefined;
+          try {
+            const parsed = JSON.parse(response);
+            if (parsed && typeof parsed === 'object') {
+              token =
+                parsed.token || parsed.accessToken || parsed.access_token;
+            } else {
+              token = response.trim();
+            }
+          } catch {
+            token = response.trim();
+          }
+
+          if (!token || token.trim() === '') {
+            throw new Error('Token no recibido del servidor');
+          }
+
+          return { token };
+        }),
+        tap((response) => {
+          this.handleAuthResponse(response);
+          localStorage.setItem('user-nombre', 'INVITADO');
+        }),
+        catchError((error) => {
+          console.error('Error en login de invitado:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Invalida la sesión actual en el servidor (POST /auth/logout).
+   * No falla la cadena si el servidor responde con error: limpiar la sesión local igualmente.
+   */
+  cerrarSesionServidor(): Observable<void> {
+    return this.http
+      .post(`${this.apiUrl}/logout`, {}, { responseType: 'text' })
+      .pipe(
+        map(() => undefined),
+        catchError((error) => {
+          console.warn('No se pudo cerrar la sesión en el servidor:', error);
+          return of(undefined);
+        })
+      );
   }
 
   registro(datos: RegistroRequest): Observable<AuthResponse> {

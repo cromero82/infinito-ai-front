@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../../../environments/environment';
 
 /** Regex para formato UUID de Java (ej: E4B8999C-FBCF-466D-91B9-599E39850BDE) */
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
@@ -35,7 +36,7 @@ export interface CreateProveedorRequest {
   providedIn: 'root'
 })
 export class ProveedorService {
-  private apiUrl = 'http://localhost:8088/proveedores';
+  private apiUrl = `${environment.apiUrlRelationalDb}/proveedores`;
 
   constructor(private http: HttpClient) {}
 

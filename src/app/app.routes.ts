@@ -24,6 +24,14 @@ export const appRoutes: VexRoutes = [
       )
   },
   {
+    // Cotización para clientes desde el celular (pantalla completa, sin layout de escritorio).
+    path: 'apps/personas/micotizacion',
+    loadComponent: () =>
+      import('./pages/apps/personas/micotizacion/micotizacion.component').then(
+        (m) => m.MiCotizacionComponent
+      )
+  },
+  {
     path: '',
     component: LayoutComponent,
     children: [

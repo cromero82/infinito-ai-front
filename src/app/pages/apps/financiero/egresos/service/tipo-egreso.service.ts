@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../../../environments/environment';
 
 export interface TipoEgresoDto {
   id: number;
@@ -12,7 +13,7 @@ export interface TipoEgresoDto {
   providedIn: 'root'
 })
 export class TipoEgresoService {
-  private apiUrl = 'http://localhost:8088/tipo_egresos';
+  private apiUrl = `${environment.apiUrlRelationalDb}/tipo_egresos`;
 
   constructor(private http: HttpClient) {}
 

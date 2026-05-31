@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
 
 export interface ClienteDto {
   id: number;
@@ -19,7 +20,7 @@ export interface CreateClienteRequest {
   providedIn: 'root'
 })
 export class ClienteService {
-  private apiUrl = 'http://localhost:8088/clients';
+  private apiUrl = `${environment.apiUrlRelationalDb}/clients`;
 
   constructor(private http: HttpClient) {}
 

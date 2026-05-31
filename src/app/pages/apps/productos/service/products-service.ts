@@ -3,12 +3,14 @@ import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ProductPage } from '../model/producto';
 import { ProductInfo } from '../model/product-info.model';
+import { environment } from '../../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ProductsService {
-  private apiUrl = 'http://localhost:8088/'+ "products";
+  private readonly baseUrl = environment.apiUrlRelationalDb;
+  private apiUrl = `${this.baseUrl}/products`;
 
   constructor(private http: HttpClient) {}
 
@@ -31,15 +33,15 @@ export class ProductsService {
       .set('q', query)
       .set('page', page)
       .set('size', size);
-    return this.http.get<any>('http://localhost:8088/api/mongoquery/products/page-smart-search', { params });
+    return this.http.get<any>(`${this.baseUrl}/api/mongoquery/products/page-smart-search`, { params });
   }
 
   addProduct(product: any): Observable<any> {
-    return this.http.post<any>('http://localhost:8088/api/mongoquery/products/add', product);
+    return this.http.post<any>(`${this.baseUrl}/api/mongoquery/products/add`, product);
   }
 
   modifyProduct(id: string, product: any): Observable<any> {
-    return this.http.put<any>(`http://localhost:8088/api/mongoquery/products/edit/${id}`, product);
+    return this.http.put<any>(`${this.baseUrl}/api/mongoquery/products/edit/${id}`, product);
   }
 
   /**
@@ -55,7 +57,7 @@ export class ProductsService {
     formData.append('file', file);
     if (name) formData.append('name', name);
     if (expiration) formData.append('expiration', expiration);
-    return this.http.post<any>('http://localhost:8088/api/images/upload', formData);
+    return this.http.post<any>(`${this.baseUrl}/api/images/upload`, formData);
   }
 
   /**
@@ -63,7 +65,7 @@ export class ProductsService {
    * @param barcode The barcode to query
    */
   getProductInfo(barcode: string): Observable<ProductInfo> {
-    return this.http.get<ProductInfo>(`http://localhost:8088/api/product-info/barcode/${barcode}`);
+    return this.http.get<ProductInfo>(`${this.baseUrl}/api/product-info/barcode/${barcode}`);
   }
 
   /**
@@ -72,7 +74,7 @@ export class ProductsService {
    * @param percentProfit The percent profit (default 0)
    */
   addType(name: string, percentProfit: number = 0): Observable<any> {
-    return this.http.post<any>('http://localhost:8088/api/types', {
+    return this.http.post<any>(`${this.baseUrl}/api/types`, {
       name,
       percentProfit
     });
@@ -83,7 +85,7 @@ export class ProductsService {
    * @param name The company name
    */
   addCompany(name: string): Observable<any> {
-    return this.http.post<any>('http://localhost:8088/api/mongoquery/companies', {
+    return this.http.post<any>(`${this.baseUrl}/api/mongoquery/companies`, {
       name,
       description: '',
       email: '',

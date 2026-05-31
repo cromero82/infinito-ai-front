@@ -1,0 +1,282 @@
+<div class="cotiza-page">
+  <!-- ───────────── Encabezado ───────────── -->
+  <header class="cotiza-header">
+    <div class="cotiza-header-top">
+      <div class="cotiza-brand">
+        <span class="cotiza-logo-wrap">
+          <img
+            class="cotiza-logo"
+            src="assets/img/logo/logo.png"
+            alt="Infinito"
+            height="32"
+            width="32" />
+        </span>
+        <span class="cotiza-brand-title">Cotiza INFINITO!!</span>
+      </div>
+
+      <button
+        type="button"
+        class="cotiza-fin-btn"
+        (click)="finalizarCotizacion()">
+        <mat-icon class="icon-sm" svgIcon="mat:logout"></mat-icon>
+        <span>Fin cotización</span>
+      </button>
+    </div>
+
+    <div class="cotiza-user-chip">
+      <mat-icon class="icon-sm" svgIcon="mat:account_circle"></mat-icon>
+      <span>INVITADO</span>
+    </div>
+  </header>
+
+  <!-- ───────────── Sesión iniciando ───────────── -->
+  @if (iniciandoSesion) {
+    <div class="cotiza-state">
+      <mat-spinner diameter="44"></mat-spinner>
+      <p>Conectando…</p>
+    </div>
+  } @else if (sesionError) {
+    <div class="cotiza-state">
+      <mat-icon class="cotiza-state-icon" svgIcon="mat:wifi_off"></mat-icon>
+      <p>No se pudo conectar al servidor.</p>
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        (click)="iniciarSesionInvitado()">
+        Reintentar
+      </button>
+    </div>
+  } @else {
+    <!-- ───────────── Contenido principal ───────────── -->
+    <main class="cotiza-content">
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        class="cotiza-scan-btn"
+        (click)="abrirEscaner()">
+        <mat-icon svgIcon="mat:qr_code_scanner"></mat-icon>
+        <span>Escanear código de barras</span>
+      </button>
+
+      <div class="cotiza-search-shell">
+        <mat-form-field
+          appearance="outline"
+          class="cotiza-search"
+          subscriptSizing="dynamic">
+          <mat-icon matPrefix class="icon-sm" svgIcon="mat:search"></mat-icon>
+          <mat-label>Buscar producto</mat-label>
+          <input
+            matInput
+            [formControl]="searchCtrl"
+            autocomplete="off"
+            inputmode="search"
+            placeholder="Código o nombre" />
+          @if (searchCtrl.value) {
+            <button
+              matSuffix
+              mat-icon-button
+              type="button"
+              aria-label="Limpiar búsqueda"
+              (click)="limpiarBusqueda()">
+              <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+            </button>
+          }
+        </mat-form-field>
+      </div>
+
+      <!-- Resultados -->
+      <section class="cotiza-results">
+        @if (buscando) {
+          <div class="cotiza-inline-state">
+            <mat-spinner diameter="32"></mat-spinner>
+            <span>Buscando productos…</span>
+          </div>
+        } @else if (busquedaRealizada && resultados.length === 0) {
+          <div class="cotiza-inline-state cotiza-empty">
+            <mat-icon svgIcon="mat:inventory_2"></mat-icon>
+            <span>No se encontraron productos.</span>
+          </div>
+        } @else if (!busquedaRealizada && resultados.length === 0) {
+          <div class="cotiza-inline-state cotiza-hint">
+            <mat-icon svgIcon="mat:photo_camera"></mat-icon>
+            <span>Escanea o busca un producto para ver su precio.</span>
+          </div>
+        } @else {
+          @for (
+            producto of resultados;
+            track trackByProducto($index, producto)
+          ) {
+            <article class="producto-card">
+              <div class="producto-foto">
+                @if (producto.foto) {
+                  <img
+                    [src]="producto.foto"
+                    [alt]="producto.nombre"
+                    loading="lazy" />
+                } @else {
+                  <mat-icon
+                    class="producto-foto-placeholder"
+                    svgIcon="mat:inventory_2"></mat-icon>
+                }
+              </div>
+
+              <div class="producto-info">
+                <h3 class="producto-nombre">{{ producto.nombre }}</h3>
+                <span class="producto-codigo">{{ producto.barcode }}</span>
+                <span class="producto-precio">{{
+                  producto.precio | currency: "COP" : "symbol-narrow" : "1.0-0"
+                }}</span>
+              </div>
+
+              <div class="producto-accion">
+                @if (estaEnCarrito(producto)) {
+                  <div class="qty-stepper" role="group" aria-label="Cantidad">
+                    <button
+                      mat-icon-button
+                      type="button"
+                      class="qty-btn"
+                      aria-label="Disminuir"
+                      (click)="decrementar(producto)">
+                      <mat-icon class="icon-sm" svgIcon="mat:remove"></mat-icon>
+                    </button>
+                    <span class="qty-value">{{
+                      cantidadEnCarrito(producto)
+                    }}</span>
+                    <button
+                      mat-icon-button
+                      type="button"
+                      class="qty-btn"
+                      aria-label="Aumentar"
+                      (click)="incrementar(producto)">
+                      <mat-icon class="icon-sm" svgIcon="mat:add"></mat-icon>
+                    </button>
+                  </div>
+                } @else {
+                  <button
+                    mat-flat-button
+                    color="primary"
+                    type="button"
+                    class="agregar-btn"
+                    (click)="agregarAlCarrito(producto)">
+                    <mat-icon
+                      class="icon-sm"
+                      svgIcon="mat:add_shopping_cart"></mat-icon>
+                    <span>Agregar</span>
+                  </button>
+                }
+              </div>
+            </article>
+          }
+        }
+      </section>
+    </main>
+
+    <!-- ───────────── Barra inferior del carrito ───────────── -->
+    <footer class="cotiza-cart-bar" [class.cotiza-cart-bar--empty]="totalItems === 0">
+      <button
+        type="button"
+        class="cart-summary"
+        [disabled]="totalItems === 0"
+        (click)="toggleCarrito()">
+        <span class="cart-summary-left">
+          <mat-icon svgIcon="mat:shopping_cart"></mat-icon>
+          @if (totalItems > 0) {
+            <span class="cart-badge">{{ totalItems }}</span>
+          }
+        </span>
+        <span class="cart-summary-text">
+          @if (totalItems > 0) {
+            Ver cotización
+          } @else {
+            Carrito vacío
+          }
+        </span>
+        <span class="cart-summary-total">{{
+          totalCotizacion | currency: "COP" : "symbol-narrow" : "1.0-0"
+        }}</span>
+      </button>
+    </footer>
+
+    <!-- ───────────── Panel del carrito ───────────── -->
+    @if (carritoAbierto) {
+      <div class="cart-overlay" (click)="cerrarCarrito()"></div>
+      <section class="cart-panel" role="dialog" aria-label="Cotización">
+        <div class="cart-panel-header">
+          <h2 class="cart-panel-title">Mi cotización</h2>
+          <button
+            mat-icon-button
+            type="button"
+            aria-label="Cerrar"
+            (click)="cerrarCarrito()">
+            <mat-icon svgIcon="mat:close"></mat-icon>
+          </button>
+        </div>
+
+        <div class="cart-panel-list">
+          @for (item of items; track trackByItem($index, item)) {
+            <div class="cart-row">
+              <div class="cart-row-info">
+                <span class="cart-row-nombre">{{ item.producto.nombre }}</span>
+                <span class="cart-row-precio">{{
+                  item.producto.precio
+                    | currency: "COP" : "symbol-narrow" : "1.0-0"
+                }}</span>
+              </div>
+              <div class="qty-stepper" role="group" aria-label="Cantidad">
+                <button
+                  mat-icon-button
+                  type="button"
+                  class="qty-btn"
+                  aria-label="Disminuir"
+                  (click)="decrementar(item.producto)">
+                  <mat-icon class="icon-sm" svgIcon="mat:remove"></mat-icon>
+                </button>
+                <span class="qty-value">{{ item.cantidad }}</span>
+                <button
+                  mat-icon-button
+                  type="button"
+                  class="qty-btn"
+                  aria-label="Aumentar"
+                  (click)="incrementar(item.producto)">
+                  <mat-icon class="icon-sm" svgIcon="mat:add"></mat-icon>
+                </button>
+              </div>
+              <span class="cart-row-subtotal">{{
+                item.producto.precio * item.cantidad
+                  | currency: "COP" : "symbol-narrow" : "1.0-0"
+              }}</span>
+              <button
+                mat-icon-button
+                type="button"
+                class="cart-row-remove"
+                aria-label="Quitar"
+                (click)="quitarDelCarrito(item.producto)">
+                <mat-icon class="icon-sm" svgIcon="mat:delete"></mat-icon>
+              </button>
+            </div>
+          }
+        </div>
+
+        <div class="cart-panel-footer">
+          <div class="cart-panel-total">
+            <span>Total</span>
+            <span class="cart-panel-total-value">{{
+              totalCotizacion | currency: "COP" : "symbol-narrow" : "1.0-0"
+            }}</span>
+          </div>
+          <button
+            mat-stroked-button
+            type="button"
+            color="warn"
+            class="cart-vaciar-btn"
+            (click)="vaciarCarrito()">
+            <mat-icon class="icon-sm" svgIcon="mat:delete"></mat-icon>
+            Vaciar
+          </button>
+        </div>
+      </section>
+    }
+  }
+</div>

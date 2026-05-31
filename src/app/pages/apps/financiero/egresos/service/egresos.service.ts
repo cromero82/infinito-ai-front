@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../../../environments/environment';
 
 export interface EgresoDto {
   id: number;
@@ -50,7 +51,7 @@ export interface PageResponse<T> {
   providedIn: 'root'
 })
 export class EgresosService {
-  private apiUrl = 'http://localhost:8088/egresos';
+  private apiUrl = `${environment.apiUrlRelationalDb}/egresos`;
 
   constructor(private http: HttpClient) {}
 
