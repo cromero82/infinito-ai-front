@@ -23,6 +23,8 @@ export interface Producto {
   fechaCreacion?: string | null;
   fecha_ultima_venta?: string | null;
   porcentaje_ganancia?: number | null;
+  porcentajeGanancia?: number | null;
+  existencia?: number;
   /** Grupo espejo (mismo producto en distintas presentaciones); null si no aplica */
   grupoEspejo?: GrupoEspejoEnProducto | null;
 }

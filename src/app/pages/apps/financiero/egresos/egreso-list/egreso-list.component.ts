@@ -49,6 +49,11 @@ import {
 import { TableViewportService } from '../../../../../core/table-viewport/table-viewport.service';
 import { FechaUtilService } from '../../../ventas/service/fecha-util.service';
 import { FooterService } from '../../../../../layouts/services/footer.service';
+import { Router } from '@angular/router';
+import {
+  EntradaInventarioService,
+  EntradaInventarioEstadoResumenDto
+} from '../../entrada-inventario/service/entrada-inventario.service';
 
 @Component({
   selector: 'gm-egreso-list',
@@ -78,6 +83,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     'proveedor',
     'tipoEgreso',
     'descripcion',
+    'entradaInventario',
     'edit',
     'delete'
   ];
@@ -102,6 +108,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   tableScrollMaxHeight = 400;
   appliedFechaInicio: string | null = null;
   appliedFechaFin: string | null = null;
+  entradaResumenMap = new Map<number, EntradaInventarioEstadoResumenDto>();
 
   private justClosedDialog = false;
 
@@ -117,7 +124,9 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     private tableViewportService: TableViewportService,
     private fechaUtilService: FechaUtilService,
     private footerService: FooterService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private router: Router,
+    private entradaInventarioService: EntradaInventarioService
   ) {}
 
   ngOnInit() {
@@ -210,6 +219,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.totalElements = page.totalElements;
         this.hasMore = !page.last;
         this.loadingMore = false;
+        this.cargarResumenEntradas();
         this.actualizarFooter();
         setTimeout(() => this.maybeLoadMoreIfNoScroll(), 50);
       },
@@ -241,6 +251,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.totalElements = page.totalElements;
         this.hasMore = !page.last;
         this.loading = false;
+        this.cargarResumenEntradas();
         this.actualizarFooter();
         setTimeout(() => {
           this.attachScrollListener();
@@ -411,6 +422,53 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }, 100);
     }
+  }
+
+  irEntradaInventario(egreso: EgresoDto, event?: Event): void {
+    event?.stopPropagation();
+    this.router.navigate([
+      '/apps/financiero/egresos',
+      egreso.id,
+      'entrada-inventario'
+    ]);
+  }
+
+  tooltipEntradaInventario(egresoId: number): string {
+    const resumen = this.entradaResumenMap.get(egresoId);
+    if (!resumen) {
+      return 'Realizar entrada almacén';
+    }
+    if (resumen.estado === 'CONFIRMADA') {
+      return `Entrada confirmada (${resumen.totalItems} ítems)`;
+    }
+    if (resumen.estado === 'BORRADOR') {
+      return `Continuar entrada borrador (${resumen.totalItems} ítems)`;
+    }
+    return 'Entrada anulada';
+  }
+
+  iconoEntradaInventario(egresoId: number): string {
+    const resumen = this.entradaResumenMap.get(egresoId);
+    if (resumen?.estado === 'CONFIRMADA') {
+      return 'mat:check_circle';
+    }
+    return 'mat:local_shipping';
+  }
+
+  private cargarResumenEntradas(): void {
+    const ids = this.dataSource.map((e) => e.id).filter((id) => id != null);
+    if (ids.length === 0) {
+      this.entradaResumenMap.clear();
+      return;
+    }
+    this.entradaInventarioService.resumenPorEgresoIds(ids).subscribe({
+      next: (items) => {
+        this.entradaResumenMap.clear();
+        for (const item of items) {
+          this.entradaResumenMap.set(item.egresoId, item);
+        }
+      }
+    });
   }
 
   formatCurrency(value: number): string {

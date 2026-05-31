@@ -1,0 +1,36 @@
+# Reverse proxy de un solo origen para exponer la cotización de invitado por
+# Cloudflare Tunnel. Caddy escucha en :8080 (HTTP; el TLS lo termina el túnel).
+#
+# Seguridad: solo se enrutan al backend los endpoints que necesita el invitado.
+# Cualquier otra ruta de API admin (p.ej. /api/mongoquery, /clients, /egresos)
+# NO se proxea: cae al handler de Angular y nunca llega a los microservicios.
+
+:8080 {
+	encode gzip
+
+	# --- Autenticación de invitado (login-guest, logout, validate, claims) ---
+	@guestAuth {
+		path /auth/*
+		method POST OPTIONS
+	}
+	handle @guestAuth {
+		reverse_proxy 127.0.0.1:8081
+	}
+
+	# --- Catálogo de productos (solo lectura) + fotos / info de producto ---
+	@catalogo {
+		path /products /products/* /api/images/* /api/product-info/*
+		method GET HEAD OPTIONS
+	}
+	handle @catalogo {
+		reverse_proxy 127.0.0.1:8088
+	}
+
+	# --- Todo lo demás -> app Angular (dev server en :4200) ---
+	# Forzamos Host local para pasar el host-check de `ng serve`.
+	handle {
+		reverse_proxy 127.0.0.1:4200 {
+			header_up Host localhost:4200
+		}
+	}
+}

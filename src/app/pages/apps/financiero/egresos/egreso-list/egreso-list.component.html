@@ -207,6 +207,20 @@
                   {{ egreso.descripcion || "-" }}
                 </td>
               </ng-container>
+              <ng-container matColumnDef="entradaInventario">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let egreso">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    color="primary"
+                    class="edit-btn-compact"
+                    [matTooltip]="tooltipEntradaInventario(egreso.id)"
+                    (click)="irEntradaInventario(egreso, $event)">
+                    <mat-icon [svgIcon]="iconoEntradaInventario(egreso.id)"></mat-icon>
+                  </button>
+                </td>
+              </ng-container>
               <ng-container matColumnDef="edit">
                 <th mat-header-cell *matHeaderCellDef></th>
                 <td mat-cell *matCellDef="let egreso">

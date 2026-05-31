@@ -8,8 +8,11 @@
   "scripts": {
     "ng": "ng",
     "start": "concurrently \"npm run health:server\" \"npm run start:angular\"",
+    "start:micotizacion": "concurrently -k -n health,angular,caddy,tunnel -c blue,green,magenta,cyan \"npm run health:server\" \"npm run start:angular\" \"npm run start:caddy\" \"npm run start:cloudflared\"",
     "dev": "ng serve --host 0.0.0.0",
-    "start:angular": "wait-on http://localhost:3001/health && ng serve --host 0.0.0.0",
+    "start:angular": "wait-on http://localhost:3001/health && ng serve --host 0.0.0.0 --port 4200",
+    "start:caddy": "wait-on tcp:4200 && caddy run --config Caddyfile",
+    "start:cloudflared": "wait-on tcp:8080 && cloudflared tunnel --url http://localhost:8080 --no-autoupdate",
     "build": "ng build --configuration production",
     "test": "ng test",
     "lint": "ng lint",

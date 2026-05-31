@@ -154,6 +154,14 @@ export const appRoutes: VexRoutes = [
                 data: { scrollDisabled: true }
               },
               {
+                path: 'egresos/:egresoId/entrada-inventario',
+                loadComponent: () =>
+                  import('./pages/apps/financiero/entrada-inventario/entrada-inventario.component').then(
+                    (m) => m.EntradaInventarioComponent
+                  ),
+                data: { scrollDisabled: true }
+              },
+              {
                 path: 'proveedores',
                 loadComponent: () =>
                   import('./pages/apps/financiero/proveedores/proveedor-list/proveedor-list.component').then(

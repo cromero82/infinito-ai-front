@@ -1,0 +1,136 @@
+---
+description: Conceptos generales del frontend POS Infinito (stack, contrato con backend, convenciones de mantenimiento) y dónde profundizar en cada proyecto
+globs: src/app/**/*.{ts,html,scss}
+alwaysApply: false
+---
+
+# POS Infinito — Visión general del frontend (mantenimiento)
+
+Punto de entrada para mantener este frontend. Resume lo esencial y enlaza a docs más
+profundas (en este repo y en los backends) cuando se necesite detalle.
+
+## 1. Ecosistema (sistema POS Infinito)
+
+POS para tiendas de abarrotes en Colombia, **despliegue local (sin nube)**, stack OSS.
+Son **5 repos** (ver `../../../README.md` en la carpeta raíz `dev/repos/`):
+
+| Repo | Rol | Doc interna clave |
+|---|---|---|
+| `infinito-ai-front` (este) | Frontend Angular 17 + Vex | `.cursor/rules/*.mdc` |
+| `pos-relational-data-service` | MS negocio (productos, ventas, finanzas, clientes) | `src/main/resources/doc/contextos/AI-ONBOARDING-basic.md` |
+| `infinito-security` | MS seguridad / auth (JWT) | `src/main/resources/info.md`, `notas.md`, `postman.md` |
+| `infinito-smtp-service` | Envío de correos | `src/main/resources/install/notas.md` |
+| Lanzador (JavaFX) | Sube/baja MS y Angular, logs, actualizar desde git | — |
+
+DB: **PostgreSQL** (lógica de tienda). Logs en tabla Postgres (Flux/InfluxDB a futuro).
+
+## 2. Stack y arranque (frontend)
+
+- Angular 17 standalone + Angular Material + template **Vex** (UI/temas/layouts).
+- `src/main.ts` → `AppComponent` con `appConfig` en `src/app/app.config.ts`.
+- Rutas en `src/app/app.routes.ts`: auth con `loadComponent`; área autenticada bajo `LayoutComponent`.
+- Detalle de dominios/rutas/estilos: ver `pos-app-map.mdc`, `pos-route-inventory.mdc`, `pos-component-inventory.mdc`. Límites POS vs Vex: `pos-app-boundaries.mdc`.
+
+## 3. Contrato frontend ↔ backend (CRÍTICO para mantenimiento)
+
+Dos backends, en la **misma máquina**:
+- **MS seguridad** (auth/JWT): puerto `8081`. Prefijos `/auth/*`, `/roles`.
+- **MS negocio** (datos): puerto `8088`. Prefijos `/products`, `/api/*`, `/clients`, `/egresos`,
+  `/proveedores`, `/tipo_egresos`, `/estadistica-financiera`, `/configuracion-app`, etc.
+
+Reglas:
+- **NO hardcodear `http://localhost:8081/8088`.** El host se resuelve en
+  `src/environments/environment.ts` (y `.prod.ts`) y los servicios usan
+  `environment.apiUrlAuth` (8081) y `environment.apiUrlRelationalDb` (8088).
+- El host se calcula desde `window.location`:
+  - Servido por el **dev server (`:4200`, local o IP LAN)** → llama por **puerto directo** (`http://<host>:8081/8088`).
+  - Servido por **otro origen** (reverse proxy `:8080` o túnel HTTPS) → **rutas relativas** (`''` ⇒ `/auth`, `/products`), sin CORS ni mixed-content.
+- Token JWT en `localStorage['user-token']`; lo adjunta `core/interceptors/auth.interceptor.ts`
+  (excluye `/auth/login*`). El interceptor también maneja 401/relogin.
+- Endpoints de auth (login, login-guest, logout, validate, claims, registro, backup): ver
+  `infinito-security/src/main/resources/info.md` y `postman.md`.
+
+## 4. Convenciones de mantenimiento
+
+- Servicios nuevos: inyectar URLs desde `environment`, nunca literal `localhost`.
+- Componentes: `standalone`, preferir `ChangeDetectionStrategy.OnPush` + `markForCheck()`.
+- Estilos: usar utilidades Vex/Tailwind y variables `--vex-*` (con fallbacks). Estilos globales
+  en `src/styles.scss`; core Vex en `src/@vex/styles/`.
+- Íconos: `svgIcon="mat:<nombre>"` (namespace resuelto desde `@material-design-icons/svg/two-tone`);
+  confirmar que el `.svg` exista antes de usarlo.
+- Monitoreo de errores propio (sin Sentry): ver `custom-monitor.mdc`.
+- Antes de crear componentes/rutas, revisar los inventarios `pos-*` para reutilizar.
+
+## 5. Cotización de invitado + acceso remoto (feature reciente)
+
+Página móvil standalone `/apps/personas/micotizacion` (no usa el layout de escritorio) con
+sesión de invitado (`POST /auth/login-guest`), escáner reutilizado y carrito en cliente.
+- Diseño/onboarding: `.cursor/rules/contexto-diseno/page-cotizacion-invitado.md`.
+- Despliegue por LAN/internet (host dinámico + Caddy `Caddyfile` + Cloudflare Tunnel) y otras
+  opciones: `.cursor/despliegue-cotizacion-invitado-lan-cloudflare.md`.
+- Recordatorio: el **escáner de cámara requiere HTTPS** (contexto seguro); por eso el acceso
+  remoto usa túnel HTTPS, no `http://<ip>`.
+
+### Requisitos para que `micotizacion` funcione en otra máquina
+
+La página **no es autónoma**: depende de frontend + 2 microservicios + PostgreSQL en la
+**misma máquina** (o accesibles desde ella). Copiar solo `infinito-ai-front` no alcanza.
+
+**Flujo mínimo al abrir la URL:**
+1. `POST /auth/login-guest` → MS seguridad (`8081`)
+2. `GET /products?...` → MS negocio (`8088`), con JWT de invitado
+3. `POST /auth/logout` al finalizar cotización
+4. Opcional: fotos vía `/api/images/*` si el producto trae `foto`
+
+**Componentes obligatorios (checklist para lanzador / otra IA):**
+
+| Componente | Repo | Puerto | Obligatorio |
+|---|---|---|---|
+| Frontend Angular | `infinito-ai-front` | `4200` (dev) | Sí |
+| MS seguridad | `infinito-security` | `8081` | Sí |
+| MS negocio | `pos-relational-data-service` | `8088` | Sí |
+| PostgreSQL | — | `5432` | Sí (BD `controlneg_rmx_db`) |
+| MS correo | `infinito-smtp-service` | — | No |
+| Caddy | `Caddyfile` en frontend | `8080` | Solo modo proxy/túnel |
+| Cloudflare Tunnel | `cloudflared` | — | Solo acceso internet/HTTPS remoto |
+
+**Base de datos:** restaurar backup o dump con productos. Ambos MS usan la misma BD;
+`jwt.secret` en seguridad debe coincidir con lo que valida el MS de negocio vía
+`auth.service.base-url=http://localhost:8081`.
+
+**Resolución de host (sin tocar código al cambiar IP):** `environment.ts` usa
+`window.location.hostname`. Si el laptop nuevo tiene otra IP, basta actualizar el enlace
+compartido (`http://<nueva-ip>:4200/...`); no hace falta la misma IP salvo QR/enlaces ya
+impresos. Solo una máquina puede usar la misma IP fija en la LAN a la vez.
+
+**Modos de arranque (orden de dependencias):**
+
+```
+PostgreSQL → infinito-security (:8081) → pos-relational-data-service (:8088)
+                    ↑                              ↑
+         ng serve --host 0.0.0.0 (:4200) ─────────┘
+```
+
+- **LAN simple (HTTP):** `ng serve --host 0.0.0.0` + backends en 8081/8088. URL:
+  `http://<ip>:4200/apps/personas/micotizacion`. Cámara en celular **no** funciona por IP
+  HTTP (solo `localhost` o HTTPS).
+- **LAN/celular con cámara:** Caddy `:8080` unifica origen + túnel HTTPS (`cloudflared
+  tunnel --url http://localhost:8080`). Ver `Caddyfile` y
+  `.cursor/despliegue-cotizacion-invitado-lan-cloudflare.md`.
+- **Evitar:** `ng serve --ssl` llamando APIs en `http://<ip>:8081/8088` → mixed content
+  (HTTPS página + HTTP APIs bloqueadas por el navegador).
+
+**Red / firewall:** permitir Node (4200) y Java (8081, 8088), o Caddy (8080). Celular en
+misma Wi‑Fi para LAN; datos móviles requieren túnel o proxy HTTPS.
+
+**Perspectiva lanzador JavaFX:** la app centralizadora debería poder (1) clonar/actualizar
+los 3 repos, (2) verificar PostgreSQL, (3) arrancar MS en orden 8081 → 8088 → Angular,
+(4) opcionalmente Caddy + cloudflared, (5) exponer URL de prueba
+(`/apps/personas/micotizacion`) y health de `POST /auth/login-guest` + `GET /products`.
+
+## 6. Dónde profundizar
+
+- Frontend: las reglas `pos-app-map`, `pos-route-inventory`, `pos-component-inventory`, `pos-app-boundaries`, `custom-monitor`, y las dos `.md` de cotización/despliegue.
+- Negocio (8088): `pos-relational-data-service/src/main/resources/doc/contextos/AI-ONBOARDING-basic.md` (y `AI-ONBOARDING-v2.md`, `postman.md`, `postgres.md`).
+- Seguridad (8081): `infinito-security/src/main/resources/info.md`, `notas.md`, `postman.md`, `instalacion.md`.
+- Mapa global: `dev/repos/README.md`.
