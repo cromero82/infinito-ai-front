@@ -49,6 +49,8 @@ import {
   HistorialPrecioProductoDto,
   HistorialPrecioProductoService
 } from './service/historial-precio-producto.service';
+import { EgresosService } from '../egresos/service/egresos.service';
+import { egresoPermiteEntradaInventario } from '../egresos/util/egreso-permite-entrada-inventario.util';
 import {
   calcularPrecioVentaAjustado,
   calcularPrecioVentaMantenerMargen,
@@ -63,6 +65,8 @@ export interface HistorialPrecioResumen {
   ventaActual: number | null;
   variacionCompraPct: number | null;
   variacionVentaPct: number | null;
+  variacionCompraPesos: number | null;
+  variacionVentaPesos: number | null;
   anosSpan: number | null;
   comparaUltimasDos: boolean;
 }
@@ -77,6 +81,12 @@ export interface HistorialPrecioChartPoint {
   ventaPct: number;
   compraRatio: number;
   margenRatio: number;
+  deltaVenta: number | null;
+}
+
+export interface HistorialVistaColumna {
+  item: HistorialPrecioProductoDto;
+  pt: HistorialPrecioChartPoint;
 }
 
 @Component({
@@ -144,6 +154,7 @@ export class EntradaInventarioComponent implements OnInit, OnDestroy {
     private router: Router,
     private fb: FormBuilder,
     private entradaService: EntradaInventarioService,
+    private egresosService: EgresosService,
     private historialPrecioService: HistorialPrecioProductoService,
     private productService: RelationalProductService,
     private snackBar: MatSnackBar,
@@ -173,7 +184,7 @@ export class EntradaInventarioComponent implements OnInit, OnDestroy {
     }
     this.egresoId = Number(idParam);
     this.initPreviewPipeline();
-    this.loadEntrada();
+    this.validarEgresoYLoadEntrada();
 
     this.lineForm
       .get('busqueda')
@@ -434,6 +445,14 @@ export class EntradaInventarioComponent implements OnInit, OnDestroy {
     return this.historialPrecioAsc.slice(start, start + this.historialVistaTamano);
   }
 
+  get historialVistaColumnas(): HistorialVistaColumna[] {
+    const items = this.historialItemsPagina;
+    const points = this.historialChartPointsVisibles;
+    return items
+      .map((item, index) => ({ item, pt: points[index] }))
+      .filter((col): col is HistorialVistaColumna => col.pt != null);
+  }
+
   /** Flecha izquierda: ventana más antigua. */
   historialPaginaAnterior(): void {
     if (this.historialVistaPagina < this.historialTotalPaginas - 1) {
@@ -507,6 +526,8 @@ export class EntradaInventarioComponent implements OnInit, OnDestroy {
       ventaActual,
       variacionCompraPct: this.calcVariacionPct(compraAnterior, compraActual),
       variacionVentaPct: this.calcVariacionPct(ventaAnterior, ventaActual),
+      variacionCompraPesos: this.calcDeltaPesos(compraAnterior, compraActual),
+      variacionVentaPesos: this.calcDeltaPesos(ventaAnterior, ventaActual),
       anosSpan,
       comparaUltimasDos
     };
@@ -519,12 +540,15 @@ export class EntradaInventarioComponent implements OnInit, OnDestroy {
     const ventas = rows.map((r) => r.precioVenta ?? 0);
     const maxVenta = Math.max(...ventas, 1);
 
-    return rows.map((r) => {
+    return rows.map((r, idx) => {
       const compra = r.precioCompra ?? 0;
       const venta = r.precioVenta ?? 0;
       const margen = Math.max(0, venta - compra);
       const compraRatio = venta > 0 ? (compra / venta) * 100 : 0;
       const margenRatio = venta > 0 ? (margen / venta) * 100 : 0;
+      const ventaAnterior = idx > 0 ? rows[idx - 1].precioVenta ?? null : null;
+      const deltaVenta =
+        ventaAnterior != null ? venta - ventaAnterior : null;
 
       return {
         id: r.id,
@@ -535,7 +559,8 @@ export class EntradaInventarioComponent implements OnInit, OnDestroy {
         ganancia: r.porcentajeGanancia ?? null,
         ventaPct: (venta / maxVenta) * 100,
         compraRatio,
-        margenRatio
+        margenRatio,
+        deltaVenta
       };
     });
   }
@@ -565,6 +590,32 @@ export class EntradaInventarioComponent implements OnInit, OnDestroy {
         this.preview = result;
         this.previewLoading = false;
       });
+  }
+
+  private validarEgresoYLoadEntrada(): void {
+    this.loading = true;
+    this.egresosService.getEgresoById(this.egresoId).subscribe({
+      next: (egreso) => {
+        if (!egresoPermiteEntradaInventario(egreso)) {
+          this.loading = false;
+          this.snackBar.open(
+            'Este tipo de egreso no permite entrada de almacén',
+            'Cerrar',
+            { duration: 5000 }
+          );
+          this.router.navigate(['/apps/financiero/egresos']);
+          return;
+        }
+        this.loadEntrada();
+      },
+      error: () => {
+        this.loading = false;
+        this.snackBar.open('No se pudo validar el egreso', 'Cerrar', {
+          duration: 5000
+        });
+        this.router.navigate(['/apps/financiero/egresos']);
+      }
+    });
   }
 
   private loadEntrada(): void {
@@ -720,7 +771,7 @@ export class EntradaInventarioComponent implements OnInit, OnDestroy {
     this.historialLoading = false;
     this.historialVistaPagina = 0;
     this.ocultarResultadosBusqueda();
-    this.suppressSearch = true;
+    this.suppressSearch = false;
     this.lineForm.patchValue(
       { busqueda: '', precioCompra: null, precioVenta: null, valorTotal: null, cantidad: 1 },
       { emitEvent: false }
@@ -974,6 +1025,39 @@ export class EntradaInventarioComponent implements OnInit, OnDestroy {
         this.historialLoading = false;
       }
     });
+  }
+
+  calcDeltaPesos(
+    anterior: number | null | undefined,
+    nuevo: number | null | undefined
+  ): number | null {
+    if (anterior == null || nuevo == null || isNaN(anterior) || isNaN(nuevo)) {
+      return null;
+    }
+    return nuevo - anterior;
+  }
+
+  tieneVariacionResumen(deltaPesos: number | null, pct: number | null): boolean {
+    return (
+      (deltaPesos != null && deltaPesos !== 0) ||
+      (pct != null && pct !== 0)
+    );
+  }
+
+  formatDeltaPesosResumen(delta: number | null | undefined): string {
+    if (delta == null || isNaN(delta) || delta === 0) return '';
+    const sign = delta > 0 ? '+' : '−';
+    return `${sign}${this.formatCurrency(Math.abs(delta))}`;
+  }
+
+  formatDeltaPesosChart(delta: number | null | undefined): string {
+    return this.formatDeltaPesosResumen(delta);
+  }
+
+  formatPctResumen(pct: number | null | undefined): string {
+    if (pct == null || isNaN(pct)) return '';
+    const sign = pct > 0 ? '+' : '';
+    return `${sign}${pct.toFixed(1)}%`;
   }
 
   calcVariacionPct(

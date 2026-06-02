@@ -98,4 +98,9 @@ export class EgresosService {
     const headers = new HttpHeaders({ Accept: 'application/json' });
     return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers });
   }
+
+  getEgresoById(id: number): Observable<EgresoDto> {
+    const headers = new HttpHeaders({ Accept: 'application/json' });
+    return this.http.get<EgresoDto>(`${this.apiUrl}/${id}`, { headers });
+  }
 }

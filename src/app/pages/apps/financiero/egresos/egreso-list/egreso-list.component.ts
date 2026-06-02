@@ -54,6 +54,7 @@ import {
   EntradaInventarioService,
   EntradaInventarioEstadoResumenDto
 } from '../../entrada-inventario/service/entrada-inventario.service';
+import { egresoPermiteEntradaInventario } from '../util/egreso-permite-entrada-inventario.util';
 
 @Component({
   selector: 'gm-egreso-list',
@@ -426,11 +427,18 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   irEntradaInventario(egreso: EgresoDto, event?: Event): void {
     event?.stopPropagation();
+    if (!this.permiteEntradaInventario(egreso)) {
+      return;
+    }
     this.router.navigate([
       '/apps/financiero/egresos',
       egreso.id,
       'entrada-inventario'
     ]);
+  }
+
+  permiteEntradaInventario(egreso: EgresoDto): boolean {
+    return egresoPermiteEntradaInventario(egreso);
   }
 
   tooltipEntradaInventario(egresoId: number): string {
@@ -456,7 +464,10 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private cargarResumenEntradas(): void {
-    const ids = this.dataSource.map((e) => e.id).filter((id) => id != null);
+    const ids = this.dataSource
+      .filter((e) => this.permiteEntradaInventario(e))
+      .map((e) => e.id)
+      .filter((id) => id != null);
     if (ids.length === 0) {
       this.entradaResumenMap.clear();
       return;

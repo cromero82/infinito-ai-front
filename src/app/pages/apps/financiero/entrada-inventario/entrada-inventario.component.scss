@@ -317,8 +317,8 @@
   border: 1px solid rgba(0, 0, 0, 0.08);
 
   &--main {
-    flex: 0 0 60%;
-    max-width: 60%;
+    flex: 0 0 55%;
+    max-width: 55%;
     min-width: 0;
     padding: 0.65rem 0.75rem;
     display: flex;
@@ -389,8 +389,8 @@
 }
 
 .historial-precios-panel {
-  flex: 0 0 40%;
-  max-width: 40%;
+  flex: 0 0 45%;
+  max-width: 45%;
   min-width: 0;
   padding: 0.65rem 0.7rem;
   border-radius: 8px;
@@ -494,10 +494,26 @@
 
   &__stat {
     display: grid;
-    grid-template-columns: 3.2rem 1fr auto;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: 0.25rem 0.35rem;
     font-size: 0.72rem;
+  }
+
+  &__ico {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    flex-shrink: 0;
+    opacity: 0.85;
+
+    &--compra {
+      color: #e65100;
+    }
+
+    &--venta {
+      color: #2e7d32;
+    }
   }
 
   &__label {
@@ -532,13 +548,207 @@
     font-size: 0.68rem;
     white-space: nowrap;
   }
+
+  &__variacion {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.15rem;
+    font-weight: 700;
+    font-size: 0.68rem;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__delta {
+    white-space: nowrap;
+  }
+
+  &__sep {
+    opacity: 0.45;
+    font-weight: 500;
+  }
+}
+
+.historial-vista {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+    align-items: end;
+    overflow: visible;
+  }
+
+  &__col {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+    gap: 0.2rem;
+    overflow: visible;
+
+    &:hover {
+      .historial-vista__details {
+        display: block;
+      }
+    }
+
+    &--latest .historial-vista__dot {
+      background: #1565c0;
+      box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.2);
+    }
+
+    &--latest .historial-vista__fecha {
+      color: #1565c0;
+      opacity: 0.9;
+    }
+  }
+
+  &__bar {
+    width: 100%;
+    min-height: 7.5rem;
+    height: 7.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0.15rem 0.1rem 0;
+
+    .historial-chart__bar-wrap {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+      height: 100%;
+    }
+
+    .historial-chart__stack {
+      flex-shrink: 0;
+      overflow: visible;
+    }
+
+    .historial-chart__delta-badge {
+      min-width: max-content;
+      padding: 0.1rem 0.35rem;
+      font-size: 0.54rem;
+      gap: 0.1rem;
+      z-index: 3;
+
+      mat-icon {
+        width: 12px;
+        height: 12px;
+        font-size: 12px;
+      }
+    }
+  }
+
+  &__axis {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    width: 100%;
+    min-height: 0;
+  }
+
+  &__dot {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.22);
+  }
+
+  &__fecha {
+    font-size: 0.58rem;
+    font-weight: 600;
+    opacity: 0.55;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    text-transform: capitalize;
+    text-align: center;
+  }
+
+  &__details {
+    display: none;
+    position: absolute;
+    left: 50%;
+    bottom: 1.65rem;
+    transform: translateX(-50%);
+    z-index: 4;
+    width: max-content;
+    min-width: calc(100% - 0.2rem);
+    max-width: 11rem;
+    padding: 0.35rem 0.4rem;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    pointer-events: none;
+  }
+
+  &__diff {
+    display: block;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #1565c0;
+    margin-bottom: 0.15rem;
+    text-transform: none;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.68rem;
+    line-height: 1.35;
+  }
+
+  &__ico {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+    flex-shrink: 0;
+    opacity: 0.75;
+
+    &--compra {
+      color: #e65100;
+    }
+
+    &--venta {
+      color: #2e7d32;
+    }
+  }
+
+  &__precio {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__ganancia {
+    margin-top: 0.1rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    opacity: 0.85;
+  }
 }
 
 .historial-chart-area {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0;
 }
 
 .historial-chart {
@@ -574,6 +784,7 @@
     align-items: center;
     justify-content: flex-end;
     gap: 0.12rem;
+    overflow: visible;
   }
 
   &__top-label {
@@ -586,6 +797,7 @@
   }
 
   &__stack {
+    position: relative;
     width: 62%;
     min-width: 14px;
     max-width: 36px;
@@ -594,25 +806,68 @@
     justify-content: flex-end;
     min-height: 4px;
     border-radius: 4px 4px 0 0;
-    overflow: hidden;
+    overflow: visible;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  }
+
+  &__delta-badge {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 50%);
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.1rem;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
+    font-size: 0.54rem;
+    font-weight: 700;
+    line-height: 1.1;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    pointer-events: auto;
+    min-width: max-content;
+
+    mat-icon {
+      width: 12px;
+      height: 12px;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    &--up {
+      color: #2e7d32;
+      border-color: rgba(46, 125, 50, 0.35);
+    }
+
+    &--down {
+      color: #c62828;
+      border-color: rgba(198, 40, 40, 0.35);
+    }
   }
 
   &__segment {
     width: 100%;
     min-height: 2px;
     transition: height 0.25s ease;
+    border-radius: 0;
 
     &--compra {
       background: linear-gradient(180deg, #ffb74d 0%, #e65100 100%);
+      border-radius: 0 0 3px 3px;
     }
 
     &--venta {
       background: linear-gradient(180deg, #81c784 0%, #2e7d32 100%);
+      border-radius: 3px 3px 0 0;
     }
   }
 
   &__lbl {
+    display: none;
     font-size: 0.58rem;
     opacity: 0.55;
     white-space: nowrap;
@@ -620,28 +875,6 @@
     text-overflow: ellipsis;
     max-width: 100%;
     text-transform: capitalize;
-  }
-}
-
-.historial-chart-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem 0.65rem;
-  font-size: 0.62rem;
-  opacity: 0.6;
-  flex-shrink: 0;
-  align-items: center;
-
-  span {
-    display: flex;
-    align-items: center;
-    gap: 0.2rem;
-  }
-
-  &__hint {
-    margin-left: auto;
-    font-style: italic;
-    opacity: 0.75;
   }
 }
 
@@ -767,21 +1000,6 @@
     font-size: 0.68rem;
     font-weight: 600;
     opacity: 0.85;
-  }
-}
-
-.dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-
-  &--compra {
-    background: #e65100;
-  }
-
-  &--venta {
-    background: #2e7d32;
   }
 }
 
@@ -985,7 +1203,7 @@
   }
 
   .historial-chart--paged,
-  .historial-timeline--paged {
+  .historial-vista__grid {
     grid-template-columns: 1fr;
   }
 
