@@ -49,3 +49,8 @@ testem.log
 Thumbs.db
 
 /ARCHIVE/*
+
+# Documentación Cursor en .cursor/ (override: ~/.gitignore_global ignora *.md)
+!.cursor/
+!.cursor/**/
+!.cursor/**/*.md
