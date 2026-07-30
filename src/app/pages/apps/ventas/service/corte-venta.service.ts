@@ -8,6 +8,10 @@ import { environment } from '../../../../../environments/environment';
  */
 export interface VentaTipoCorteDto {
   metodoPagoId: number;
+  base?: number;
+  totalVentasSistema?: number;
+  totalEgresosSistema?: number;
+  totalMovimientosSistema?: number;
   totalSistema: number;
 }
 
@@ -23,6 +27,51 @@ export interface ConsultarRangoCorteDto {
   otrosCortesIntersectados: any[];
 }
 
+export interface DistribucionEfectivoPendienteDto {
+  pendiente: boolean;
+  corteVentaId?: number;
+  cajaEfectivoId?: number;
+  cajaEfectivoNombre?: string;
+  saldoCajaEfectivo?: number;
+  cajaMenorId?: number;
+  cajaMenorNombre?: string;
+  cajaGeneralId?: number;
+  cajaGeneralNombre?: string;
+}
+
+export interface DistribucionEfectivoRequest {
+  base: number;
+  montoCajaMenor: number;
+  montoCajaGeneral: number;
+  observacion?: string;
+}
+
+export interface DistribucionEfectivoResultDto {
+  ok: boolean;
+  corteVentaId: number;
+  baseSiguienteEfectivo: number;
+}
+
+export interface BaseInicialPendienteDto {
+  pendiente: boolean;
+  cajaEfectivoId?: number;
+  cajaEfectivoNombre?: string;
+  motivoMovimientoId?: number;
+  motivoMovimientoNombre?: string;
+}
+
+export interface BaseInicialRequest {
+  valor: number;
+  fecha?: string;
+  observacion?: string;
+}
+
+export interface BaseInicialResultDto {
+  ok: boolean;
+  baseSiguienteEfectivo: number;
+  movimientoId: number;
+}
+
 /**
  * DTO de venta tipo en un corte (search)
  */
@@ -32,6 +81,34 @@ export interface VentaTipoSearchDto {
   total: number;
   totalSistema: number;
   corteVentaId?: number;
+}
+
+export type EstadoCorteVenta = 'creada' | 'revisada' | 'eliminado';
+export type ModoCapturaCorte =
+  | 'DECLARADO_CAJERO'
+  | 'SOLO_VISIBLE'
+  | 'DECLARADO_ADMIN';
+export type EstadoRevisionCorte = 'PENDIENTE' | 'OK' | 'SUGERENCIA';
+
+export interface CorteVentaDetalleDto {
+  id?: number;
+  corteVentaId?: number;
+  metodoPagoId: number;
+  origenFondosId?: number | null;
+  base: number;
+  totalVentasSistema: number;
+  totalEgresosSistema: number;
+  totalMovimientosSistema: number;
+  totalSistema: number;
+  total: number | null;
+  desfase: number | null;
+  motivoDesfaseId?: number | null;
+  modoCaptura: ModoCapturaCorte;
+  declaradoPor?: string | null;
+  revisionEstado: EstadoRevisionCorte;
+  revisionComentario?: string | null;
+  ajusteGenerado?: boolean;
+  orden?: number;
 }
 
 /**
@@ -46,6 +123,12 @@ export interface CorteVentaSearchItemDto {
   total: number;
   totalSistema: number;
   ventasTipo: VentaTipoSearchDto[];
+  detalles?: CorteVentaDetalleDto[];
+  estado: EstadoCorteVenta;
+  observacion?: string | null;
+  revisadoPor?: string | null;
+  fechaRevision?: string | null;
+  ultimoVigente?: boolean;
   ultimoCorte: boolean;
   actual: boolean;
 }
@@ -67,6 +150,10 @@ export interface VentaTipoRegistroItemDto {
   metodoPagoId: number;
   total: number;
   totalSistema: number;
+  totalVentasSistema?: number;
+  totalEgresosSistema?: number;
+  desfase?: number;
+  motivoDesfaseId?: number | null;
 }
 
 /**
@@ -79,7 +166,17 @@ export interface RegistrarCorteDto {
   totalSistema: number;
   ultimoCorte: boolean;
   actual: boolean;
+  observacion?: string | null;
   ventasTipo: VentaTipoRegistroItemDto[];
+  detalles?: CorteVentaDetalleDto[];
+}
+
+export interface DetalleRevisionRequest {
+  detalleId: number;
+  total?: number | null;
+  motivoDesfaseId?: number | null;
+  revisionEstado: 'OK' | 'SUGERENCIA';
+  revisionComentario?: string | null;
 }
 
 /**
@@ -250,6 +347,12 @@ export class CorteVentaService {
       total,
       totalSistema,
       ventasTipo,
+      detalles: [],
+      estado: base.estado ?? 'revisada',
+      observacion: base.observacion,
+      revisadoPor: base.revisadoPor,
+      fechaRevision: base.fechaRevision,
+      ultimoVigente: false,
       ultimoCorte,
       actual
     };
@@ -301,12 +404,57 @@ export class CorteVentaService {
    * @param dto Datos del corte a registrar
    * @returns Observable con la respuesta del servidor
    */
-  registrarCorte(dto: RegistrarCorteDto): Observable<unknown> {
+  registrarCorte(dto: RegistrarCorteDto): Observable<CorteVentaSearchItemDto> {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       Accept: 'application/json'
     });
-    return this.http.post(this.apiUrl, dto, { headers });
+    return this.http.post<CorteVentaSearchItemDto>(this.apiUrl, dto, { headers });
+  }
+
+  obtenerDistribucionPendiente(): Observable<DistribucionEfectivoPendienteDto> {
+    return this.http.get<DistribucionEfectivoPendienteDto>(
+      `${this.apiUrl}/distribucion-pendiente`
+    );
+  }
+
+  confirmarDistribucionEfectivo(
+    corteId: number,
+    body: DistribucionEfectivoRequest
+  ): Observable<DistribucionEfectivoResultDto> {
+    return this.http.post<DistribucionEfectivoResultDto>(
+      `${this.apiUrl}/${corteId}/distribucion-efectivo`,
+      body
+    );
+  }
+
+  obtenerBaseInicialPendiente(): Observable<BaseInicialPendienteDto> {
+    return this.http.get<BaseInicialPendienteDto>(
+      `${this.apiUrl}/base-inicial-pendiente`
+    );
+  }
+
+  confirmarBaseInicial(
+    body: BaseInicialRequest
+  ): Observable<BaseInicialResultDto> {
+    return this.http.post<BaseInicialResultDto>(
+      `${this.apiUrl}/base-inicial`,
+      body
+    );
+  }
+
+  obtenerPorId(id: number): Observable<CorteVentaSearchItemDto> {
+    return this.http.get<CorteVentaSearchItemDto>(`${this.apiUrl}/${id}`);
+  }
+
+  finalizarRevision(
+    id: number,
+    detalles: DetalleRevisionRequest[]
+  ): Observable<CorteVentaSearchItemDto> {
+    return this.http.put<CorteVentaSearchItemDto>(
+      `${this.apiUrl}/${id}/finalizar-revision`,
+      { detalles }
+    );
   }
 
   /**

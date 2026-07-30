@@ -5,7 +5,7 @@
         <div
           class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-wrap">
           <div class="flex items-center gap-2 flex-wrap min-w-0">
-            <h2 class="title m-0">Resumen económico</h2>
+            <h2 class="title m-0">Resumen económico (ayuda gerencial)</h2>
             <button
               mat-icon-button
               type="button"
@@ -56,6 +56,12 @@
               Procesar período
             </button>
           </div>
+        </div>
+
+        <div class="resumen-disclaimer-banner px-2 py-2 rounded text-sm">
+          Resumen de ayuda gerencial. Calcula ventas registradas en cortes del POS menos egresos
+          anotados en el sistema. No sustituye contabilidad, libros oficiales ni declaración de
+          renta. Un egreso aquí no implica gasto deducible sin soporte y criterio de un contador.
         </div>
 
         <mat-menu
@@ -199,14 +205,14 @@
                   </ng-container>
                   <ng-container matColumnDef="utilidad">
                     <th mat-header-cell *matHeaderCellDef class="col-utilidad">
-                      Utilidad
+                      Resultado operativo
                     </th>
                     <td mat-cell *matCellDef="let row" class="col-utilidad">
                       {{ formatCurrency(row.utilidad) }}
                     </td>
                   </ng-container>
                   <ng-container matColumnDef="porcentajeUtilidad">
-                    <th mat-header-cell *matHeaderCellDef>% utilidad</th>
+                    <th mat-header-cell *matHeaderCellDef>% sobre ventas</th>
                     <td mat-cell *matCellDef="let row">
                       {{ formatPct(row.porcentajeUtilidad) }}
                     </td>
@@ -296,14 +302,14 @@
                   </ng-container>
                   <ng-container matColumnDef="utilidad">
                     <th mat-header-cell *matHeaderCellDef class="col-utilidad">
-                      Utilidad
+                      Resultado operativo
                     </th>
                     <td mat-cell *matCellDef="let row" class="col-utilidad">
                       {{ formatCurrency(row.utilidad) }}
                     </td>
                   </ng-container>
                   <ng-container matColumnDef="porcentajeUtilidad">
-                    <th mat-header-cell *matHeaderCellDef>% utilidad</th>
+                    <th mat-header-cell *matHeaderCellDef>% sobre ventas</th>
                     <td mat-cell *matCellDef="let row">
                       {{ formatPct(row.porcentajeUtilidad) }}
                     </td>
@@ -388,14 +394,14 @@
                   </ng-container>
                   <ng-container matColumnDef="utilidad">
                     <th mat-header-cell *matHeaderCellDef class="col-utilidad">
-                      Utilidad
+                      Resultado operativo
                     </th>
                     <td mat-cell *matCellDef="let row" class="col-utilidad">
                       {{ formatCurrency(row.utilidad) }}
                     </td>
                   </ng-container>
                   <ng-container matColumnDef="porcentajeUtilidad">
-                    <th mat-header-cell *matHeaderCellDef>% utilidad</th>
+                    <th mat-header-cell *matHeaderCellDef>% sobre ventas</th>
                     <td mat-cell *matCellDef="let row">
                       {{ formatPct(row.porcentajeUtilidad) }}
                     </td>
@@ -472,6 +478,10 @@
           </div>
         }
       </div>
+      <p class="resumen-table-footnote">
+        Cifras aproximadas para decisiones del día a día. Para obligaciones tributarias consulte
+        a su contador con soportes y libros del periodo.
+      </p>
     </div>
   </div>
 </div>

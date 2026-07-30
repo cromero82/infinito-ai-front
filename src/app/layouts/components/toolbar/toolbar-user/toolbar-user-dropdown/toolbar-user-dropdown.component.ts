@@ -93,6 +93,14 @@ export class ToolbarUserDropdownComponent implements OnInit {
   private buildMenuItems(): void {
     this.items = [
       {
+        id: '0',
+        icon: 'mat:store',
+        label: 'Datos del negocio',
+        description: 'Configuración del establecimiento',
+        colorClass: 'text-indigo-600',
+        route: '/apps/tickets/configuracion-establecimiento'
+      },
+      {
         id: '1',
         icon: 'mat:account_circle',
         label: 'Perfil de Usuario',

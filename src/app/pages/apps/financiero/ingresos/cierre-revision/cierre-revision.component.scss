@@ -1,0 +1,68 @@
+.revision-content {
+  min-width: min(1180px, 90vw);
+  max-height: 75vh;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.cabecera {
+  display: flex;
+  gap: 24px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  background: #f6f7f9;
+}
+
+.table-wrap {
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 1100px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th,
+td {
+  padding: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  text-align: left;
+  vertical-align: top;
+}
+
+td small {
+  display: block;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.revision-cell {
+  min-width: 280px;
+}
+
+.revision-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.selected-ok {
+  color: #137333;
+  border-color: #137333;
+}
+
+.selected-suggestion {
+  color: #b06000;
+  border-color: #b06000;
+}
+
+.comentario,
+mat-form-field {
+  width: 100%;
+  margin-top: 6px;
+}

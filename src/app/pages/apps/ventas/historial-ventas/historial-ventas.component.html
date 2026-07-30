@@ -11,6 +11,7 @@
         <mat-button-toggle value="todos">Todos</mat-button-toggle>
         <mat-button-toggle value="pagado">Pagado</mat-button-toggle>
         <mat-button-toggle value="anulados">Anulados</mat-button-toggle>
+        <mat-button-toggle value="restaurados">Restaurados</mat-button-toggle>
       </mat-button-toggle-group>
     </div>
 
@@ -64,6 +65,14 @@
               <span
                 class="recibo-total"
                 [innerHTML]="formatCurrencyWithBold(recibo.total)"></span>
+              @if (recibo.documentoVentaConsecutivo) {
+                <span class="recibo-consecutivo">{{
+                  recibo.documentoVentaConsecutivo
+                }}</span>
+              }
+              @if (recibo.restaurado || selectedFilter === 'restaurados') {
+                <span class="recibo-chip restaurado">Restaurado</span>
+              }
               <div class="recibo-fecha-cliente-row">
                 <span class="recibo-fecha">{{
                   formatDate(recibo.fechaCreacion)
@@ -108,9 +117,18 @@
               color="warn"
               type="button"
               class="anular-button"
-              [disabled]="anulandoRecibo || isReciboAnulado()"
-              (click)="anularFactura()">
-              {{ anulandoRecibo ? "Anulando..." : "Anular factura" }}
+              [disabled]="anulandoRecibo || isReciboAnulado() || !isReciboPagado()"
+              (click)="anularVenta()">
+              {{ anulandoRecibo ? "Anulando..." : "Anular venta" }}
+            </button>
+            <button
+              mat-flat-button
+              color="accent"
+              type="button"
+              class="restaurar-button"
+              [disabled]="restaurandoTicket || !isReciboPagado()"
+              (click)="restaurarTicket()">
+              {{ restaurandoTicket ? "Restaurando..." : "Restaurar ticket" }}
             </button>
             <button
               mat-flat-button
@@ -147,6 +165,63 @@
       }
 
       @if (selectedReciboId && !detallesLoading && !detallesError) {
+        @if (documentosLoading) {
+          <div class="loading documentos-loading">Cargando documentos...</div>
+        }
+        @if (!documentosLoading && documentos) {
+          <mat-expansion-panel class="documentos-panel" expanded>
+            <mat-expansion-panel-header>
+              <mat-panel-title>Documentos y operaciones</mat-panel-title>
+            </mat-expansion-panel-header>
+            <div class="documentos-content">
+              @if (documentos.documentoVenta?.consecutivo) {
+                <div class="doc-row">
+                  <span class="doc-label">Comprobante venta</span>
+                  <span class="doc-badge">{{
+                    documentos.documentoVenta!.consecutivo
+                  }}</span>
+                </div>
+                <div class="doc-row">
+                  <span class="doc-label">Estado documento</span>
+                  <span>{{ documentos.documentoVenta!.estado ?? '—' }}</span>
+                </div>
+              }
+              @for (nota of documentos.notasAjuste ?? []; track nota.id) {
+                <div class="doc-row nota-row">
+                  <span class="doc-label">{{
+                    nota.tipo === 'DEBITO' ? 'Nota débito' : 'Nota crédito'
+                  }}</span>
+                  <span class="doc-badge nc">{{ nota.consecutivo }}</span>
+                </div>
+                @if (nota.motivoNombre || nota.motivoTexto) {
+                  <div class="doc-row sub">
+                    <span class="doc-label">Motivo</span>
+                    <span>{{
+                      nota.motivoNombre ?? nota.motivoCodigo
+                    }}@if (nota.motivoTexto) {
+                      — {{ nota.motivoTexto }}
+                    }</span>
+                  </div>
+                }
+                @if (nota.fechaHecho) {
+                  <div class="doc-row sub">
+                    <span class="doc-label">Fecha operación</span>
+                    <span>{{ formatDate(nota.fechaHecho) }}</span>
+                  </div>
+                }
+              }
+              @if (documentos.documentoVentaNuevo?.consecutivo) {
+                <div class="doc-row">
+                  <span class="doc-label">VTA nueva</span>
+                  <span class="doc-badge">{{
+                    documentos.documentoVentaNuevo!.consecutivo
+                  }}</span>
+                </div>
+              }
+            </div>
+          </mat-expansion-panel>
+        }
+
         <div class="detalle-content">
           <div class="detalle-container">
             <div class="detalle-wrapper">

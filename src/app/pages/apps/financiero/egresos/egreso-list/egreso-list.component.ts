@@ -54,6 +54,15 @@ import {
   EntradaInventarioService,
   EntradaInventarioEstadoResumenDto
 } from '../../entrada-inventario/service/entrada-inventario.service';
+import {
+  MetodoPagoService,
+  MetodoPagoDto
+} from '../../../ventas/service/metodo-pago.service';
+import {
+  OrigenFondosService
+} from '../../origenes-fondos/service/origen-fondos.service';
+import { OrigenFondosArbolItemDto } from '../../origenes-fondos/util/origen-fondos-arbol.util';
+import { etiquetaMetodoPagoEgresoPorId } from '../util/metodo-pago-egreso-label.util';
 import { egresoPermiteEntradaInventario } from '../util/egreso-permite-entrada-inventario.util';
 
 @Component({
@@ -81,6 +90,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   displayedColumns: string[] = [
     'fecha',
     'valor',
+    'origen',
     'proveedor',
     'tipoEgreso',
     'descripcion',
@@ -89,6 +99,8 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     'delete'
   ];
   dataSource: EgresoDto[] = [];
+  metodosPago: MetodoPagoDto[] = [];
+  origenesArbol: OrigenFondosArbolItemDto[] = [];
   activeFilters: Array<{ label: string; value: string }> = [];
   selectedRowId: number | null = null;
   eliminandoEgresoId: number | null = null;
@@ -127,13 +139,17 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     private footerService: FooterService,
     private snackBar: MatSnackBar,
     private router: Router,
-    private entradaInventarioService: EntradaInventarioService
+    private entradaInventarioService: EntradaInventarioService,
+    private metodoPagoService: MetodoPagoService,
+    private origenFondosService: OrigenFondosService
   ) {}
 
   ngOnInit() {
     this.footerService.clearFooterItems();
     this.applyViewport();
     this.loadTiposYProveedores();
+    this.loadMetodosPago();
+    this.loadOrigenesArbol();
     this.searchEgresos();
 
     this.descripcionCtrl.valueChanges
@@ -145,6 +161,35 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.tipoEgresoIdCtrl.valueChanges.subscribe(() => this.searchEgresos());
     this.proveedorIdCtrl.valueChanges.subscribe(() => this.searchEgresos());
+  }
+
+  private loadMetodosPago() {
+    this.metodoPagoService.obtenerMetodosPagoParaEgresos().subscribe({
+      next: (metodos) => {
+        this.metodosPago = metodos ?? [];
+      }
+    });
+  }
+
+  origenLabel(egreso: EgresoDto): string {
+    if (egreso.origenFondosId != null) {
+      const cuenta = this.origenesArbol.find(
+        (c) => c.id === egreso.origenFondosId
+      );
+      if (cuenta) {
+        return cuenta.nombreDisplay.replace(/^[─\s]+/, '').trim() || cuenta.nombre;
+      }
+      return `#${egreso.origenFondosId}`;
+    }
+    return etiquetaMetodoPagoEgresoPorId(egreso.metodoPagoId, this.metodosPago);
+  }
+
+  private loadOrigenesArbol() {
+    this.origenFondosService.findArbol().subscribe({
+      next: (items) => {
+        this.origenesArbol = items ?? [];
+      }
+    });
   }
 
   private loadTiposYProveedores() {

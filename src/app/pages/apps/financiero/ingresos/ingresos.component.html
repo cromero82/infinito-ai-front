@@ -15,6 +15,18 @@
             <mat-icon svgIcon="mat:receipt_long" class="align-middle"></mat-icon>
           </mat-button-toggle>
         </mat-button-toggle-group>
+        @if (vistaCtrl.value === "corte") {
+          <mat-button-toggle-group
+            [formControl]="estadoCorteCtrl"
+            appearance="legacy"
+            class="estado-corte-toggle">
+            <mat-button-toggle value="vigentes">Vigentes</mat-button-toggle>
+            <mat-button-toggle value="creada">Creados</mat-button-toggle>
+            <mat-button-toggle value="revisada">Revisados</mat-button-toggle>
+            <mat-button-toggle value="eliminado">Eliminados</mat-button-toggle>
+            <mat-button-toggle value="todos">Todos</mat-button-toggle>
+          </mat-button-toggle-group>
+        }
         <button
           mat-flat-button
           color="primary"
@@ -302,21 +314,28 @@
                   <h3 class="title font-medium mb-3">Detalles por Fecha</h3>
                   <div
                     class="ingresos-details-table overflow-x-auto -mx-1 px-1">
-                    <table class="w-full border-collapse text-sm min-w-[920px]">
+                    <table class="w-full border-collapse text-sm min-w-[1100px]">
                       <thead>
                         <tr class="border-b">
                           <th class="text-left py-2 px-2">Usuario</th>
                           <th class="text-left py-2 px-2">Fecha inicio</th>
                           <th class="text-left py-2 px-2">Fecha fin</th>
+                          <th class="text-left py-2 px-2">Estado</th>
                           <th class="text-right py-2 px-2">Total</th>
                           <th class="text-right py-2 px-2">Total sistema</th>
                           <th class="text-left py-2 px-2">Métodos de pago</th>
-                          <th class="text-center py-2 px-2 w-12"></th>
+                          <th class="text-left py-2 px-2">Observación</th>
+                          <th class="text-center py-2 px-2 w-24"></th>
                         </tr>
                       </thead>
                       <tbody>
                         @for (corte of cortesVentaListado; track corte.id) {
-                          <tr class="border-b hover:bg-gray-50 align-top">
+                          <tr
+                            class="border-b hover:bg-gray-50 align-top"
+                            [class.cursor-pointer]="
+                              esAdmin && corte.estado === 'creada'
+                            "
+                            (click)="abrirRevisionCorte(corte, $event)">
                             <td class="py-2 px-2">
                               {{ nombreUsuarioDesdeCache(corte.usuarioId) }}
                             </td>
@@ -325,6 +344,19 @@
                             </td>
                             <td class="py-2 px-2 whitespace-nowrap">
                               {{ formatearFechaHora(corte.fechaFin) }}
+                            </td>
+                            <td class="py-2 px-2">
+                              <span
+                                class="estado-corte"
+                                [class.estado-creada]="corte.estado === 'creada'"
+                                [class.estado-revisada]="
+                                  corte.estado === 'revisada'
+                                "
+                                [class.estado-eliminado]="
+                                  corte.estado === 'eliminado'
+                                ">
+                                {{ corte.estado }}
+                              </span>
                             </td>
                             <td class="text-right py-2 px-2 font-medium">
                               {{ formatCurrency(corte.total) }}
@@ -345,23 +377,43 @@
                                 }
                               </div>
                             </td>
+                            <td class="py-2 px-2">
+                              {{ corte.observacion || "—" }}
+                            </td>
                             <td class="py-2 px-1 text-center">
-                              <button
-                                mat-icon-button
-                                type="button"
-                                color="warn"
-                                [disabled]="eliminandoCorteId === corte.id"
-                                (click)="eliminarCorteVenta(corte, $event)"
-                                matTooltip="Eliminar corte">
-                                @if (eliminandoCorteId === corte.id) {
+                              @if (esAdmin && corte.estado === "creada") {
+                                <button
+                                  mat-icon-button
+                                  type="button"
+                                  color="primary"
+                                  (click)="abrirRevisionCorte(corte, $event)"
+                                  matTooltip="Revisar cierre">
                                   <mat-icon
-                                    class="animate-spin"
-                                    svgIcon="mat:hourglass_empty"></mat-icon>
-                                } @else {
-                                  <mat-icon
-                                    svgIcon="mat:delete_forever"></mat-icon>
-                                }
-                              </button>
+                                    svgIcon="mat:fact_check"></mat-icon>
+                                </button>
+                              }
+                              @if (
+                                esAdmin &&
+                                corte.ultimoVigente &&
+                                corte.estado !== "eliminado"
+                              ) {
+                                <button
+                                  mat-icon-button
+                                  type="button"
+                                  color="warn"
+                                  [disabled]="eliminandoCorteId === corte.id"
+                                  (click)="eliminarCorteVenta(corte, $event)"
+                                  matTooltip="Eliminar último corte">
+                                  @if (eliminandoCorteId === corte.id) {
+                                    <mat-icon
+                                      class="animate-spin"
+                                      svgIcon="mat:hourglass_empty"></mat-icon>
+                                  } @else {
+                                    <mat-icon
+                                      svgIcon="mat:delete_forever"></mat-icon>
+                                  }
+                                </button>
+                              }
                             </td>
                           </tr>
                         }

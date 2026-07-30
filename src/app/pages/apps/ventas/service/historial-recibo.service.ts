@@ -20,6 +20,54 @@ export interface HistorialReciboDto {
   sesionId: number;
   total: number;
   montoRecibido?: number;
+  documentoVentaConsecutivo?: string | null;
+  restaurado?: boolean | null;
+}
+
+export interface DocumentoVentaResumenDto {
+  id: number;
+  consecutivo: string;
+  anio?: number;
+  historialReciboId?: number;
+  fechaHecho?: string;
+  total?: number;
+  metodoPagoId?: number;
+  clienteId?: number;
+  estado?: string;
+}
+
+export interface NotaAjusteResumenDto {
+  id: number;
+  tipo: string;
+  consecutivo: string;
+  totalAjuste?: number;
+  motivoCodigo?: string;
+  motivoNombre?: string;
+  motivoTexto?: string;
+  usuarioNombre?: string;
+  fechaHecho?: string;
+  operacionRestauracion?: boolean;
+}
+
+export interface HistorialDocumentosDto {
+  documentoVenta?: DocumentoVentaResumenDto | null;
+  notasAjuste?: NotaAjusteResumenDto[];
+  documentoVentaNuevo?: DocumentoVentaResumenDto | null;
+  restaurado?: boolean;
+  anuladoConNc?: boolean;
+}
+
+export interface RestaurarTicketResponseDto {
+  notaCreditoConsecutivo?: string;
+  notaAjusteId?: number;
+  ticketId?: number;
+  reciboId?: number;
+  documentoVentaConsecutivoAnulado?: string;
+}
+
+export interface MotivoOperacionRequestDto {
+  motivoOperacionCodigo?: string;
+  motivoTexto?: string;
 }
 
 export interface HistorialReciboPage {
@@ -73,7 +121,8 @@ export class HistorialReciboService {
     sort: string = 'fechaCreacion,desc',
     fecha?: string,
     estadoId?: number,
-    sesionId?: number | null
+    sesionId?: number | null,
+    restaurados?: boolean
   ): Observable<HistorialReciboPage> {
     const headers = new HttpHeaders({ 'Accept': 'application/json' });
     let params = new HttpParams()
@@ -94,6 +143,10 @@ export class HistorialReciboService {
     // Add sesionId parameter if provided
     if (sesionId !== undefined && sesionId !== null) {
       params = params.set('sesionId', String(sesionId));
+    }
+
+    if (restaurados) {
+      params = params.set('restaurados', 'true');
     }
     
     return this.http.get<HistorialReciboPage>(`${this.apiUrl}/search`, { headers, params });
@@ -137,6 +190,31 @@ export class HistorialReciboService {
     const headers = new HttpHeaders({ 'Accept': 'application/json' });
     const params = new HttpParams().set('fecha', fecha);
     return this.http.get<number>(`${this.apiUrl}/total-by-date`, { headers, params });
+  }
+
+  getDocumentos(reciboId: number): Observable<HistorialDocumentosDto> {
+    const headers = new HttpHeaders({ Accept: 'application/json' });
+    return this.http.get<HistorialDocumentosDto>(
+      `${this.apiUrl}/${reciboId}/documentos`,
+      { headers }
+    );
+  }
+
+  restaurarTicket(
+    reciboId: number,
+    sesionId: number,
+    body?: MotivoOperacionRequestDto
+  ): Observable<RestaurarTicketResponseDto> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    });
+    const params = new HttpParams().set('sesionId', String(sesionId));
+    return this.http.post<RestaurarTicketResponseDto>(
+      `${this.apiUrl}/${reciboId}/restaurar-ticket`,
+      body ?? {},
+      { headers, params }
+    );
   }
 }
 

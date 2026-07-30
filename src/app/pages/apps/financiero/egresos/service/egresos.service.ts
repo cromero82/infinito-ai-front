@@ -8,6 +8,8 @@ export interface EgresoDto {
   fecha: string;
   valor: number;
   descripcion: string;
+  metodoPagoId?: number;
+  origenFondosId?: number;
   proveedor: {
     id: number;
     nombre?: string;
@@ -22,6 +24,8 @@ export interface CreateEgresoRequest {
   fecha: string;
   valor: number;
   descripcion: string;
+  metodoPagoId: number;
+  origenFondosId: number;
   proveedor: { id: number };
 }
 

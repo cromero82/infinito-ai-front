@@ -45,6 +45,34 @@ table td {
   color: rgba(0, 0, 0, 0.6);
 }
 
+.estado-corte {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  text-transform: capitalize;
+  background: #eef1f4;
+}
+
+.estado-creada {
+  color: #8a4b00;
+  background: #fff3d6;
+}
+
+.estado-revisada {
+  color: #137333;
+  background: #e6f4ea;
+}
+
+.estado-eliminado {
+  color: #8b1a1a;
+  background: #fce8e6;
+}
+
+.estado-corte-toggle {
+  max-width: 460px;
+}
+
 .navigation-button {
   min-width: 120px;
   height: 40px;

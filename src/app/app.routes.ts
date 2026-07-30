@@ -75,6 +75,14 @@ export const appRoutes: VexRoutes = [
                   ),
                 data: { scrollDisabled: true }
               },
+              {
+                path: 'configuracion-establecimiento',
+                loadComponent: () =>
+                  import('./pages/apps/ventas/configuracion-establecimiento/configuracion-establecimiento.component').then(
+                    (m) => m.ConfiguracionEstablecimientoComponent
+                  ),
+                data: { scrollDisabled: true }
+              },
             ]
           },
           {
@@ -183,6 +191,14 @@ export const appRoutes: VexRoutes = [
                   import('./pages/apps/financiero/ingresos/ingresos.component').then(
                     (m) => m.IngresosComponent
                   ),
+                data: { scrollDisabled: true }
+              },
+              {
+                path: 'origenes-fondos',
+                loadComponent: () =>
+                  import(
+                    './pages/apps/financiero/origenes-fondos/origenes-list/origenes-list.component'
+                  ).then((m) => m.OrigenesListComponent),
                 data: { scrollDisabled: true }
               }
             ]

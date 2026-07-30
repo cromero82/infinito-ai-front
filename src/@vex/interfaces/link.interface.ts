@@ -3,4 +3,5 @@ export interface Link {
   route: string | string[];
   routerLinkActiveOptions?: { exact: boolean };
   disabled?: boolean;
+  badge?: string;
 }

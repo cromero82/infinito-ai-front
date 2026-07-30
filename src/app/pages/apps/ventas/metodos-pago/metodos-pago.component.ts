@@ -50,7 +50,7 @@ export class MetodosPagoComponent implements OnInit, OnDestroy {
 
   private cargarMetodosPago(): void {
     this.metodoPagoService
-      .obtenerMetodosPago()
+      .obtenerMetodosPagoParaTickets()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (metodos) =>

@@ -25,9 +25,16 @@ import {
   CorteVentaService,
   CorteVentaSearchItemDto
 } from '../../ventas/service/corte-venta.service';
-import { Subject, Observable } from 'rxjs';
-import { takeUntil, switchMap } from 'rxjs/operators';
+import { Subject, Observable, of } from 'rxjs';
+import { takeUntil, switchMap, catchError } from 'rxjs/operators';
 import { CierreVentasComponent } from './cierre-ventas/cierre-ventas.component';
+import { CierreRevisionComponent } from './cierre-revision/cierre-revision.component';
+import {
+  DistribucionEfectivoDialogComponent,
+  DistribucionEfectivoDialogResult
+} from './distribucion-efectivo-dialog/distribucion-efectivo-dialog.component';
+import { SesionesService } from '../../ventas/service/sesiones.service';
+import { Router } from '@angular/router';
 
 interface VentasPorFecha {
   fecha: string;
@@ -69,6 +76,11 @@ export class IngresosComponent implements OnInit, OnDestroy {
   ventasPorFechaVisibles: VentasPorFecha[] = [];
   /** Respuesta cruda de search (sin agrupar); modo "Datos corte de ventas". */
   cortesVentaListado: CorteVentaSearchItemDto[] = [];
+  todosCortesVenta: CorteVentaSearchItemDto[] = [];
+  estadoCorteCtrl = new FormControl<
+    'vigentes' | 'creada' | 'revisada' | 'eliminado' | 'todos'
+  >('vigentes');
+  esAdmin = false;
   eliminandoCorteId: number | null = null;
   loading = false;
   error: string | null = null;
@@ -191,10 +203,13 @@ export class IngresosComponent implements OnInit, OnDestroy {
     private metodoPagoService: MetodoPagoService,
     private dialog: MatDialog,
     private authService: AuthService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private sesionesService: SesionesService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
+    this.esAdmin = this.authService.isAdmin();
     const periodoInicial = this.periodoCtrl.value || 'semanal';
     this.diasVisibles = this.obtenerDiasPorPeriodo(periodoInicial);
 
@@ -206,6 +221,10 @@ export class IngresosComponent implements OnInit, OnDestroy {
           this.cargarVentasUltimos7Dias();
         }
       });
+
+    this.estadoCorteCtrl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.aplicarFiltroEstadoCorte());
 
     this.cargarMetodosPagoYVentas();
   }
@@ -361,17 +380,82 @@ export class IngresosComponent implements OnInit, OnDestroy {
   abrirModalCierreVentas(): void {
     this.dialog
       .open(CierreVentasComponent, {
-        width: '950px',
+        width: '1140px',
         disableClose: false,
         maxWidth: '95vw'
       })
       .afterClosed()
       .pipe(takeUntil(this.destroy$))
       .subscribe((result) => {
-        if (result?.success) {
-          this.refrescarDatosIngresosMismoRango();
+        if (!result?.success) {
+          return;
+        }
+        this.refrescarDatosIngresosMismoRango();
+        if (result.requiereLogout) {
+          this.cerrarSesionTrasCorteSinPermiso();
+          return;
+        }
+        if (result.abrirDistribucion) {
+          this.abrirDistribucionEfectivo();
         }
       });
+  }
+
+  private abrirDistribucionEfectivo(): void {
+    this.corteVentaService
+      .obtenerDistribucionPendiente()
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError(() => of({ pendiente: false }))
+      )
+      .subscribe((pendiente) => {
+        if (!pendiente?.pendiente) {
+          return;
+        }
+        this.dialog
+          .open(DistribucionEfectivoDialogComponent, {
+            width: '520px',
+            disableClose: true,
+            data: { pendiente }
+          })
+          .afterClosed()
+          .subscribe((res: DistribucionEfectivoDialogResult | undefined) => {
+            if (res?.confirmada) {
+              this.snackBar.open(
+                'Se cerrará la sesión para iniciar el próximo turno.',
+                'Cerrar',
+                { duration: 4000 }
+              );
+              this.cerrarSesionCompleta();
+              return;
+            }
+            if (res?.definirLuego) {
+              this.cerrarSesionCompleta();
+            }
+          });
+      });
+  }
+
+  private cerrarSesionTrasCorteSinPermiso(): void {
+    this.snackBar.open(
+      'Cierre registrado. Un administrador debe completar la Distribución de efectivo. Se cerrará la sesión.',
+      'Cerrar',
+      { duration: 6000 }
+    );
+    this.cerrarSesionCompleta();
+  }
+
+  private cerrarSesionCompleta(): void {
+    const sessionId = localStorage.getItem('session-id');
+    const idNum = sessionId ? Number(sessionId) : NaN;
+    const fin$ = Number.isFinite(idNum)
+      ? this.sesionesService.deleteSesion(idNum).pipe(catchError(() => of(null)))
+      : of(null);
+    fin$.subscribe(() => {
+      localStorage.removeItem('session-id');
+      this.authService.logout();
+      void this.router.navigateByUrl('/login');
+    });
   }
 
   /**
@@ -447,10 +531,22 @@ export class IngresosComponent implements OnInit, OnDestroy {
    */
   private aplicarRespuestaSearch(cortes: CorteVentaSearchItemDto[]): void {
     const lista = cortes ?? [];
-    this.cortesVentaListado = [...lista].sort((a, b) =>
+    this.todosCortesVenta = [...lista].sort((a, b) =>
       b.fechaIni.localeCompare(a.fechaIni)
     );
-    this.procesarRespuestaDashboardDesdeCortes(lista);
+    this.aplicarFiltroEstadoCorte();
+    this.procesarRespuestaDashboardDesdeCortes(
+      lista.filter((c) => c.estado !== 'eliminado')
+    );
+  }
+
+  private aplicarFiltroEstadoCorte(): void {
+    const filtro = this.estadoCorteCtrl.value ?? 'vigentes';
+    this.cortesVentaListado = this.todosCortesVenta.filter((c) => {
+      if (filtro === 'todos') return true;
+      if (filtro === 'vigentes') return c.estado !== 'eliminado';
+      return c.estado === filtro;
+    });
   }
 
   private procesarRespuestaDashboardDesdeCortes(cortes: CorteVentaSearchItemDto[]): void {
@@ -525,7 +621,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
     event?.stopPropagation();
     if (
       !confirm(
-        `¿Eliminar el corte #${corte.id}? Esta acción no se puede deshacer.`
+        `¿Eliminar el corte #${corte.id}? Se conservará en el histórico y se revertirán sus ajustes.`
       )
     ) {
       return;
@@ -538,10 +634,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
         next: () => {
           this.eliminandoCorteId = null;
           this.snackBar.open('Corte eliminado', 'Cerrar', { duration: 3000 });
-          this.cortesVentaListado = this.cortesVentaListado.filter(
-            (c) => c.id !== corte.id
-          );
-          this.aplicarRespuestaSearch(this.cortesVentaListado);
+          this.refrescarDatosIngresosMismoRango();
         },
         error: (err) => {
           this.eliminandoCorteId = null;
@@ -551,6 +644,27 @@ export class IngresosComponent implements OnInit, OnDestroy {
             'Cerrar',
             { duration: 5000 }
           );
+        }
+      });
+  }
+
+  abrirRevisionCorte(corte: CorteVentaSearchItemDto, event?: Event): void {
+    event?.stopPropagation();
+    if (!this.esAdmin || corte.estado !== 'creada') {
+      return;
+    }
+    this.dialog
+      .open(CierreRevisionComponent, {
+        data: { corteId: corte.id },
+        width: '1220px',
+        maxWidth: '96vw',
+        disableClose: true
+      })
+      .afterClosed()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((actualizado) => {
+        if (actualizado) {
+          this.refrescarDatosIngresosMismoRango();
         }
       });
   }

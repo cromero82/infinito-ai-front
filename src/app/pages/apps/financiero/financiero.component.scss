@@ -18,9 +18,31 @@
   flex-direction: column;
 }
 
+.tab-badge {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.92);
+  vertical-align: middle;
+}
+
 // Igual que vex-main-route-host: el host de la ruta hija participa en el flex del outlet (si no, altura = contenido y no hay scroll interno en Ingresos)
 .financiero-outlet > router-outlet {
   display: contents;
+}
+
+// Tabs con scroll horizontal cuando no caben (Bolsillos + badges)
+:host ::ng-deep .financiero-tabs .mat-mdc-tab-link-container {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+:host ::ng-deep .financiero-tabs .mat-mdc-tab-link {
+  flex-shrink: 0;
 }
 
 // Tabs Egresos/Proveedores más compactos

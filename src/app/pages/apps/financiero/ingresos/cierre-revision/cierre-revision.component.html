@@ -1,0 +1,126 @@
+<h2 mat-dialog-title>Revisión del cierre #{{ corte?.id }}</h2>
+
+<div mat-dialog-content class="revision-content">
+  @if (loading) {
+    <div class="loading"><mat-spinner diameter="40"></mat-spinner></div>
+  } @else if (corte) {
+    <div class="cabecera">
+      <span><strong>Estado:</strong> {{ corte.estado }}</span>
+      <span><strong>Observación:</strong> {{ corte.observacion || '—' }}</span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Método / MPOF</th>
+            <th>Ventas</th>
+            <th>Egresos</th>
+            <th>Neto sistema</th>
+            <th>Total real</th>
+            <th>Desfase / motivo</th>
+            <th>Revisión</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows; track row.detalle.id) {
+            <tr>
+              <td>
+                {{ nombreMetodo(row.detalle.metodoPagoId) }}
+                @if (!esEditable(row)) {
+                  <small>Declarado por cajero</small>
+                } @else {
+                  <small>Pendiente de declaración admin</small>
+                }
+              </td>
+              <td>{{ formatCurrency(row.detalle.totalVentasSistema) }}</td>
+              <td>{{ formatCurrency(row.detalle.totalEgresosSistema) }}</td>
+              <td>{{ formatCurrency(row.detalle.totalSistema) }}</td>
+              <td>
+                @if (esEditable(row)) {
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <span matPrefix>$</span>
+                    <input
+                      matInput
+                      type="number"
+                      min="0"
+                      [formControl]="row.totalCtrl" />
+                  </mat-form-field>
+                } @else {
+                  {{ formatCurrency(row.detalle.total) }}
+                }
+              </td>
+              <td>
+                <span>{{ formatCurrency(desfase(row)) }}</span>
+                @if (esEditable(row) && desfase(row) !== 0) {
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <mat-label>Motivo</mat-label>
+                    <mat-select [formControl]="row.motivoCtrl">
+                      @for (motivo of motivos; track motivo.id) {
+                        <mat-option [value]="motivo.id">
+                          {{ motivo.nombre }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                }
+              </td>
+              <td class="revision-cell">
+                <div class="revision-actions">
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    [class.selected-ok]="row.revisionEstado === 'OK'"
+                    (click)="seleccionarRevision(row, 'OK')">
+                    <mat-icon svgIcon="mat:check"></mat-icon>
+                    De acuerdo
+                  </button>
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    [class.selected-suggestion]="
+                      row.revisionEstado === 'SUGERENCIA'
+                    "
+                    (click)="seleccionarRevision(row, 'SUGERENCIA')">
+                    Sugerencia
+                  </button>
+                </div>
+                @if (row.revisionEstado === 'SUGERENCIA') {
+                  <mat-form-field
+                    appearance="outline"
+                    subscriptSizing="dynamic"
+                    class="comentario">
+                    <mat-label>Sugerencia</mat-label>
+                    <textarea
+                      matInput
+                      rows="2"
+                      maxlength="500"
+                      [formControl]="row.comentarioCtrl"></textarea>
+                  </mat-form-field>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" [mat-dialog-close]="false">
+    Cerrar
+  </button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    [disabled]="!puedeFinalizar() || saving"
+    (click)="finalizar()">
+    @if (saving) {
+      <mat-spinner diameter="20"></mat-spinner>
+    } @else {
+      Finalizar revisión
+    }
+  </button>
+</div>

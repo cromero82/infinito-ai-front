@@ -899,12 +899,12 @@ export class ResumenEconomicoListComponent
     this.footerService.setFooterItems([
       { textoClave: labelPeriodo, valorClave: String(n), estiloCssClave: '' },
       {
-        textoClave: 'Total utilidad',
+        textoClave: 'Total resultado operativo',
         valorClave: this.formatCurrency(sumUtilidad),
         estiloCssClave: 'footer-item-utilidad-highlight'
       },
       {
-        textoClave: '% utilidad',
+        textoClave: '% sobre ventas (aprox.)',
         valorClave: pctStr,
         estiloCssClave: 'footer-item-total-highlight'
       },

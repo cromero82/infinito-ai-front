@@ -56,7 +56,9 @@ import {
 import {
   ReciboService,
   ReciboDto,
-  ActualizarReciboRequest
+  ActualizarReciboRequest,
+  ActualizarReciboResponse,
+  isReciboPagoResponse
 } from '../service/recibo.service';
 import {
   TicketReciboService,
@@ -74,6 +76,7 @@ import {
   ReciboTicketImpresionExtra,
   ReciboImpresionOpciones
 } from '../service/recibo-print.service';
+import { EstablecimientoService } from '../service/establecimiento.service';
 import { ModoPrecioLista } from '../service/producto-desde-lista-ventas.service';
 import {
   SelectorProductosComponent,
@@ -160,6 +163,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   detallesParaImprimir: ReciboDetalleDto[] = [];
   /** Datos de pago/cambio para la tirilla (efectivo u otro método). */
   private ticketImpresionExtras: ReciboTicketImpresionExtra | null = null;
+  /** Consecutivo VTA-* devuelto al cerrar el pago (tirilla). */
+  private documentoVentaConsecutivoPago: string | null = null;
   selectedDetalleIndex = -1;
   selectedDetalleIndices: number[] = [];
   editingDetalleIndex = -1;
@@ -230,10 +235,15 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private fechaUtilService: FechaUtilService,
     private reciboPrintService: ReciboPrintService,
+    private establecimientoService: EstablecimientoService,
     private footerService: FooterService
   ) {}
 
   ngOnInit(): void {
+    this.establecimientoService
+      .loadActual()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({ error: () => undefined });
     this.cargarUsuariosDesdeStorage();
     this.productSearchCtrl.valueChanges
       .pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$))
@@ -861,6 +871,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
   private fetchRecibo(id: number): void {
     this.loading = true;
+    this.documentoVentaConsecutivoPago = null;
     this.scheduleUpdateSearchDisabled();
     this.error = null;
     this.reciboService.getRecibo(id).subscribe({
@@ -1025,6 +1036,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.searchingProduct = false;
     this.showCreateProductFromSearchButton = false;
     this.ticketImpresionExtras = null;
+    this.documentoVentaConsecutivoPago = null;
     this.dialogAbierto = false;
     this.estaEnEdicion = false;
     this.setSelectedDetalles([], null, false);
@@ -1076,8 +1088,35 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       fechaEmision: fechaEmision ?? undefined,
       clienteNombre:
         this.recibo?.cliente?.nombre ?? this.ticket?.cliente?.nombre,
+      establecimiento: ReciboPrintService.toImpresionEstablecimiento(
+        this.establecimientoService.getSnapshot()
+      ),
+      documentoVentaConsecutivo: this.documentoVentaConsecutivoPago,
       ...this.ticketImpresionExtras
     };
+  }
+
+  private capturarConsecutivoDocumentoVenta(resp: ActualizarReciboResponse): void {
+    if (isReciboPagoResponse(resp) && resp.documentoVentaConsecutivo?.trim()) {
+      this.documentoVentaConsecutivoPago = resp.documentoVentaConsecutivo.trim();
+    }
+  }
+
+  private mergeActualizarReciboResponse(
+    current: ReciboDto,
+    resp: ActualizarReciboResponse
+  ): ReciboDto {
+    if (isReciboPagoResponse(resp)) {
+      this.capturarConsecutivoDocumentoVenta(resp);
+      return {
+        ...current,
+        total: resp.total ?? current.total,
+        metodoPagoId: resp.metodoPagoId ?? current.metodoPagoId,
+        clienteId: resp.clienteId ?? current.clienteId,
+        sesionId: resp.sesionId ?? current.sesionId
+      };
+    }
+    return resp;
   }
 
   private aplicarExtrasImpresionMetodoDirecto(
@@ -2023,7 +2062,12 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             })
             .subscribe({
               next: (updatedRecibo) => {
-                this.recibo = updatedRecibo;
+                if (this.recibo) {
+                  this.recibo = this.mergeActualizarReciboResponse(
+                    this.recibo,
+                    updatedRecibo
+                  );
+                }
 
                 // Emitir evento para que el componente padre recargue los tickets
                 this.metodoPagoActualizado.emit();
@@ -2223,7 +2267,12 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
               })
               .subscribe({
                 next: (updatedRecibo) => {
-                  this.recibo = updatedRecibo;
+                  if (this.recibo) {
+                    this.recibo = this.mergeActualizarReciboResponse(
+                      this.recibo,
+                      updatedRecibo
+                    );
+                  }
 
                   // Emitir evento para que el componente padre recargue los tickets
                   this.metodoPagoActualizado.emit();
@@ -2665,7 +2714,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       throw new Error('No se pudo determinar el ticket asociado al recibo.');
     }
 
-    return firstValueFrom(
+    const resp = await firstValueFrom(
       this.reciboService.actualizarRecibo(recibo.id, {
         clienteId: recibo.clienteId,
         ticketId,
@@ -2676,6 +2725,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         montoRecibido: total
       })
     );
+    return this.mergeActualizarReciboResponse(recibo, resp);
   }
 
   private async rollbackTargetDetalleChange(
@@ -2876,6 +2926,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           return this.reciboService
             .actualizarRecibo(this.recibo!.id, payload)
             .pipe(
+              tap((resp) => this.capturarConsecutivoDocumentoVenta(resp)),
               switchMap(() => {
                 const sessionId = this.getSessionId();
                 if (!sessionId) {
@@ -3101,6 +3152,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           return this.reciboService
             .actualizarRecibo(this.recibo!.id, payload)
             .pipe(
+              tap((resp) => this.capturarConsecutivoDocumentoVenta(resp)),
               switchMap(() => {
                 const sessionId = this.getSessionId();
                 if (!sessionId) {
@@ -3258,7 +3310,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
   private cargarMetodosPago(): void {
     this.metodoPagoService
-      .obtenerMetodosPago()
+      .obtenerMetodosPagoParaTickets()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (metodos) =>
@@ -3419,6 +3471,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           return this.reciboService
             .actualizarRecibo(this.recibo!.id, payload)
             .pipe(
+              tap((resp) => this.capturarConsecutivoDocumentoVenta(resp)),
               switchMap(() => {
                 const sessionId = this.getSessionId();
                 if (!sessionId) {
@@ -3604,6 +3657,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         return this.reciboService
           .actualizarRecibo(this.recibo!.id, payload)
           .pipe(
+            tap((resp) => this.capturarConsecutivoDocumentoVenta(resp)),
             switchMap(() => {
               const sessionId = this.getSessionId();
               if (!sessionId) throw new Error('No se encontró sessionId.');
@@ -3917,6 +3971,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       detalles: this.reciboPrintService.toPrintableDetalles(detalles),
       fechaCreacion: recibo.fechaCreacion,
       clienteNombre: recibo.cliente?.nombre ?? this.ticket?.cliente?.nombre,
+      establecimiento: ReciboPrintService.toImpresionEstablecimiento(
+        this.establecimientoService.getSnapshot()
+      ),
+      documentoVentaConsecutivo: this.documentoVentaConsecutivoPago,
       ...this.ticketImpresionExtras
     });
     const htmlCompleto = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Recibo</title>

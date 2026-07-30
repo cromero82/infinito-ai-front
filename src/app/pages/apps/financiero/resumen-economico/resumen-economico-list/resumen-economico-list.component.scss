@@ -83,6 +83,20 @@ td.col-utilidad {
   background-color: rgba(124, 77, 255, 0.08) !important;
 }
 
+.resumen-disclaimer-banner {
+  background: rgba(33, 150, 243, 0.08);
+  border-left: 3px solid #2196f3;
+  color: rgba(0, 0, 0, 0.78);
+  line-height: 1.45;
+}
+
+.resumen-table-footnote {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: rgba(0, 0, 0, 0.55);
+}
+
 :host ::ng-deep {
   .filters-custom-menu {
     max-width: min(272px, calc(100vw - 24px)) !important;

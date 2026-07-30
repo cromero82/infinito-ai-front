@@ -88,6 +88,24 @@
         <mat-error>Seleccione un proveedor</mat-error>
       }
     </mat-form-field>
+    <mat-form-field class="flex-1" appearance="outline">
+      <mat-label>Origen del egreso</mat-label>
+      <mat-select formControlName="origenCuentaId">
+        @for (op of origenesArbol; track op.id) {
+          <mat-option [value]="op.id" [class.opcion-hijo]="op.nivel > 0">
+            {{ etiquetaOrigen(op) }}
+          </mat-option>
+        }
+      </mat-select>
+      <mat-icon matIconPrefix svgIcon="mat:account_balance_wallet"></mat-icon>
+      <mat-hint>Saldo = total parcial (movimientos + tickets sin corte)</mat-hint>
+      @if (form.get("origenCuentaId")?.hasError("required")) {
+        <mat-error>Seleccione el origen</mat-error>
+      }
+    </mat-form-field>
+    @if (advertenciaSaldoOrigen) {
+      <p class="origen-warning">{{ advertenciaSaldoOrigen }}</p>
+    }
     <mat-form-field class="flex-1">
       <mat-label>Observación</mat-label>
       <input formControlName="descripcion" matInput />

@@ -40,3 +40,18 @@
     }
   }
 }
+
+.origen-warning {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(255, 152, 0, 0.12);
+  color: #e65100;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+:host ::ng-deep .opcion-hijo .mdc-list-item__primary-text {
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.75);
+}

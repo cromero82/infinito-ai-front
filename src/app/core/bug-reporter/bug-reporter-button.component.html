@@ -1,0 +1,26 @@
+<div class="bug-reporter-fab">
+  <button
+    mat-mini-fab
+    color="primary"
+    [matBadge]="count$ | async"
+    matBadgeColor="warn"
+    matBadgeSize="small"
+    [matMenuTriggerFor]="menu"
+    aria-label="Bug Reporter">
+    <mat-icon>bug_report</mat-icon>
+  </button>
+  <mat-menu #menu="matMenu">
+    <button mat-menu-item (click)="exportar()">
+      <mat-icon svgIcon="mat:download"></mat-icon>
+      <span>Exportar JSON (para Cursor AI)</span>
+    </button>
+    <button mat-menu-item (click)="copiarAlPortapapeles()">
+      <mat-icon svgIcon="mat:content_copy"></mat-icon>
+      <span>Copiar al portapapeles</span>
+    </button>
+    <button mat-menu-item (click)="limpiar()">
+      <mat-icon svgIcon="mat:delete_sweep"></mat-icon>
+      <span>Limpiar</span>
+    </button>
+  </mat-menu>
+</div>

@@ -20,6 +20,7 @@ import { SearchComponent } from '../components/toolbar/search/search.component';
 import { VexProgressBarComponent } from '@vex/components/vex-progress-bar/vex-progress-bar.component';
 import { VexConfig } from '@vex/config/vex-config.interface';
 import { FooterService } from '../services/footer.service';
+import { BugReporterButtonComponent } from '../../core/bug-reporter/bug-reporter-button.component';
 
 @Component({
   selector: 'vex-layout',
@@ -39,7 +40,8 @@ import { FooterService } from '../services/footer.service';
     MatSidenavModule,
     RouterOutlet,
     SearchComponent,
-    VexProgressBarComponent
+    VexProgressBarComponent,
+    BugReporterButtonComponent
   ]
 })
 export class LayoutComponent {

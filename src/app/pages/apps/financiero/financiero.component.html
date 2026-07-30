@@ -24,10 +24,11 @@
           <h1 @fadeInRight class="headline text-white pb-2 m-0">
             {{ tituloSeccion }}
           </h1>
+          <p class="text-white/80 text-xs m-0 pb-1">{{ subtituloSeccion }}</p>
         </div>
 
-        <nav [tabPanel]="tabPanel" class="border-0" mat-tab-nav-bar>
-          @for (link of links; track link) {
+        <nav [tabPanel]="tabPanel" class="border-0 financiero-tabs" mat-tab-nav-bar>
+          @for (link of links; track link.route) {
             <a
               #rla="routerLinkActive"
               [active]="rla.isActive"
@@ -39,7 +40,10 @@
               mat-tab-link
               queryParamsHandling="preserve"
               routerLinkActive>
-              {{ link.label }}
+              <span>{{ link.label }}</span>
+              @if (link.badge) {
+                <span class="tab-badge">{{ link.badge }}</span>
+              }
             </a>
           }
         </nav>

@@ -1,0 +1,103 @@
+---
+description: Bug Reporter — captura HTTP requests/responses para exportar como JSON y usar como contexto en Cursor AI
+alwaysApply: false
+---
+
+# Bug Reporter (exportar contexto para IA)
+
+## Propósito
+
+Cuando un usuario reporta un bug, este sistema captura **todas las peticiones HTTP** (con headers, body, status, duración) y permite descargar un JSON estructurado que se arrastra a **Cursor AI** como contexto para debugging.
+
+## Arquitectura
+
+```
+HttpClient (app)
+  │
+  ▼
+bugReporterInterceptor (captura request/response)
+  │
+  ├─ success (2xx) → tap.next → BugReporterService.add()
+  └─ error (4xx/5xx) → tap.error → BugReporterService.add()
+
+reporte-frontend (fetch)
+  │
+  └─ fallo HTTP o de red → ReporteFrontendService → BugReporterService.addManual()
+                                                    con source: 'reporte-frontend'
+
+Usuario hace clic en botón flotante 🐛
+  │
+  └─ BugReporterButtonComponent → BugReporterService.downloadJson()
+                                   → descarga bug-report-<ts>.json
+```
+
+## Archivos clave
+
+| Archivo | Rol |
+|---------|-----|
+| `src/app/core/bug-reporter/bug-reporter.service.ts` | Almacena hasta 200 entries, exporta JSON, descarga archivo |
+| `src/app/core/bug-reporter/bug-reporter.interceptor.ts` | Interceptor HTTP funcional, captura success + error, filtra assets estáticos (svg, jpg, etc.) |
+| `src/app/core/bug-reporter/bug-reporter-button.component.ts` | Botón flotante con badge contador y menú (exportar, copiar, limpiar) |
+| `src/app/core/bug-reporter/bug-reporter-button.component.html` | Template del botón + menú contextual |
+| `src/app/core/bug-reporter/bug-reporter-button.component.scss` | Estilos: fixed bottom-right, z-index alto |
+| `src/app/app.config.ts` | Registro del interceptor: `withInterceptors([..., bugReporterInterceptor])` |
+| `src/app/layouts/layout/layout.component.ts` | Importa `BugReporterButtonComponent` |
+| `src/app/layouts/layout/layout.component.html` | `<vex-bug-reporter-button>` agregado al layout |
+
+## Integración con reporte-frontend
+
+El servicio `ReporteFrontendService` (`src/app/core/monitoring/reporte-frontend.service.ts`) inyecta `BugReporterService`. Cuando el `fetch` a `reporte-frontend` falla (HTTP error o network error), lo registra manualmente con `source: 'reporte-frontend'` para que aparezca en el JSON exportado.
+
+## Formato del JSON exportado
+
+```json
+{
+  "exportedAt": "2026-07-10T...",
+  "user": "nombre-del-usuario",
+  "route": "/apps/ventas",
+  "userAgent": "Mozilla/...",
+  "requests": [
+    {
+      "id": 1,
+      "timestamp": "2026-07-10T...",
+      "method": "PUT",
+      "url": "http://localhost:8088/api/recurso",
+      "requestHeaders": { "Authorization": "Bearer ..." },
+      "requestBody": { "campo": "valor" },
+      "responseStatus": 409,
+      "responseStatusText": "OK",
+      "responseHeaders": { "content-type": "application/json" },
+      "responseBody": { "error": "conflicto" },
+      "durationMs": 164
+    },
+    {
+      "id": 2,
+      "method": "POST",
+      "url": "http://localhost:8088/reporte-frontend",
+      "responseStatus": 404,
+      "source": "reporte-frontend",
+      "durationMs": 25
+    }
+  ]
+}
+```
+
+- Los requests con `source: "reporte-frontend"` son fallos del propio mecanismo de reporte de errores (no pasan por HttpClient, se registran manualmente desde `ReporteFrontendService`).
+- El badge del botón muestra el contador en tiempo real.
+
+## Uso
+
+1. Al navegar, el interceptor captura automáticamente solo requests al backend (filtra assets estáticos).
+2. Cuando ocurre un bug, hacer clic en botón flotante 🐛 (abajo a la derecha).
+3. Seleccionar **"Exportar JSON (para Cursor AI)"** → descarga `bug-report-<timestamp>.json`.
+4. Arrastrar el archivo a Cursor AI y preguntar: *"Debug this bug, here's the full HTTP context"*.
+
+## Límites conocidos
+
+- Máximo 200 entries en memoria (buffer circular, descarta las más viejas).
+- Solo captura peticiones que pasan por Angular `HttpClient` (no `fetch()` nativo), excepto `reporte-frontend` que se registra manualmente.
+- Assets estáticos (svg, jpg, png, ico, webp, woff, css, js, map) se excluyen automáticamente.
+
+## Seguridad
+
+Headers sensibles (`authorization`, `cookie`, `set-cookie`, `x-api-key`, `x-auth-token`) se truncan automáticamente: solo se guardan los primeros 20 caracteres seguido de `... [truncated]`. Esto evita exponer tokens JWT completos en el JSON exportado.

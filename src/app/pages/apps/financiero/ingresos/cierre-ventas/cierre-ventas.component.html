@@ -6,10 +6,14 @@
     class="cierre-ventas-drag-header"
     mat-dialog-title
     cdkDragHandle>
-    <h2 class="dialog-title m-0">Cierre de Ventas</h2>
+    <h2 class="dialog-title m-0">Cierre de turno — medios de pago</h2>
   </div>
 
   <div mat-dialog-content class="dialog-content">
+  <p class="cierre-disclaimer">
+    Cierre de turno — medios de pago (control interno). Efectivo: cuente billetes y monedas.
+    Nequi / transferencia: indique el total recibido según su aplicación.
+  </p>
   <div class="fechas-container">
     <div class="fecha-grupo">
       <span class="fecha-label">Desde:</span>
@@ -106,9 +110,39 @@
             }}</span>
           </td>
         </ng-container>
+        <ng-container matColumnDef="base">
+          <th mat-header-cell *matHeaderCellDef class="header-cell">Base</th>
+          <td mat-cell *matCellDef="let row" class="cell">
+            {{ formatCurrency(row.base) }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="totalVentasSistema">
+          <th mat-header-cell *matHeaderCellDef class="header-cell">
+            Ventas sistema
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell">
+            {{ formatCurrency(row.totalVentasSistema) }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="totalEgresosSistema">
+          <th mat-header-cell *matHeaderCellDef class="header-cell">
+            Egresos sistema
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell">
+            {{ formatCurrency(row.totalEgresosSistema) }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="totalMovimientosSistema">
+          <th mat-header-cell *matHeaderCellDef class="header-cell">
+            Movimientos
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell">
+            {{ formatCurrency(row.totalMovimientosSistema) }}
+          </td>
+        </ng-container>
         <ng-container matColumnDef="totalSistema">
           <th mat-header-cell *matHeaderCellDef class="header-cell">
-            Total Sistema
+            Neto sistema
           </th>
           <td mat-cell *matCellDef="let row" class="cell total-sistema-cell">
             <div class="total-sistema-container">
@@ -132,18 +166,13 @@
                 <input
                   matInput
                   type="text"
-                  [formControl]="row.totalRealCtrl"
+                  inputmode="numeric"
+                  [value]="displayTotalReal(row)"
                   placeholder="0"
                   (input)="onTotalRealInput($event, row)"
                   (focus)="onTotalRealFocus($event, row)"
                   (blur)="onTotalRealBlur($event, row)"
                   (keydown)="onTotalRealKeydown($event, row, i)" />
-                @if (row.totalRealCtrl.hasError("required")) {
-                  <mat-error>Requerido</mat-error>
-                }
-                @if (row.totalRealCtrl.hasError("min")) {
-                  <mat-error>Debe ser >= 0</mat-error>
-                }
               </mat-form-field>
             </div>
           </td>
@@ -153,11 +182,32 @@
             Desfase
           </th>
           <td mat-cell *matCellDef="let row" class="cell desfase-cell">
-            <span
-              class="desfase-texto"
-              [ngClass]="getDesfaseClass(row.desfase)">
-              {{ getDesfaseTexto(row.desfase) }}
-            </span>
+            <div class="desfase-stack">
+              <span
+                class="desfase-texto"
+                [ngClass]="getDesfaseClass(row.desfase)">
+                {{ getDesfaseTexto(row.desfase) }}
+              </span>
+              @if (tieneDesfase(row.desfase)) {
+                <mat-form-field
+                  appearance="outline"
+                  class="motivo-desfase-field"
+                  subscriptSizing="dynamic">
+                  <mat-label>Motivo</mat-label>
+                  <mat-select
+                    [formControl]="row.motivoDesfaseCtrl"
+                    [compareWith]="compareMotivoId"
+                    (selectionChange)="onMotivoDesfaseChange(row, $event)">
+                    @for (m of motivosDesfase; track m.id) {
+                      <mat-option [value]="m.id">{{ m.nombre }}</mat-option>
+                    }
+                  </mat-select>
+                  @if (row.motivoDesfaseCtrl.hasError('required')) {
+                    <mat-error>Obligatorio</mat-error>
+                  }
+                </mat-form-field>
+              }
+            </div>
           </td>
         </ng-container>
         <tr
@@ -166,12 +216,7 @@
           class="header-row"></tr>
         <tr
           mat-row
-          *matRowDef="
-            let row;
-            columns: displayedColumns;
-            let i = index;
-            trackBy: trackByMetodoPagoId
-          "
+          *matRowDef="let row; columns: displayedColumns; index as i"
           class="data-row"
           [class.row-alt]="i % 2 !== 0"></tr>
         <tr *matNoDataRow class="mat-mdc-row no-data-mat-row">
@@ -187,22 +232,52 @@
                 </p>
               </div>
             }
+            @if (datosConsultados && !consultando && corteVentasRows.length === 0) {
+              <div class="mensaje-inicial mensaje-inicial--inline">
+                <mat-icon svgIcon="mat:info" class="info-icon"></mat-icon>
+                <p>No hay medios de pago para este rango.</p>
+              </div>
+            }
           </td>
         </tr>
       </table>
       </div>
     </div>
       <div class="totales-container">
-        <div class="total-row totales-grid">
+        <div
+          class="total-row totales-grid"
+          [class.totales-grid--extended]="!esAdmin"
+          [class.totales-grid--admin]="esAdmin">
           <span class="total-label">TOTAL</span>
+          @if (esAdmin) {
+            <span class="total-value">{{ formatCurrency(totalBase) }}</span>
+          }
+          <span class="total-value">{{ formatCurrency(totalVentasSistema) }}</span>
+          <span class="total-value">{{ formatCurrency(totalEgresosSistema) }}</span>
+          @if (esAdmin) {
+            <span class="total-value">{{
+              formatCurrency(totalMovimientosSistema)
+            }}</span>
+          }
           <span class="total-value">{{ formatCurrency(totalSistema) }}</span>
           <span class="total-value total-real-final">{{
             formatCurrency(totalReal)
           }}</span>
           <span class="total-cell-spacer" aria-hidden="true"></span>
         </div>
-        <div class="total-row totales-grid desfases-row">
+        <div
+          class="total-row totales-grid desfases-row"
+          [class.totales-grid--extended]="!esAdmin"
+          [class.totales-grid--admin]="esAdmin">
           <span class="total-label">TOTAL DESFASES</span>
+          @if (esAdmin) {
+            <span class="total-cell-spacer" aria-hidden="true"></span>
+          }
+          <span class="total-cell-spacer" aria-hidden="true"></span>
+          <span class="total-cell-spacer" aria-hidden="true"></span>
+          @if (esAdmin) {
+            <span class="total-cell-spacer" aria-hidden="true"></span>
+          }
           <span class="total-cell-spacer" aria-hidden="true"></span>
           <span class="total-cell-spacer" aria-hidden="true"></span>
           <span
@@ -213,9 +288,26 @@
         </div>
       </div>
     </div>
+    <mat-form-field appearance="outline" class="observacion-cierre-field">
+      <mat-label>Observación general</mat-label>
+      <textarea
+        matInput
+        rows="2"
+        maxlength="200"
+        [formControl]="observacionCtrl"
+        (input)="refrescarPuedeRegistrar()"
+        placeholder="Observaciones para la revisión administrativa"></textarea>
+      <mat-hint align="end">{{ observacionCtrl.value?.length || 0 }}/200</mat-hint>
+      @if (observacionCtrl.hasError('maxlength')) {
+        <mat-error>Máximo 200 caracteres</mat-error>
+      }
+    </mat-form-field>
   </div>
 
   <div mat-dialog-actions align="end" class="dialog-actions">
+    @if (!puedeRegistrar && !loading && mensajeValidacion) {
+      <span class="hint-registro">{{ mensajeValidacion }}</span>
+    }
     <button
       mat-stroked-button
       type="button"
@@ -228,7 +320,7 @@
       color="primary"
       type="button"
       (click)="registrar()"
-      [disabled]="!esFormularioValido() || loading || consultando">
+      [disabled]="!puedeRegistrar || loading || consultando">
       @if (loading) {
         <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
       }

@@ -230,7 +230,7 @@ export class PagoEfectivoCambioComponent
       });
 
     this.metodoPagoService
-      .obtenerMetodosPago()
+      .obtenerMetodosPagoParaTickets()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (metodos) => {

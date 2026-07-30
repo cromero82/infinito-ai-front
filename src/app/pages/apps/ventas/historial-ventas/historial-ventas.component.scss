@@ -71,6 +71,70 @@
   }
 }
 
+.recibo-consecutivo {
+  font-size: 11px;
+  color: #1565c0;
+  font-weight: 500;
+}
+
+.recibo-chip {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+
+  &.restaurado {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+}
+
+.documentos-panel {
+  margin-bottom: 16px;
+}
+
+.documentos-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.doc-row {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  font-size: 13px;
+
+  &.sub {
+    padding-left: 12px;
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.doc-label {
+  min-width: 140px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.doc-badge {
+  font-weight: 600;
+  color: #1565c0;
+
+  &.nc {
+    color: #c62828;
+  }
+}
+
+.restaurar-button {
+  width: auto;
+}
+
+.documentos-loading {
+  margin-bottom: 12px;
+}
+
 .filter-section {
   margin-bottom: 16px;
 }
@@ -172,6 +236,18 @@
   ::ng-deep b {
     font-weight: 700;
   }
+}
+
+.recibo-consecutivo {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 600;
+  color: #3f51b5;
+  background: rgba(63, 81, 181, 0.1);
+  border-radius: 4px;
+  padding: 1px 6px;
+  letter-spacing: 0.02em;
 }
 
 .recibo-fecha-cliente-row {

@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -12,24 +12,40 @@ import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSelectModule, MatSelectChange } from '@angular/material/select';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { Subject, merge } from 'rxjs';
 import { takeUntil, finalize, debounceTime, filter } from 'rxjs/operators';
 import { MetodoPagoService, MetodoPagoDto } from '../../../ventas/service/metodo-pago.service';
 import { CorteVentaService, ConsultarRangoCorteDto } from '../../../ventas/service/corte-venta.service';
+import {
+  MotivoMovimientoDto,
+  MotivoMovimientoService
+} from '../../origenes-fondos/service/motivo-movimiento.service';
+import { AuthService } from '../../../../../auth/service/auth.service';
 
 export interface CierreVentasData {}
 
 export interface CierreVentasResultado {
   success: boolean;
   registrosCreados: number;
+  corteVentaId?: number;
+  /** Si true, el caller debe abrir Distribución de efectivo (admin). */
+  abrirDistribucion?: boolean;
+  /** Si true, el caller debe cerrar sesión (cajero sin permiso de distribución). */
+  requiereLogout?: boolean;
 }
 
 interface CorteVentaRow {
   metodoPago: MetodoPagoDto;
+  base: number;
+  totalVentasSistema: number;
+  totalEgresosSistema: number;
+  totalMovimientosSistema: number;
   totalSistema: number;
   totalRealCtrl: FormControl<number | null>;
   desfase: number;
+  motivoDesfaseCtrl: FormControl<number | null>;
 }
 
 @Component({
@@ -47,6 +63,7 @@ interface CorteVentaRow {
         MatProgressSpinnerModule,
         MatSnackBarModule,
         MatCheckboxModule,
+        MatSelectModule,
         DragDropModule,
         ReactiveFormsModule
     ],
@@ -61,21 +78,58 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
 
   desdeUltimoCorteCtrl = new FormControl<boolean>(true);
   hastaActualmenteCtrl = new FormControl<boolean>(true);
+  observacionCtrl = new FormControl<string>('', [Validators.maxLength(200)]);
 
   corteVentasRows: CorteVentaRow[] = [];
-  displayedColumns: string[] = ['metodoPago', 'totalSistema', 'totalReal', 'desfase'];
+  /** Columnas base (cajero). Admin añade Base + Movimientos. */
+  private readonly columnasCajero: string[] = [
+    'metodoPago',
+    'totalVentasSistema',
+    'totalEgresosSistema',
+    'totalSistema',
+    'totalReal',
+    'desfase'
+  ];
+  private readonly columnasAdmin: string[] = [
+    'metodoPago',
+    'base',
+    'totalVentasSistema',
+    'totalEgresosSistema',
+    'totalMovimientosSistema',
+    'totalSistema',
+    'totalReal',
+    'desfase'
+  ];
+  displayedColumns: string[] = [...this.columnasCajero];
+  esAdmin = false;
 
   loading = false;
   consultando = false;
   datosConsultados = false;
   cargaInicial = true;
 
+  totalBase = 0;
+  totalVentasSistema = 0;
+  totalEgresosSistema = 0;
+  totalMovimientosSistema = 0;
   totalSistema = 0;
   totalReal = 0;
   totalDesfases = 0;
 
   fechaIniRespuesta: string | null = null;
   fechaFinRespuesta: string | null = null;
+  motivosDesfase: MotivoMovimientoDto[] = [];
+  /** Flag simple para el botón (no evaluar métodos mutables desde el template). */
+  puedeRegistrar = false;
+  /** Mensaje bajo las acciones cuando el registro está bloqueado. */
+  mensajeValidacion = '';
+
+  /** Mientras se edita un total, no reformatear el input (evita cursor jump y strings "1.500.000"). */
+  private editingMetodoId: number | null = null;
+  private editingRaw = '';
+
+  /** Desfase relevante en pesos enteros (alineado a BigDecimal ≠ 0 en backend). */
+  private readonly desfaseEps = 1;
 
   private destroy$ = new Subject<void>();
 
@@ -84,10 +138,37 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
     @Inject(MAT_DIALOG_DATA) data: CierreVentasData,
     private metodoPagoService: MetodoPagoService,
     private corteVentaService: CorteVentaService,
-    private snackBar: MatSnackBar
+    private motivoMovimientoService: MotivoMovimientoService,
+    private authService: AuthService,
+    private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    this.esAdmin = this.authService.isAdmin();
+    this.displayedColumns = this.esAdmin
+      ? [...this.columnasAdmin]
+      : [...this.columnasCajero];
+
+    this.motivoMovimientoService.findActivos().subscribe({
+      next: (motivos) => {
+        const todos = motivos ?? [];
+        this.motivosDesfase = todos.filter((m) => m.categoria === 'DESFASE_CIERRE');
+        if (this.motivosDesfase.length === 0) {
+          this.motivosDesfase = todos.filter((m) => m.categoria === 'AJUSTE');
+        }
+        this.refrescarPuedeRegistrar();
+      },
+      error: () => {
+        this.snackBar.open(
+          'No se pudieron cargar los motivos de desfase',
+          'Cerrar',
+          { duration: 4000 }
+        );
+        this.refrescarPuedeRegistrar();
+      }
+    });
+
     this.desdeUltimoCorteCtrl.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(checked => {
@@ -196,6 +277,7 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
         finalize(() => {
           this.consultando = false;
           this.cargaInicial = false;
+          this.refrescarPuedeRegistrar();
         })
       )
       .subscribe({
@@ -204,6 +286,10 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Error consultando rango', err);
+          this.datosConsultados = false;
+          this.corteVentasRows = [];
+          this.puedeRegistrar = false;
+          this.mensajeValidacion = 'Error al consultar las ventas.';
           this.snackBar.open('Error al consultar las ventas', 'Cerrar', {
             duration: 3000
           });
@@ -223,33 +309,151 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
       this.setearFechaHoraDesdeISO(respuesta.fechaFin, this.fechaFinCtrl, this.horaFinCtrl);
     }
 
-    const totalesPorMetodo = new Map<number, number>();
-    respuesta.ventasTipo.forEach(vt => {
-      totalesPorMetodo.set(vt.metodoPagoId, vt.totalSistema);
+    const totalesPorMetodo = new Map<number, {
+      base: number;
+      totalVentasSistema: number;
+      totalEgresosSistema: number;
+      totalMovimientosSistema: number;
+      totalSistema: number;
+    }>();
+    (respuesta.ventasTipo ?? []).forEach((vt) => {
+      const metodoPagoId = Number(vt.metodoPagoId);
+      if (!Number.isFinite(metodoPagoId)) {
+        return;
+      }
+      const base = this.toPesosEnteros(vt.base ?? 0);
+      const ventas = this.toPesosEnteros(vt.totalVentasSistema ?? 0);
+      const egresos = this.toPesosEnteros(vt.totalEgresosSistema ?? 0);
+      const movimientos = this.toPesosEnteros(vt.totalMovimientosSistema ?? 0);
+      const neto = this.toPesosEnteros(
+        vt.totalSistema ?? base + ventas - egresos + movimientos
+      );
+      totalesPorMetodo.set(metodoPagoId, {
+        base,
+        totalVentasSistema: ventas,
+        totalEgresosSistema: egresos,
+        totalMovimientosSistema: movimientos,
+        totalSistema: neto
+      });
     });
 
-    this.corteVentasRows = metodos.map(metodo => {
-      const totalSistema = totalesPorMetodo.get(metodo.id) || 0;
-      const totalRealCtrl = new FormControl<number | null>(totalSistema, [
-        Validators.required,
-        Validators.min(0)
-      ]);
+    // Medios de tickets (+ los que tengan ventas reales en el rango).
+    // Excluye catálogo legacy tipo "base proveedores" y bolsillos sin ventas POS.
+    const metodosActivos = (metodos ?? []).filter((m) => {
+      const id = Number(m.id);
+      if (!Number.isFinite(id)) {
+        return false;
+      }
+      const estado = String(m.estado ?? '')
+        .trim()
+        .toLowerCase();
+      const inactivo =
+        estado.includes('inactiv') || estado === '0' || estado === 'i';
+      const visibleTickets = m.visiblePagoTickets !== false;
+      const resumen = totalesPorMetodo.get(id);
+      const tieneVentas = (resumen?.totalVentasSistema ?? 0) !== 0;
+
+      if (resumen) {
+        // Actividad en el rango: solo mostrar si es medio de tickets o hubo ventas.
+        return visibleTickets || tieneVentas;
+      }
+      if (inactivo || !visibleTickets) {
+        return false;
+      }
+      return true;
+    });
+
+    const fuente =
+      metodosActivos.length > 0
+        ? metodosActivos
+        : Array.from(totalesPorMetodo.keys()).map(
+            (id) =>
+              metodos.find((m) => Number(m.id) === id) ??
+              ({
+                id,
+                descripcion: `Método ${id}`,
+                estado: 'A',
+                file: '',
+                sigla: '',
+                color: ''
+              } as MetodoPagoDto)
+          );
+
+    this.corteVentasRows = fuente.map((metodo) => {
+      const resumen = totalesPorMetodo.get(Number(metodo.id));
+      const base = this.toPesosEnteros(resumen?.base ?? 0);
+      const totalVentasSistema = this.toPesosEnteros(resumen?.totalVentasSistema ?? 0);
+      const totalEgresosSistema = this.toPesosEnteros(resumen?.totalEgresosSistema ?? 0);
+      const totalMovimientosSistema = this.toPesosEnteros(
+        resumen?.totalMovimientosSistema ?? 0
+      );
+      const totalSistema = this.toPesosEnteros(
+        resumen?.totalSistema ??
+          base + totalVentasSistema - totalEgresosSistema + totalMovimientosSistema
+      );
+      // El neto puede ser negativo (p. ej. solo egresos en «base proveedores»).
+      // Inicializar el físico con el mismo valor evita un falso desfase y no bloquea el botón.
+      const totalRealCtrl = new FormControl<number | null>(totalSistema, {
+        nonNullable: false,
+        validators: [Validators.required]
+      });
+      const motivoDesfaseCtrl = new FormControl<number | null>(null);
 
       totalRealCtrl.valueChanges
         .pipe(takeUntil(this.destroy$))
         .subscribe(() => this.actualizarTotales());
 
+      motivoDesfaseCtrl.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => this.refrescarPuedeRegistrar());
+
       return {
         metodoPago: metodo,
+        base,
+        totalVentasSistema,
+        totalEgresosSistema,
+        totalMovimientosSistema,
         totalSistema,
         totalRealCtrl,
-        desfase: 0
+        desfase: 0,
+        motivoDesfaseCtrl
       };
     });
 
-    this.totalSistema = respuesta.total;
+    this.totalBase = this.corteVentasRows.reduce((acc, row) => acc + row.base, 0);
+    this.totalVentasSistema = this.corteVentasRows.reduce(
+      (acc, row) => acc + row.totalVentasSistema,
+      0
+    );
+    this.totalEgresosSistema = this.corteVentasRows.reduce(
+      (acc, row) => acc + row.totalEgresosSistema,
+      0
+    );
+    this.totalMovimientosSistema = this.corteVentasRows.reduce(
+      (acc, row) => acc + row.totalMovimientosSistema,
+      0
+    );
+    this.totalSistema = this.corteVentasRows.reduce(
+      (acc, row) => acc + row.totalSistema,
+      0
+    );
     this.datosConsultados = true;
     this.actualizarTotales();
+  }
+
+  /** Normaliza number | string | BigDecimal-like a pesos enteros. */
+  private toPesosEnteros(value: unknown): number {
+    if (value === null || value === undefined || value === '') {
+      return 0;
+    }
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? Math.round(value) : 0;
+    }
+    if (typeof value === 'string') {
+      return this.parseCurrency(value);
+    }
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.round(n) : 0;
   }
 
   private setearFechaHoraDesdeISO(
@@ -287,28 +491,168 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
     this.totalReal = 0;
     this.totalDesfases = 0;
 
-    this.corteVentasRows.forEach(row => {
-      const totalReal = row.totalRealCtrl.value ?? 0;
-      row.desfase = totalReal - row.totalSistema;
+    this.corteVentasRows.forEach((row) => {
+      let totalReal = this.asMonto(row.totalRealCtrl.value);
+      if (totalReal === null) {
+        totalReal = 0;
+        row.totalRealCtrl.setValue(0, { emitEvent: false });
+      } else if (typeof row.totalRealCtrl.value !== 'number') {
+        row.totalRealCtrl.setValue(totalReal, { emitEvent: false });
+      }
+      row.desfase = this.calcularDesfase(totalReal, row.totalSistema);
       this.totalReal += totalReal;
       this.totalDesfases += row.desfase;
+      if (!this.tieneDesfase(row.desfase)) {
+        if (row.motivoDesfaseCtrl.value !== null) {
+          row.motivoDesfaseCtrl.setValue(null, { emitEvent: false });
+        }
+        row.motivoDesfaseCtrl.clearValidators();
+      } else {
+        row.motivoDesfaseCtrl.setValidators([Validators.required]);
+      }
+      row.motivoDesfaseCtrl.updateValueAndValidity({ emitEvent: false });
     });
+    this.refrescarPuedeRegistrar();
+  }
+
+  /** Normaliza number | string formateado ("1.500.000") a pesos enteros. */
+  asMonto(value: unknown): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? Math.round(value) : null;
+    }
+    const parsed = this.parseCurrency(String(value));
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  /** Desfase en pesos enteros (evita residuos decimales que bloquean el registro). */
+  private calcularDesfase(totalReal: number, totalSistema: number): number {
+    return Math.round(totalReal) - Math.round(Number(totalSistema) || 0);
+  }
+
+  tieneDesfase(desfase: number): boolean {
+    return Number.isFinite(desfase) && Math.abs(desfase) >= this.desfaseEps;
+  }
+
+  onMotivoDesfaseChange(row: CorteVentaRow, event: MatSelectChange): void {
+    const raw = event.value;
+    const motivoId =
+      raw === null || raw === undefined || raw === ''
+        ? null
+        : Number(raw);
+    row.motivoDesfaseCtrl.setValue(
+      motivoId !== null && Number.isFinite(motivoId) && motivoId > 0
+        ? motivoId
+        : null,
+      { emitEvent: false }
+    );
+    this.refrescarPuedeRegistrar();
+  }
+
+  compareMotivoId = (a: unknown, b: unknown): boolean => {
+    if (a == null && b == null) {
+      return true;
+    }
+    if (a == null || b == null) {
+      return false;
+    }
+    return Number(a) === Number(b);
+  };
+
+  /**
+   * Recalcula el flag del botón. Solo se llama desde handlers / finalize,
+   * nunca desde el template (evita mutaciones durante CD en MatDialog).
+   */
+  refrescarPuedeRegistrar(): void {
+    const resultado = this.evaluarPuedeRegistrar();
+    this.puedeRegistrar = resultado.ok;
+    this.mensajeValidacion = resultado.mensaje;
+    this.cdr.markForCheck();
+  }
+
+  private evaluarPuedeRegistrar(): { ok: boolean; mensaje: string } {
+    if (this.consultando) {
+      return { ok: false, mensaje: 'Espere a que termine la consulta.' };
+    }
+    if (!this.datosConsultados) {
+      return { ok: false, mensaje: 'Consulte el rango antes de registrar.' };
+    }
+    if (this.corteVentasRows.length === 0) {
+      return {
+        ok: false,
+        mensaje: 'No hay medios de pago para registrar en este rango.'
+      };
+    }
+    if (this.observacionCtrl.invalid) {
+      return {
+        ok: false,
+        mensaje: 'La observación no puede superar 200 caracteres.'
+      };
+    }
+
+    const pendientesMotivo: string[] = [];
+    for (const row of this.corteVentasRows) {
+      const totalReal = this.asMonto(row.totalRealCtrl.value);
+      // Permitir neto/real negativo (medios con más egresos que ventas).
+      if (totalReal === null || !Number.isFinite(totalReal)) {
+        return {
+          ok: false,
+          mensaje: 'Complete el total físico / real en todos los medios.'
+        };
+      }
+      const desfase = this.calcularDesfase(totalReal, row.totalSistema);
+      row.desfase = desfase;
+      if (this.tieneDesfase(desfase) && !this.tieneMotivoSeleccionado(row)) {
+        pendientesMotivo.push(
+          row.metodoPago.descripcion ||
+            row.metodoPago.descripcionEgreso ||
+            `Método ${row.metodoPago.id}`
+        );
+      }
+    }
+
+    if (pendientesMotivo.length > 0) {
+      if (this.motivosDesfase.length === 0) {
+        return {
+          ok: false,
+          mensaje:
+            'Hay desfase pero no hay motivos cargados. Revise /motivos-movimiento (categoría DESFASE_CIERRE).'
+        };
+      }
+      return {
+        ok: false,
+        mensaje: `Seleccione el motivo de desfase en: ${pendientesMotivo.join(', ')}.`
+      };
+    }
+
+    return { ok: true, mensaje: '' };
+  }
+
+  private tieneMotivoSeleccionado(row: CorteVentaRow): boolean {
+    const v = row.motivoDesfaseCtrl.value as unknown;
+    if (v === null || v === undefined || v === '') {
+      return false;
+    }
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0;
   }
 
   getDesfaseClass(desfase: number): string {
-    if (desfase === 0) return 'desfase-ok';
+    if (!this.tieneDesfase(desfase)) return 'desfase-ok';
     if (desfase > 0) return 'desfase-mas';
     return 'desfase-menos';
   }
 
   getDesfaseTexto(desfase: number): string {
-    if (desfase === 0) return 'Sin desfase';
+    if (!this.tieneDesfase(desfase)) return 'Sin desfase';
     const tipo = desfase > 0 ? 'Más' : 'Menos';
     return `Desfase: (${tipo}) ${this.formatCurrency(Math.abs(desfase))}`;
   }
 
   getTotalDesfaseClass(): string {
-    if (this.totalDesfases === 0) return 'desfase-ok';
+    if (!this.tieneDesfase(this.totalDesfases)) return 'desfase-ok';
     if (this.totalDesfases > 0) return 'desfase-mas';
     return 'desfase-menos';
   }
@@ -341,35 +685,67 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
 
   parseCurrency(value: string | null | undefined): number {
     if (!value) return 0;
-    const digits = String(value)
-      .replace(/\s+/g, '')
-      .replace(/[^\d]/g, '');
+    const cleaned = String(value).replace(/\s+/g, '');
+    const negative = cleaned.startsWith('-');
+    const unsigned = cleaned.replace(/^-/, '');
+    // Decimal simple API/JS: "1500.50" o "1500,50"
+    if (/^\d([.,]\d{1,2})?$/.test(unsigned) || /^\d+[.,]\d{1,2}$/.test(unsigned)) {
+      const n = Number(unsigned.replace(',', '.'));
+      if (!Number.isFinite(n)) return 0;
+      return Math.round(negative ? -n : n);
+    }
+    // Miles es-CO: "1.500.000" o "1.500.000,50"
+    if (unsigned.includes(',')) {
+      const [enteros, dec = ''] = unsigned.split(',');
+      const enterosNum = enteros.replace(/[^\d]/g, '');
+      const decNum = dec.replace(/[^\d]/g, '').slice(0, 2);
+      const n = Number(`${enterosNum}.${decNum || '0'}`);
+      if (!Number.isFinite(n)) return 0;
+      return Math.round(negative ? -n : n);
+    }
+    // Solo dígitos y puntos de miles: "1.500.000"
+    const digits = unsigned.replace(/[^\d]/g, '');
     if (!digits) return 0;
-    return Number(digits);
+    const n = Number(digits);
+    return negative ? -n : n;
   }
 
   esFormularioValido(): boolean {
-    if (!this.datosConsultados) return false;
-    return this.corteVentasRows.every(row => {
-      const total = row.totalRealCtrl.value;
-      return total !== null && total !== undefined && total >= 0;
-    });
+    return this.puedeRegistrar;
   }
 
   registrar(): void {
-    if (!this.esFormularioValido()) {
-      this.snackBar.open('Por favor complete todos los campos correctamente', 'Cerrar', {
-        duration: 3000
-      });
+    this.refrescarPuedeRegistrar();
+    if (!this.puedeRegistrar) {
+      this.snackBar.open(
+        this.mensajeValidacion || 'Complete el formulario antes de registrar',
+        'Cerrar',
+        { duration: 4000 }
+      );
       return;
     }
 
     const ventasTipo = this.corteVentasRows
-      .filter(row => row.totalRealCtrl.value !== null && row.totalRealCtrl.value !== undefined && row.totalRealCtrl.value > 0)
-      .map(row => ({
+      .filter(
+        (row) =>
+          row.totalRealCtrl.value !== null &&
+          row.totalRealCtrl.value !== undefined &&
+          (row.totalRealCtrl.value > 0 ||
+            row.totalSistema !== 0 ||
+            this.tieneDesfase(row.desfase))
+      )
+      .map((row) => ({
         metodoPagoId: row.metodoPago.id,
-        total: row.totalRealCtrl.value!,
-        totalSistema: row.totalSistema
+        total: this.asMonto(row.totalRealCtrl.value) ?? 0,
+        totalSistema: row.totalSistema,
+        totalVentasSistema: row.totalVentasSistema,
+        totalEgresosSistema: row.totalEgresosSistema,
+        totalMovimientosSistema: row.totalMovimientosSistema,
+        base: row.base,
+        desfase: row.desfase,
+        motivoDesfaseId: this.tieneDesfase(row.desfase)
+          ? Number(row.motivoDesfaseCtrl.value)
+          : null
       }));
 
     if (ventasTipo.length === 0) {
@@ -389,7 +765,25 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
       totalSistema: this.totalSistema,
       ultimoCorte: this.desdeUltimoCorteCtrl.value ?? false,
       actual: this.hastaActualmenteCtrl.value ?? false,
-      ventasTipo
+      observacion: this.observacionCtrl.value?.trim() || null,
+      ventasTipo,
+      detalles: this.corteVentasRows.map((row, orden) => ({
+        metodoPagoId: row.metodoPago.id,
+        origenFondosId: null,
+        base: row.base,
+        totalVentasSistema: row.totalVentasSistema,
+        totalEgresosSistema: row.totalEgresosSistema,
+        totalMovimientosSistema: row.totalMovimientosSistema,
+        totalSistema: row.totalSistema,
+        total: this.asMonto(row.totalRealCtrl.value) ?? 0,
+        desfase: row.desfase,
+        motivoDesfaseId: this.tieneDesfase(row.desfase)
+          ? Number(row.motivoDesfaseCtrl.value)
+          : null,
+        modoCaptura: 'DECLARADO_CAJERO' as const,
+        revisionEstado: 'PENDIENTE' as const,
+        orden
+      }))
     };
 
     this.loading = true;
@@ -400,62 +794,66 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
         finalize(() => this.loading = false)
       )
       .subscribe({
-        next: () => {
+        next: (corte) => {
           this.snackBar.open(
             'Se registró el cierre de ventas correctamente',
             'Cerrar',
             { duration: 3000 }
           );
+          const esAdmin = this.authService.isAdmin();
           this.dialogRef.close({
             success: true,
-            registrosCreados: ventasTipo.length
+            registrosCreados: ventasTipo.length,
+            corteVentaId: corte?.id,
+            abrirDistribucion: esAdmin,
+            requiereLogout: !esAdmin
           });
         },
         error: (err) => {
           console.error('Error registrando cierre de ventas', err);
-          this.snackBar.open(
-            'Error al registrar el cierre de ventas. Por favor intente nuevamente.',
-            'Cerrar',
-            { duration: 5000 }
-          );
+          const msg =
+            err?.error?.message ||
+            'Error al registrar el cierre de ventas. Por favor intente nuevamente.';
+          this.snackBar.open(msg, 'Cerrar', { duration: 5000 });
         }
       });
   }
 
   onTotalRealInput(event: Event, row: CorteVentaRow): void {
     const input = event.target as HTMLInputElement;
-    const value = input.value;
-    const numericValue = this.parseCurrency(value);
+    this.editingMetodoId = row.metodoPago.id;
+    this.editingRaw = input.value;
+    row.totalRealCtrl.setValue(this.parseCurrency(input.value), { emitEvent: false });
+    this.actualizarTotales();
+  }
 
-    if (!isNaN(numericValue) && numericValue >= 0) {
-      row.totalRealCtrl.setValue(numericValue, { emitEvent: true });
-    } else if (value === '' || value === null) {
-      row.totalRealCtrl.setValue(null, { emitEvent: true });
+  displayTotalReal(row: CorteVentaRow): string {
+    if (this.editingMetodoId === row.metodoPago.id) {
+      return this.editingRaw;
     }
+    const monto = this.asMonto(row.totalRealCtrl.value);
+    if (monto === null) {
+      return '';
+    }
+    return this.formatMontoInput(monto);
   }
 
   onTotalRealFocus(event: Event, row: CorteVentaRow): void {
     const input = event.target as HTMLInputElement;
-    const value = row.totalRealCtrl.value;
-
-    if (value !== null && value !== undefined) {
-      input.value = String(value);
-    }
+    const monto = this.asMonto(row.totalRealCtrl.value);
+    this.editingMetodoId = row.metodoPago.id;
+    this.editingRaw = monto !== null ? String(monto) : '';
+    input.value = this.editingRaw;
   }
 
   onTotalRealBlur(event: Event, row: CorteVentaRow): void {
     const input = event.target as HTMLInputElement;
-    const value = row.totalRealCtrl.value;
-
-    if (value !== null && value !== undefined) {
-      const numValue = Number(value);
-      if (!isNaN(numValue) && numValue >= 0) {
-        row.totalRealCtrl.setValue(numValue, { emitEvent: false });
-        input.value = this.formatMontoInput(numValue);
-      }
-    } else {
-      input.value = '';
-    }
+    const monto = this.parseCurrency(input.value);
+    row.totalRealCtrl.setValue(monto, { emitEvent: false });
+    this.editingMetodoId = null;
+    this.editingRaw = '';
+    input.value = this.formatMontoInput(monto);
+    this.actualizarTotales();
   }
 
   onTotalRealKeydown(event: KeyboardEvent, row: CorteVentaRow, index: number): void {
@@ -469,7 +867,7 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (event.key.match(/[0-9.]/)) {
+    if (event.key.match(/[0-9.\-]/)) {
       return;
     }
 

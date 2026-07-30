@@ -22,6 +22,16 @@ import { BitacoraUsuarioService } from '../../pages/apps/usuario/gestion-usuario
 import { UsuarioPerfilService } from '../service/usuario-perfil.service';
 import { finalize, switchMap, map, catchError } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { CorteVentaService } from '../../pages/apps/ventas/service/corte-venta.service';
+import {
+  DistribucionEfectivoDialogComponent,
+  DistribucionEfectivoDialogResult
+} from '../../pages/apps/financiero/ingresos/distribucion-efectivo-dialog/distribucion-efectivo-dialog.component';
+import {
+  BaseInicialDialogComponent,
+  BaseInicialDialogResult
+} from '../../pages/apps/financiero/ingresos/base-inicial-dialog/base-inicial-dialog.component';
 
 @Component({
   selector: 'vex-login',
@@ -39,7 +49,8 @@ import { forkJoin, of } from 'rxjs';
     MatCheckboxModule,
     RouterLink,
     MatSnackBarModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatDialogModule
   ]
 })
 export class LoginComponent {
@@ -73,7 +84,9 @@ export class LoginComponent {
     private sesionesService: SesionesService,
     private configurationService: ConfigurationService,
     private bitacoraUsuarioService: BitacoraUsuarioService,
-    private usuarioPerfilService: UsuarioPerfilService
+    private usuarioPerfilService: UsuarioPerfilService,
+    private dialog: MatDialog,
+    private corteVentaService: CorteVentaService
   ) {
     this.loadRecentEmailsFromStorage();
   }
@@ -193,6 +206,29 @@ export class LoginComponent {
           this.snackbar.open('Inicio de sesión exitoso', 'Cerrar', {
             duration: 3000
           });
+
+          if (this.authService.isAdmin()) {
+            this.corteVentaService.obtenerDistribucionPendiente()
+              .pipe(catchError(() => of({ pendiente: false as const })))
+              .subscribe((pendiente) => {
+                if (pendiente?.pendiente) {
+                  this.abrirDistribucionPostLogin(redirectUrl);
+                  return;
+                }
+                this.corteVentaService
+                  .obtenerBaseInicialPendiente()
+                  .pipe(catchError(() => of({ pendiente: false as const })))
+                  .subscribe((baseIni) => {
+                    if (baseIni?.pendiente) {
+                      this.abrirBaseInicialPostLogin(redirectUrl);
+                      return;
+                    }
+                    void this.router.navigateByUrl(redirectUrl);
+                  });
+              });
+            return;
+          }
+
           void this.router.navigateByUrl(redirectUrl);
         },
         error: (error) => {
@@ -216,6 +252,77 @@ export class LoginComponent {
           });
         }
       });
+  }
+
+  private abrirDistribucionPostLogin(redirectUrl: string): void {
+    this.corteVentaService.obtenerDistribucionPendiente().subscribe({
+      next: (pendiente) => {
+        if (!pendiente?.pendiente) {
+          void this.router.navigateByUrl(redirectUrl);
+          return;
+        }
+        this.dialog
+          .open(DistribucionEfectivoDialogComponent, {
+            width: '520px',
+            disableClose: true,
+            data: { pendiente }
+          })
+          .afterClosed()
+          .subscribe((res: DistribucionEfectivoDialogResult | undefined) => {
+            if (res?.confirmada) {
+              void this.router.navigateByUrl(redirectUrl);
+              return;
+            }
+            // Cancelar / definir luego → logout
+            this.forzarLogoutPostLogin(
+              'Debe completar la Distribución de efectivo para continuar.'
+            );
+          });
+      },
+      error: () => void this.router.navigateByUrl(redirectUrl)
+    });
+  }
+
+  private abrirBaseInicialPostLogin(redirectUrl: string): void {
+    this.corteVentaService.obtenerBaseInicialPendiente().subscribe({
+      next: (pendiente) => {
+        if (!pendiente?.pendiente) {
+          void this.router.navigateByUrl(redirectUrl);
+          return;
+        }
+        this.dialog
+          .open(BaseInicialDialogComponent, {
+            width: '480px',
+            disableClose: true,
+            data: { pendiente }
+          })
+          .afterClosed()
+          .subscribe((res: BaseInicialDialogResult | undefined) => {
+            if (res?.confirmada) {
+              void this.router.navigateByUrl(redirectUrl);
+              return;
+            }
+            this.forzarLogoutPostLogin(
+              'Debe registrar la inversión inicial (Base de caja) para continuar.'
+            );
+          });
+      },
+      error: () => void this.router.navigateByUrl(redirectUrl)
+    });
+  }
+
+  private forzarLogoutPostLogin(mensaje: string): void {
+    const sessionId = localStorage.getItem('session-id');
+    const idNum = sessionId ? Number(sessionId) : NaN;
+    const fin$ = Number.isFinite(idNum)
+      ? this.sesionesService.deleteSesion(idNum).pipe(catchError(() => of(null)))
+      : of(null);
+    fin$.subscribe(() => {
+      localStorage.removeItem('session-id');
+      this.authService.logout();
+      this.snackbar.open(mensaje, 'Cerrar', { duration: 5000 });
+      this.cd.markForCheck();
+    });
   }
 
   private resolvePostLoginUrl(): string {

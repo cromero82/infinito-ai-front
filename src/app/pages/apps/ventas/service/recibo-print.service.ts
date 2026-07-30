@@ -1,5 +1,9 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import {
+  EstablecimientoDto,
+  EstablecimientoService
+} from './establecimiento.service';
 
 export interface PrintableReciboDetalle {
   productoId: number;
@@ -33,6 +37,16 @@ export interface RecentPrintedReciboItem {
   cambio?: number | null;
 }
 
+export interface ReciboImpresionEstablecimiento {
+  razonSocial: string;
+  nombreComercial?: string | null;
+  nit?: string | null;
+  digitoVerificacion?: string | null;
+  regimenTributario?: string | null;
+  regimenLeyendaImpresion?: string | null;
+  direccion?: string | null;
+}
+
 export interface ReciboImpresionOpciones extends ReciboTicketImpresionExtra {
   fechaCreacion?: string | Date | null;
   /** Si se indica, tiene prioridad sobre `fechaCreacion` para la hora en el ticket. */
@@ -40,6 +54,8 @@ export interface ReciboImpresionOpciones extends ReciboTicketImpresionExtra {
   detalles: PrintableReciboDetalle[];
   /** Nombre tal cual viene del recibo/ticket; vacío o ANONIMO → "Anonimo" en CLIENTE. */
   clienteNombre?: string | null;
+  establecimiento?: ReciboImpresionEstablecimiento | null;
+  documentoVentaConsecutivo?: string | null;
 }
 
 /**
@@ -59,6 +75,8 @@ export class ReciboPrintService {
   private readonly recentRecibosSubject = new BehaviorSubject<RecentPrintedReciboItem[]>(this.loadRecentRecibos());
 
   readonly recentRecibos$ = this.recentRecibosSubject.asObservable();
+
+  constructor(private establecimientoService: EstablecimientoService) {}
 
   getRecentRecibosSnapshot(): RecentPrintedReciboItem[] {
     return this.recentRecibosSubject.value;
@@ -362,6 +380,23 @@ p, div, span { color: #000; text-shadow: none; }
     return formatter.format(Number(value ?? 0)).replace('COP', '$').trim();
   }
 
+  static toImpresionEstablecimiento(
+    dto: EstablecimientoDto | null | undefined
+  ): ReciboImpresionEstablecimiento | null {
+    if (!dto?.razonSocial) {
+      return null;
+    }
+    return {
+      razonSocial: dto.razonSocial,
+      nombreComercial: dto.nombreComercial ?? null,
+      nit: dto.nit ?? null,
+      digitoVerificacion: dto.digitoVerificacion ?? null,
+      regimenTributario: dto.regimenTributario ?? null,
+      regimenLeyendaImpresion: dto.regimenLeyendaImpresion ?? null,
+      direccion: dto.direccion ?? null
+    };
+  }
+
   formatReciboFecha(fecha: string | Date | null | undefined): string {
     const date = fecha ? new Date(fecha) : new Date();
     if (Number.isNaN(date.getTime())) {
@@ -393,12 +428,43 @@ p, div, span { color: #000; text-shadow: none; }
     const total = this.calculateTotal(opts.detalles);
     const atendido = this.readAtendidoNombre(opts.atendidoNombre);
     const clienteEtiqueta = this.formatNombreEtiquetaTicket(opts.clienteNombre);
+    const est =
+      opts.establecimiento ??
+      ReciboPrintService.toImpresionEstablecimiento(
+        this.establecimientoService.getSnapshot()
+      );
+    const titulo =
+      est?.nombreComercial?.trim() ||
+      est?.razonSocial?.trim() ||
+      'MI TIENDA POS';
+    const leyendaRegimen =
+      est?.regimenLeyendaImpresion?.trim() ||
+      'Establecimiento NO RESPONSABLE DE IVA';
+    const consecutivo = opts.documentoVentaConsecutivo?.trim() || null;
 
     const lineas: string[] = [];
     lineas.push('<div class="pos-recibo">');
-    lineas.push('<p class="pos-titulo">Gestor infinito market</p>');
+    lineas.push(`<p class="pos-titulo">${this.escapeHtml(titulo)}</p>`);
+    if (est?.razonSocial && est.razonSocial.trim() !== titulo) {
+      lineas.push(
+        `<p class="pos-leyenda">${this.escapeHtml(est.razonSocial.trim())}</p>`
+      );
+    }
+    if (est?.nit?.trim()) {
+      const dv = est.digitoVerificacion?.trim();
+      const nitLine = dv ? `NIT ${est.nit.trim()}-${dv}` : `NIT ${est.nit.trim()}`;
+      lineas.push(`<p class="pos-leyenda">${this.escapeHtml(nitLine)}</p>`);
+    }
     lineas.push(`<p class="pos-fecha">${this.escapeHtml(fechaHoraStr)}</p>`);
-    lineas.push('<p class="pos-leyenda">Recibo no apto como factura</p>');
+    if (consecutivo) {
+      lineas.push(
+        `<p class="pos-leyenda">Doc. venta: ${this.escapeHtml(consecutivo)}</p>`
+      );
+    }
+    lineas.push(`<p class="pos-leyenda">${this.escapeHtml(leyendaRegimen)}</p>`);
+    lineas.push(
+      '<p class="pos-leyenda">Documento de venta — no constituye factura electrónica</p>'
+    );
     lineas.push('<hr class="pos-sep-linea"/>');
 
     for (const det of opts.detalles) {

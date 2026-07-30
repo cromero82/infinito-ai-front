@@ -15,15 +15,23 @@ import { MatTabsModule } from '@angular/material/tabs';
 })
 export class FinancieroComponent {
   tituloSeccion = 'Financiero';
+  subtituloSeccion = 'Ayuda gerencial — no es utilidad fiscal';
 
   links: Link[] = [
     {
       label: 'Ingresos',
-      route: './ingresos'
+      route: './ingresos',
+      badge: 'Cortes de venta'
     },
     {
       label: 'Egresos',
-      route: './egresos'
+      route: './egresos',
+      badge: 'Salidas de caja'
+    },
+    {
+      label: 'Orígenes de fondos',
+      route: './origenes-fondos',
+      badge: 'Medios y cajitas'
     },
     {
       label: 'Proveedores',
@@ -31,7 +39,8 @@ export class FinancieroComponent {
     },
     {
       label: 'Resumen económico',
-      route: './resumen-economico'
+      route: './resumen-economico',
+      badge: 'Ayuda gerencial'
     }
   ];
 }

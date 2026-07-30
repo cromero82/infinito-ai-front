@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { FrontendActivityBufferService } from './frontend-activity-buffer.service';
 import { REPORTE_FRONTEND_URL_FRAGMENT } from './frontend-monitor.constants';
 import { truncarParaMonitoreo } from './frontend-monitor-string.util';
+import { BugReporterService } from '../bug-reporter/bug-reporter.service';
 
 function formatUnknownError(error: unknown): string {
   if (error instanceof Error) {
@@ -25,6 +26,7 @@ function formatUnknownError(error: unknown): string {
 export class ReporteFrontendService {
   private readonly router = inject(Router);
   private readonly buffer = inject(FrontendActivityBufferService);
+  private readonly bugReporter = inject(BugReporterService);
 
   private lastKey = '';
   private lastAt = 0;
@@ -137,6 +139,8 @@ export class ReporteFrontendService {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    const startMs = performance.now();
+
     void fetch(endpoint, {
       method: 'POST',
       headers,
@@ -144,11 +148,28 @@ export class ReporteFrontendService {
       keepalive: true
     })
       .then(res => {
-        // 202 sin cuerpo: éxito sin leer body. Cualquier fallo HTTP aquí se ignora para no impactar negocio.
-        void res.status;
+        if (!res.ok) {
+          this.bugReporter.addManual({
+            method: 'POST',
+            url: endpoint,
+            requestBody: payload,
+            responseStatus: res.status,
+            responseStatusText: res.statusText,
+            durationMs: Math.round(performance.now() - startMs),
+            source: 'reporte-frontend'
+          });
+        }
       })
       .catch(() => {
-        /* red, CORS, abort: ignorar */
+        this.bugReporter.addManual({
+          method: 'POST',
+          url: endpoint,
+          requestBody: payload,
+          responseStatus: 0,
+          responseStatusText: 'NetworkError',
+          durationMs: Math.round(performance.now() - startMs),
+          source: 'reporte-frontend'
+        });
       });
   }
 }

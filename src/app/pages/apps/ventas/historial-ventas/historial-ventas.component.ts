@@ -15,10 +15,13 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatExpansionModule } from '@angular/material/expansion';
 import {
   HistorialReciboService,
   HistorialReciboDto,
-  HistorialReciboPage
+  HistorialReciboPage,
+  HistorialDocumentosDto
 } from '../service/historial-recibo.service';
 import {
   HistorialReciboDetalleService,
@@ -40,6 +43,11 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { FooterService } from '../../../../layouts/services/footer.service';
 import { FechaUtilService } from '../service/fecha-util.service';
 import { ReciboPrintService } from '../service/recibo-print.service';
+import { EstablecimientoService } from '../service/establecimiento.service';
+import {
+  RestaurarTicketDialogComponent,
+  RestaurarTicketDialogResult
+} from './restaurar-ticket-dialog.component';
 
 @Component({
   selector: 'vex-historial-ventas',
@@ -52,7 +60,9 @@ import { ReciboPrintService } from '../service/recibo-print.service';
     MatDatepickerModule,
     MatNativeDateModule,
     MatSnackBarModule,
-    MatIconModule
+    MatIconModule,
+    MatDialogModule,
+    MatExpansionModule
   ],
   templateUrl: './historial-ventas.component.html',
   styleUrls: ['./historial-ventas.component.scss']
@@ -86,6 +96,11 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   anulandoRecibo = false;
   volviendoAEditar = false;
   imprimiendoRecibo = false;
+  restaurandoTicket = false;
+
+  documentos: HistorialDocumentosDto | null = null;
+  documentosLoading = false;
+  documentosError: string | null = null;
 
   // Clientes state
   clientes: ClienteDto[] = [];
@@ -107,10 +122,16 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     private activatedRoute: ActivatedRoute,
     private footerService: FooterService,
     private fechaUtilService: FechaUtilService,
-    private reciboPrintService: ReciboPrintService
+    private reciboPrintService: ReciboPrintService,
+    private establecimientoService: EstablecimientoService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
+    this.establecimientoService
+      .loadActual()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({ error: () => undefined });
     this.footerService.clearFooterItems();
 
     // Read sesionId from URL query parameters and fetch user info
@@ -215,11 +236,10 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   }
 
   getEstadoIdByFilter(filter: string): number | undefined {
-    if (filter === 'todos') {
-      return undefined; // No filtrar por estado
+    if (filter === 'todos' || filter === 'restaurados') {
+      return undefined;
     }
 
-    // Buscar el estado por sigla
     const estado = this.estadosRecibos.find((e) => {
       if (filter === 'pagado') {
         return e.sigla === 'P';
@@ -259,6 +279,7 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
 
     // Get estadoId based on selected filter (default to pagado if not todos)
     const estadoId = this.getEstadoIdByFilter(this.selectedFilter);
+    const soloRestaurados = this.selectedFilter === 'restaurados';
 
     this.historialReciboService
       .searchHistorialRecibos(
@@ -267,7 +288,8 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
         'fechaCreacion,desc',
         fechaParam,
         estadoId,
-        this.sesionIdFromUrl
+        this.sesionIdFromUrl,
+        soloRestaurados
       )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -381,7 +403,29 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     this.selectedReciboId = recibo.id;
     this.detalles = [];
     this.detallesError = null;
+    this.documentos = null;
+    this.documentosError = null;
     this.loadDetalles(recibo.id);
+    this.loadDocumentos(recibo.id);
+  }
+
+  loadDocumentos(reciboId: number): void {
+    this.documentosLoading = true;
+    this.documentosError = null;
+    this.historialReciboService
+      .getDocumentos(reciboId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (docs) => {
+          this.documentos = docs;
+          this.documentosLoading = false;
+        },
+        error: () => {
+          this.documentos = null;
+          this.documentosError = null;
+          this.documentosLoading = false;
+        }
+      });
   }
 
   loadDetalles(reciboId: number): void {
@@ -420,6 +464,18 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     );
   }
 
+  isReciboPagado(): boolean {
+    const recibo = this.getSelectedRecibo();
+    if (!recibo) {
+      return false;
+    }
+    const estadoPagado = this.estadosRecibos.find((e) => e.sigla === 'P');
+    if (!estadoPagado) {
+      return false;
+    }
+    return recibo.estadoId === estadoPagado.id;
+  }
+
   isReciboAnulado(): boolean {
     const recibo = this.getSelectedRecibo();
     if (!recibo) {
@@ -432,7 +488,7 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     return recibo.estadoId === estadoAnulado.id;
   }
 
-  anularFactura(): void {
+  anularVenta(): void {
     const recibo = this.getSelectedRecibo();
     if (!recibo) {
       return;
@@ -495,8 +551,8 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
           this.selectedReciboId = null;
           this.detalles = [];
           this.detallesError = null;
+          this.documentos = null;
 
-          // Reload the historial recibos list to reflect the updated estado
           this.page = 1;
           this.historialRecibos = [];
           this.loadHistorialRecibos();
@@ -508,6 +564,65 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
           this.anulandoRecibo = false;
         }
       });
+  }
+
+  restaurarTicket(): void {
+    const recibo = this.getSelectedRecibo();
+    if (!recibo || !this.isReciboPagado()) {
+      return;
+    }
+
+    const stored = localStorage.getItem('session-id');
+    const sesionId = stored ? Number(stored) : recibo.sesionId;
+    if (!sesionId || Number.isNaN(sesionId)) {
+      this.snackBar.open('No hay sesión activa para restaurar', 'Cerrar', {
+        duration: 4000
+      });
+      return;
+    }
+
+    const dialogRef = this.dialog.open<
+      RestaurarTicketDialogComponent,
+      RestaurarTicketDialogResult | undefined
+    >(RestaurarTicketDialogComponent, { width: '420px' });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!result?.motivoTexto) {
+        return;
+      }
+
+      this.restaurandoTicket = true;
+      this.historialReciboService
+        .restaurarTicket(recibo.id, sesionId, {
+          motivoTexto: result.motivoTexto
+        })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (resp) => {
+            const nc = resp.notaCreditoConsecutivo ?? 'NC';
+            this.snackBar.open(
+              `Ticket restaurado. ${nc} generada.`,
+              undefined,
+              { duration: 5000, horizontalPosition: 'right' }
+            );
+            this.selectedReciboId = null;
+            this.detalles = [];
+            this.documentos = null;
+            this.page = 1;
+            this.historialRecibos = [];
+            this.loadHistorialRecibos();
+            this.restaurandoTicket = false;
+            this.router.navigate(['/apps/tickets']);
+          },
+          error: (err) => {
+            console.error('Error restaurando ticket', err);
+            this.snackBar.open('No se pudo restaurar el ticket', 'Cerrar', {
+              duration: 5000
+            });
+            this.restaurandoTicket = false;
+          }
+        });
+    });
   }
 
   volverAEditar(): void {
@@ -572,8 +687,8 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
           this.selectedReciboId = null;
           this.detalles = [];
           this.detallesError = null;
+          this.documentos = null;
 
-          // Reload the historial recibos list to reflect the updated estado
           this.page = 1;
           this.historialRecibos = [];
           this.loadHistorialRecibos();
@@ -657,6 +772,10 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
         fechaCreacion: recibo.fechaCreacion,
         detalles: printable,
         clienteNombre: this.getClienteNombre(recibo.clienteId),
+        establecimiento: ReciboPrintService.toImpresionEstablecimiento(
+          this.establecimientoService.getSnapshot()
+        ),
+        documentoVentaConsecutivo: recibo.documentoVentaConsecutivo ?? null,
         ...impExtra
       });
 

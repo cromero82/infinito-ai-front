@@ -144,7 +144,7 @@ export class TicketRapidoComponent implements OnInit, OnDestroy {
   private loadMetodosPago(): void {
     this.loadingMetodos = true;
     this.metodoPagoService
-      .obtenerMetodosPago()
+      .obtenerMetodosPagoParaTickets()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (metodos) => {
