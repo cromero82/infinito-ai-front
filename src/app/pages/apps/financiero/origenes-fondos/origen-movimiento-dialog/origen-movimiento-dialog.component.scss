@@ -1,12 +1,25 @@
+:host {
+  display: block;
+}
+
+h2[mat-dialog-title] {
+  margin: 0 0 4px;
+  padding-bottom: 4px;
+}
+
 .dialog-content {
   min-width: 320px;
   max-width: 480px;
+  /* Espacio para el floating label outline del primer campo */
+  padding-top: 12px !important;
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0 16px;
+  column-gap: 16px;
+  row-gap: 4px;
+  padding-top: 4px;
 }
 
 .full-width {

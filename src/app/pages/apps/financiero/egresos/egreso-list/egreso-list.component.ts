@@ -49,7 +49,7 @@ import {
 import { TableViewportService } from '../../../../../core/table-viewport/table-viewport.service';
 import { FechaUtilService } from '../../../ventas/service/fecha-util.service';
 import { FooterService } from '../../../../../layouts/services/footer.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   EntradaInventarioService,
   EntradaInventarioEstadoResumenDto
@@ -124,6 +124,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   entradaResumenMap = new Map<number, EntradaInventarioEstadoResumenDto>();
 
   private justClosedDialog = false;
+  private abriendoNuevoDesdeShortcut = false;
 
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
   @ViewChild('tableScroll') tableScroll!: ElementRef<HTMLElement>;
@@ -139,6 +140,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     private footerService: FooterService,
     private snackBar: MatSnackBar,
     private router: Router,
+    private route: ActivatedRoute,
     private entradaInventarioService: EntradaInventarioService,
     private metodoPagoService: MetodoPagoService,
     private origenFondosService: OrigenFondosService
@@ -161,6 +163,34 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.tipoEgresoIdCtrl.valueChanges.subscribe(() => this.searchEgresos());
     this.proveedorIdCtrl.valueChanges.subscribe(() => this.searchEgresos());
+
+    // Shortcut Financiero → Crear Egreso: /egresos?nuevo=1
+    this.route.queryParamMap.subscribe((params) => {
+      if (params.get('nuevo') === '1') {
+        this.abrirNuevoEgresoDesdeShortcut();
+      }
+    });
+  }
+
+  private abrirNuevoEgresoDesdeShortcut(): void {
+    if (this.abriendoNuevoDesdeShortcut) {
+      return;
+    }
+    this.abriendoNuevoDesdeShortcut = true;
+    this.router
+      .navigate([], {
+        relativeTo: this.route,
+        queryParams: { nuevo: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true
+      })
+      .then(() => {
+        this.createEgreso();
+        this.abriendoNuevoDesdeShortcut = false;
+      })
+      .catch(() => {
+        this.abriendoNuevoDesdeShortcut = false;
+      });
   }
 
   private loadMetodosPago() {

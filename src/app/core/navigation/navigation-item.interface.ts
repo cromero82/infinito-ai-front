@@ -3,6 +3,14 @@ export type NavigationItem =
   | NavigationDropdown
   | NavigationSubheading;
 
+export interface NavigationShortcut {
+  label: string;
+  route: string;
+  /** Query params opcionales (p. ej. { nuevo: '1' } para abrir modal al llegar). */
+  queryParams?: Record<string, string>;
+  icon?: string;
+}
+
 export interface NavigationLink {
   type: 'link';
   route: string | any;
@@ -10,6 +18,8 @@ export interface NavigationLink {
   label: string;
   icon?: string;
   routerLinkActiveOptions?: { exact: boolean };
+  /** Accesos directos: flecha a la derecha del ítem abre este menú. */
+  shortcuts?: NavigationShortcut[];
   badge?: {
     value: string;
     bgClass: string;

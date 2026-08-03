@@ -1,0 +1,100 @@
+.ref-dialog-root {
+  cursor: default;
+}
+
+.dialog-header {
+  gap: 8px;
+  padding-right: 4px;
+  cursor: move;
+  user-select: none;
+}
+
+.solo-lectura-badge {
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #3949ab;
+  background: rgba(63, 81, 181, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.ref-content {
+  min-width: min(520px, 92vw);
+  max-width: 920px;
+  padding-top: 12px !important;
+}
+
+.loading-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.error-msg {
+  margin: 8px 0 0;
+  color: #c62828;
+}
+
+.ref-dl {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ref-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 8px 12px;
+  align-items: baseline;
+
+  dt {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    opacity: 0.65;
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.9rem;
+    word-break: break-word;
+  }
+}
+
+.sub-title {
+  margin: 16px 0 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.detalle-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 4px;
+}
+
+.detalle-table {
+  width: 100%;
+  font-size: 12px;
+
+  th.mat-mdc-header-cell,
+  td.mat-mdc-cell {
+    padding: 4px 8px !important;
+    white-space: nowrap;
+  }
+
+  th.mat-mdc-header-cell {
+    font-weight: 600;
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  td.mat-mdc-cell:not(:first-child),
+  th.mat-mdc-header-cell:not(:first-child) {
+    text-align: right;
+  }
+}

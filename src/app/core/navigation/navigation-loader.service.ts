@@ -43,7 +43,20 @@ export class NavigationLoaderService {
         label: 'Financiero',
         route: '/apps/financiero',
         icon: 'mat:dashboard',
-        routerLinkActiveOptions: { exact: false }
+        routerLinkActiveOptions: { exact: false },
+        shortcuts: [
+          {
+            label: 'Crear Egreso',
+            route: '/apps/financiero/egresos',
+            queryParams: { nuevo: '1' },
+            icon: 'mat:money_off'
+          },
+          {
+            label: 'Orígenes de fondos',
+            route: '/apps/financiero/origenes-fondos',
+            icon: 'mat:account_balance_wallet'
+          }
+        ]
       },
     ]);
   }

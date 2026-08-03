@@ -276,3 +276,19 @@ mat-checkbox.mat-mdc-checkbox {
   gap: 4px;
 }
 
+/* Bug en modales: empuja el control a la izquierda; Cancelar/Registrar siguen a la derecha */
+.mat-mdc-dialog-actions vex-bug-reporter-in-dialog,
+[mat-dialog-actions] vex-bug-reporter-in-dialog,
+.dialog-actions vex-bug-reporter-in-dialog {
+  margin-right: auto;
+  order: -1;
+}
+
+.bug-reporter-dialog-actions-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 8px 16px;
+  gap: 8px;
+}
+

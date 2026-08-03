@@ -4,11 +4,35 @@
       class="footer-items-horizontal"
       [class.footer-items-horizontal--flow-rtl]="itemsFlow === 'rtl'">
       @for (item of footerItems; track trackByTextoClave($index, item)) {
-        <span class="footer-item" [ngClass]="item.estiloCssClave">
-          <span class="footer-item-key">{{ item.textoClave }}</span>
-          <span class="footer-item-separator">:</span>
-          <span class="footer-item-value">{{ item.valorClave }}</span>
-        </span>
+        @if (item.tipo === 'sugerencia' || item.tipo === 'warning') {
+          <span
+            class="footer-item footer-item-sugerencia"
+            [class.footer-item-sugerencia--activa]="
+              item.tipo === 'sugerencia' &&
+              item.estiloCssClave === 'footer-sugerencia-activa'
+            "
+            [class.footer-item-warning]="item.tipo === 'warning'"
+            [ngClass]="item.estiloCssClave">
+            <mat-icon
+              class="footer-sugerencia-icon"
+              [svgIcon]="
+                item.icono ||
+                (item.tipo === 'warning' ? 'mat:warning' : 'mat:tips_and_updates')
+              "></mat-icon>
+            <span class="footer-sugerencia-text">
+              @if (item.textoClave) {
+                <span class="footer-sugerencia-label">{{ item.textoClave }}</span>
+              }
+              <span class="footer-sugerencia-valor">{{ item.valorClave }}</span>
+            </span>
+          </span>
+        } @else {
+          <span class="footer-item" [ngClass]="item.estiloCssClave">
+            <span class="footer-item-key">{{ item.textoClave }}</span>
+            <span class="footer-item-separator">:</span>
+            <span class="footer-item-value">{{ item.valorClave }}</span>
+          </span>
+        }
       }
     </div>
   }

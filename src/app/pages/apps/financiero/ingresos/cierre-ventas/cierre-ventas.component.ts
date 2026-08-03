@@ -464,7 +464,17 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
     if (!fechaISO) return;
 
     try {
-      const dateObj = new Date(fechaISO);
+      // LocalDateTime del backend sin zona: parsear componentes (evitar sesgo UTC).
+      const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(fechaISO);
+      const dateObj = m
+        ? new Date(
+            Number(m[1]),
+            Number(m[2]) - 1,
+            Number(m[3]),
+            Number(m[4]),
+            Number(m[5])
+          )
+        : new Date(fechaISO);
 
       if (!isNaN(dateObj.getTime())) {
         fechaCtrl.setValue(dateObj, { emitEvent: false });
@@ -673,6 +683,15 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(value).replace('COP', '$').trim();
+  }
+
+  /** Egresos = salida de O.F.: se muestran con signo negativo (solo UI). */
+  formatCurrencyEgreso(value: number | null | undefined): string {
+    const n = value ?? 0;
+    if (n === 0) {
+      return this.formatCurrency(0);
+    }
+    return this.formatCurrency(-Math.abs(n));
   }
 
   /** Valor mostrado dentro del input: solo número formateado (el $ va en matPrefix). */

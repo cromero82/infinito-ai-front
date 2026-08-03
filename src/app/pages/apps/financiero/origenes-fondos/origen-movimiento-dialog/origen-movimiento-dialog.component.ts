@@ -25,7 +25,11 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs/operators';
-import { OrigenFondosArbolItemDto } from '../util/origen-fondos-arbol.util';
+import {
+  etiquetaOrigenConSaldo,
+  OrigenFondosArbolItemDto,
+  saldoOrigenConVentasSinCorte
+} from '../util/origen-fondos-arbol.util';
 import {
   MovimientoOrigenFondosService,
   MovimientoEntradaRequest,
@@ -44,6 +48,8 @@ export interface OrigenMovimientoDialogData {
   cuentaId?: number;
   destinoId?: number;
   arbol: OrigenFondosArbolItemDto[];
+  /** Tickets sin corte por método de pago (mismo mapa que la lista). */
+  ventasSinCortePorMetodo?: Map<number, number>;
 }
 
 @Component({
@@ -144,6 +150,24 @@ export class OrigenMovimientoDialogComponent implements OnInit, AfterViewInit {
 
   get esEntrada(): boolean {
     return this.data.tipo === 'entrada';
+  }
+
+  /** Etiqueta con total parcial (ledger + tickets sin corte, si aplica). */
+  etiquetaCuenta(cuenta: OrigenFondosArbolItemDto): string {
+    const parcial = saldoOrigenConVentasSinCorte(
+      cuenta,
+      this.data.ventasSinCortePorMetodo ?? new Map()
+    ).parcial;
+    return etiquetaOrigenConSaldo(cuenta, (n) => this.formatSaldo(n), parcial);
+  }
+
+  formatSaldo(valor: number): string {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(valor);
   }
 
   cancelar(): void {

@@ -7,7 +7,7 @@
         <mat-label>Origen de fondos</mat-label>
         <mat-select #origenSelect formControlName="origenFondosId">
           @for (c of data.arbol; track c.id) {
-            <mat-option [value]="c.id">{{ c.nombreDisplay }}</mat-option>
+            <mat-option [value]="c.id">{{ etiquetaCuenta(c) }}</mat-option>
           }
         </mat-select>
       </mat-form-field>
@@ -18,7 +18,7 @@
         <mat-label>Origen</mat-label>
         <mat-select #origenSelect formControlName="origenFondosId">
           @for (c of data.arbol; track c.id) {
-            <mat-option [value]="c.id">{{ c.nombreDisplay }}</mat-option>
+            <mat-option [value]="c.id">{{ etiquetaCuenta(c) }}</mat-option>
           }
         </mat-select>
       </mat-form-field>
@@ -27,7 +27,7 @@
         <mat-label>Destino</mat-label>
         <mat-select formControlName="origenDestinoId">
           @for (c of data.arbol; track c.id) {
-            <mat-option [value]="c.id">{{ c.nombreDisplay }}</mat-option>
+            <mat-option [value]="c.id">{{ etiquetaCuenta(c) }}</mat-option>
           }
         </mat-select>
       </mat-form-field>

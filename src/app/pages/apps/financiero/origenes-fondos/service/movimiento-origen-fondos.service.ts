@@ -24,6 +24,9 @@ export interface MovimientoOrigenFondosDto {
   valorSistema?: number | null;
   valorReal?: number | null;
   origenTipo?: string | null;
+  /** Id egreso / corte_venta / etc. según origenTipo. */
+  idReferencia?: number | null;
+  /** @deprecated usar idReferencia */
   origenId?: number | null;
   grupoTrasladoId?: string | null;
 }

@@ -1,42 +1,43 @@
-<div class="origenes-page p-6 flex flex-col h-full">
+<div class="origenes-page p-4 sm:p-6 flex flex-col h-full min-h-0">
   <div class="header-row">
-    <div>
-      <h2 class="title mt-0 mb-1">Orígenes de fondos</h2>
+    <h2 class="title mt-0 mb-0">Orígenes de fondos</h2>
+    <div class="legend-row">
       <p class="text-secondary subtitle">
-        Medios de pago y orígenes hijos — mueva saldo entre cuentas y revise movimientos.
-        El total parcial suma ventas sin corte (mismo período que Cierre de ventas).
+        <span class="subtitle-text">
+          Medios de pago y orígenes hijos — mueva saldo entre cuentas y revise movimientos.
+        </span>
         @if (modoEstricto) {
           <span class="modo-badge estricto">Modo estricto</span>
         } @else {
           <span class="modo-badge flexible">Modo flexible</span>
         }
       </p>
-    </div>
 
-    @if (esAdmin) {
-      <div class="acciones-admin">
-        <button
-          mat-flat-button
-          color="primary"
-          type="button"
-          (click)="abrirMovimiento('traslado')">
-          <mat-icon svgIcon="mat:swap_horiz"></mat-icon>
-          Mover saldo
-        </button>
-        <button mat-stroked-button type="button" (click)="abrirMovimiento('entrada')">
-          <mat-icon svgIcon="mat:add"></mat-icon>
-          Entrada
-        </button>
-        <button mat-stroked-button type="button" (click)="abrirMovimiento('prestamo')">
-          <mat-icon svgIcon="mat:handshake"></mat-icon>
-          Préstamo
-        </button>
-        <button mat-stroked-button type="button" (click)="abrirAjuste()">
-          <mat-icon svgIcon="mat:tune"></mat-icon>
-          Ajuste
-        </button>
-      </div>
-    }
+      @if (esAdmin) {
+        <div class="acciones-admin">
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            (click)="abrirMovimiento('traslado')">
+            <mat-icon svgIcon="mat:swap_horiz"></mat-icon>
+            Mover saldo
+          </button>
+          <button mat-stroked-button type="button" (click)="abrirMovimiento('entrada')">
+            <mat-icon svgIcon="mat:add"></mat-icon>
+            Entrada
+          </button>
+          <button mat-stroked-button type="button" (click)="abrirMovimiento('prestamo')">
+            <mat-icon svgIcon="mat:handshake"></mat-icon>
+            Préstamo
+          </button>
+          <button mat-stroked-button type="button" (click)="abrirAjuste()">
+            <mat-icon svgIcon="mat:tune"></mat-icon>
+            Ajuste
+          </button>
+        </div>
+      }
+    </div>
   </div>
 
   @if (loadingCuentas) {
@@ -62,139 +63,226 @@
   }
 
   @if (!loadingCuentas && grupos.length > 0) {
-    <div class="origenes-scroll flex flex-row gap-4 overflow-x-auto">
-    @for (grupo of grupos; track grupo.raiz.id) {
-      <section class="grupo-origen flex-shrink-0 min-w-[210px]">
-        <div class="grupo-header">
-          <h3 class="grupo-title">{{ grupo.raiz.nombre }}</h3>
-          @if (grupo.raiz.tipoOrigenFondosNombre) {
-            <span class="tipo-chip">{{ grupo.raiz.tipoOrigenFondosNombre }}</span>
+    <div class="body-split">
+      <div class="origenes-panel">
+        <div class="origenes-scroll flex flex-row gap-4 overflow-x-auto">
+          @for (grupo of grupos; track grupo.raiz.id) {
+            <section class="grupo-origen flex-shrink-0 min-w-[210px]">
+              <div class="cards-stack">
+                @if (saldoVista(grupo.raiz); as svRaiz) {
+                  <div
+                    class="raiz-wrap"
+                    [class.con-hijos]="grupo.hijos.length > 0">
+                    @if (grupo.hijos.length) {
+                      <button
+                        type="button"
+                        class="expand-hijos-btn"
+                        mat-icon-button
+                        [matTooltip]="
+                          estaExpandido(grupo.raiz.id)
+                            ? 'Ocultar bolsillos'
+                            : 'Ver bolsillos (' + grupo.hijos.length + ')'
+                        "
+                        [attr.aria-expanded]="estaExpandido(grupo.raiz.id)"
+                        (click)="toggleHijos(grupo.raiz.id, $event)">
+                        <mat-icon
+                          [svgIcon]="
+                            estaExpandido(grupo.raiz.id) ? 'mat:remove' : 'mat:add'
+                          "></mat-icon>
+                      </button>
+                    }
+                    <button
+                      type="button"
+                      class="origen-card raiz"
+                      [class.selected]="cuentaSeleccionada?.id === grupo.raiz.id"
+                      [class.con-desglose]="svRaiz.mostrarDesglose"
+                      [class.con-hijos]="grupo.hijos.length > 0"
+                      [style.border-top-color]="cardAccent(grupo.raiz)"
+                      [draggable]="esAdmin"
+                      (click)="seleccionarCuenta(grupo.raiz)"
+                      (dblclick)="copiarInfoRaiz(grupo.raiz)"
+                      (dragstart)="onDragStart(grupo.raiz, $event)"
+                      (dragover)="onDragOver(grupo.raiz, $event)"
+                      (drop)="onDrop(grupo.raiz, $event)"
+                      (dragend)="onDragEnd()">
+                      <span class="card-head">
+                        @if (iconoMetodoPagoUrl(grupo.raiz); as iconUrl) {
+                          <span class="origen-avatar origen-avatar--img">
+                            <img [src]="iconUrl" [alt]="grupo.raiz.nombre" />
+                          </span>
+                        } @else {
+                          <span
+                            class="origen-avatar"
+                            [style.background]="cardAccent(grupo.raiz) || '#5c6bc0'">
+                            {{ inicialesOrigen(grupo.raiz.nombre) }}
+                          </span>
+                        }
+                        <span class="nombre">{{ grupo.raiz.nombre }}</span>
+                      </span>
+                      @if (svRaiz.mostrarDesglose) {
+                        <span class="saldo-desglose">
+                          <span class="linea-ledger">
+                            {{ svRaiz.ledger | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                            <span class="etiqueta">movimientos</span>
+                          </span>
+                          <span class="linea-tickets">
+                            + {{ svRaiz.ventasSinCorte | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                            <span class="etiqueta">tickets sin corte</span>
+                          </span>
+                          <span class="saldo parcial" [ngClass]="saldoClass(svRaiz.parcial)">
+                            {{ svRaiz.parcial | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                            <span class="etiqueta-parcial">total parcial</span>
+                          </span>
+                        </span>
+                      } @else {
+                        <span class="saldo" [ngClass]="saldoClass(svRaiz.parcial)">
+                          {{ svRaiz.parcial | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                        </span>
+                      }
+                    </button>
+                  </div>
+                }
+
+                @if (grupo.hijos.length && estaExpandido(grupo.raiz.id)) {
+                  <div class="hijos-col">
+                    @for (hijo of grupo.hijos; track hijo.id) {
+                      <button
+                        type="button"
+                        class="origen-card hijo"
+                        [class.selected]="cuentaSeleccionada?.id === hijo.id"
+                        [style.border-top-color]="cardAccent(hijo)"
+                        [draggable]="esAdmin"
+                        (click)="seleccionarCuenta(hijo)"
+                        (dblclick)="copiarInfoHijo(hijo)"
+                        (dragstart)="onDragStart(hijo, $event)"
+                        (dragover)="onDragOver(hijo, $event)"
+                        (drop)="onDrop(hijo, $event)"
+                        (dragend)="onDragEnd()">
+                        <span class="card-head">
+                          @if (iconoMetodoPagoUrl(hijo); as iconUrlHijo) {
+                            <span class="origen-avatar origen-avatar--sm origen-avatar--img">
+                              <img [src]="iconUrlHijo" [alt]="hijo.nombre" />
+                            </span>
+                          } @else {
+                            <span
+                              class="origen-avatar origen-avatar--sm"
+                              [style.background]="cardAccent(hijo) || '#7986cb'">
+                              {{ inicialesOrigen(hijo.nombre) }}
+                            </span>
+                          }
+                          <span class="nombre">{{ hijo.nombre }}</span>
+                        </span>
+                        <span class="saldo" [ngClass]="saldoClass(hijo.saldo)">
+                          {{ hijo.saldo ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                        </span>
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            </section>
           }
         </div>
+      </div>
 
-        <div class="cards-grid">
-          @if (saldoVista(grupo.raiz); as svRaiz) {
-            <button
-              type="button"
-              class="origen-card raiz"
-              [class.selected]="cuentaSeleccionada?.id === grupo.raiz.id"
-              [class.con-desglose]="svRaiz.mostrarDesglose"
-              [style.border-top-color]="cardAccent(grupo.raiz)"
-              [draggable]="esAdmin"
-              matTooltip="Doble clic para copiar · Arrastra sobre otra caja para mover saldo"
-              (click)="seleccionarCuenta(grupo.raiz)"
-              (dblclick)="copiarInfoRaiz(grupo.raiz)"
-              (dragstart)="onDragStart(grupo.raiz, $event)"
-              (dragover)="onDragOver($event)"
-              (drop)="onDrop(grupo.raiz, $event)"
-              (dragend)="onDragEnd()">
-              <span class="nombre">{{ grupo.raiz.nombre }}</span>
-              @if (svRaiz.mostrarDesglose) {
-                <span class="saldo-desglose">
-                  <span class="linea-ledger">
-                    {{ svRaiz.ledger | currency: 'COP':'symbol-narrow':'1.0-0' }}
-                    <span class="etiqueta">movimientos</span>
-                  </span>
-                  <span class="linea-tickets">
-                    + {{ svRaiz.ventasSinCorte | currency: 'COP':'symbol-narrow':'1.0-0' }}
-                    <span class="etiqueta">tickets sin corte</span>
-                  </span>
-                  <span class="saldo parcial" [ngClass]="saldoClass(svRaiz.parcial)">
-                    {{ svRaiz.parcial | currency: 'COP':'symbol-narrow':'1.0-0' }}
-                    <span class="etiqueta-parcial">total parcial</span>
-                  </span>
-                </span>
-              } @else {
-                <span class="saldo" [ngClass]="saldoClass(svRaiz.parcial)">
-                  {{ svRaiz.parcial | currency: 'COP':'symbol-narrow':'1.0-0' }}
-                </span>
-              }
-            </button>
-          }
+      @if (cuentaSeleccionada) {
+        <section class="historial">
+          <h3 class="historial-title">
+            Movimientos — {{ cuentaSeleccionada.nombre }}
+          </h3>
 
-          @for (hijo of grupo.hijos; track hijo.id) {
-            <button
-              type="button"
-              class="origen-card hijo"
-              [class.selected]="cuentaSeleccionada?.id === hijo.id"
-              [style.border-top-color]="cardAccent(hijo)"
-              [draggable]="esAdmin"
-              matTooltip="Doble clic para copiar · Arrastra sobre otra caja para mover saldo"
-              (click)="seleccionarCuenta(hijo)"
-              (dblclick)="copiarInfoHijo(hijo)"
-              (dragstart)="onDragStart(hijo, $event)"
-              (dragover)="onDragOver($event)"
-              (drop)="onDrop(hijo, $event)"
-              (dragend)="onDragEnd()">
-              <span class="hijo-prefix">────</span>
-              <span class="nombre">{{ hijo.nombre }}</span>
-              <span class="saldo" [ngClass]="saldoClass(hijo.saldo)">
-                {{ hijo.saldo ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
-              </span>
-            </button>
+          @if (loadingMovimientos) {
+            <mat-spinner diameter="28"></mat-spinner>
+          } @else if (movimientos.length === 0) {
+            <p class="text-secondary historial-empty">Sin movimientos registrados.</p>
+          } @else {
+            <div class="table-wrap">
+              <table mat-table [dataSource]="movimientos" class="mov-table mov-table-compact">
+                <ng-container matColumnDef="icono">
+                  <th mat-header-cell *matHeaderCellDef class="icono-col"></th>
+                  <td mat-cell *matCellDef="let m" class="icono-col">
+                    <span
+                      class="mov-tipo-icon"
+                      [attr.title]="tipoMovimientoLabel(m.tipoMovimiento)">
+                      <mat-icon [svgIcon]="iconoTipoMovimiento(m.tipoMovimiento)"></mat-icon>
+                    </span>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="fecha">
+                  <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                  <td mat-cell *matCellDef="let m">{{ m.fecha | date: 'dd/MM/yyyy' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="tipoMovimiento">
+                  <th mat-header-cell *matHeaderCellDef>Tipo</th>
+                  <td mat-cell *matCellDef="let m">{{ tipoMovimientoLabel(m.tipoMovimiento) }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="valor">
+                  <th mat-header-cell *matHeaderCellDef>Valor</th>
+                  <td mat-cell *matCellDef="let m">
+                    {{ m.valor | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="impacto">
+                  <th mat-header-cell *matHeaderCellDef>Impacto</th>
+                  <td mat-cell *matCellDef="let m" [class.impacto-neg]="(m.impacto ?? 0) < 0">
+                    {{ m.impacto ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="saldoDespues">
+                  <th mat-header-cell *matHeaderCellDef>Saldo</th>
+                  <td mat-cell *matCellDef="let m">
+                    {{ m.saldoDespues ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="usuario">
+                  <th mat-header-cell *matHeaderCellDef>Usuario</th>
+                  <td
+                    mat-cell
+                    *matCellDef="let m"
+                    class="usuario-col"
+                    [matTooltip]="nombreUsuarioMovimiento(m)">
+                    {{ nombreUsuarioMovimiento(m) }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="detalle">
+                  <th mat-header-cell *matHeaderCellDef>Detalle</th>
+                  <td mat-cell *matCellDef="let m" class="detalle-cell">
+                    <span class="detalle-inner">
+                      @if (tieneReferenciaVer(m)) {
+                        <button
+                          type="button"
+                          mat-flat-button
+                          color="primary"
+                          class="btn-ver-ref"
+                          matTooltip="Ver documento de origen"
+                          (click)="verReferencia(m, $event)">
+                          Ver
+                        </button>
+                      }
+                      <span class="detalle-texto">{{ detalleMovimiento(m) }}</span>
+                    </span>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="movimientoColumns; sticky: true"></tr>
+                <tr
+                  mat-row
+                  *matRowDef="let row; columns: movimientoColumns"
+                  class="mov-row"
+                  [class.selected-row]="isMovimientoSelected(row)"
+                  (click)="selectMovimiento(row)"></tr>
+              </table>
+            </div>
           }
-        </div>
-      </section>
-    }
+        </section>
+      }
     </div>
-
-    @if (cuentaSeleccionada) {
-      <section class="historial flex-1 overflow-y-auto">
-        <h3 class="historial-title">
-          Movimientos — {{ cuentaSeleccionada.nombre }}
-        </h3>
-
-        @if (loadingMovimientos) {
-          <mat-spinner diameter="28"></mat-spinner>
-        } @else if (movimientos.length === 0) {
-          <p class="text-secondary">Sin movimientos registrados.</p>
-        } @else {
-          <div class="table-wrap">
-            <table mat-table [dataSource]="movimientos" class="mov-table">
-              <ng-container matColumnDef="fecha">
-                <th mat-header-cell *matHeaderCellDef>Fecha</th>
-                <td mat-cell *matCellDef="let m">{{ m.fecha | date: 'dd/MM/yyyy' }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="tipoMovimiento">
-                <th mat-header-cell *matHeaderCellDef>Tipo</th>
-                <td mat-cell *matCellDef="let m">{{ tipoMovimientoLabel(m.tipoMovimiento) }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="valor">
-                <th mat-header-cell *matHeaderCellDef>Valor</th>
-                <td mat-cell *matCellDef="let m">
-                  {{ m.valor | currency: 'COP':'symbol-narrow':'1.0-0' }}
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="impacto">
-                <th mat-header-cell *matHeaderCellDef>Impacto</th>
-                <td mat-cell *matCellDef="let m" [class.impacto-neg]="(m.impacto ?? 0) < 0">
-                  {{ m.impacto ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="saldoDespues">
-                <th mat-header-cell *matHeaderCellDef>Saldo</th>
-                <td mat-cell *matCellDef="let m">
-                  {{ m.saldoDespues ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="detalle">
-                <th mat-header-cell *matHeaderCellDef>Detalle</th>
-                <td mat-cell *matCellDef="let m" class="detalle-cell">
-                  {{ detalleMovimiento(m) }}
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="movimientoColumns; sticky: true"></tr>
-              <tr mat-row *matRowDef="let row; columns: movimientoColumns"></tr>
-            </table>
-          </div>
-        }
-      </section>
-    }
   }
 </div>

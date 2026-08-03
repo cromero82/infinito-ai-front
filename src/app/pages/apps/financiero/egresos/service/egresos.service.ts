@@ -24,7 +24,8 @@ export interface CreateEgresoRequest {
   fecha: string;
   valor: number;
   descripcion: string;
-  metodoPagoId: number;
+  /** Opcional: derivado del O.F.; ausente en cuentas sin medio (Caja Menor/General). */
+  metodoPagoId?: number | null;
   origenFondosId: number;
   proveedor: { id: number };
 }

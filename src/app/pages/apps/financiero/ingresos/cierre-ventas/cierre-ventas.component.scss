@@ -1,7 +1,12 @@
+:host {
+  display: block;
+}
+
 .cierre-ventas-draggable-root {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  max-height: min(90vh, 920px);
 }
 
 .cierre-ventas-drag-header {
@@ -9,6 +14,8 @@
   user-select: none;
   touch-action: none;
   flex-shrink: 0;
+  margin: 0 !important;
+  padding: 16px 24px 4px !important;
 
   .dialog-title {
     margin-bottom: 0;
@@ -24,31 +31,63 @@
 .dialog-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  justify-content: flex-start;
+  gap: 8px;
   min-width: 1090px;
   max-width: 1400px;
   max-height: 75vh;
   overflow-y: auto;
+  /* Evita el hueco enorme entre observación y botones (MDC flex-grow) */
+  flex: 0 1 auto !important;
+  flex-grow: 0 !important;
+  padding-top: 8px !important;
+  padding-bottom: 4px !important;
+  margin-bottom: 0 !important;
 }
 
 .observacion-cierre-field {
   width: 100%;
+  margin-bottom: 0;
+
+  ::ng-deep {
+    .mat-mdc-form-field-subscript-wrapper {
+      margin-top: 2px;
+      height: auto;
+      min-height: 16px;
+    }
+
+    .mat-mdc-text-field-wrapper {
+      padding-bottom: 0;
+    }
+
+    .mat-mdc-form-field-infix {
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+      min-height: 0;
+    }
+
+    textarea.mat-mdc-input-element {
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+    }
+  }
 }
 
 .fechas-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 24px;
-  padding: 16px;
+  gap: 16px;
+  padding: 10px 12px;
   background-color: #f9f9f9;
   border-radius: 8px;
   align-items: flex-start;
+  margin-bottom: 0;
 }
 
 .fecha-grupo {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   flex: 1;
   min-width: 200px;
 }
@@ -120,7 +159,7 @@
 .consultar-container {
   display: flex;
   align-items: flex-end;
-  padding-bottom: 8px;
+  padding-bottom: 0;
 
   .consultar-btn {
     min-width: 148px;
@@ -136,8 +175,9 @@
   background: white;
   height: auto;
   min-height: 0;
-  max-height: min(420px, 55vh);
+  max-height: min(460px, 52vh);
   overflow: hidden;
+  flex: 0 1 auto;
 }
 
 .table-scroll-wrap {
@@ -150,10 +190,12 @@
 }
 
 .table-scroll {
-  flex: 0 1 auto;
-  max-height: 300px;
+  flex: 1 1 auto;
+  min-height: 140px;
+  max-height: 340px;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
 }
 
 .table-loading-overlay {
@@ -198,6 +240,7 @@
 
 .corte-table {
   width: 100%;
+  table-layout: fixed;
   background: white;
   border-collapse: collapse;
 
@@ -227,6 +270,45 @@
   }
 }
 
+/* Anchos compartidos: tabla de datos + filas TOTAL */
+.corte-table--admin,
+.totales-table--admin {
+  .col-metodo {
+    width: 16%;
+  }
+  .col-base,
+  .col-ventas,
+  .col-egresos,
+  .col-movimientos {
+    width: 10%;
+  }
+  .col-neto,
+  .col-real {
+    width: 12%;
+  }
+  .col-desfase {
+    width: 20%;
+  }
+}
+
+.corte-table--cajero,
+.totales-table--cajero {
+  .col-metodo {
+    width: 20%;
+  }
+  .col-ventas,
+  .col-egresos {
+    width: 13%;
+  }
+  .col-neto,
+  .col-real {
+    width: 15%;
+  }
+  .col-desfase {
+    width: 24%;
+  }
+}
+
 .header-row {
   background-color: #cacaca;
   position: sticky;
@@ -251,6 +333,7 @@
 .data-row {
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   transition: background-color 0.2s ease;
+  height: 48px;
 
   &:hover {
     background-color: rgba(0, 0, 0, 0.02);
@@ -270,9 +353,11 @@
 }
 
 .cell {
-  padding: 6px 12px;
+  padding: 10px 12px;
   vertical-align: middle;
   border-right: 1px solid rgba(0, 0, 0, 0.08);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 
   &:last-child {
     border-right: none;
@@ -280,7 +365,7 @@
 }
 
 .metodo-pago-cell {
-  width: 26%;
+  text-align: left;
 }
 
 .metodo-pago-nombre {
@@ -290,13 +375,12 @@
 }
 
 .total-sistema-cell {
-  width: 22%;
-  text-align: center;
+  text-align: right;
 }
 
 .total-sistema-container {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
 }
 
@@ -309,24 +393,20 @@
   border-radius: 4px;
   min-width: 130px;
   text-align: right;
-}
-
-.total-real-cell {
-  width: 22%;
+  font-variant-numeric: tabular-nums;
 }
 
 .desfase-cell {
-  width: 30%;
-  min-width: 220px;
   vertical-align: middle;
   padding-top: 8px;
   padding-bottom: 8px;
+  text-align: right;
 }
 
 .desfase-stack {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: flex-end;
   gap: 6px;
   width: 100%;
   box-sizing: border-box;
@@ -359,7 +439,7 @@
 
 .total-real-container {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
 }
 
@@ -381,8 +461,14 @@
       min-height: 32px;
     }
 
+    .mat-mdc-form-field-prefix {
+      order: 0;
+    }
+
     input.mat-mdc-input-element {
       font-size: 13px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
     }
   }
 }
@@ -394,15 +480,15 @@
 }
 
 .desfase-texto {
-  display: block;
-  width: 100%;
+  display: inline-block;
   box-sizing: border-box;
   font-size: 11px;
   font-weight: 600;
   padding: 4px 8px;
   border-radius: 3px;
-  text-align: center;
+  text-align: right;
   line-height: 1.3;
+  max-width: 100%;
 }
 
 .desfase-ok {
@@ -424,80 +510,62 @@
   flex: 0 0 auto;
   background-color: #ebf4eb;
   border-top: 1px solid #e4e8e4;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  padding: 0;
+}
+
+.totales-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
 }
 
 .total-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  min-height: 28px;
 }
 
-.totales-grid {
-  display: grid;
-  grid-template-columns: minmax(100px, 1.4fr) minmax(96px, 1fr) minmax(96px, 1fr) minmax(110px, 1.1fr);
-  align-items: center;
-  column-gap: 12px;
-  row-gap: 4px;
-  width: 100%;
+.total-cell {
+  padding: 6px 10px;
+  vertical-align: middle;
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+
+  &:last-child {
+    border-right: none;
+  }
 }
 
-.totales-grid--extended {
-  grid-template-columns:
-    minmax(90px, 1.2fr)
-    minmax(80px, 0.9fr)
-    minmax(80px, 0.9fr)
-    minmax(80px, 0.9fr)
-    minmax(96px, 1fr)
-    minmax(110px, 1.1fr);
-}
-
-.totales-grid--admin {
-  grid-template-columns:
-    minmax(80px, 1.1fr)
-    minmax(64px, 0.7fr)
-    minmax(72px, 0.85fr)
-    minmax(72px, 0.85fr)
-    minmax(72px, 0.85fr)
-    minmax(72px, 0.85fr)
-    minmax(88px, 1fr)
-    minmax(100px, 1.05fr);
+.total-desfase-cell {
+  text-align: right;
 }
 
 .cierre-disclaimer {
-  margin: 0 0 12px;
-  padding: 10px 12px;
+  margin: 0;
+  padding: 8px 12px;
   font-size: 12px;
-  line-height: 1.45;
+  line-height: 1.35;
   color: rgba(0, 0, 0, 0.72);
   background: rgba(33, 150, 243, 0.08);
   border-left: 3px solid #2196f3;
   border-radius: 4px;
 }
 
-.total-cell-spacer {
-  display: block;
-}
-
 .total-label {
-  font-size: 18px;
+  font-size: 12px;
   font-weight: 700;
-  min-width: 0;
+  line-height: 1.2;
   text-align: left;
+  white-space: nowrap;
 }
 
 .total-value {
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 700;
-  min-width: 0;
+  line-height: 1.2;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .total-real-final {
-  font-size: 18px;
+  font-size: 12px;
 }
 
 .desfases-row {
@@ -507,13 +575,14 @@
 }
 
 .total-desfases-value {
-  font-size: 15px;
+  display: inline-block;
+  font-size: 12px;
   font-weight: 700;
-  min-width: 0;
+  line-height: 1.2;
   text-align: right;
-  padding: 4px 12px;
-  border-radius: 4px;
-  justify-self: end;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-variant-numeric: tabular-nums;
 }
 
 .mensaje-inicial {
@@ -550,7 +619,9 @@
 }
 
 .dialog-actions {
-  padding-top: 16px;
+  padding: 4px 24px 12px !important;
+  margin: 0 !important;
+  min-height: auto !important;
   gap: 12px;
   flex-wrap: wrap;
   align-items: center;

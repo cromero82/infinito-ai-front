@@ -1,15 +1,44 @@
 @if (isLink(item) && !isFunction(item.route)) {
-  <a
+  <div
     [class.hover:bg-hover]="!(isActive$ | async)?.(item)"
     [ngClass]="{
       'bg-primary-600 text-on-primary-600': (isActive$ | async)?.(item),
       'navigation-color': !(isActive$ | async)?.(item)
     }"
-    [routerLink]="item.route"
     class="navigation-item"
-    matRipple>
-    {{ item.label }}
-  </a>
+    [class.navigation-item--with-shortcuts]="!!item.shortcuts?.length">
+    <a
+      [routerLink]="item.route"
+      class="navigation-item__label"
+      matRipple>
+      {{ item.label }}
+    </a>
+    @if (item.shortcuts?.length) {
+      <button
+        type="button"
+        class="navigation-item__chevron"
+        [matMenuTriggerFor]="shortcutsMenu"
+        (click)="$event.preventDefault(); $event.stopPropagation()"
+        [attr.aria-label]="'Accesos de ' + item.label"
+        matRipple>
+        <mat-icon class="navigation-item__chevron-icon" svgIcon="mat:arrow_drop_down"></mat-icon>
+      </button>
+      <mat-menu #shortcutsMenu="matMenu" yPosition="below" xPosition="before">
+        @for (shortcut of item.shortcuts; track shortcut.label) {
+          <a
+            [routerLink]="shortcut.route"
+            [queryParams]="shortcut.queryParams || null"
+            class="navigation-menu-item"
+            mat-menu-item>
+            @if (shortcut.icon) {
+              <mat-icon [svgIcon]="shortcut.icon" class="text-current"></mat-icon>
+            }
+            <span>{{ shortcut.label }}</span>
+          </a>
+        }
+      </mat-menu>
+    }
+  </div>
 }
 
 @if (isLink(item) && isFunction(item.route)) {

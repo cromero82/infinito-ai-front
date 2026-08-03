@@ -1,4 +1,11 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  Inject,
+  OnInit,
+  ViewChild
+} from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import {
   FormBuilder,
@@ -47,10 +54,12 @@ export interface DistribucionEfectivoDialogResult {
   templateUrl: './distribucion-efectivo-dialog.component.html',
   styleUrl: './distribucion-efectivo-dialog.component.scss'
 })
-export class DistribucionEfectivoDialogComponent implements OnInit {
+export class DistribucionEfectivoDialogComponent implements OnInit, AfterViewInit {
   form: FormGroup;
   guardando = false;
   readonly saldo: number;
+
+  @ViewChild('cajaMenorInput') cajaMenorInput?: ElementRef<HTMLInputElement>;
 
   constructor(
     private fb: FormBuilder,
@@ -63,10 +72,11 @@ export class DistribucionEfectivoDialogComponent implements OnInit {
     private snackBar: MatSnackBar
   ) {
     this.saldo = Number(data.pendiente.saldoCajaEfectivo ?? 0);
+    // Base inicia en 0; General absorbe el residual (saldo − base − menor).
     this.form = this.fb.group({
-      base: [this.saldo, [Validators.required, Validators.min(0)]],
+      base: [0, [Validators.required, Validators.min(0)]],
       aCajaMenor: [0, [Validators.required, Validators.min(0)]],
-      aCajaGeneral: [{ value: 0, disabled: true }],
+      aCajaGeneral: [{ value: this.saldo, disabled: true }],
       observacion: ['']
     });
   }
@@ -75,6 +85,24 @@ export class DistribucionEfectivoDialogComponent implements OnInit {
     this.form.get('base')!.valueChanges.subscribe(() => this.recalcularGeneral());
     this.form.get('aCajaMenor')!.valueChanges.subscribe(() => this.recalcularGeneral());
     this.recalcularGeneral();
+  }
+
+  ngAfterViewInit(): void {
+    // Tras abrir el overlay de Material, enfocar y seleccionar el 0 de Caja Menor.
+    setTimeout(() => this.focusYSeleccionarCajaMenor(), 0);
+  }
+
+  /** Selecciona todo el valor (p. ej. el 0) para reemplazarlo al escribir. */
+  seleccionarContenido(input: HTMLInputElement | null | undefined): void {
+    if (!input) {
+      return;
+    }
+    input.focus();
+    input.select();
+  }
+
+  focusYSeleccionarCajaMenor(): void {
+    this.seleccionarContenido(this.cajaMenorInput?.nativeElement);
   }
 
   get aCajaGeneral(): number {

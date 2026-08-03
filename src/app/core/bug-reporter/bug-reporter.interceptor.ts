@@ -1,7 +1,10 @@
 import { HttpErrorResponse, HttpEvent, HttpEventType, HttpInterceptorFn, HttpRequest, HttpResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { tap } from 'rxjs/operators';
-import { BugReporterService } from './bug-reporter.service';
+import {
+  BugReporterService,
+  durationMsIfSlow
+} from './bug-reporter.service';
 
 const STATIC_ASSET_EXTENSIONS = /\.(?:svg|jpg|jpeg|png|gif|ico|webp|woff|woff2|ttf|eot|css|js|map)$/i;
 
@@ -10,12 +13,29 @@ function isStaticAsset(url: string): boolean {
   return STATIC_ASSET_EXTENSIONS.test(path);
 }
 
-const SENSITIVE_HEADERS = new Set(['authorization', 'cookie', 'set-cookie', 'x-api-key', 'x-auth-token']);
+const SENSITIVE_HEADERS = new Set([
+  'authorization',
+  'cookie',
+  'set-cookie',
+  'x-api-key',
+  'x-auth-token'
+]);
+
+/** Headers de cache sin valor para depuración. */
+const OMITTED_HEADERS = new Set([
+  'cache-control',
+  'expires',
+  'pragma'
+]);
 
 function sanitizeHeaders(headers: Record<string, string>): Record<string, string> {
   const result: Record<string, string> = {};
   for (const [key, value] of Object.entries(headers)) {
-    if (SENSITIVE_HEADERS.has(key.toLowerCase()) && value.length > 20) {
+    const lower = key.toLowerCase();
+    if (OMITTED_HEADERS.has(lower)) {
+      continue;
+    }
+    if (SENSITIVE_HEADERS.has(lower) && value.length > 20) {
       result[key] = value.slice(0, 20) + '... [truncated]';
     } else {
       result[key] = value;
@@ -58,6 +78,9 @@ export const bugReporterInterceptor: HttpInterceptorFn = (req, next) => {
           response.headers.keys().forEach(key => { rawResponseHeaders[key] = response.headers.get(key) ?? ''; });
           const responseHeaders = sanitizeHeaders(rawResponseHeaders);
 
+          const durationMs = durationMsIfSlow(
+            Math.round(performance.now() - startTime)
+          );
           service.add({
             timestamp: new Date().toISOString(),
             method: req.method,
@@ -68,7 +91,7 @@ export const bugReporterInterceptor: HttpInterceptorFn = (req, next) => {
             responseStatusText: response.statusText,
             responseHeaders,
             responseBody: safeCloneBody(response.body),
-            durationMs: Math.round(performance.now() - startTime)
+            ...(durationMs != null ? { durationMs } : {})
           });
         }
       },
@@ -77,6 +100,9 @@ export const bugReporterInterceptor: HttpInterceptorFn = (req, next) => {
           const rawErrorHeaders: Record<string, string> = {};
           error.headers.keys().forEach(key => { rawErrorHeaders[key] = error.headers.get(key) ?? ''; });
           const responseHeaders = sanitizeHeaders(rawErrorHeaders);
+          const durationMs = durationMsIfSlow(
+            Math.round(performance.now() - startTime)
+          );
 
           service.add({
             timestamp: new Date().toISOString(),
@@ -88,7 +114,7 @@ export const bugReporterInterceptor: HttpInterceptorFn = (req, next) => {
             responseStatusText: error.statusText,
             responseHeaders,
             responseBody: safeCloneBody(error.error),
-            durationMs: Math.round(performance.now() - startTime)
+            ...(durationMs != null ? { durationMs } : {})
           });
         }
       }

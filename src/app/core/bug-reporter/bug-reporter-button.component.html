@@ -6,10 +6,16 @@
     matBadgeColor="warn"
     matBadgeSize="small"
     [matMenuTriggerFor]="menu"
-    aria-label="Bug Reporter">
-    <mat-icon>bug_report</mat-icon>
+    [matTooltip]="tooltip"
+    matTooltipPosition="left"
+    aria-label="Monitor">
+    <mat-icon svgIcon="mat:monitor"></mat-icon>
   </button>
   <mat-menu #menu="matMenu">
+    <button mat-menu-item (click)="verDetalle()">
+      <mat-icon svgIcon="mat:table_chart"></mat-icon>
+      <span>Ver detalle</span>
+    </button>
     <button mat-menu-item (click)="exportar()">
       <mat-icon svgIcon="mat:download"></mat-icon>
       <span>Exportar JSON (para Cursor AI)</span>

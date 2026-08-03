@@ -1,0 +1,163 @@
+<div
+  cdkDrag
+  cdkDragRootElement=".cdk-overlay-pane"
+  class="ref-dialog-root">
+  <div
+    class="flex items-center dialog-header"
+    mat-dialog-title
+    cdkDragHandle>
+    <h2 class="headline m-0 flex-auto">{{ titulo }}</h2>
+    <span class="solo-lectura-badge">Solo lectura</span>
+    <button
+      class="text-secondary"
+      mat-dialog-close
+      mat-icon-button
+      type="button"
+      aria-label="Cerrar">
+      <mat-icon svgIcon="mat:close"></mat-icon>
+    </button>
+  </div>
+  <mat-divider class="text-border"></mat-divider>
+
+  <mat-dialog-content class="ref-content">
+    @if (loading) {
+      <div class="loading-wrap">
+        <mat-spinner diameter="32"></mat-spinner>
+      </div>
+    } @else if (error) {
+      <p class="error-msg">{{ error }}</p>
+    } @else if (vista === 'egreso' && egreso) {
+      <dl class="ref-dl">
+        <div class="ref-row">
+          <dt>Id</dt>
+          <dd>#{{ egreso.id }}</dd>
+        </div>
+        <div class="ref-row">
+          <dt>Usuario</dt>
+          <dd>{{ nombreUsuario }}</dd>
+        </div>
+        <div class="ref-row">
+          <dt>Fecha</dt>
+          <dd>{{ egreso.fecha | date: 'dd/MM/yyyy' }}</dd>
+        </div>
+        <div class="ref-row">
+          <dt>Valor</dt>
+          <dd>{{ egreso.valor | currency: 'COP':'symbol-narrow':'1.0-0' }}</dd>
+        </div>
+        <div class="ref-row">
+          <dt>Proveedor</dt>
+          <dd>{{ egreso.proveedor?.nombre || '—' }}</dd>
+        </div>
+        <div class="ref-row">
+          <dt>Origen</dt>
+          <dd>{{ origenEgresoNombre || '—' }}</dd>
+        </div>
+        <div class="ref-row">
+          <dt>Observación</dt>
+          <dd>{{ egreso.descripcion?.trim() || '—' }}</dd>
+        </div>
+      </dl>
+    } @else if (vista === 'corte' && corte) {
+      <dl class="ref-dl">
+        <div class="ref-row">
+          <dt>Id</dt>
+          <dd>#{{ corte.id }}</dd>
+        </div>
+        <div class="ref-row">
+          <dt>Usuario</dt>
+          <dd>{{ nombreUsuario }}</dd>
+        </div>
+        <div class="ref-row">
+          <dt>Estado</dt>
+          <dd>{{ corte.estado }}</dd>
+        </div>
+        <div class="ref-row">
+          <dt>Periodo</dt>
+          <dd>
+            {{ corte.fechaIni | date: 'dd/MM/yyyy HH:mm' }}
+            —
+            {{ corte.fechaFin | date: 'dd/MM/yyyy HH:mm' }}
+          </dd>
+        </div>
+        <div class="ref-row">
+          <dt>Total sistema</dt>
+          <dd>{{ corte.totalSistema | currency: 'COP':'symbol-narrow':'1.0-0' }}</dd>
+        </div>
+        <div class="ref-row">
+          <dt>Total físico</dt>
+          <dd>{{ corte.total | currency: 'COP':'symbol-narrow':'1.0-0' }}</dd>
+        </div>
+        @if (corte.observacion) {
+          <div class="ref-row">
+            <dt>Observación</dt>
+            <dd>{{ corte.observacion }}</dd>
+          </div>
+        }
+      </dl>
+
+      @if (detallesCorte.length) {
+        <h3 class="sub-title">Detalle por medio de pago</h3>
+        <div class="detalle-table-wrap">
+          <table mat-table [dataSource]="detallesCorte" class="detalle-table">
+            <ng-container matColumnDef="metodo">
+              <th mat-header-cell *matHeaderCellDef>Medio</th>
+              <td mat-cell *matCellDef="let d">
+                {{ metodoPagoNombre(d.metodoPagoId) }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="base">
+              <th mat-header-cell *matHeaderCellDef>Base</th>
+              <td mat-cell *matCellDef="let d">
+                {{ d.base ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="ventas">
+              <th mat-header-cell *matHeaderCellDef>Ventas</th>
+              <td mat-cell *matCellDef="let d">
+                {{ d.totalVentasSistema ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="egresos">
+              <th mat-header-cell *matHeaderCellDef>Egresos</th>
+              <td mat-cell *matCellDef="let d">
+                {{ d.totalEgresosSistema ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="movimientos">
+              <th mat-header-cell *matHeaderCellDef>Mov.</th>
+              <td mat-cell *matCellDef="let d">
+                {{ d.totalMovimientosSistema ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="sistema">
+              <th mat-header-cell *matHeaderCellDef>Sistema</th>
+              <td mat-cell *matCellDef="let d">
+                {{ d.totalSistema ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="real">
+              <th mat-header-cell *matHeaderCellDef>Físico</th>
+              <td mat-cell *matCellDef="let d">
+                {{ d.total ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="desfase">
+              <th mat-header-cell *matHeaderCellDef>Desfase</th>
+              <td mat-cell *matCellDef="let d">
+                {{ d.desfase ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="detalleColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: detalleColumns"></tr>
+          </table>
+        </div>
+      }
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-flat-button color="primary" type="button" (click)="cerrar()">
+      Cerrar
+    </button>
+  </mat-dialog-actions>
+</div>

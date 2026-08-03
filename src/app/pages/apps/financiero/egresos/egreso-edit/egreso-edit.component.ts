@@ -442,7 +442,7 @@ export class EgresoEditComponent implements OnInit, AfterViewInit {
       fecha: fechaStr,
       valor: this.parseCurrency(form.valor),
       descripcion: form.descripcion || '',
-      metodoPagoId: origen.metodoPagoId ?? 0,
+      metodoPagoId: origen.metodoPagoId ?? null,
       origenFondosId: origen.id,
       proveedor: { id: prov.id }
     };

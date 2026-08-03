@@ -8,6 +8,13 @@ export interface FooterItemDto {
   textoClave: string;
   valorClave: string;
   estiloCssClave: string;
+  /**
+   * `sugerencia` / `warning`: tip de ayuda con icono (footer libre).
+   * Por defecto se muestra como "clave: valor".
+   */
+  tipo?: 'dato' | 'sugerencia' | 'warning';
+  /** Icono Material (svgIcon), p. ej. mat:tips_and_updates. */
+  icono?: string;
 }
 
 @Component({
