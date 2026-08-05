@@ -1,12 +1,33 @@
 # Onboarding IA — Finanzas, egresos, orígenes de fondos y cierres
 
-**Fecha de corte:** 2026-07-18  
-**Propósito:** permitir que otra IA (o un chat nuevo) retome el trabajo sin reconstruir la
-conversación completa.  
-**Estado:** documento de handoff técnico; describe el código y la BD reales, no solo el diseño.
+**Fecha de corte original:** 2026-07-18  
+**Actualización:** 2026-08-05 (tarde) — egreso sin MP + reset v2; secciones julio “pendiente” obsoletas.
 
-> Leer este archivo antes de modificar Egresos, Orígenes de fondos, movimientos o Cierre de turno.
-> Después consultar [`bolsillos-planificacion.md`](./bolsillos-planificacion.md) para el diseño futuro.
+> **Leer primero (fuente de verdad Ago 2026):**  
+> `/Users/carlosromero/Documents/dev/repos/pos-relational-data-service/src/main/resources/doc/contextos/AI-ONBOARDING-basic.md`  
+> `/Users/carlosromero/Documents/dev/repos/pos-relational-data-service/src/main/resources/doc/contextos/AI-HANDOFF-FINANZAS-2026-08.md`  
+> Monitor / HAR: `.../AI-HANDOFF-MONITOR-2026-08.md`  
+> Reset prueba: `/Users/carlosromero/Documents/dev/repos/prompts-general-pos/RESET-TABLAS-FINANCIERAS-TRANSACCIONALES.md`
+
+### Delta rápido (2026-08) — ya NO pendiente
+
+- Watermarks de historial **y** `ultimo_movimiento_origen_fondos_id` en `corte_venta`
+- `consultar-rango` usa ledger/watermarks; Desde/Hasta = 1ª/última **venta o movimiento**
+- Distribución de efectivo + base inicial (modal **solo login admin**)
+- `id_referencia` (ex `origen_id`); modal Ver en FE; egresos con signo − en cierre
+- UI orígenes: DnD, footer, JSON al doble clic, total parcial en traslados, fila mov. seleccionada
+- UI cierre: estilos compactos / totales alineados
+- **Egreso prima O.F.**: Caja Menor/General sin `metodoPagoId`; BE no lanza si no hay MP; FE no envía `0`
+- **Reset v2** (`prompts-general-pos`): incluye `egreso` + stats; DBeaver Auto-commit ON; aserción `BASE_INICIAL=0`
+- **Monitor** (`src/app/core/bug-reporter/`): FAB + modales; Ver detalle; sanitize HAR
+- SQL `21`–`27` + `apply-migrate-prod-to-dian-v2.sh`
+
+Paths locales macOS: `/Users/carlosromero/Documents/dev/repos/...`  
+(Branches: BE `dian-v2`, FE `dian-version`.)  
+Paths Linux históricos en el resto del doc (`/home/carlosr/...`) → mapear al path macOS de arriba.
+
+El resto de este documento sigue siendo útil para modelo, endpoints base y riesgos
+históricos (p. ej. compensación de egresos), pero **ante conflicto gana el handoff 2026-08**.
 
 ---
 

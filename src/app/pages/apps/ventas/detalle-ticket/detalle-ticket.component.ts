@@ -1470,6 +1470,16 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     return this.selectedDetalleIndices.includes(index);
   }
 
+  /** Selecciona todas las líneas (p. ej. mover productos a ticket con cliente existente). */
+  selectAllDetalles(): void {
+    if (!this.detalles.length) {
+      this.setSelectedDetalles([], null, false);
+      return;
+    }
+    const indices = this.detalles.map((_, index) => index);
+    this.setSelectedDetalles(indices, 0, false);
+  }
+
   onDetalleContextMenu(index: number, event: MouseEvent): void {
     event.preventDefault();
     event.stopPropagation();

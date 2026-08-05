@@ -72,10 +72,12 @@
   overflow: auto;
   background: #fff;
   border-radius: 4px;
+  position: relative;
 }
 
 .req-table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   font-size: 12px;
 }
 
@@ -88,6 +90,83 @@
 
   &:hover {
     background: rgba(0, 0, 0, 0.04);
+  }
+}
+
+/*
+ * Botón eliminar flotante: sticky al borde derecho del scroll de Peticiones,
+ * con margen (~1cm) para que siga visible aunque otras columnas se crucen.
+ */
+.req-table {
+  .mat-mdc-header-cell.acciones-col,
+  .mat-mdc-cell.acciones-col,
+  th.acciones-col,
+  td.acciones-col {
+    position: sticky;
+    right: 28px;
+    z-index: 3;
+    width: 48px;
+    min-width: 48px;
+    max-width: 48px;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+    text-align: center;
+    background: #fff;
+    box-shadow: -8px 0 12px rgba(0, 0, 0, 0.12);
+  }
+
+  .mat-mdc-header-cell.acciones-col,
+  th.acciones-col {
+    z-index: 5;
+    top: 0;
+  }
+
+  .req-row:hover .acciones-col {
+    background: #f5f5f5;
+  }
+
+  .req-row.selected .acciones-col {
+    background: #e8eaf6;
+  }
+}
+
+.btn-eliminar-peticion {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+
+  ::ng-deep .mat-mdc-button-touch-target {
+    width: 32px;
+    height: 32px;
+  }
+
+  mat-icon,
+  ::ng-deep mat-icon {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+    line-height: 18px !important;
+    color: #c62828;
+  }
+
+  ::ng-deep mat-icon svg {
+    display: block;
+    width: 18px;
+    height: 18px;
   }
 }
 

@@ -49,7 +49,8 @@ import {
 } from '../ticket-rapido/ticket-rapido.component';
 import {
   EditarTabTicketComponent,
-  EditarTabTicketData
+  EditarTabTicketData,
+  EditarTabTicketResult
 } from '../editar-tab-ticket/editar-tab-ticket.component';
 import {
   ConfirmDialogComponent,
@@ -107,14 +108,17 @@ export class TicketsComponent
     if (this._selectedIndex !== value) {
       this._selectedIndex = value;
       const suppressedUntil = this._suppressAutoScrollUntil;
-      setTimeout(() => {
+      // Diferir: MatTabNav._scrollToLabel usa offsetLeft del <a> (roto por .tab-item)
+      // y pisa nuestro scroll si corremos solo en el mismo tick.
+      queueMicrotask(() => {
         if (Date.now() >= suppressedUntil) {
           this.scrollSelectedTabIntoView();
         }
-      }, 0);
+      });
     }
   }
   private _suppressAutoScrollUntil = 0;
+  private scrollIntoViewTimers: ReturnType<typeof setTimeout>[] = [];
   sessionId: number | null = null;
   loading = false;
   headerActionsBusy = false;
@@ -249,6 +253,7 @@ export class TicketsComponent
 
   ngAfterViewInit(): void {
     this.focusProductSearch(false);
+    this.disableBrokenMatTabScrollToLabel();
   }
 
   ngAfterViewChecked(): void {
@@ -285,6 +290,25 @@ export class TicketsComponent
 
   ngOnDestroy(): void {
     this.recentPrintedRecibosSubscription?.unsubscribe();
+    for (const t of this.scrollIntoViewTimers) {
+      clearTimeout(t);
+    }
+    this.scrollIntoViewTimers = [];
+  }
+
+  /**
+   * MatTabNav._scrollToLabel usa offsetLeft del <a mat-tab-link>. Con el
+   * wrapper .tab-item (position:relative) ese offset es ~padding (~12px),
+   * no la posición real del tab → el scroll “vuelve” al inicio. Lo anulamos
+   * y usamos solo scrollSelectedTabIntoView().
+   */
+  private disableBrokenMatTabScrollToLabel(): void {
+    const nav = this.matTabNav as MatTabNav & {
+      _scrollToLabel?: (labelIndex: number) => void;
+    };
+    if (nav && typeof nav._scrollToLabel === 'function') {
+      nav._scrollToLabel = () => undefined;
+    }
   }
 
   formatRecentReciboTotal(item: RecentPrintedReciboItem): string {
@@ -349,47 +373,87 @@ export class TicketsComponent
 
   /**
    * Desplaza la barra de tabs para que el tab activo quede visible.
-   * Calcula la posición manualmente usando offsetLeft del .tab-item
-   * (que es relativo al <nav>, el offsetParent correcto) y delega
-   * en MatTabNav.scrollDistance para mantener sincronizado el
-   * paginador MDC — a diferencia de _scrollToLabel() que usa
-   * offsetLeft del <a> que queda mal por el position:relative
-   * del wrapper .tab-item.
+   * Usa la suma de anchos de .tab-item (no offsetLeft del <a>): Material
+   * `_scrollToLabel` calcula mal por el wrapper `position:relative` y
+   * suele “devolver” el scroll al inicio. Reaplicamos en varios ticks
+   * para ganar esa carrera.
    */
   private scrollSelectedTabIntoView(): void {
-    setTimeout(() => {
+    for (const t of this.scrollIntoViewTimers) {
+      clearTimeout(t);
+    }
+    this.scrollIntoViewTimers = [];
+    // Por si el ViewChild no estaba listo en AfterViewInit
+    this.disableBrokenMatTabScrollToLabel();
+
+    const apply = (): void => {
+      if (Date.now() < this._suppressAutoScrollUntil) {
+        return;
+      }
       const navEl = this.ticketTabNavEl?.nativeElement;
-      if (!navEl || this._selectedIndex < 0 || !this.matTabNav) return;
+      if (!navEl || this._selectedIndex < 0 || !this.matTabNav) {
+        return;
+      }
 
       const container = navEl.querySelector(
         '.mat-mdc-tab-link-container'
       ) as HTMLElement;
-      if (!container) return;
+      if (!container) {
+        return;
+      }
 
-      const tabItems = navEl.querySelectorAll('.tab-item');
-      const targetEl = tabItems[this._selectedIndex] as
-        | HTMLElement
-        | undefined;
-      if (!targetEl) return;
+      const tabItems = Array.from(
+        navEl.querySelectorAll('.tab-item')
+      ) as HTMLElement[];
+      const targetEl = tabItems[this._selectedIndex];
+      if (!targetEl || targetEl.classList.contains('tab-collapsed')) {
+        return;
+      }
 
+      const offset = this.getTabItemContentOffset(tabItems, this._selectedIndex);
       const viewLength = container.offsetWidth;
       const currentScroll = this.matTabNav.scrollDistance;
+      const targetEnd = offset + targetEl.offsetWidth;
 
       let newScroll = currentScroll;
-      if (targetEl.offsetLeft < currentScroll) {
-        newScroll = targetEl.offsetLeft;
-      } else if (
-        targetEl.offsetLeft + targetEl.offsetWidth >
-        currentScroll + viewLength
-      ) {
-        newScroll =
-          targetEl.offsetLeft + targetEl.offsetWidth - viewLength;
+      if (offset < currentScroll + 4) {
+        newScroll = Math.max(0, offset - 4);
+      } else if (targetEnd > currentScroll + viewLength - 4) {
+        newScroll = targetEnd - viewLength + 4;
       } else {
         return;
       }
 
+      if (Math.abs(newScroll - currentScroll) < 1) {
+        return;
+      }
       this.matTabNav.scrollDistance = newScroll;
-    }, 0);
+    };
+
+    apply();
+    requestAnimationFrame(() => {
+      apply();
+      this.scrollIntoViewTimers.push(setTimeout(apply, 0));
+      this.scrollIntoViewTimers.push(setTimeout(apply, 32));
+      this.scrollIntoViewTimers.push(setTimeout(apply, 80));
+    });
+  }
+
+  /** Offset horizontal del tab i dentro de la lista (contenido sin transform). */
+  private getTabItemContentOffset(
+    tabItems: HTMLElement[],
+    index: number
+  ): number {
+    let offset = 0;
+    for (let i = 0; i < index && i < tabItems.length; i++) {
+      const el = tabItems[i];
+      offset += el.offsetWidth;
+      const mr = parseFloat(getComputedStyle(el).marginRight || '0');
+      if (!Number.isNaN(mr)) {
+        offset += mr;
+      }
+    }
+    return offset;
   }
 
   getTicketLabel(ticket: TicketDto): string {
@@ -808,10 +872,14 @@ export class TicketsComponent
     const dialogRef = this.dialog.open<
       EditarTabTicketComponent,
       EditarTabTicketData,
-      boolean
+      EditarTabTicketResult
     >(EditarTabTicketComponent, {
       width: '560px',
-      data: { ticket },
+      data: {
+        ticket,
+        ticketsSesion: this.tickets,
+        tieneProductos: (this.reciboComponent?.detalles?.length ?? 0) > 0
+      },
       // Con supresión del foco en #productSearchInput, el primer control del modal puede enfocarse.
       autoFocus: true
     });
@@ -819,23 +887,62 @@ export class TicketsComponent
     dialogRef.afterClosed().subscribe((result) => {
       this.suppressProductSearchFocusUntil = 0;
 
-      if (result && this.sessionId !== null) {
-        // Recargar tickets para reflejar el cambio de cliente
-        this.loadTickets(this.sessionId);
-      }
-
-      // Restaurar el foco si lo tenía antes
-      if (hadFocus) {
-        setTimeout(() => {
-          this.focusProductSearch(false);
-        }, 100);
-      }
+      void this.handleEditarTabTicketResult(result).finally(() => {
+        if (hadFocus) {
+          setTimeout(() => {
+            this.focusProductSearch(false);
+          }, 100);
+        }
+      });
     });
   }
 
-  /** Clic en tab de ticket: el segundo click de un doble clic tiene detail === 2 (no re-enfocar buscador). */
-  onTicketTabClick(index: number, event: MouseEvent): void {
+  private async handleEditarTabTicketResult(
+    result: EditarTabTicketResult | undefined
+  ): Promise<void> {
+    if (!result || this.sessionId === null) {
+      return;
+    }
+
+    if (result.type === 'updated') {
+      this.loadTickets(this.sessionId);
+      return;
+    }
+
+    if (result.type === 'move-products') {
+      this.actividadUi.record(
+        `acción: mover productos al ticket con cliente ya asignado (destino id ${result.targetTicketId})`
+      );
+      this.reciboComponent?.selectAllDetalles();
+      await this.onMoveToExistingTicketRequested(result.targetTicketId);
+      const idx = this.tickets.findIndex((t) => t.id === result.targetTicketId);
+      if (idx >= 0) {
+        this.selectTicket(idx);
+      }
+      this.loadTickets(this.sessionId);
+    }
+  }
+
+  /**
+   * Selección en pointerdown (antes del umbral de cdkDrag) para que el clic
+   * no se pierda cuando el tab está cerca de los botones `<`/`>` o tras scroll.
+   */
+  onTicketTabPointerDown(index: number, event: PointerEvent): void {
+    if (event.button !== 0) {
+      return;
+    }
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('.tab-close')) {
+      return;
+    }
     this.selectTicket(index);
+  }
+
+  /** Clic: refuerza selección (fallback) y foco al buscador en clic simple. */
+  onTicketTabClick(index: number, event: MouseEvent): void {
+    if (this.selectedIndex !== index) {
+      this.selectTicket(index);
+    }
     if (event.detail === 1) {
       this.focusProductSearch(false);
     }

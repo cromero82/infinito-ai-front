@@ -209,7 +209,12 @@ export class LoginComponent {
 
           if (this.authService.isAdmin()) {
             this.corteVentaService.obtenerDistribucionPendiente()
-              .pipe(catchError(() => of({ pendiente: false as const })))
+              .pipe(
+                catchError((err) => {
+                  console.error('distribucion-pendiente', err);
+                  return of({ pendiente: false as const });
+                })
+              )
               .subscribe((pendiente) => {
                 if (pendiente?.pendiente) {
                   this.abrirDistribucionPostLogin(redirectUrl);
@@ -217,7 +222,17 @@ export class LoginComponent {
                 }
                 this.corteVentaService
                   .obtenerBaseInicialPendiente()
-                  .pipe(catchError(() => of({ pendiente: false as const })))
+                  .pipe(
+                    catchError((err) => {
+                      console.error('base-inicial-pendiente', err);
+                      this.snackbar.open(
+                        'No se pudo verificar la base inicial de caja. Reintente el login.',
+                        'Cerrar',
+                        { duration: 7000 }
+                      );
+                      return of({ pendiente: false as const });
+                    })
+                  )
                   .subscribe((baseIni) => {
                     if (baseIni?.pendiente) {
                       this.abrirBaseInicialPostLogin(redirectUrl);

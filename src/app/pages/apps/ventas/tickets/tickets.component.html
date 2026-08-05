@@ -123,10 +123,12 @@
                     [class.tab-collapsed]="
                       !ticketsConClienteVisibles && isTicketConCliente(t)
                     "
-                    cdkDrag>
+                    cdkDrag
+                    [cdkDragStartDelay]="200">
                     <a
                       mat-tab-link
                       [active]="selectedIndex === i"
+                      (pointerdown)="onTicketTabPointerDown(i, $event)"
                       (click)="onTicketTabClick(i, $event)"
                       (dblclick)="editTicket(t, $event)"
                       class="tab-link">
@@ -137,7 +139,8 @@
                       type="button"
                       class="tab-close"
                       [disabled]="ticketTabsDisabled"
-                      (click)="deleteTicket(t, i, $event)">
+                      (click)="deleteTicket(t, i, $event)"
+                      (pointerdown)="$event.stopPropagation()">
                       <mat-icon svgIcon="mat:close"></mat-icon>
                     </button>
                     <!-- Placeholder visible mientras se arrastra -->

@@ -13,6 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { Router } from '@angular/router';
 import {
   BugReporterService,
   CapturedRequest
@@ -56,6 +57,7 @@ const EDITABLE_ROOT_SECTIONS: { path: string; label: string }[] = [
 export class BugReporterDetailDialogComponent implements OnInit {
   private readonly service = inject(BugReporterService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly router = inject(Router);
   private readonly dialogRef = inject(
     MatDialogRef<BugReporterDetailDialogComponent>
   );
@@ -173,24 +175,44 @@ export class BugReporterDetailDialogComponent implements OnInit {
     );
   }
 
-  guardarPeticion(): void {
-    if (!this.draft || this.selectedId == null) {
-      return;
-    }
+  /**
+   * Guarda la petición en edición (si hay), compacta todos los JSON del
+   * reporte, copia al portapapeles (sin saltos de línea) y cierra.
+   */
+  guardarCopiarYCerrar(): void {
     if (this.jsonError) {
-      this.snackBar.open('Corrija el JSON antes de guardar', 'Cerrar', {
+      this.snackBar.open('Corrija el JSON antes de continuar', 'Cerrar', {
         duration: 3000
       });
       return;
     }
-    try {
-      const parsed = JSON.parse(this.jsonText) as CapturedRequest;
-      this.service.replace(this.selectedId, { ...parsed, id: this.selectedId });
-      this.reload();
-      this.snackBar.open('Petición actualizada', undefined, { duration: 2000 });
-    } catch {
-      this.snackBar.open('JSON inválido', 'Cerrar', { duration: 3000 });
+
+    if (this.draft && this.selectedId != null) {
+      try {
+        const parsed = JSON.parse(this.jsonText) as CapturedRequest;
+        this.service.replace(this.selectedId, {
+          ...parsed,
+          id: this.selectedId
+        });
+      } catch {
+        this.snackBar.open('JSON inválido', 'Cerrar', { duration: 3000 });
+        return;
+      }
     }
+
+    this.jsonExpanded = false;
+    const report = this.service.exportJson(this.router.url);
+    // Compacto: sin indentación ni saltos de línea
+    const text = JSON.stringify(report);
+    navigator.clipboard.writeText(text).then(
+      () => this.dialogRef.close(true),
+      () => {
+        this.snackBar.open('No se pudo copiar al portapapeles', 'Cerrar', {
+          duration: 3000
+        });
+        this.dialogRef.close(true);
+      }
+    );
   }
 
   eliminarPeticion(id: number, event?: Event): void {

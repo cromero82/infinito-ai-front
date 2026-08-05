@@ -1,14 +1,38 @@
 <h2 mat-dialog-title>Editar Ticket — {{ data.ticket.nombre }}</h2>
 
 <div mat-dialog-content class="dialog-content">
-  <div class="form-fields">
-    <cliente-selector
-      [initialClienteId]="data.ticket.cliente?.id ?? null"
-      [disabled]="loading"
-      [autoFocus]="true"
-      (clienteSelected)="onClienteSelectedFromSelector($event)">
-    </cliente-selector>
-  </div>
+  @if (!mostrandoConflicto) {
+    <div class="form-fields">
+      <cliente-selector
+        [initialClienteId]="data.ticket.cliente?.id ?? null"
+        [disabled]="loading"
+        [autoFocus]="true"
+        (clienteSelected)="onClienteSelectedFromSelector($event)">
+      </cliente-selector>
+    </div>
+  } @else {
+    <div class="conflicto-panel" role="alert">
+      <p class="conflicto-mensaje">
+        Ya existe un ticket asignado a este cliente
+      </p>
+      <p class="conflicto-detalle text-secondary">
+        Cliente:
+        <strong>{{ selectedClienteNombre || etiquetaTicketExistente }}</strong>
+        · Ticket:
+        <strong>{{ ticketExistente?.nombre }}</strong>
+        ({{ etiquetaTicketExistente }})
+      </p>
+
+      @if (data.tieneProductos) {
+        <mat-checkbox
+          class="mover-check"
+          [(ngModel)]="moverProductosChecked"
+          [disabled]="loading">
+          Mover productos al ticket [{{ etiquetaTicketExistente }}]
+        </mat-checkbox>
+      }
+    </div>
+  }
 
   @if (error) {
     <div class="error-message">
@@ -18,10 +42,13 @@
 </div>
 
 <div mat-dialog-actions align="end">
-  <button mat-button (click)="cancelar()" [disabled]="loading">Cancelar</button>
+  <button mat-button type="button" (click)="cancelar()" [disabled]="loading">
+    Cancelar
+  </button>
   <button
     mat-raised-button
     color="primary"
+    type="button"
     (click)="guardar()"
     [disabled]="!canGuardar()">
     @if (loading) {
@@ -31,7 +58,7 @@
         class="inline-spinner"></mat-progress-spinner>
     }
     @if (!loading) {
-      <span>Guardar</span>
+      <span>{{ textoBotonAceptar }}</span>
     }
   </button>
 </div>

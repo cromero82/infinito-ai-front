@@ -20,6 +20,33 @@
   border-radius: 4px;
 }
 
+.conflicto-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  background: rgba(245, 124, 0, 0.08);
+  border-left: 3px solid #f57c00;
+}
+
+.conflicto-mensaje {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.conflicto-detalle {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.mover-check {
+  margin-top: 4px;
+}
+
 ::ng-deep .mat-mdc-dialog-actions {
   padding: 16px 24px;
   gap: 8px;
