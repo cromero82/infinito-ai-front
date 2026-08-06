@@ -77,6 +77,9 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
   modoPrecioElegidoPorProducto: Record<number, ModoPrecioLista> = {};
   modoPrecioExplicitoPorProducto: Record<number, boolean> = {};
 
+  /** Estilo VS Code: coincide palabra completa (envía coincidirTodaPalabraIndividual=true). */
+  coincidirTodaPalabraIndividual = false;
+
   constructor(
     private dialogRef: MatDialogRef<SelectorProductosComponent, SelectorProductosResult | undefined>,
     private relationalProductService: RelationalProductService,
@@ -98,18 +101,19 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
     this.searchCtrl.valueChanges
       .pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((value) => {
-        const term = value?.trim();
-        if (!term) {
+        // No trim: un solo espacio final (p. ej. "ron ") debe enviarse al API.
+        const raw = value ?? '';
+        const resolved = this.resolveSearchTerm(raw);
+        if (resolved === null) {
+          return;
+        }
+        if (!resolved) {
           this.products = [];
           this.error = null;
           this.page = 0;
           this.totalPages = 0;
           this.selectedProductIndex = -1;
           this.cdr.markForCheck();
-          return;
-        }
-        const resolved = this.resolveSearchTerm(term);
-        if (resolved === null) {
           return;
         }
         this.fetchProducts(resolved, true);
@@ -129,7 +133,7 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
       setTimeout(() => this.focusSearchInput(), 0);
       return null;
     }
-    if (term !== raw.trim()) {
+    if (term !== raw) {
       this.searchCtrl.setValue(term, { emitEvent: false });
     }
     return term;
@@ -193,6 +197,17 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
     this.page = 0;
     this.totalPages = 0;
     this.selectedProductIndex = -1;
+    setTimeout(() => this.focusSearchInput(), 0);
+  }
+
+  toggleCoincidirTodaPalabra(event?: Event): void {
+    event?.stopPropagation();
+    event?.preventDefault();
+    this.coincidirTodaPalabraIndividual = !this.coincidirTodaPalabraIndividual;
+    const term = this.resolveSearchTerm(this.searchCtrl.value ?? '');
+    if (term) {
+      this.fetchProducts(term, true);
+    }
     setTimeout(() => this.focusSearchInput(), 0);
   }
 
@@ -313,7 +328,7 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
     editDialogRef.afterClosed().subscribe((result) => {
       if (result && result._edit) {
         // Product was updated, refresh the product list
-        const currentTerm = this.searchCtrl.value?.trim() || '';
+        const currentTerm = this.resolveSearchTerm(this.searchCtrl.value ?? '');
         if (currentTerm) {
           this.fetchProducts(currentTerm, true);
         }
@@ -327,7 +342,7 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
       (event as KeyboardEvent)?.preventDefault?.();
     }
 
-    const searchTerm = this.searchCtrl.value.trim();
+    const searchTerm = this.resolveSearchTerm(this.searchCtrl.value ?? '') ?? '';
     const createDialogRef = this.dialog.open(EditarProductoComponent, {
       width: '600px',
       data: searchTerm ? { barcode: searchTerm } : null,
@@ -370,7 +385,15 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
     this.error = null;
     const pageToLoad = reset ? 0 : this.page + 1;
 
-    this.relationalProductService.getProducts(term, pageToLoad, this.size).subscribe({
+    this.relationalProductService
+      .getProducts(
+        term,
+        pageToLoad,
+        this.size,
+        false,
+        this.coincidirTodaPalabraIndividual
+      )
+      .subscribe({
       next: (resp: ProductPage) => {
         const content = resp?.content ?? [];
         this.totalPages = resp?.totalPages ?? 0;
@@ -425,7 +448,7 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
 
     const isNearBottom = remaining < 80;
 
-    const currentTerm = this.searchCtrl.value?.trim();
+    const currentTerm = this.resolveSearchTerm(this.searchCtrl.value ?? '');
     if (
       isNearBottom &&
       !this.loading &&

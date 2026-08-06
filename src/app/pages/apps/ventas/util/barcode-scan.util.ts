@@ -69,24 +69,42 @@ export function tryExtractBarcodeFromQrOrUrl(raw: string): string | null {
   return digitMatch ? digitMatch[0] : null;
 }
 
+/**
+ * Normaliza el término de búsqueda de producto:
+ * - Colapsa 2+ espacios seguidos a un solo espacio
+ * - No hace trim: un espacio simple al inicio/fin se conserva (p. ej. "ron ")
+ */
+export function normalizeProductSearchTerm(raw: string | null | undefined): string {
+  if (raw == null || raw === '') {
+    return '';
+  }
+  return raw.replace(/\s{2,}/g, ' ');
+}
+
 export function resolveProductSearchTerm(raw: string): ProductSearchTermResolution {
-  const trimmed = raw.trim();
-  if (!trimmed) {
+  const term = normalizeProductSearchTerm(raw);
+  if (!term) {
     return { rejected: false, term: '', message: null };
   }
 
-  if (!isLikelyQrOrUrlScan(trimmed)) {
-    return { rejected: false, term: trimmed, message: null };
+  // Heurística QR sobre el texto sin espacios extremos (no altera el término a buscar).
+  const forQrCheck = term.trim();
+  if (!forQrCheck) {
+    return { rejected: false, term, message: null };
   }
 
-  const extracted = tryExtractBarcodeFromQrOrUrl(trimmed);
+  if (!isLikelyQrOrUrlScan(forQrCheck)) {
+    return { rejected: false, term, message: null };
+  }
+
+  const extracted = tryExtractBarcodeFromQrOrUrl(forQrCheck);
   if (extracted) {
     return { rejected: false, term: extracted, message: null };
   }
 
   return {
     rejected: true,
-    term: trimmed,
+    term,
     message: QR_SCAN_REJECTION_MESSAGE
   };
 }

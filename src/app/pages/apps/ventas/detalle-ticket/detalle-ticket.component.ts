@@ -248,17 +248,18 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.productSearchCtrl.valueChanges
       .pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((value) => {
-        const term = value?.trim();
-        if (!term) {
+        // No trim: un solo espacio final (p. ej. "ron ") debe enviarse al API.
+        const raw = value ?? '';
+        const resolved = this.resolveProductSearchInput(raw);
+        if (resolved === null) {
+          return;
+        }
+        if (!resolved) {
           this.productSearchError = null;
           this.showCreateProductFromSearchButton = false;
           return;
         }
         this.showCreateProductFromSearchButton = false;
-        const resolved = this.resolveProductSearchInput(term);
-        if (resolved === null) {
-          return;
-        }
         this.performProductSearch(resolved, true);
       });
     this.focusSearchInputRequest.emit();
@@ -622,14 +623,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   searchAndAddProduct(): void {
-    const searchValue = this.productSearchCtrl.value?.trim();
+    const searchValue = this.productSearchCtrl.value ?? '';
     if (!this.reciboId) {
       this.productSearchError = 'Seleccione un ticket válido.';
-      this.showCreateProductFromSearchButton = false;
-      return;
-    }
-    if (!searchValue) {
-      this.productSearchError = 'Ingrese un código o nombre de producto.';
       this.showCreateProductFromSearchButton = false;
       return;
     }
@@ -638,11 +634,17 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     if (resolved === null) {
       return;
     }
+    if (!resolved) {
+      this.productSearchError = 'Ingrese un código o nombre de producto.';
+      this.showCreateProductFromSearchButton = false;
+      return;
+    }
     this.performProductSearch(resolved, false);
   }
 
   /**
    * Rechaza QR/URL o devuelve término listo para buscar (p. ej. EAN extraído del QR).
+   * Conserva un espacio simple; solo colapsa 2+ espacios seguidos.
    */
   private resolveProductSearchInput(raw: string): string | null {
     const { rejected, term, message } = resolveProductSearchTerm(raw);
@@ -650,7 +652,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       this.rejectQrOrUrlScan(message ?? '');
       return null;
     }
-    if (term !== raw.trim()) {
+    if (term !== raw) {
       this.productSearchCtrl.setValue(term, { emitEvent: false });
     }
     return term;
@@ -1154,12 +1156,17 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.updateSearchDisabled();
     this.relationalProductService.getProducts(term, 0, 1, true).subscribe({
       next: (page: ProductPage) => {
-        const latestTerm = (this.productSearchCtrl.value ?? '').trim();
-        if (latestTerm !== term) {
+        const latestResolved = this.resolveProductSearchInput(
+          this.productSearchCtrl.value ?? ''
+        );
+        if (latestResolved === null) {
+          return;
+        }
+        if (latestResolved !== term) {
           this.searchingProduct = false;
           this.updateSearchDisabled();
-          if (latestTerm) {
-            this.performProductSearch(latestTerm, triggeredAutomatically);
+          if (latestResolved) {
+            this.performProductSearch(latestResolved, triggeredAutomatically);
           }
           return;
         }
@@ -1175,7 +1182,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         this.searchingProduct = false;
         this.updateSearchDisabled();
 
-        const termForSelector = (this.productSearchCtrl.value ?? '').trim() || term;
+        const termForSelector = latestResolved || term;
 
         if (total === 0) {
           this.showCreateProductFromSearchButton = termForSelector.length > 0;
@@ -1218,7 +1225,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       SelectorProductosData,
       SelectorProductosResult
     >(SelectorProductosComponent, {
-      width: '800px',
+      width: '1040px',
+      maxWidth: '96vw',
       data: { term },
       autoFocus: false
     });

@@ -91,6 +91,45 @@
   gap: 2px;
 }
 
+/* Toggle estilo VS Code “Match Whole Word” — centrado como mat-icon */
+.whole-word-toggle.mat-mdc-icon-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.whole-word-toggle .whole-word-glyph {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  opacity: 0.55;
+}
+
+.whole-word-toggle--active .whole-word-glyph {
+  opacity: 1;
+  color: var(--mat-sys-primary, #1976d2);
+  border-color: var(--mat-sys-primary, #1976d2);
+  background: color-mix(in srgb, var(--mat-sys-primary, #1976d2) 12%, transparent);
+}
+
 .table-container {
   flex: 1 1 0%;
   min-height: 0;
@@ -116,6 +155,52 @@
 
 .product-table {
   width: 100%;
+  table-layout: fixed;
+  /* ~20% menos que la altura MDC por defecto (~52px → ~42px) */
+  --mat-table-row-item-container-height: 42px;
+  --mat-table-header-container-height: 40px;
+  font-size: 13px;
+}
+
+:host ::ng-deep .product-table {
+  tr.mat-mdc-header-row {
+    height: 40px !important;
+    min-height: 40px !important;
+  }
+
+  tr.mat-mdc-row {
+    height: auto !important;
+    min-height: 42px !important;
+  }
+
+  th.mat-mdc-header-cell,
+  th[mat-header-cell],
+  td.mat-mdc-cell,
+  td[mat-cell] {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    line-height: 1.25 !important;
+    height: auto !important;
+    min-height: unset !important;
+    vertical-align: middle !important;
+  }
+}
+
+/* El +30% de ancho del modal se destina a la columna Producto. */
+.product-table th.col-nombre,
+.product-table td.col-nombre {
+  width: 48%;
+  min-width: 280px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.product-table th.col-barcode,
+.product-table td.col-barcode {
+  width: 16%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Fila activa por teclado (misma idea que detalle-ticket .selected-detalle) */
@@ -134,6 +219,7 @@
 
 .product-table th.col-precio,
 .product-table td.col-precio {
+  width: 20%;
   background-color: rgba(76, 175, 80, 0.08) !important;
 }
 
@@ -158,20 +244,55 @@
 .action-buttons {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   justify-content: flex-end;
+}
+
+/* El ripple circular de mat-icon-button (~40–48px) imponía la altura de fila. */
+:host ::ng-deep .action-buttons .btn-edit-compact.mat-mdc-icon-button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  --mdc-icon-button-state-layer-size: 28px;
+
+  .mat-mdc-button-touch-target {
+    width: 28px;
+    height: 28px;
+  }
+
+  .mat-mdc-button-persistent-ripple,
+  .mat-mdc-button-ripple {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
+}
+
+:host ::ng-deep .action-buttons .btn-select-compact.mat-mdc-unelevated-button {
+  min-height: 28px;
+  height: 28px;
+  padding: 0 12px;
+  font-size: 12px;
+  line-height: 28px;
 }
 
 // Precio empaque (General) vs unidad: cada subfila con hover (sombra) y clic (efecto azul)
 .precio-dual-wrap {
   min-width: 8rem;
-  padding: 2px 0;
+  padding: 0;
 }
 
 .precio-dual-lines {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .precio-dual-line {
@@ -181,16 +302,16 @@
   gap: 8px;
   width: 100%;
   margin: 0;
-  padding: 6px 8px;
+  padding: 3px 6px;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   font: inherit;
   text-align: left;
   cursor: pointer;
   color: inherit;
   background: transparent;
-  font-size: 13px;
-  line-height: 1.25;
+  font-size: 12px;
+  line-height: 1.2;
   box-sizing: border-box;
   transition:
     background 0.15s ease,
