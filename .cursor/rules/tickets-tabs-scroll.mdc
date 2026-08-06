@@ -69,3 +69,12 @@ Se reaplica en rAF + timeouts cortos por si el layout aún no midió anchos tras
 - Si se quita `position: relative` de `.tab-item`, revisar ink-bar / close button; el noop de `_scrollToLabel` puede volverse opcional, pero el offset por anchos sigue siendo más robusto.
 - Si cambia la duración de `.tab-collapsed`, actualizar el `400` ms del toggle.
 - El setter público `MatTabNav.scrollDistance` es la vía correcta (clampa, sincroniza paginador y aplica transform).
+
+## Estilos de layout (`preferencias-estilo-tickets`)
+
+| Valor | UI |
+|-------|-----|
+| `todo-en-linea` (default) | Una sola `mat-tab-nav-bar`. Botones Nuevo/Rápido/menú en el header (junto a “Buscar producto”). |
+| `2-lineas` | Sin MatTabNav: fila clientes identificados + fila anónimos; mismos botones en el header. Selección única vía `selectedIndex` / `.is-selected` |
+
+Cambiar desde menú **Más opciones → Estilo de tickets**.

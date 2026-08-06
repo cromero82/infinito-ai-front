@@ -71,6 +71,10 @@ import { FrontendActivityBufferService } from '../../../../core/monitoring/front
 import { sanitizeActividadTexto } from '../../../../core/monitoring/frontend-ui-activity.util';
 const LAST_TICKET_ID_KEY = 'last-ticket-id';
 const FORCED_SELECTION_TICKET_ID_KEY = 'forced-selection-ticket-id';
+/** Preferencia de layout de tabs de tickets (localStorage). */
+const ESTILO_TICKETS_KEY = 'preferencias-estilo-tickets';
+
+export type EstiloTicketsTabs = 'todo-en-linea' | '2-lineas';
 
 @Component({
   selector: 'tickets',
@@ -137,6 +141,8 @@ export class TicketsComponent
   ticketTabNavEl?: ElementRef<HTMLElement>;
   @ViewChild('ticketTabNav', { read: MatTabNav })
   matTabNav?: MatTabNav;
+  @ViewChild('tabsTwoLines')
+  tabsTwoLinesEl?: ElementRef<HTMLElement>;
 
   /** Preferencia de usuario: imprimir recibo tras pago (persistida en localStorage). Por defecto false. */
   imprimirReciboActivo = false;
@@ -146,6 +152,13 @@ export class TicketsComponent
 
   /** True cuando los tickets con cliente personalizado (no ANONIMO) están visibles en la barra de tabs. */
   ticketsConClienteVisibles = true;
+
+  /**
+   * Layout de tabs: `todo-en-linea` (barra única + botones a la derecha) o
+   * `2-lineas` (clientes arriba / anónimos abajo; botones junto al buscador).
+   * Persistido en localStorage (`preferencias-estilo-tickets`).
+   */
+  estiloTickets: EstiloTicketsTabs = 'todo-en-linea';
 
   /** Último ticketId sobre el cual el usuario hizo clic (persistido en localStorage para evitar llamadas HTTP redundantes). */
   private lastFetchedTicketId: number | null = null;
@@ -182,6 +195,7 @@ export class TicketsComponent
   ) {}
 
   ngOnInit(): void {
+    this.estiloTickets = this.getEstiloTicketsFromStorage();
     this.imprimirReciboActivo = this.getImprimirReciboFromStorage();
     this.recentPrintedRecibos =
       this.reciboPrintService.getRecentRecibosSnapshot();
@@ -220,6 +234,52 @@ export class TicketsComponent
   private getImprimirReciboFromStorage(): boolean {
     const v = localStorage.getItem(IMPRIMIR_RECIBO_KEY);
     return v === 'true';
+  }
+
+  private getEstiloTicketsFromStorage(): EstiloTicketsTabs {
+    const v = localStorage.getItem(ESTILO_TICKETS_KEY);
+    return v === '2-lineas' ? '2-lineas' : 'todo-en-linea';
+  }
+
+  get isEstiloDosLineas(): boolean {
+    return this.estiloTickets === '2-lineas';
+  }
+
+  get isEstiloTodoEnLinea(): boolean {
+    return this.estiloTickets === 'todo-en-linea';
+  }
+
+  /** Tickets con cliente identificado (primera línea en modo 2-lineas). */
+  get ticketsIdentificados(): TicketDto[] {
+    return this.tickets.filter((t) => this.isTicketConCliente(t));
+  }
+
+  /** Tickets anónimos / sin cliente (segunda línea en modo 2-lineas). */
+  get ticketsAnonimos(): TicketDto[] {
+    return this.tickets.filter((t) => !this.isTicketConCliente(t));
+  }
+
+  ticketIndex(ticket: TicketDto): number {
+    return this.tickets.findIndex((t) => t.id === ticket.id);
+  }
+
+  setEstiloTickets(estilo: EstiloTicketsTabs): void {
+    if (this.estiloTickets === estilo) {
+      return;
+    }
+    this.actividadUi.record(
+      `botón acción: estilo de tabs de tickets (${estilo})`
+    );
+    this.estiloTickets = estilo;
+    localStorage.setItem(ESTILO_TICKETS_KEY, estilo);
+    // Tras recrear el mat-tab-nav (vuelta a todo-en-linea), reaplicar noop + scroll
+    setTimeout(() => {
+      if (this.isEstiloTodoEnLinea) {
+        this.disableBrokenMatTabScrollToLabel();
+        this.scrollSelectedTabIntoView();
+      }
+      this.cdr.detectChanges();
+    }, 0);
   }
 
   toggleImprimirRecibo(event: { checked: boolean }): void {
@@ -383,6 +443,11 @@ export class TicketsComponent
       clearTimeout(t);
     }
     this.scrollIntoViewTimers = [];
+    // Modo 2 líneas: cada fila hace scroll propio; no hay MatTabNav paginado
+    if (this.isEstiloDosLineas) {
+      this.scrollSelectedTabIntoViewDosLineas();
+      return;
+    }
     // Por si el ViewChild no estaba listo en AfterViewInit
     this.disableBrokenMatTabScrollToLabel();
 
@@ -454,6 +519,32 @@ export class TicketsComponent
       }
     }
     return offset;
+  }
+
+  /** En modo 2 líneas, centra el tab activo dentro de su fila con overflow-x. */
+  private scrollSelectedTabIntoViewDosLineas(): void {
+    requestAnimationFrame(() => {
+      const host = this.tabsTwoLinesEl?.nativeElement;
+      if (!host) {
+        return;
+      }
+      const selected = host.querySelector(
+        '.tab-item.is-selected'
+      ) as HTMLElement | null;
+      const row = selected?.closest('.tabs-line') as HTMLElement | null;
+      if (!selected || !row) {
+        return;
+      }
+      const rowRect = row.getBoundingClientRect();
+      const tabRect = selected.getBoundingClientRect();
+      const deltaLeft = tabRect.left - rowRect.left;
+      const deltaRight = tabRect.right - rowRect.right;
+      if (deltaLeft < 0) {
+        row.scrollLeft += deltaLeft - 8;
+      } else if (deltaRight > 0) {
+        row.scrollLeft += deltaRight + 8;
+      }
+    });
   }
 
   getTicketLabel(ticket: TicketDto): string {
@@ -1014,71 +1105,101 @@ export class TicketsComponent
       `acción: reordenar tabs de tickets (índice ${event.previousIndex} → ${event.currentIndex})`
     );
 
-    // Preservar el ticket actualmente seleccionado
     const selectedTicket = this.tickets[this.selectedIndex];
-
-    // Reordenar el array local
     moveItemInArray(this.tickets, event.previousIndex, event.currentIndex);
 
-    // Actualizar selectedIndex para seguir al ticket que estaba seleccionado
     if (selectedTicket) {
       this.selectedIndex = this.tickets.findIndex(
         (t) => t.id === selectedTicket.id
       );
     }
 
-    // Recalcular el campo orden (1-based) según la nueva posición
+    this.persistTicketsOrder();
+  }
+
+  /**
+   * Reordena dentro del grupo (identificados o anónimos) en modo 2 líneas.
+   * El orden global queda: identificados primero, luego anónimos.
+   */
+  onTicketDropInGroup(
+    event: CdkDragDrop<TicketDto[]>,
+    group: 'identificados' | 'anonimos'
+  ): void {
+    if (this.ticketTabsBusy) {
+      return;
+    }
+    if (event.previousIndex === event.currentIndex) {
+      return;
+    }
+
+    this.actividadUi.record(
+      `acción: reordenar tabs (${group}) índice ${event.previousIndex} → ${event.currentIndex}`
+    );
+
+    const selectedTicket = this.tickets[this.selectedIndex];
+    const identificados = this.tickets.filter((t) => this.isTicketConCliente(t));
+    const anonimos = this.tickets.filter((t) => !this.isTicketConCliente(t));
+    const working = group === 'identificados' ? identificados : anonimos;
+    moveItemInArray(working, event.previousIndex, event.currentIndex);
+    this.tickets = [...identificados, ...anonimos];
+
+    if (selectedTicket) {
+      this.selectedIndex = this.tickets.findIndex(
+        (t) => t.id === selectedTicket.id
+      );
+    }
+
+    this.persistTicketsOrder();
+  }
+
+  private persistTicketsOrder(): void {
     this.tickets.forEach((t, i) => {
       t.orden = i + 1;
     });
 
-    // Persistir el nuevo orden en el backend
-    if (this.sessionId !== null) {
-      this.ticketTabsBusy = true;
-      const payload: TicketOrdenDto[] = this.tickets.map((t) => ({
-        id: t.id,
-        sessionId: t.sessionId,
-        nombre: t.nombre,
-        orden: t.orden
-      }));
-      this.ticketsService.updateTicketsOrder(payload).subscribe({
-        next: () => {
-          // Orden actualizado exitosamente
-          this.ticketTabsBusy = false;
-        },
-        error: (err) => {
-          this.ticketTabsBusy = false;
-          console.error('Error updating tickets order', err);
-
-          // Mostrar mensaje de error al usuario
-          let errorMessage =
-            'Error al actualizar el orden de los tickets. Por favor, intente nuevamente.';
-
-          if (err.status === 500) {
-            errorMessage =
-              'Error interno del servidor. Contacte al administrador del sistema.';
-          } else if (err.status === 404) {
-            errorMessage = 'No se encontró la sesión de trabajo.';
-          } else if (err.status === 403) {
-            errorMessage =
-              'No tiene permisos para modificar el orden de los tickets.';
-          } else if (err.status === 0) {
-            errorMessage =
-              'Error de conexión con el servidor. Verifique su conexión a internet.';
-          }
-
-          this.snackBar.open(errorMessage, 'Cerrar', {
-            duration: 5000,
-            horizontalPosition: 'center',
-            verticalPosition: 'top',
-            panelClass: ['error-snackbar']
-          });
-
-          // Revertir el orden local si falla el backend
-          // Esto requeriría tener una copia del orden anterior, por ahora solo mostramos el error
-        }
-      });
+    if (this.sessionId === null) {
+      return;
     }
+
+    this.ticketTabsBusy = true;
+    const payload: TicketOrdenDto[] = this.tickets.map((t) => ({
+      id: t.id,
+      sessionId: t.sessionId,
+      nombre: t.nombre,
+      orden: t.orden
+    }));
+    this.ticketsService.updateTicketsOrder(payload).subscribe({
+      next: () => {
+        this.ticketTabsBusy = false;
+      },
+      error: (err) => {
+        this.ticketTabsBusy = false;
+        console.error('Error updating tickets order', err);
+
+        let errorMessage =
+          'Error al actualizar el orden de los tickets. Por favor, intente nuevamente.';
+
+        if (err.status === 500) {
+          errorMessage =
+            'Error interno del servidor. Contacte al administrador del sistema.';
+        } else if (err.status === 404) {
+          errorMessage = 'No se encontró la sesión de trabajo.';
+        } else if (err.status === 403) {
+          errorMessage =
+            'No tiene permisos para modificar el orden de los tickets.';
+        } else if (err.status === 0) {
+          errorMessage =
+            'Error de conexión con el servidor. Verifique su conexión a internet.';
+        }
+
+        this.snackBar.open(errorMessage, 'Cerrar', {
+          duration: 5000,
+          horizontalPosition: 'center',
+          verticalPosition: 'top',
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
   }
 
   deleteTicket(ticket: TicketDto, index: number, event: MouseEvent): void {

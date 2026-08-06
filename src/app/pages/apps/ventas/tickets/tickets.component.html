@@ -11,9 +11,10 @@
     <div class="tickets-page flex flex-col flex-1 min-h-0 min-w-0 w-full">
       <div class="flex flex-col flex-1 min-h-0 w-full">
         <div
-          class="card tickets-card flex flex-col flex-1 min-h-0 overflow-hidden">
+          class="card tickets-card flex flex-col flex-1 min-h-0 overflow-hidden"
+          [class.tickets-card--dos-lineas]="isEstiloDosLineas">
       <div class="bg-app-bar px-6 border-b sticky left-0 flex items-center">
-        <div class="header-row">
+        <div class="header-row header-row--with-actions">
           <h2 class="title my-0">Tickets</h2>
           @if (reciboForSearch; as recibo) {
             <div class="search-controls">
@@ -66,192 +67,232 @@
               </div>
             </div>
           }
+          <div class="header-ticket-actions">
+            <button
+              mat-flat-button
+              color="primary"
+              class="header-action-btn new-ticket-btn flex-none"
+              type="button"
+              [disabled]="headerActionsDisabled"
+              (click)="newTicket()">
+              <mat-icon
+                class="header-action-icon icon-sm"
+                svgIcon="mat:add"></mat-icon>
+              <span>Nuevo ticket</span>
+            </button>
+            <button
+              mat-flat-button
+              color="accent"
+              class="header-action-btn quick-recibo-btn flex-none"
+              type="button"
+              [disabled]="headerActionsDisabled"
+              (click)="openQuickRecibo()">
+              <mat-icon
+                class="header-action-icon icon-sm"
+                svgIcon="mat:bolt"></mat-icon>
+              <span>Ticket rápido</span>
+            </button>
+            <button
+              mat-flat-button
+              class="opciones-recibo-btn flex-none"
+              type="button"
+              [matMenuTriggerFor]="opcionesReciboMenu"
+              [disabled]="headerActionsDisabled"
+              [matTooltip]="'Mas opciones de este ticket'"
+              matTooltipPosition="above">
+              <mat-icon
+                class="header-action-icon icon-sm"
+                svgIcon="mat:more_vert"></mat-icon>
+              <mat-icon
+                class="options-arrow-icon icon-sm"
+                svgIcon="mat:arrow_drop_down"></mat-icon>
+            </button>
+          </div>
         </div>
       </div>
       <div
         class="px-4 content-area flex flex-col flex-1 min-h-0 overflow-hidden">
         @if (tickets.length) {
           <div class="tabs-container">
-            <div class="tabs-row">
-              @if (tieneTicketsConCliente) {
-                <button
-                  mat-icon-button
-                  type="button"
-                  class="toggle-clientes-btn"
-                  [class.activo]="!ticketsConClienteVisibles"
-                  [matTooltip]="
-                    ticketsConClienteVisibles
-                      ? 'Ocultar cuentas de clientes (' +
-                        cantidadTicketsConCliente +
-                        ')'
-                      : 'Mostrar cuentas de clientes (' +
-                        cantidadTicketsConCliente +
-                        ')'
-                  "
-                  matTooltipPosition="above"
-                  (click)="
-                    toggleTicketsConCliente(); focusProductSearch(false)
-                  ">
-                  <mat-icon
-                    [svgIcon]="
+            @if (isEstiloTodoEnLinea) {
+              <div class="tabs-row">
+                @if (tieneTicketsConCliente) {
+                  <button
+                    mat-icon-button
+                    type="button"
+                    class="toggle-clientes-btn"
+                    [class.activo]="!ticketsConClienteVisibles"
+                    [matTooltip]="
                       ticketsConClienteVisibles
-                        ? 'mat:people'
-                        : 'mat:people_outline'
-                    "></mat-icon>
-                  <span class="toggle-clientes-badge">{{
-                    cantidadTicketsConCliente
-                  }}</span>
-                </button>
-              }
-              <nav
-                mat-tab-nav-bar
-                #ticketTabNav
-                class="ticket-tab-nav border-0 flex-auto"
-                [tabPanel]="tabPanel"
-                cdkDropList
-                cdkDropListOrientation="horizontal"
-                [cdkDropListDisabled]="ticketTabsDisabled"
-                (cdkDropListDropped)="onTicketDrop($event)">
-                @for (
-                  t of tickets;
-                  track trackByTicketId(i, t);
-                  let i = $index
-                ) {
-                  <div
-                    class="tab-item"
-                    [class.ticket-con-cliente]="isTicketConCliente(t)"
-                    [class.tab-collapsed]="
-                      !ticketsConClienteVisibles && isTicketConCliente(t)
+                        ? 'Ocultar cuentas de clientes (' +
+                          cantidadTicketsConCliente +
+                          ')'
+                        : 'Mostrar cuentas de clientes (' +
+                          cantidadTicketsConCliente +
+                          ')'
                     "
-                    cdkDrag
-                    [cdkDragStartDelay]="200">
-                    <a
-                      mat-tab-link
-                      [active]="selectedIndex === i"
-                      (pointerdown)="onTicketTabPointerDown(i, $event)"
-                      (click)="onTicketTabClick(i, $event)"
-                      (dblclick)="editTicket(t, $event)"
-                      class="tab-link">
-                      {{ getTicketLabel(t) }}
-                    </a>
-                    <button
-                      mat-icon-button
-                      type="button"
-                      class="tab-close"
-                      [disabled]="ticketTabsDisabled"
-                      (click)="deleteTicket(t, i, $event)"
-                      (pointerdown)="$event.stopPropagation()">
-                      <mat-icon svgIcon="mat:close"></mat-icon>
-                    </button>
-                    <!-- Placeholder visible mientras se arrastra -->
-                    <div class="tab-drag-placeholder" *cdkDragPlaceholder></div>
-                  </div>
+                    matTooltipPosition="above"
+                    (click)="
+                      toggleTicketsConCliente(); focusProductSearch(false)
+                    ">
+                    <mat-icon
+                      [svgIcon]="
+                        ticketsConClienteVisibles
+                          ? 'mat:people'
+                          : 'mat:people_outline'
+                      "></mat-icon>
+                    <span class="toggle-clientes-badge">{{
+                      cantidadTicketsConCliente
+                    }}</span>
+                  </button>
                 }
-              </nav>
-              <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
-              <button
-                mat-flat-button
-                color="primary"
-                class="header-action-btn new-ticket-btn flex-none"
-                type="button"
-                [disabled]="headerActionsDisabled"
-                (click)="newTicket()">
-                <mat-icon
-                  class="header-action-icon icon-sm"
-                  svgIcon="mat:add"></mat-icon>
-                <span>Nuevo ticket</span>
-              </button>
-              <button
-                mat-flat-button
-                color="accent"
-                class="header-action-btn quick-recibo-btn flex-none"
-                type="button"
-                [disabled]="headerActionsDisabled"
-                (click)="openQuickRecibo()">
-                <mat-icon
-                  class="header-action-icon icon-sm"
-                  svgIcon="mat:bolt"></mat-icon>
-                <span>Ticket rápido</span>
-              </button>
-              <button
-                mat-flat-button
-                class="opciones-recibo-btn flex-none"
-                type="button"
-                [matMenuTriggerFor]="opcionesReciboMenu"
-                [disabled]="headerActionsDisabled"
-                [matTooltip]="'Mas opciones de este ticket'"
-                matTooltipPosition="above">
-                <mat-icon
-                  class="header-action-icon icon-sm"
-                  svgIcon="mat:more_vert"></mat-icon>
-                <span></span>
-                <mat-icon
-                  class="options-arrow-icon icon-sm"
-                  svgIcon="mat:arrow_drop_down"></mat-icon>
-              </button>
-              <mat-menu
-                #opcionesReciboMenu="matMenu"
-                xPosition="after"
-                yPosition="below"
-                class="opciones-recibo-menu">
-                <button mat-menu-item [matMenuTriggerFor]="ultimosRecibosMenu">
-                  <mat-icon svgIcon="mat:print"></mat-icon>
-                  <span>Imprimir ultimos 3 recibos</span>
-                </button>
-                <button
-                  mat-menu-item
-                  class="opciones-recibo-menu-item-toggle"
-                  (click)="$event.stopPropagation()">
-                  <span class="opciones-recibo-label">{{
-                    imprimirTicketLuegoDePagarLabel
-                  }}</span>
-                  <mat-slide-toggle
-                    class="opciones-recibo-toggle"
-                    [checked]="imprimirReciboActivo"
-                    (change)="toggleImprimirRecibo($event)"
-                    (click)="$event.stopPropagation()">
-                  </mat-slide-toggle>
-                </button>
-              </mat-menu>
-              <mat-menu
-                #ultimosRecibosMenu="matMenu"
-                xPosition="after"
-                yPosition="below"
-                class="ultimos-recibos-menu">
-                <div
-                  class="recibos-list-container recent-recibos-list-container"
-                  (click)="$event.stopPropagation()">
-                  @if (recentPrintedRecibos.length > 0) {
-                    <div class="recibos-list recent-recibos-list">
-                      @for (recibo of recentPrintedRecibos; track recibo) {
-                        <button
-                          type="button"
-                          class="recibo-item recent-recibo-item"
-                          (click)="printRecentRecibo(recibo)">
-                          <span class="recibo-total">{{
-                            formatRecentReciboTotal(recibo)
-                          }}</span>
-                          <div class="recibo-fecha-cliente-row">
-                            <span class="recibo-fecha">{{
-                              formatRecentReciboFecha(recibo)
-                            }}</span>
-                            @if (recibo.clienteNombre) {
-                              <span class="recibo-cliente">{{
-                                recibo.clienteNombre
-                              }}</span>
-                            }
-                          </div>
-                        </button>
-                      }
-                    </div>
-                  } @else {
-                    <div class="empty-message recent-recibos-empty">
-                      No hay recibos recientes para imprimir
+                <nav
+                  mat-tab-nav-bar
+                  #ticketTabNav
+                  class="ticket-tab-nav border-0 flex-auto"
+                  [tabPanel]="tabPanel"
+                  cdkDropList
+                  cdkDropListOrientation="horizontal"
+                  [cdkDropListDisabled]="ticketTabsDisabled"
+                  (cdkDropListDropped)="onTicketDrop($event)">
+                  @for (
+                    t of tickets;
+                    track trackByTicketId(i, t);
+                    let i = $index
+                  ) {
+                    <div
+                      class="tab-item"
+                      [class.ticket-con-cliente]="isTicketConCliente(t)"
+                      [class.tab-collapsed]="
+                        !ticketsConClienteVisibles && isTicketConCliente(t)
+                      "
+                      cdkDrag
+                      [cdkDragStartDelay]="200">
+                      <a
+                        mat-tab-link
+                        [active]="selectedIndex === i"
+                        (pointerdown)="onTicketTabPointerDown(i, $event)"
+                        (click)="onTicketTabClick(i, $event)"
+                        (dblclick)="editTicket(t, $event)"
+                        class="tab-link">
+                        {{ getTicketLabel(t) }}
+                      </a>
+                      <button
+                        mat-icon-button
+                        type="button"
+                        class="tab-close"
+                        [disabled]="ticketTabsDisabled"
+                        (click)="deleteTicket(t, i, $event)"
+                        (pointerdown)="$event.stopPropagation()">
+                        <mat-icon svgIcon="mat:close"></mat-icon>
+                      </button>
+                      <div
+                        class="tab-drag-placeholder"
+                        *cdkDragPlaceholder></div>
                     </div>
                   }
-                </div>
-              </mat-menu>
-            </div>
+                </nav>
+                <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
+              </div>
+            } @else {
+              <div #tabsTwoLines class="tabs-two-lines">
+                @if (ticketsIdentificados.length) {
+                  <div
+                    class="tabs-line tabs-line--identificados"
+                    role="tablist"
+                    aria-label="Tickets con cliente identificado"
+                    cdkDropList
+                    cdkDropListOrientation="horizontal"
+                    [cdkDropListDisabled]="ticketTabsDisabled"
+                    (cdkDropListDropped)="
+                      onTicketDropInGroup($event, 'identificados')
+                    ">
+                    @for (t of ticketsIdentificados; track t.id) {
+                      <div
+                        class="tab-item ticket-con-cliente"
+                        [class.is-selected]="selectedIndex === ticketIndex(t)"
+                        cdkDrag
+                        [cdkDragStartDelay]="200">
+                        <button
+                          type="button"
+                          role="tab"
+                          class="tab-link"
+                          [attr.aria-selected]="
+                            selectedIndex === ticketIndex(t)
+                          "
+                          (pointerdown)="
+                            onTicketTabPointerDown(ticketIndex(t), $event)
+                          "
+                          (click)="onTicketTabClick(ticketIndex(t), $event)"
+                          (dblclick)="editTicket(t, $event)">
+                          {{ getTicketLabel(t) }}
+                        </button>
+                        <button
+                          mat-icon-button
+                          type="button"
+                          class="tab-close"
+                          [disabled]="ticketTabsDisabled"
+                          (click)="deleteTicket(t, ticketIndex(t), $event)"
+                          (pointerdown)="$event.stopPropagation()">
+                          <mat-icon svgIcon="mat:close"></mat-icon>
+                        </button>
+                        <div
+                          class="tab-drag-placeholder"
+                          *cdkDragPlaceholder></div>
+                      </div>
+                    }
+                  </div>
+                }
+                @if (ticketsAnonimos.length) {
+                  <div
+                    class="tabs-line tabs-line--anonimos"
+                    role="tablist"
+                    aria-label="Tickets anónimos"
+                    cdkDropList
+                    cdkDropListOrientation="horizontal"
+                    [cdkDropListDisabled]="ticketTabsDisabled"
+                    (cdkDropListDropped)="
+                      onTicketDropInGroup($event, 'anonimos')
+                    ">
+                    @for (t of ticketsAnonimos; track t.id) {
+                      <div
+                        class="tab-item"
+                        [class.is-selected]="selectedIndex === ticketIndex(t)"
+                        cdkDrag
+                        [cdkDragStartDelay]="200">
+                        <button
+                          type="button"
+                          role="tab"
+                          class="tab-link"
+                          [attr.aria-selected]="
+                            selectedIndex === ticketIndex(t)
+                          "
+                          (pointerdown)="
+                            onTicketTabPointerDown(ticketIndex(t), $event)
+                          "
+                          (click)="onTicketTabClick(ticketIndex(t), $event)"
+                          (dblclick)="editTicket(t, $event)">
+                          {{ getTicketLabel(t) }}
+                        </button>
+                        <button
+                          mat-icon-button
+                          type="button"
+                          class="tab-close"
+                          [disabled]="ticketTabsDisabled"
+                          (click)="deleteTicket(t, ticketIndex(t), $event)"
+                          (pointerdown)="$event.stopPropagation()">
+                          <mat-icon svgIcon="mat:close"></mat-icon>
+                        </button>
+                        <div
+                          class="tab-drag-placeholder"
+                          *cdkDragPlaceholder></div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
             @if (tickets[selectedIndex]; as activeTicket) {
               <div class="ticket-panel">
                 <div class="detalle-wrapper">
@@ -281,6 +322,96 @@
         } @else {
           <div class="text-secondary">No hay tickets para esta sesión.</div>
         }
+
+        <mat-menu
+          #opcionesReciboMenu="matMenu"
+          xPosition="after"
+          yPosition="below"
+          class="opciones-recibo-menu">
+          <button mat-menu-item [matMenuTriggerFor]="estiloTabsMenu">
+            <mat-icon svgIcon="mat:view_agenda"></mat-icon>
+            <span>Estilo de tickets</span>
+          </button>
+          <button mat-menu-item [matMenuTriggerFor]="ultimosRecibosMenu">
+            <mat-icon svgIcon="mat:print"></mat-icon>
+            <span>Imprimir ultimos 3 recibos</span>
+          </button>
+          <button
+            mat-menu-item
+            class="opciones-recibo-menu-item-toggle"
+            (click)="$event.stopPropagation()">
+            <span class="opciones-recibo-label">{{
+              imprimirTicketLuegoDePagarLabel
+            }}</span>
+            <mat-slide-toggle
+              class="opciones-recibo-toggle"
+              [checked]="imprimirReciboActivo"
+              (change)="toggleImprimirRecibo($event)"
+              (click)="$event.stopPropagation()">
+            </mat-slide-toggle>
+          </button>
+        </mat-menu>
+        <mat-menu
+          #estiloTabsMenu="matMenu"
+          xPosition="after"
+          yPosition="below"
+          class="estilo-tabs-menu">
+          <button mat-menu-item (click)="setEstiloTickets('todo-en-linea')">
+            <!-- visibility inline: el menú vive en overlay CDK, fuera de :host -->
+            <mat-icon
+              svgIcon="mat:check"
+              [style.visibility]="
+                isEstiloTodoEnLinea ? 'visible' : 'hidden'
+              "></mat-icon>
+            <span>Todo en línea</span>
+          </button>
+          <button mat-menu-item (click)="setEstiloTickets('2-lineas')">
+            <mat-icon
+              svgIcon="mat:check"
+              [style.visibility]="
+                isEstiloDosLineas ? 'visible' : 'hidden'
+              "></mat-icon>
+            <span>2 líneas</span>
+          </button>
+        </mat-menu>
+        <mat-menu
+          #ultimosRecibosMenu="matMenu"
+          xPosition="after"
+          yPosition="below"
+          class="ultimos-recibos-menu">
+          <div
+            class="recibos-list-container recent-recibos-list-container"
+            (click)="$event.stopPropagation()">
+            @if (recentPrintedRecibos.length > 0) {
+              <div class="recibos-list recent-recibos-list">
+                @for (recibo of recentPrintedRecibos; track recibo) {
+                  <button
+                    type="button"
+                    class="recibo-item recent-recibo-item"
+                    (click)="printRecentRecibo(recibo)">
+                    <span class="recibo-total">{{
+                      formatRecentReciboTotal(recibo)
+                    }}</span>
+                    <div class="recibo-fecha-cliente-row">
+                      <span class="recibo-fecha">{{
+                        formatRecentReciboFecha(recibo)
+                      }}</span>
+                      @if (recibo.clienteNombre) {
+                        <span class="recibo-cliente">{{
+                          recibo.clienteNombre
+                        }}</span>
+                      }
+                    </div>
+                  </button>
+                }
+              </div>
+            } @else {
+              <div class="empty-message recent-recibos-empty">
+                No hay recibos recientes para imprimir
+              </div>
+            }
+          </div>
+        </mat-menu>
       </div>
         </div>
       </div>
