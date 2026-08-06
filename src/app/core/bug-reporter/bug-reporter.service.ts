@@ -4,8 +4,11 @@ export interface CapturedRequest {
   id: number;
   timestamp: string;
   method: string;
+  /** URL completa incluyendo query string (`HttpParams`). */
   url: string;
   requestHeaders: Record<string, string>;
+  /** Query params de Angular `HttpParams` (útil en GET). */
+  requestParams?: Record<string, string | string[]>;
   requestBody: unknown;
   responseStatus: number;
   responseStatusText: string;
@@ -135,18 +138,6 @@ export class BugReporterService {
       userAgent: navigator.userAgent,
       requests: this.getAll().map((r) => sanitizeCapturedRequest(r))
     };
-  }
-
-  downloadJson(route: string): void {
-    const report = this.exportJson(route);
-    const json = JSON.stringify(report, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `bug-report-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
   }
 }
 

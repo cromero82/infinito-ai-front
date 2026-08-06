@@ -5,10 +5,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { BugReporterService } from './bug-reporter.service';
 import { BugReporterDialogAttachService } from './bug-reporter-dialog-attach.service';
-import { MONITOR_BUTTON_TOOLTIP } from './bug-reporter.labels';
 import { openBugReporterDetail } from './bug-reporter-open.util';
 import { AsyncPipe } from '@angular/common';
 import { Observable } from 'rxjs';
@@ -22,7 +20,6 @@ import { Observable } from 'rxjs';
     MatButtonModule,
     MatBadgeModule,
     MatMenuModule,
-    MatTooltipModule,
     AsyncPipe
   ]
 })
@@ -32,7 +29,6 @@ export class BugReporterButtonComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly dialogAttach = inject(BugReporterDialogAttachService);
 
-  readonly tooltip = MONITOR_BUTTON_TOOLTIP;
   count$: Observable<number>;
 
   constructor() {
@@ -50,10 +46,6 @@ export class BugReporterButtonComponent implements OnInit {
 
   verDetalle(): void {
     openBugReporterDetail(this.dialog);
-  }
-
-  exportar(): void {
-    this.service.downloadJson(this.router.url);
   }
 
   copiarAlPortapapeles(): void {

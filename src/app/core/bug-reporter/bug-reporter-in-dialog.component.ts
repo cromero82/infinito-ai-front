@@ -6,13 +6,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { Observable } from 'rxjs';
 import { BugReporterService } from './bug-reporter.service';
-import {
-  MONITOR_BUTTON_LABEL,
-  MONITOR_BUTTON_TOOLTIP
-} from './bug-reporter.labels';
+import { MONITOR_BUTTON_LABEL } from './bug-reporter.labels';
 import { openBugReporterDetail } from './bug-reporter-open.util';
 
 /**
@@ -26,7 +22,6 @@ import { openBugReporterDetail } from './bug-reporter-open.util';
     MatIconModule,
     MatMenuModule,
     MatBadgeModule,
-    MatTooltipModule,
     AsyncPipe
   ],
   template: `
@@ -40,7 +35,6 @@ import { openBugReporterDetail } from './bug-reporter-open.util';
       matBadgeSize="small"
       matBadgeOverlap="false"
       [matMenuTriggerFor]="menu"
-      [matTooltip]="tooltip"
       aria-label="Monitor">
       <mat-icon svgIcon="mat:monitor"></mat-icon>
       <span>{{ label }}</span>
@@ -49,10 +43,6 @@ import { openBugReporterDetail } from './bug-reporter-open.util';
       <button mat-menu-item type="button" (click)="verDetalle()">
         <mat-icon svgIcon="mat:table_chart"></mat-icon>
         <span>Ver detalle</span>
-      </button>
-      <button mat-menu-item type="button" (click)="exportar()">
-        <mat-icon svgIcon="mat:download"></mat-icon>
-        <span>Exportar JSON (para Cursor AI)</span>
       </button>
       <button mat-menu-item type="button" (click)="copiarAlPortapapeles()">
         <mat-icon svgIcon="mat:content_copy"></mat-icon>
@@ -94,7 +84,6 @@ export class BugReporterInDialogComponent {
   private readonly dialog = inject(MatDialog);
 
   readonly label = MONITOR_BUTTON_LABEL;
-  readonly tooltip = MONITOR_BUTTON_TOOLTIP;
 
   readonly count$: Observable<number> = new Observable<number>((observer) => {
     const emit = () => observer.next(this.service.count());
@@ -105,10 +94,6 @@ export class BugReporterInDialogComponent {
 
   verDetalle(): void {
     openBugReporterDetail(this.dialog);
-  }
-
-  exportar(): void {
-    this.service.downloadJson(this.router.url);
   }
 
   copiarAlPortapapeles(): void {

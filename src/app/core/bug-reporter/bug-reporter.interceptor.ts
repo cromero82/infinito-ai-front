@@ -57,6 +57,54 @@ function safeCloneBody(body: unknown): unknown {
   return body;
 }
 
+/** Serializa `HttpParams` (query) — `req.url` no los incluye. */
+function extractRequestParams(
+  req: HttpRequest<unknown>
+): Record<string, string | string[]> | undefined {
+  const keys = req.params.keys();
+  if (!keys.length) {
+    return undefined;
+  }
+  const out: Record<string, string | string[]> = {};
+  for (const key of keys) {
+    const all = req.params.getAll(key) ?? [];
+    out[key] = all.length <= 1 ? (all[0] ?? '') : all;
+  }
+  return out;
+}
+
+function captureEntry(
+  req: HttpRequest<unknown>,
+  startTime: number,
+  responseStatus: number,
+  responseStatusText: string,
+  responseHeaders: Record<string, string>,
+  responseBody: unknown
+) {
+  const durationMs = durationMsIfSlow(
+    Math.round(performance.now() - startTime)
+  );
+  const requestParams = extractRequestParams(req);
+  const rawRequestHeaders: Record<string, string> = {};
+  req.headers.keys().forEach((key) => {
+    rawRequestHeaders[key] = req.headers.get(key) ?? '';
+  });
+  return {
+    timestamp: new Date().toISOString(),
+    method: req.method,
+    // urlWithParams incluye ?query=&page=… (HttpParams)
+    url: req.urlWithParams,
+    requestHeaders: sanitizeHeaders(rawRequestHeaders),
+    ...(requestParams ? { requestParams } : {}),
+    requestBody: safeCloneBody(req.body),
+    responseStatus,
+    responseStatusText,
+    responseHeaders,
+    responseBody: safeCloneBody(responseBody),
+    ...(durationMs != null ? { durationMs } : {})
+  };
+}
+
 export const bugReporterInterceptor: HttpInterceptorFn = (req, next) => {
   const service = inject(BugReporterService);
 
@@ -65,9 +113,6 @@ export const bugReporterInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   const startTime = performance.now();
-  const rawRequestHeaders: Record<string, string> = {};
-  req.headers.keys().forEach(key => { rawRequestHeaders[key] = req.headers.get(key) ?? ''; });
-  const requestHeaders = sanitizeHeaders(rawRequestHeaders);
 
   return next(req).pipe(
     tap({
@@ -75,47 +120,37 @@ export const bugReporterInterceptor: HttpInterceptorFn = (req, next) => {
         if (event.type === HttpEventType.Response) {
           const response = event as HttpResponse<unknown>;
           const rawResponseHeaders: Record<string, string> = {};
-          response.headers.keys().forEach(key => { rawResponseHeaders[key] = response.headers.get(key) ?? ''; });
-          const responseHeaders = sanitizeHeaders(rawResponseHeaders);
-
-          const durationMs = durationMsIfSlow(
-            Math.round(performance.now() - startTime)
-          );
-          service.add({
-            timestamp: new Date().toISOString(),
-            method: req.method,
-            url: req.url,
-            requestHeaders,
-            requestBody: safeCloneBody(req.body),
-            responseStatus: response.status,
-            responseStatusText: response.statusText,
-            responseHeaders,
-            responseBody: safeCloneBody(response.body),
-            ...(durationMs != null ? { durationMs } : {})
+          response.headers.keys().forEach((key) => {
+            rawResponseHeaders[key] = response.headers.get(key) ?? '';
           });
+          service.add(
+            captureEntry(
+              req,
+              startTime,
+              response.status,
+              response.statusText,
+              sanitizeHeaders(rawResponseHeaders),
+              response.body
+            )
+          );
         }
       },
       error: (error: unknown) => {
         if (error instanceof HttpErrorResponse) {
           const rawErrorHeaders: Record<string, string> = {};
-          error.headers.keys().forEach(key => { rawErrorHeaders[key] = error.headers.get(key) ?? ''; });
-          const responseHeaders = sanitizeHeaders(rawErrorHeaders);
-          const durationMs = durationMsIfSlow(
-            Math.round(performance.now() - startTime)
-          );
-
-          service.add({
-            timestamp: new Date().toISOString(),
-            method: req.method,
-            url: req.url,
-            requestHeaders,
-            requestBody: safeCloneBody(req.body),
-            responseStatus: error.status,
-            responseStatusText: error.statusText,
-            responseHeaders,
-            responseBody: safeCloneBody(error.error),
-            ...(durationMs != null ? { durationMs } : {})
+          error.headers.keys().forEach((key) => {
+            rawErrorHeaders[key] = error.headers.get(key) ?? '';
           });
+          service.add(
+            captureEntry(
+              req,
+              startTime,
+              error.status,
+              error.statusText,
+              sanitizeHeaders(rawErrorHeaders),
+              error.error
+            )
+          );
         }
       }
     })

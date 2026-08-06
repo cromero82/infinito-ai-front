@@ -29,6 +29,7 @@ export interface JsonSectionItem {
 /** Secciones de una petición que suelen sobrar al depurar. */
 const EDITABLE_ROOT_SECTIONS: { path: string; label: string }[] = [
   { path: 'requestHeaders', label: 'Headers de request' },
+  { path: 'requestParams', label: 'Query params (HttpParams)' },
   { path: 'requestBody', label: 'Body de request' },
   { path: 'responseHeaders', label: 'Headers de response' },
   { path: 'responseBody', label: 'Body de response' },

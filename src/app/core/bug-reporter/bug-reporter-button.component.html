@@ -6,8 +6,6 @@
     matBadgeColor="warn"
     matBadgeSize="small"
     [matMenuTriggerFor]="menu"
-    [matTooltip]="tooltip"
-    matTooltipPosition="left"
     aria-label="Monitor">
     <mat-icon svgIcon="mat:monitor"></mat-icon>
   </button>
@@ -15,10 +13,6 @@
     <button mat-menu-item (click)="verDetalle()">
       <mat-icon svgIcon="mat:table_chart"></mat-icon>
       <span>Ver detalle</span>
-    </button>
-    <button mat-menu-item (click)="exportar()">
-      <mat-icon svgIcon="mat:download"></mat-icon>
-      <span>Exportar JSON (para Cursor AI)</span>
     </button>
     <button mat-menu-item (click)="copiarAlPortapapeles()">
       <mat-icon svgIcon="mat:content_copy"></mat-icon>
