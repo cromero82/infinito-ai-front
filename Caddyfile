@@ -26,6 +26,16 @@
 		reverse_proxy 127.0.0.1:8088
 	}
 
+	# --- Confirmación pagos electrónicos (puente-tienda :8095) ---
+	# Webhook Worker CF + polling FE (solo estas rutas).
+	@pagosEmail {
+		path /api/email-inbound /api/notificaciones/* /api/recibos-electronicos/*
+		method GET POST PUT OPTIONS
+	}
+	handle @pagosEmail {
+		reverse_proxy 127.0.0.1:8095
+	}
+
 	# --- Todo lo demás -> app Angular (dev server en :4200) ---
 	# Forzamos Host local para pasar el host-check de `ng serve`.
 	handle {

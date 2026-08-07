@@ -20,6 +20,7 @@ import {
   DetalleTicketComponent,
   TicketMoveOption
 } from '../detalle-ticket/detalle-ticket.component';
+import { ConfirmacionPagosPanelComponent } from '../confirmacion-pagos-panel/confirmacion-pagos-panel.component';
 import { VexPageLayoutComponent } from '@vex/components/vex-page-layout/vex-page-layout.component';
 import { VexPageLayoutHeaderDirective } from '@vex/components/vex-page-layout/vex-page-layout-header.directive';
 import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/vex-page-layout-content.directive';
@@ -95,7 +96,8 @@ export type EstiloTicketsTabs = 'todo-en-linea' | '2-lineas';
     MatSnackBarModule,
     MatTooltipModule,
     DragDropModule,
-    DetalleTicketComponent
+    DetalleTicketComponent,
+    ConfirmacionPagosPanelComponent
   ],
   templateUrl: './tickets.component.html',
   styleUrls: ['./tickets.component.scss']

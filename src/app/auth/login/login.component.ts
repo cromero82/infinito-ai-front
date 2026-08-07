@@ -32,6 +32,7 @@ import {
   BaseInicialDialogComponent,
   BaseInicialDialogResult
 } from '../../pages/apps/financiero/ingresos/base-inicial-dialog/base-inicial-dialog.component';
+import { BugReporterButtonComponent } from '../../core/bug-reporter/bug-reporter-button.component';
 
 @Component({
   selector: 'vex-login',
@@ -50,7 +51,8 @@ import {
     RouterLink,
     MatSnackBarModule,
     MatProgressSpinnerModule,
-    MatDialogModule
+    MatDialogModule,
+    BugReporterButtonComponent
   ]
 })
 export class LoginComponent {

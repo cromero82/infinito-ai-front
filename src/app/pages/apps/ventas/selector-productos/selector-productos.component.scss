@@ -156,30 +156,30 @@
 .product-table {
   width: 100%;
   table-layout: fixed;
-  /* ~20% menos que la altura MDC por defecto (~52px → ~42px) */
-  --mat-table-row-item-container-height: 42px;
-  --mat-table-header-container-height: 40px;
-  font-size: 13px;
+  /* Más compacto que el default MDC (~52px → ~34px) */
+  --mat-table-row-item-container-height: 34px;
+  --mat-table-header-container-height: 34px;
+  font-size: 12.5px;
 }
 
 :host ::ng-deep .product-table {
   tr.mat-mdc-header-row {
-    height: 40px !important;
-    min-height: 40px !important;
+    height: 34px !important;
+    min-height: 34px !important;
   }
 
   tr.mat-mdc-row {
     height: auto !important;
-    min-height: 42px !important;
+    min-height: 34px !important;
   }
 
   th.mat-mdc-header-cell,
   th[mat-header-cell],
   td.mat-mdc-cell,
   td[mat-cell] {
-    padding-top: 4px !important;
-    padding-bottom: 4px !important;
-    line-height: 1.25 !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    line-height: 1.2 !important;
     height: auto !important;
     min-height: unset !important;
     vertical-align: middle !important;
@@ -248,16 +248,16 @@
   justify-content: flex-end;
 }
 
-/* El ripple circular de mat-icon-button (~40–48px) imponía la altura de fila. */
+/* El ripple circular de mat-icon-button imponía la altura de fila. */
 :host ::ng-deep .action-buttons .btn-edit-compact.mat-mdc-icon-button {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   padding: 0;
-  --mdc-icon-button-state-layer-size: 28px;
+  --mdc-icon-button-state-layer-size: 24px;
 
   .mat-mdc-button-touch-target {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
   }
 
   .mat-mdc-button-persistent-ripple,
@@ -269,18 +269,18 @@
   }
 
   mat-icon {
-    width: 18px;
-    height: 18px;
-    font-size: 18px;
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
   }
 }
 
 :host ::ng-deep .action-buttons .btn-select-compact.mat-mdc-unelevated-button {
-  min-height: 28px;
-  height: 28px;
-  padding: 0 12px;
-  font-size: 12px;
-  line-height: 28px;
+  min-height: 24px;
+  height: 24px;
+  padding: 0 10px;
+  font-size: 11px;
+  line-height: 24px;
 }
 
 // Precio empaque (General) vs unidad: cada subfila con hover (sombra) y clic (efecto azul)
@@ -292,26 +292,26 @@
 .precio-dual-lines {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .precio-dual-line {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   margin: 0;
-  padding: 3px 6px;
+  padding: 2px 5px;
   border: none;
-  border-radius: 4px;
+  border-radius: 3px;
   font: inherit;
   text-align: left;
   cursor: pointer;
   color: inherit;
   background: transparent;
-  font-size: 12px;
-  line-height: 1.2;
+  font-size: 11.5px;
+  line-height: 1.15;
   box-sizing: border-box;
   transition:
     background 0.15s ease,

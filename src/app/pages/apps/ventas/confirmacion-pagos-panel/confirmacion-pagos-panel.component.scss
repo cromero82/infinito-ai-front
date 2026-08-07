@@ -1,0 +1,103 @@
+.confirmacion-pagos-panel {
+  position: fixed;
+  /* A la izquierda del FAB bug-reporter (right:24px, ~40px) + settings */
+  right: 88px;
+  bottom: 80px;
+  z-index: 1100;
+  width: min(280px, calc(100vw - 112px));
+  background: #1a2332;
+  color: #f2f5f8;
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+  font-size: 13px;
+  user-select: none;
+}
+
+.confirmacion-pagos-panel--dragging {
+  opacity: 0.92;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #121922;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: grab;
+  touch-action: none;
+}
+
+.confirmacion-pagos-panel--dragging .panel-header {
+  cursor: grabbing;
+}
+
+.panel-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.panel-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 40vh;
+  overflow: auto;
+}
+
+.panel-item {
+  border-radius: 8px;
+  padding: 10px;
+  background: #243044;
+}
+
+.panel-item--espera {
+  border-left: 3px solid #e6b422;
+}
+
+.panel-item--ok {
+  border-left: 3px solid #2ecc71;
+  background: #1e3a2c;
+}
+
+.panel-item--ambigua {
+  border-left: 3px solid #e67e22;
+}
+
+.panel-item-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.panel-estado {
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  opacity: 0.9;
+}
+
+.panel-monto {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel-pagador {
+  margin-top: 4px;
+  opacity: 0.85;
+  font-size: 12px;
+}
+
+.panel-countdown {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #8dffb0;
+  font-variant-numeric: tabular-nums;
+}

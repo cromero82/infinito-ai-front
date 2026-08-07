@@ -129,7 +129,7 @@ vex-page-layout-header .container {
   }
 }
 
-/* Outline más bajo: reduce altura del header (Tickets + buscador) */
+/* Outline compacto (40px). El label en reposo debe quedar centrado (sin foco). */
 :host ::ng-deep .search-controls .search-input.mat-mdc-form-field {
   margin: 0;
   font-size: 13px !important;
@@ -140,6 +140,7 @@ vex-page-layout-header .container {
     max-height: 40px !important;
     align-items: center !important;
     padding-top: 0 !important;
+    padding-bottom: 0 !important;
   }
 
   .mat-mdc-text-field-wrapper {
@@ -149,15 +150,32 @@ vex-page-layout-header .container {
   }
 
   .mat-mdc-form-field-infix {
-    min-height: 28px !important;
-    padding-top: 8px !important;
-    padding-bottom: 8px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
   }
 
-  .mat-mdc-text-field-wrapper input,
-  .mat-mdc-floating-label,
   .mat-mdc-input-element {
     font-size: 13px !important;
+    line-height: 22px !important;
+    height: 22px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .mat-mdc-floating-label,
+  .mdc-floating-label {
+    font-size: 13px !important;
+  }
+
+  /* Sin foco / vacío: centrar label. Con foco Material usa --float-above. */
+  .mdc-floating-label:not(.mdc-floating-label--float-above) {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
   }
 
   .mat-mdc-form-field-subscript-wrapper {

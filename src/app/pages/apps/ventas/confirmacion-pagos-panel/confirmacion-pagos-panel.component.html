@@ -1,0 +1,48 @@
+@if (visible) {
+  <aside
+    class="confirmacion-pagos-panel"
+    [class.confirmacion-pagos-panel--dragging]="dragging"
+    [ngStyle]="panelStyle"
+    aria-live="polite">
+    <header
+      class="panel-header"
+      (pointerdown)="onDragStart($event)"
+      (dblclick)="resetPosition()"
+      title="Arrastrar · doble clic para resetear posición">
+      <mat-icon svgIcon="mat:account_balance_wallet" class="panel-icon"></mat-icon>
+      <span>Pagos electrónicos</span>
+    </header>
+    <ul class="panel-list">
+      @for (item of items; track trackById($index, item)) {
+        <li
+          class="panel-item"
+          [class.panel-item--espera]="item.estado === 'CREADA'"
+          [class.panel-item--ok]="item.estado === 'CONFIRMADA'"
+          [class.panel-item--ambigua]="item.estado === 'AMBIGUA'">
+          <div class="panel-item-main">
+            <span class="panel-estado">
+              @if (item.estado === 'CREADA') {
+                Esperando
+              } @else if (item.estado === 'CONFIRMADA') {
+                Confirmado
+              } @else if (item.estado === 'AMBIGUA') {
+                Ambigüedad
+              } @else {
+                {{ item.estado }}
+              }
+            </span>
+            <span class="panel-monto">{{
+              item.montoEsperado | currency: 'COP' : 'symbol-narrow' : '1.0-0'
+            }}</span>
+          </div>
+          @if (item.nombrePagador) {
+            <div class="panel-pagador">{{ item.nombrePagador }}</div>
+          }
+          @if (item.estado === 'CONFIRMADA') {
+            <div class="panel-countdown">Cierra en {{ countdownOf(item.id) ?? 0 }}s</div>
+          }
+        </li>
+      }
+    </ul>
+  </aside>
+}

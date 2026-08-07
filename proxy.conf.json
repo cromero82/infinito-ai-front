@@ -1,4 +1,19 @@
 {
+  "/api/notificaciones": {
+    "target": "http://localhost:8095",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/recibos-electronicos": {
+    "target": "http://localhost:8095",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/email-inbound": {
+    "target": "http://localhost:8095",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/products": {
     "target": "http://localhost:8088",
     "secure": false,

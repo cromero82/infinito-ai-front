@@ -14,6 +14,7 @@ export const environment = {
   apiHost,
   apiUrlRelationalDb: isDevServer ? `http://${apiHost}:8088` : '',
   apiUrlAuth: isDevServer ? `http://${apiHost}:8081` : '',
+  apiUrlPuenteTienda: isDevServer ? `http://${apiHost}:8095` : '',
   localStorageKeyEstadosRecibos: 'estados_recibos',
   /** Si true, no envía errores a POST /reporte-frontend. */
   reporteFrontendDeshabilitado: false
