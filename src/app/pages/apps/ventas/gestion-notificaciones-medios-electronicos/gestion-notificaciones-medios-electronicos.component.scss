@@ -1,0 +1,263 @@
+.gestion-notif-page {
+  max-width: 1280px;
+}
+
+.card-section {
+  background: var(--vex-background-card, #fff);
+  border-radius: 10px;
+  padding: 16px 20px 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.gestion-notif-tabs {
+  .tab-panel {
+    margin-top: 12px;
+    border-radius: 0 0 10px 10px;
+  }
+}
+
+.section-title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.tab-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.mb-0 {
+  margin-bottom: 0;
+}
+
+.hint {
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.plantilla-card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 12px 12px 4px;
+  margin-bottom: 12px;
+}
+
+.plantilla-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.plantilla-icon-preview {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.nombre-field {
+  width: 140px;
+}
+
+.icon-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+
+.icon-picker-label {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.54);
+  margin-right: 4px;
+}
+
+.icon-option {
+  width: 48px;
+  height: 48px;
+  padding: 3px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+
+  img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    display: block;
+  }
+
+  &.selected {
+    border-color: #3f51b5;
+    background: rgba(63, 81, 181, 0.06);
+  }
+}
+
+.col-plantilla {
+  width: 40px;
+  text-align: center;
+}
+
+.row-plantilla-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.search {
+  min-width: 240px;
+  flex: 1;
+}
+
+.table-wrap {
+  overflow: auto;
+}
+
+.notif-table {
+  width: 100%;
+  font-size: 13px;
+  --mat-table-header-container-height: 28px;
+
+  tr.mat-mdc-header-row,
+  tr.mat-header-row {
+    height: 28px !important;
+    min-height: unset !important;
+    background-color: rgba(0, 0, 0, 0.008) !important;
+  }
+
+  th.mat-mdc-header-cell,
+  th.mat-header-cell,
+  th[mat-header-cell] {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding: 0 8px !important;
+    line-height: 1.2 !important;
+    height: 28px !important;
+    min-height: unset !important;
+    vertical-align: middle !important;
+    color: rgba(0, 0, 0, 0.7);
+  }
+
+  tr.mat-mdc-row,
+  tr.mat-row {
+    height: 36px !important;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+
+    &:hover,
+    &:hover td {
+      background-color: var(--pos-mat-table-row-hover, rgba(63, 81, 181, 0.08)) !important;
+    }
+
+    &.selected-row {
+      border-left: 3px solid #3f51b5;
+    }
+
+    &.selected-row,
+    &.selected-row td {
+      background-color: rgba(63, 81, 181, 0.15) !important;
+    }
+
+    &.selected-row:hover,
+    &.selected-row:hover td {
+      background-color: rgba(63, 81, 181, 0.2) !important;
+    }
+  }
+
+  td.mat-mdc-cell,
+  td.mat-cell {
+    padding: 2px 10px !important;
+    line-height: 1.2 !important;
+    height: 36px !important;
+    font-size: 13px !important;
+    vertical-align: middle !important;
+  }
+
+  .mat-mdc-icon-button,
+  .mat-icon-button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+  }
+}
+
+.col-asunto {
+  max-width: 180px;
+  width: 180px;
+}
+
+.asunto-cell-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  line-height: 1.2;
+  height: 20px;
+}
+
+.asunto-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.asunto-warn-icon {
+  flex-shrink: 0;
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 16px !important;
+  line-height: 16px !important;
+  color: #b45309;
+
+  ::ng-deep svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+td.col-asunto.asunto-no-permitido {
+  background-color: rgba(245, 158, 11, 0.28) !important;
+}
+
+.notif-table tr:hover td.col-asunto.asunto-no-permitido {
+  background-color: rgba(245, 158, 11, 0.4) !important;
+}
+
+.col-cuerpo {
+  max-width: 360px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.empty {
+  padding: 16px 0 4px;
+}
+
+code {
+  font-size: 12px;
+}

@@ -18,6 +18,8 @@ export interface PendienteConfirmacionDto {
   montoEsperado: number;
   estado: 'CREADA' | 'CONFIRMADA' | 'AMBIGUA' | 'HUERFANA' | string;
   nombrePagador?: string | null;
+  nombreCliente?: string | null;
+  numeroVenta?: string | null;
   fechaCreacion?: string;
   fechaConfirmacion?: string | null;
   notificacionId?: number | null;
@@ -50,6 +52,13 @@ export class ConfirmacionPagoService {
     return this.http.put<PendienteConfirmacionDto>(
       `${this.base}/api/recibos-electronicos/${historialElectronicoId}/asignar`,
       { notificacionId }
+    );
+  }
+
+  yaNoEsperar(historialElectronicoId: number): Observable<PendienteConfirmacionDto> {
+    return this.http.put<PendienteConfirmacionDto>(
+      `${this.base}/api/recibos-electronicos/${historialElectronicoId}/ya-no-esperar`,
+      {}
     );
   }
 }

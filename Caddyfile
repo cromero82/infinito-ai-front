@@ -29,8 +29,8 @@
 	# --- Confirmación pagos electrónicos (puente-tienda :8095) ---
 	# Webhook Worker CF + polling FE (solo estas rutas).
 	@pagosEmail {
-		path /api/email-inbound /api/notificaciones/* /api/recibos-electronicos/*
-		method GET POST PUT OPTIONS
+		path /api/email-inbound /api/notificaciones/* /api/recibos-electronicos/* /api/notificaciones-email /api/notificaciones-email/* /api/plantillas-notificacion-pago /api/plantillas-notificacion-pago/* /api/tickets-sin-notificacion /api/tickets-sin-notificacion/*
+		method GET POST PUT DELETE OPTIONS
 	}
 	handle @pagosEmail {
 		reverse_proxy 127.0.0.1:8095

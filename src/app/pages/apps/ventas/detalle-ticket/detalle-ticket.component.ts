@@ -105,6 +105,8 @@ const ESTADOS_RECIBO = {
   SIGLA_EDICION: 'ED'
 } as const;
 
+const CLIENTE_ANONIMO_ID = 1;
+
 export interface TicketMoveOption {
   id: number;
   label: string;
@@ -2070,7 +2072,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
           this.reciboService
             .actualizarRecibo(this.recibo.id, {
-              clienteId: this.recibo.clienteId,
+              clienteId: this.clienteIdParaRecibo(),
               ticketId: this.recibo.ticketId,
               estadoId: this.recibo.estadoId ?? ESTADOS_RECIBO.PENDIENTE_PAGO,
               metodoPagoId: this.recibo.metodoPagoId ?? 0,
@@ -2275,7 +2277,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
             this.reciboService
               .actualizarRecibo(this.recibo.id, {
-                clienteId: this.recibo.clienteId,
+                clienteId: this.clienteIdParaRecibo(),
                 ticketId: this.recibo.ticketId,
                 estadoId: this.recibo.estadoId ?? ESTADOS_RECIBO.PENDIENTE_PAGO,
                 metodoPagoId: this.recibo.metodoPagoId ?? 0,
@@ -2719,6 +2721,18 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.actualizarFooterSeleccion();
   }
 
+  private clienteIdParaRecibo(recibo: ReciboDto | null = this.recibo): number {
+    const ticketClienteId = Number(this.ticket?.cliente?.id);
+    if (Number.isFinite(ticketClienteId) && ticketClienteId !== CLIENTE_ANONIMO_ID) {
+      return ticketClienteId;
+    }
+    const reciboClienteId = Number(recibo?.clienteId);
+    if (Number.isFinite(reciboClienteId) && reciboClienteId > 0) {
+      return reciboClienteId;
+    }
+    return CLIENTE_ANONIMO_ID;
+  }
+
   private calculateDetallesTotal(detalles: ReciboDetalleDto[]): number {
     return detalles.reduce((acc, det) => acc + Number(det?.subtotal ?? 0), 0);
   }
@@ -2734,7 +2748,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     const resp = await firstValueFrom(
       this.reciboService.actualizarRecibo(recibo.id, {
-        clienteId: recibo.clienteId,
+        clienteId: this.clienteIdParaRecibo(recibo),
         ticketId,
         estadoId: recibo.estadoId ?? ESTADOS_RECIBO.PENDIENTE_PAGO,
         metodoPagoId: recibo.metodoPagoId ?? 0,
@@ -2932,7 +2946,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             metodo.id === 1 ? totalARegistrar : totalARegistrar;
 
           const payload: ActualizarReciboRequest = {
-            clienteId: this.recibo!.clienteId,
+            clienteId: this.clienteIdParaRecibo(),
             ticketId,
             estadoId: ESTADOS_RECIBO.PAGADO,
             metodoPagoId: metodo.id,
@@ -3158,7 +3172,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             metodo.id === 1 ? totalARegistrar : totalARegistrar;
 
           const payload: ActualizarReciboRequest = {
-            clienteId: this.recibo!.clienteId,
+            clienteId: this.clienteIdParaRecibo(),
             ticketId,
             estadoId: ESTADOS_RECIBO.PAGADO,
             metodoPagoId: metodo.id,
@@ -3477,7 +3491,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             metodo.id === 1 ? totalARegistrar : totalARegistrar;
 
           const payload: ActualizarReciboRequest = {
-            clienteId: this.recibo!.clienteId,
+            clienteId: this.clienteIdParaRecibo(),
             ticketId,
             estadoId: ESTADOS_RECIBO.PAGADO,
             metodoPagoId: metodo.id,
@@ -3664,7 +3678,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             : totalARegistrar;
 
         const payload: ActualizarReciboRequest = {
-          clienteId: this.recibo!.clienteId,
+          clienteId: this.clienteIdParaRecibo(),
           ticketId,
           estadoId: ESTADOS_RECIBO.PAGADO,
           metodoPagoId: metodo.id,

@@ -145,6 +145,8 @@ export class TicketsComponent
   matTabNav?: MatTabNav;
   @ViewChild('tabsTwoLines')
   tabsTwoLinesEl?: ElementRef<HTMLElement>;
+  @ViewChild(ConfirmacionPagosPanelComponent)
+  confirmacionPagosPanel?: ConfirmacionPagosPanelComponent;
 
   /** Preferencia de usuario: imprimir recibo tras pago (persistida en localStorage). Por defecto false. */
   imprimirReciboActivo = false;
@@ -812,6 +814,7 @@ export class TicketsComponent
     ) {
       this.fetchReciboForTicket(this.tickets[this.selectedIndex].id, true);
     }
+    this.confirmacionPagosPanel?.revisarPendientes();
   }
 
   onTicketProcesado(): void {
@@ -932,8 +935,7 @@ export class TicketsComponent
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        // Optionally reload tickets or show success message
-        // this.loadTickets(this.sessionId!);
+        this.confirmacionPagosPanel?.revisarPendientes();
       }
 
       // Restaurar el foco si lo tenía antes
@@ -998,7 +1000,11 @@ export class TicketsComponent
     }
 
     if (result.type === 'updated') {
+      const ticketId = this.tickets[this.selectedIndex]?.id;
       this.loadTickets(this.sessionId);
+      if (ticketId) {
+        this.fetchReciboForTicket(ticketId, true);
+      }
       return;
     }
 

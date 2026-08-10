@@ -12,6 +12,7 @@ import {
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Subscription, interval, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
@@ -20,18 +21,20 @@ import {
   PendienteConfirmacionDto
 } from '../service/confirmacion-pago.service';
 import { AmbiguidadPagoDialogComponent } from './ambiguidad-pago-dialog.component';
+import { TicketSinNotifProductosDialogComponent } from '../gestion-notificaciones-medios-electronicos/ticket-sin-notif-productos-dialog.component';
+import { FechaUtilService } from '../service/fecha-util.service';
 
 const POLL_MS = 2500;
 const COUNTDOWN_FROM = 6;
 const POS_STORAGE_KEY = 'confirmacion-pagos-panel-pos';
-const PANEL_W = 280;
+const PANEL_W = 300;
 const PANEL_H_MIN = 120;
 
 @Component({
   selector: 'app-confirmacion-pagos-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, CurrencyPipe, MatButtonModule, MatIconModule, MatDialogModule],
+  imports: [CommonModule, CurrencyPipe, MatButtonModule, MatIconModule, MatTooltipModule, MatDialogModule],
   templateUrl: './confirmacion-pagos-panel.component.html',
   styleUrls: ['./confirmacion-pagos-panel.component.scss']
 })
@@ -55,15 +58,14 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
   constructor(
     private confirmacionPago: ConfirmacionPagoService,
     private dialog: MatDialog,
+    private fechaUtil: FechaUtilService,
     private cdr: ChangeDetectorRef
   ) {
     this.restorePosition();
   }
 
   ngOnInit(): void {
-    if (this.sesionId != null && !this.pollingStarted) {
-      this.startPolling();
-    }
+    this.revisarPendientes();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -71,8 +73,8 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
       this.stopPolling();
       this.items = [];
       this.countdowns.clear();
-      if (this.sesionId != null) {
-        this.startPolling();
+      if (!changes['sesionId'].firstChange) {
+        this.revisarPendientes();
       }
       this.cdr.markForCheck();
     }
@@ -220,10 +222,27 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
     }
   }
 
-  private startPolling(): void {
-    this.stopPolling();
-    this.pollingStarted = true;
+  /** Una consulta; si hay pendientes arranca el poll, si no, no vuelve a preguntar. */
+  revisarPendientes(): void {
+    if (this.sesionId == null) {
+      this.stopPolling();
+      return;
+    }
+    this.confirmacionPago
+      .getPendientes(this.sesionId)
+      .pipe(catchError(() => of(null)))
+      .subscribe((list) => {
+        if (list != null) {
+          this.applyList(list);
+        }
+      });
+  }
 
+  private ensurePolling(): void {
+    if (this.pollingStarted) {
+      return;
+    }
+    this.pollingStarted = true;
     this.pollSub = interval(POLL_MS)
       .pipe(
         switchMap(() => {
@@ -240,18 +259,6 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
           this.applyList(list);
         }
       });
-
-    if (this.sesionId != null) {
-      this.confirmacionPago
-        .getPendientes(this.sesionId)
-        .pipe(catchError(() => of(null)))
-        .subscribe((list) => {
-          if (list != null) {
-            this.applyList(list);
-          }
-        });
-    }
-
     this.tickSub = interval(1000).subscribe(() => this.tickCountdowns());
   }
 
@@ -276,6 +283,12 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
       if (!ids.has(id)) {
         this.countdowns.delete(id);
       }
+    }
+
+    if (this.items.length === 0) {
+      this.stopPolling();
+    } else {
+      this.ensurePolling();
     }
 
     const ambigua = this.items.find((i) => i.estado === 'AMBIGUA' || i.ambiguo);
@@ -305,6 +318,9 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
       this.confirmacionPago.marcarConfirmadas(done).subscribe({
         next: () => {
           this.items = this.items.filter((i) => !done.includes(i.id));
+          if (this.items.length === 0) {
+            this.stopPolling();
+          }
           this.cdr.markForCheck();
         },
         error: () => {
@@ -312,7 +328,7 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
         }
       });
     }
-    if (changed) {
+    if (changed || this.items.some((i) => i.estado === 'CREADA')) {
       this.cdr.markForCheck();
     }
   }
@@ -345,5 +361,49 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
 
   countdownOf(id: number): number | null {
     return this.countdowns.has(id) ? (this.countdowns.get(id) as number) : null;
+  }
+
+  tiempoEspera(item: PendienteConfirmacionDto): string {
+    return this.fechaUtil.formatDateConTiempoRelativo(item.fechaCreacion);
+  }
+
+  clienteIdentificado(item: PendienteConfirmacionDto): boolean {
+    const n = (item.nombreCliente || '').trim();
+    if (!n) {
+      return false;
+    }
+    const lower = n.toLowerCase();
+    return lower !== 'anonimo' && lower !== 'anónimo';
+  }
+
+  verProductos(item: PendienteConfirmacionDto, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!item.historialReciboId) {
+      return;
+    }
+    this.dialog.open(TicketSinNotifProductosDialogComponent, {
+      width: '560px',
+      data: {
+        historialReciboId: item.historialReciboId,
+        numeroVenta: item.numeroVenta,
+        total: item.montoEsperado
+      }
+    });
+  }
+
+  yaNoEsperar(item: PendienteConfirmacionDto, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.confirmacionPago.yaNoEsperar(item.id).subscribe({
+      next: () => {
+        this.items = this.items.filter((i) => i.id !== item.id);
+        this.countdowns.delete(item.id);
+        if (this.items.length === 0) {
+          this.stopPolling();
+        }
+        this.cdr.markForCheck();
+      }
+    });
   }
 }

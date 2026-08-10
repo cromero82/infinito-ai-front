@@ -204,6 +204,13 @@ export const appRoutes: VexRoutes = [
             ]
           },
           {
+            path: 'gestion-notificaciones-medios-electronicos',
+            loadComponent: () =>
+              import(
+                './pages/apps/ventas/gestion-notificaciones-medios-electronicos/gestion-notificaciones-medios-electronicos.component'
+              ).then((m) => m.GestionNotificacionesMediosElectronicosComponent)
+          },
+          {
             path: 'logs-errores',
             loadComponent: () =>
               import('./pages/apps/logs-errores/logs-errores.component').then(

@@ -534,6 +534,9 @@
     align-items: center;
     justify-content: flex-end;
     gap: 32px;
+    /* Reserva espacio para FAB Monitor + config (fixed right ~24px, Ø ~40px). */
+    padding-right: 56px;
+    box-sizing: border-box;
   }
 
   &.has-atendido .total-externo {

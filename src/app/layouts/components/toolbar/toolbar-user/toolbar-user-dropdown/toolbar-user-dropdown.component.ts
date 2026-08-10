@@ -149,6 +149,15 @@ export class ToolbarUserDropdownComponent implements OnInit {
       });
 
       this.items.push({
+        id: '8',
+        icon: 'mat:account_balance_wallet',
+        label: 'Notificaciones QR / email',
+        description: 'Plantilla y correos de pagos electrónicos',
+        colorClass: 'text-cyan-700',
+        route: '/apps/gestion-notificaciones-medios-electronicos'
+      });
+
+      this.items.push({
         id: '6',
         icon: 'mat:backup',
         label: 'Copias de seguridad',
