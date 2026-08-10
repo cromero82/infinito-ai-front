@@ -69,6 +69,14 @@
             "namedChunks": true
           },
           "configurations": {
+            "sandbox": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.sandbox.ts"
+                }
+              ]
+            },
             "production": {
               "fileReplacements": [
                 {
@@ -100,6 +108,10 @@
             "proxyConfig": "proxy.conf.json"
           },
           "configurations": {
+            "sandbox": {
+              "buildTarget": "vex:build:sandbox",
+              "proxyConfig": "proxy.sandbox.conf.json"
+            },
             "production": {
               "buildTarget": "vex:build:production"
             }

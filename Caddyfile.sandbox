@@ -1,0 +1,56 @@
+# Reverse proxy sandbox (tester) — paralelo a Caddyfile dev (:8080).
+# Escucha :8180 → Angular :4210 + MS sandbox :8181 / :8188 / :8195.
+# Cloudflare: pos-sandbox.mayaksoluciones.com → http://127.0.0.1:8180
+#
+# Orden: APIs específicas → SPA/estáticos Angular → resto API relacional.
+# Nota: varios `path` en un matcher se AND-ean; un solo `path` con varios args se OR-ean.
+
+:8180 {
+	encode gzip
+
+	# --- Auth sandbox ---
+	handle /auth/* {
+		reverse_proxy 127.0.0.1:8181
+	}
+
+	# --- Confirmación pagos electrónicos (puente-tienda sandbox) ---
+	@pagosEmail {
+		path /api/email-inbound /api/email-inbound/* /api/notificaciones /api/notificaciones/* /api/recibos-electronicos /api/recibos-electronicos/* /api/notificaciones-email /api/notificaciones-email/* /api/plantillas-notificacion-pago /api/plantillas-notificacion-pago/* /api/tickets-sin-notificacion /api/tickets-sin-notificacion/*
+	}
+	handle @pagosEmail {
+		reverse_proxy 127.0.0.1:8195
+	}
+
+	# --- Health del FE sandbox ---
+	@health {
+		path /actuator /actuator/* /health
+	}
+	handle @health {
+		reverse_proxy 127.0.0.1:3011
+	}
+
+	# --- SPA Angular (rutas de la app) ---
+	@spaRoutes {
+		path / /index.html /apps /apps/* /login /login/* /register /register/* /forgot-password /forgot-password/* /assets /assets/* /favicon.ico /manifest.webmanifest /ngsw-worker.js /ng-cli-ws /ng-cli-ws/* /sockjs-node /sockjs-node/*
+	}
+	handle @spaRoutes {
+		reverse_proxy 127.0.0.1:4210 {
+			header_up Host localhost:4210
+		}
+	}
+
+	# --- Bundles / sourcemaps / fuentes / imágenes de ng serve ---
+	@spaStatic {
+		path_regexp \.(js|css|mjs|map|woff2?|ttf|eot|png|jpe?g|gif|svg|ico|webp)$
+	}
+	handle @spaStatic {
+		reverse_proxy 127.0.0.1:4210 {
+			header_up Host localhost:4210
+		}
+	}
+
+	# --- Resto de APIs relacionales (tickets, recibos, clientes, financiero, …) ---
+	handle {
+		reverse_proxy 127.0.0.1:8188
+	}
+}
