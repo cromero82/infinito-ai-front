@@ -21,6 +21,14 @@
           [class.panel-item--ambigua]="item.estado === 'AMBIGUA'">
           <div class="panel-item-main">
             <span class="panel-estado">
+              <span class="panel-metodo-icon-wrap">
+                <img
+                  class="panel-metodo-icon"
+                  src="/assets/img/icons/payments/qr-bancolombia.png"
+                  alt="QR Bancolombia"
+                  width="28"
+                  height="28" />
+              </span>
               @if (item.estado === 'CREADA') {
                 Esperando
               } @else if (item.estado === 'CONFIRMADA') {
