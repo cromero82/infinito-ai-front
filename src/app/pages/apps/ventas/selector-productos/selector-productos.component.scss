@@ -171,6 +171,21 @@
   tr.mat-mdc-row {
     height: auto !important;
     min-height: 34px !important;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+
+    /* Misma zebra / hover que detalle-ticket (productos del ticket) */
+    &:nth-child(even) {
+      background-color: rgba(0, 0, 0, 0.005) !important;
+    }
+
+    &:nth-child(odd) {
+      background-color: transparent !important;
+    }
+
+    &:hover {
+      background-color: var(--pos-mat-table-row-hover) !important;
+    }
   }
 
   th.mat-mdc-header-cell,
@@ -209,8 +224,19 @@
   border-left: 3px solid #3f51b5;
 }
 
-:host ::ng-deep .product-table tr.mat-mdc-row.selector-product-row-selected:hover {
+:host ::ng-deep
+  .product-table
+  tr.mat-mdc-row.selector-product-row-selected:hover {
   background-color: rgba(63, 81, 181, 0.18) !important;
+}
+
+:host ::ng-deep
+  .product-table
+  tr.mat-mdc-row.selector-product-row-selected:nth-child(even),
+:host ::ng-deep
+  .product-table
+  tr.mat-mdc-row.selector-product-row-selected:nth-child(odd) {
+  background-color: rgba(63, 81, 181, 0.12) !important;
 }
 
 .product-table th {

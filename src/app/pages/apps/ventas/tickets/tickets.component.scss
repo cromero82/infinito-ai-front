@@ -278,7 +278,7 @@ vex-page-layout-header .container {
   box-sizing: border-box;
 }
 
-.tickets-card--dos-lineas .tabs-line {
+.tickets-card--dos-lineas .tabs-line-scroll {
   min-height: 0;
   /* Respiro interno para tabs / glow; el fondo sí llega al borde */
   padding: 3px 10px;
@@ -294,10 +294,8 @@ vex-page-layout-header .container {
   margin-top: 8px;
 }
 
-.tabs-line {
-  display: flex;
-  align-items: center;
-  gap: 0;
+.tabs-line-scroll {
+  display: block;
   width: 100%;
   min-height: 0;
   overflow-x: auto;
@@ -305,6 +303,7 @@ vex-page-layout-header .container {
   scrollbar-width: thin;
   /* Padding para que el glow de selección (como origen-card) no se recorte */
   padding: 4px 4px 5px;
+  box-sizing: border-box;
 
   &::-webkit-scrollbar {
     height: 4px;
@@ -314,6 +313,16 @@ vex-page-layout-header .container {
     background: rgba(0, 0, 0, 0.18);
     border-radius: 4px;
   }
+}
+
+/* Lista DnD: sin overflow propio (el scroll vive en .tabs-line-scroll) */
+.tabs-line-list {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  min-width: 100%;
+  width: max-content;
+  vertical-align: top;
 }
 
 .tabs-line--identificados {
@@ -385,7 +394,7 @@ vex-page-layout-header .container {
   appearance: none;
   border: none;
   background: transparent;
-  cursor: pointer;
+  cursor: grab;
   max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -398,6 +407,8 @@ vex-page-layout-header .container {
   padding: 4px 12px;
   color: rgba(0, 0, 0, 0.54);
   font-family: inherit;
+  user-select: none;
+  outline: none;
 }
 
 .tabs-two-lines .tab-close {
@@ -441,15 +452,29 @@ vex-page-layout-header .container {
   display: inline-flex;
   align-items: center;
   min-width: 80px;
-  height: 36px;
-  margin-right: 12px;
+  height: 28px;
+  margin-right: 6px;
   border: 2px dashed rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+  border-radius: 8px;
   background: rgba(0, 0, 0, 0.04);
 }
 
 :host ::ng-deep .tabs-two-lines .tab-item.cdk-drag {
   cursor: grab;
+}
+
+:host ::ng-deep .tabs-two-lines .tab-item.cdk-drag:active,
+:host ::ng-deep .tabs-two-lines .tab-item.cdk-drag-dragging {
+  cursor: grabbing;
+}
+
+:host ::ng-deep .tabs-two-lines .cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+:host ::ng-deep .tabs-two-lines .tabs-line-list.cdk-drop-list-dragging
+  .tab-item:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
 
 .ticket-tab-nav {

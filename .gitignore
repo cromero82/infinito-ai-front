@@ -24,6 +24,9 @@ speed-measure-plugin.json
 *.sublime-workspace
 dist/
 
+# Sandbox tester secrets (DBeaver)
+scripts/sandbox/credentials.tester.local
+
 
 # IDE - VSCode
 .vscode/*
@@ -49,6 +52,9 @@ testem.log
 Thumbs.db
 
 /ARCHIVE/*
+
+# Sandbox tester secrets (DBeaver)
+scripts/sandbox/credentials.tester.local
 
 # Documentación Cursor en .cursor/ (override: ~/.gitignore_global ignora *.md)
 !.cursor/

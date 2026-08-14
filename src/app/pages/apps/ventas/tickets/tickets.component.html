@@ -198,96 +198,120 @@
               <div #tabsTwoLines class="tabs-two-lines">
                 @if (ticketsIdentificados.length) {
                   <div
-                    class="tabs-line tabs-line--identificados"
-                    role="tablist"
-                    aria-label="Tickets con cliente identificado"
-                    cdkDropList
-                    cdkDropListOrientation="horizontal"
-                    [cdkDropListDisabled]="ticketTabsDisabled"
-                    (cdkDropListDropped)="
-                      onTicketDropInGroup($event, 'identificados')
-                    ">
-                    @for (t of ticketsIdentificados; track t.id) {
-                      <div
-                        class="tab-item ticket-con-cliente"
-                        [class.is-selected]="selectedIndex === ticketIndex(t)"
-                        cdkDrag
-                        [cdkDragStartDelay]="200">
-                        <button
-                          type="button"
-                          role="tab"
-                          class="tab-link"
-                          [attr.aria-selected]="
+                    class="tabs-line-scroll tabs-line--identificados"
+                    aria-label="Tickets con cliente identificado">
+                    <div
+                      class="tabs-line-list"
+                      role="tablist"
+                      cdkDropList
+                      cdkDropListOrientation="horizontal"
+                      [cdkDropListDisabled]="ticketTabsDisabled"
+                      (cdkDropListDropped)="
+                        onTicketDropInGroup($event, 'identificados')
+                      ">
+                      @for (t of ticketsIdentificados; track t.id) {
+                        <div
+                          class="tab-item ticket-con-cliente"
+                          [class.is-selected]="
                             selectedIndex === ticketIndex(t)
                           "
-                          (pointerdown)="
-                            onTicketTabPointerDown(ticketIndex(t), $event)
-                          "
-                          (click)="onTicketTabClick(ticketIndex(t), $event)"
-                          (dblclick)="editTicket(t, $event)">
-                          {{ getTicketLabel(t) }}
-                        </button>
-                        <button
-                          mat-icon-button
-                          type="button"
-                          class="tab-close"
-                          [disabled]="ticketTabsDisabled"
-                          (click)="deleteTicket(t, ticketIndex(t), $event)"
-                          (pointerdown)="$event.stopPropagation()">
-                          <mat-icon svgIcon="mat:close"></mat-icon>
-                        </button>
-                        <div
-                          class="tab-drag-placeholder"
-                          *cdkDragPlaceholder></div>
-                      </div>
-                    }
+                          cdkDrag
+                          [cdkDragDisabled]="ticketTabsDisabled"
+                          [cdkDragStartDelay]="150"
+                          cdkDragLockAxis="x">
+                          <span
+                            role="tab"
+                            tabindex="0"
+                            class="tab-link"
+                            [attr.aria-selected]="
+                              selectedIndex === ticketIndex(t)
+                            "
+                            (pointerdown)="
+                              onTicketTabPointerDown(ticketIndex(t), $event)
+                            "
+                            (click)="onTicketTabClick(ticketIndex(t), $event)"
+                            (keydown.enter)="selectTicket(ticketIndex(t))"
+                            (keydown.space)="
+                              $event.preventDefault();
+                              selectTicket(ticketIndex(t))
+                            "
+                            (dblclick)="editTicket(t, $event)">
+                            {{ getTicketLabel(t) }}
+                          </span>
+                          <button
+                            mat-icon-button
+                            type="button"
+                            class="tab-close"
+                            [disabled]="ticketTabsDisabled"
+                            (click)="deleteTicket(t, ticketIndex(t), $event)"
+                            (pointerdown)="$event.stopPropagation()">
+                            <mat-icon svgIcon="mat:close"></mat-icon>
+                          </button>
+                          <div
+                            class="tab-drag-placeholder"
+                            *cdkDragPlaceholder></div>
+                        </div>
+                      }
+                    </div>
                   </div>
                 }
                 @if (ticketsAnonimos.length) {
                   <div
-                    class="tabs-line tabs-line--anonimos"
-                    role="tablist"
-                    aria-label="Tickets anónimos"
-                    cdkDropList
-                    cdkDropListOrientation="horizontal"
-                    [cdkDropListDisabled]="ticketTabsDisabled"
-                    (cdkDropListDropped)="
-                      onTicketDropInGroup($event, 'anonimos')
-                    ">
-                    @for (t of ticketsAnonimos; track t.id) {
-                      <div
-                        class="tab-item"
-                        [class.is-selected]="selectedIndex === ticketIndex(t)"
-                        cdkDrag
-                        [cdkDragStartDelay]="200">
-                        <button
-                          type="button"
-                          role="tab"
-                          class="tab-link"
-                          [attr.aria-selected]="
+                    class="tabs-line-scroll tabs-line--anonimos"
+                    aria-label="Tickets anónimos">
+                    <div
+                      class="tabs-line-list"
+                      role="tablist"
+                      cdkDropList
+                      cdkDropListOrientation="horizontal"
+                      [cdkDropListDisabled]="ticketTabsDisabled"
+                      (cdkDropListDropped)="
+                        onTicketDropInGroup($event, 'anonimos')
+                      ">
+                      @for (t of ticketsAnonimos; track t.id) {
+                        <div
+                          class="tab-item"
+                          [class.is-selected]="
                             selectedIndex === ticketIndex(t)
                           "
-                          (pointerdown)="
-                            onTicketTabPointerDown(ticketIndex(t), $event)
-                          "
-                          (click)="onTicketTabClick(ticketIndex(t), $event)"
-                          (dblclick)="editTicket(t, $event)">
-                          {{ getTicketLabel(t) }}
-                        </button>
-                        <button
-                          mat-icon-button
-                          type="button"
-                          class="tab-close"
-                          [disabled]="ticketTabsDisabled"
-                          (click)="deleteTicket(t, ticketIndex(t), $event)"
-                          (pointerdown)="$event.stopPropagation()">
-                          <mat-icon svgIcon="mat:close"></mat-icon>
-                        </button>
-                        <div
-                          class="tab-drag-placeholder"
-                          *cdkDragPlaceholder></div>
-                      </div>
-                    }
+                          cdkDrag
+                          [cdkDragDisabled]="ticketTabsDisabled"
+                          [cdkDragStartDelay]="150"
+                          cdkDragLockAxis="x">
+                          <span
+                            role="tab"
+                            tabindex="0"
+                            class="tab-link"
+                            [attr.aria-selected]="
+                              selectedIndex === ticketIndex(t)
+                            "
+                            (pointerdown)="
+                              onTicketTabPointerDown(ticketIndex(t), $event)
+                            "
+                            (click)="onTicketTabClick(ticketIndex(t), $event)"
+                            (keydown.enter)="selectTicket(ticketIndex(t))"
+                            (keydown.space)="
+                              $event.preventDefault();
+                              selectTicket(ticketIndex(t))
+                            "
+                            (dblclick)="editTicket(t, $event)">
+                            {{ getTicketLabel(t) }}
+                          </span>
+                          <button
+                            mat-icon-button
+                            type="button"
+                            class="tab-close"
+                            [disabled]="ticketTabsDisabled"
+                            (click)="deleteTicket(t, ticketIndex(t), $event)"
+                            (pointerdown)="$event.stopPropagation()">
+                            <mat-icon svgIcon="mat:close"></mat-icon>
+                          </button>
+                          <div
+                            class="tab-drag-placeholder"
+                            *cdkDragPlaceholder></div>
+                        </div>
+                      }
+                    </div>
                   </div>
                 }
               </div>

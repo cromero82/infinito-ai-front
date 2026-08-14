@@ -77,4 +77,4 @@ Se reaplica en rAF + timeouts cortos por si el layout aún no midió anchos tras
 | `todo-en-linea` (default) | Una sola `mat-tab-nav-bar`. Botones Nuevo/Rápido/menú en el header (junto a “Buscar producto”). |
 | `2-lineas` | Sin MatTabNav: fila clientes identificados + fila anónimos; mismos botones en el header. Selección única vía `selectedIndex` / `.is-selected` |
 
-Cambiar desde menú **Más opciones → Estilo de tickets**.
+- Drag & drop: en `2-lineas` el scroll vive en `.tabs-line-scroll` y el `cdkDropList` en `.tabs-line-list` (sin overflow), reordenando solo dentro del grupo (`onTicketDropInGroup`).
