@@ -280,8 +280,8 @@ vex-page-layout-header .container {
 
 .tickets-card--dos-lineas .tabs-line-scroll {
   min-height: 0;
-  /* Respiro interno para tabs / glow; el fondo sí llega al borde */
-  padding: 3px 10px;
+  /* Más respiro arriba/abajo: el glow de selección no debe recortarse */
+  padding: 7px 10px 8px;
   border-radius: 0;
 }
 
@@ -291,7 +291,7 @@ vex-page-layout-header .container {
 }
 
 .tickets-card--dos-lineas .ticket-panel {
-  margin-top: 8px;
+  margin-top: 6px; /* antes 8px (−~20%) */
 }
 
 .tabs-line-scroll {
@@ -368,13 +368,25 @@ vex-page-layout-header .container {
   }
 
   &.is-selected {
-    background: var(--vex-background-card, #fff);
-    border-color: transparent;
+    /* Relieve 3D en blancos (eco del chip activo del toolbar, tonos claros) */
+    background: linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #f7f8fc 55%,
+      #eef0f6 100%
+    );
+    border-color: rgb(var(--vex-color-primary-400) / 0.42);
     transform: translateY(-1px);
     box-shadow:
-      0 0 0 2px rgb(var(--vex-color-primary-500) / 0.55),
-      0 4px 16px rgb(var(--vex-color-primary-500) / 0.4),
-      0 0 0 5px rgb(var(--vex-color-primary-400) / 0.18);
+      /* highlight superior (volumen) */
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      inset 0 -1px 0 rgba(15, 23, 42, 0.05),
+      /* anillo selección */
+      0 0 0 2px rgb(var(--vex-color-primary-500) / 0.5),
+      /* glow simétrico: arriba + abajo (antes solo caía hacia abajo) */
+      0 -3px 10px rgb(var(--vex-color-primary-500) / 0.28),
+      0 4px 14px rgb(var(--vex-color-primary-500) / 0.32),
+      0 0 0 5px rgb(var(--vex-color-primary-400) / 0.16);
 
     .tab-link {
       color: var(--mdc-theme-primary, #303f9f);
@@ -382,10 +394,19 @@ vex-page-layout-header .container {
     }
 
     &:hover {
+      background: linear-gradient(
+        180deg,
+        #ffffff 0%,
+        #f4f6fb 50%,
+        #e8ebf4 100%
+      );
       box-shadow:
-        0 0 0 2px rgb(var(--vex-color-primary-500) / 0.65),
-        0 6px 18px rgb(var(--vex-color-primary-500) / 0.48),
-        0 0 0 5px rgb(var(--vex-color-primary-400) / 0.22);
+        inset 0 1px 0 rgba(255, 255, 255, 1),
+        inset 0 -1px 0 rgba(15, 23, 42, 0.06),
+        0 0 0 2px rgb(var(--vex-color-primary-500) / 0.6),
+        0 -3px 12px rgb(var(--vex-color-primary-500) / 0.34),
+        0 5px 16px rgb(var(--vex-color-primary-500) / 0.38),
+        0 0 0 5px rgb(var(--vex-color-primary-400) / 0.2);
     }
   }
 }
@@ -481,6 +502,13 @@ vex-page-layout-header .container {
   flex: 1 1 auto;
   //max-width: 280px;
   width: 100%;
+  /* Todo en línea: Material 48px. Gap vertical −30% → ~39px (antes −40% / 36px). */
+  --mat-tab-container-height: 39px;
+}
+
+:host ::ng-deep .ticket-tab-nav .mat-mdc-tab-labels,
+:host ::ng-deep .ticket-tab-nav .mat-mdc-tab-links {
+  min-height: var(--mat-tab-container-height, 39px);
 }
 
 :host ::ng-deep .ticket-tab-nav .mat-mdc-tab-labels {
@@ -490,8 +518,29 @@ vex-page-layout-header .container {
 :host ::ng-deep .ticket-tab-nav .tab-item {
   display: inline-flex;
   align-items: center;
-  margin-right: 6px;
+  margin-right: 0;
   position: relative;
+}
+
+/* Indicador activo a todo el ancho del tab (label + botón cerrar) */
+:host ::ng-deep .ticket-tab-nav .tab-item:has(.mdc-tab--active)::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--mat-tab-active-indicator-height, 2px);
+  background: var(
+    --mat-tab-active-indicator-color,
+    rgb(var(--vex-color-primary-600))
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+:host ::ng-deep .ticket-tab-nav .tab-item:has(.mdc-tab--active) .mdc-tab-indicator {
+  /* Evita el ink-bar corto solo bajo el <a>; usamos el ::after del .tab-item */
+  display: none;
 }
 
 :host ::ng-deep .ticket-tab-nav .tab-item:hover .tab-close {
@@ -513,9 +562,9 @@ vex-page-layout-header .container {
 }
 
 :host ::ng-deep .ticket-tab-nav .tab-close {
-  width: 24px;
-  height: 24px;
-  margin-left: 4px;
+  width: 22px;
+  height: 22px;
+  margin-left: 2px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -553,9 +602,18 @@ vex-page-layout-header .container {
   white-space: nowrap;
   transition: color 0.2s ease;
   font-size: 13px;
-  padding-left: 12px;
-  padding-right: 12px;
+  height: var(--mat-tab-container-height, 39px);
+  min-height: var(--mat-tab-container-height, 39px);
+  /* Horizontal −30% respecto a 12px */
+  padding-left: 8px;
+  padding-right: 8px;
   min-width: auto;
+}
+
+:host ::ng-deep .ticket-tab-nav .mdc-tab {
+  padding-left: 8px;
+  padding-right: 8px;
+  min-width: 0;
 }
 
 // ─── Drag & Drop estilos ────────────────────────────────────────────
@@ -607,8 +665,8 @@ vex-page-layout-header .container {
 .toggle-clientes-btn {
   flex-shrink: 0;
   position: relative;
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -667,9 +725,20 @@ vex-page-layout-header .container {
   transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
               opacity 0.25s ease,
               margin-right 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-              padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+              padding 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              background 0.18s ease,
+              box-shadow 0.18s ease;
   max-width: 220px;
   overflow: hidden;
+  border-radius: 0;
+  border: none;
+  /* Mismo toque semi-dorado que .tabs-line--identificados (estilo 2 líneas) */
+  background: linear-gradient(
+    180deg,
+    rgba(212, 175, 55, 0.07) 0%,
+    rgba(245, 245, 245, 0.35) 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(212, 175, 55, 0.1);
 
   &.tab-collapsed {
     max-width: 0 !important;
@@ -678,6 +747,7 @@ vex-page-layout-header .container {
     padding-left: 0 !important;
     padding-right: 0 !important;
     pointer-events: none;
+    box-shadow: none;
   }
 }
 
@@ -819,7 +889,7 @@ vex-page-layout-header .container {
 }
 
 .ticket-panel {
-  margin-top: 16px;
+  margin-top: 13px; /* antes 16px (−~20% entre tabs y productos) */
   margin-bottom: 0;
   padding-bottom: 0;
   display: flex;

@@ -10,6 +10,8 @@
 
 .toolbar {
   height: var(--vex-toolbar-height);
+  min-height: var(--vex-toolbar-height);
+  padding-block: 0;
 }
 
 a {

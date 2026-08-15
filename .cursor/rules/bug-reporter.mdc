@@ -52,7 +52,8 @@ El servicio `ReporteFrontendService` inyecta `BugReporterService`. Cuando el `fe
 
 1. Al navegar, el interceptor captura requests al backend (filtra assets estáticos).
 2. Clic en **Monitor** → menú: **Ver detalle**, **Copiar al portapapeles**, **Limpiar**.
-3. No hay opción “Exportar JSON (para Cursor AI)” ni `downloadJson()`.
+3. Visible solo si `configuracion-app` tiene `monitor-bug=true` (se guarda en localStorage al login).
+4. Sin opción “Exportar JSON (para Cursor AI)” ni `downloadJson()`.
 
 ## Límites conocidos
 

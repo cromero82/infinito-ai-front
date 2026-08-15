@@ -8,6 +8,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { BugReporterService } from './bug-reporter.service';
 import { BugReporterDialogAttachService } from './bug-reporter-dialog-attach.service';
 import { openBugReporterDetail } from './bug-reporter-open.util';
+import { isMonitorBugEnabled } from './bug-reporter.labels';
 import { AsyncPipe } from '@angular/common';
 import { Observable } from 'rxjs';
 
@@ -29,6 +30,9 @@ export class BugReporterButtonComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly dialogAttach = inject(BugReporterDialogAttachService);
 
+  /** Controlado por configuracion-app `monitor-bug` (localStorage). */
+  readonly enabled = isMonitorBugEnabled();
+
   count$: Observable<number>;
 
   constructor() {
@@ -41,6 +45,9 @@ export class BugReporterButtonComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    if (!this.enabled) {
+      return;
+    }
     this.dialogAttach.start();
   }
 

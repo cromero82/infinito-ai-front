@@ -22,9 +22,17 @@ export class ConfigurationService {
   obtenerTodasConfiguraciones(): Observable<ConfigurationItem[]> {
     return this.http.get<ConfigurationItem[]>(`${this.apiUrl}/obtenerTodos`).pipe(
       map(configuraciones => {
+        let monitorBugSeen = false;
         for (const config of configuraciones) {
           if (config.key === 'longitud-vertical-panel-productos' && config.value) {
             localStorage.setItem('longitud-vertical-panel-productos', config.value);
+          }
+          if (config.key === 'monitor-bug') {
+            monitorBugSeen = true;
+            localStorage.setItem(
+              'monitor-bug',
+              parseMonitorBugEnabled(config.value) ? 'true' : 'false'
+            );
           }
           if (config.key === 'alerta-precios' && config.value) {
             try {
@@ -39,6 +47,9 @@ export class ConfigurationService {
               console.warn('Error al parsear alerta-precios:', e);
             }
           }
+        }
+        if (!monitorBugSeen) {
+          localStorage.setItem('monitor-bug', 'false');
         }
         return configuraciones;
       }),
@@ -67,6 +78,11 @@ export class ConfigurationService {
     return Number.isNaN(n) ? 80 : n;
   }
 
+  /** `monitor-bug=true` en configuracion-app → muestra el icono Monitor. */
+  isMonitorBugEnabled(): boolean {
+    return localStorage.getItem('monitor-bug') === 'true';
+  }
+
   actualizarPorKey(key: string, value: string): Observable<ConfigurationItem> {
     return this.http.put<ConfigurationItem>(`${this.apiUrl}/key/${key}`, { value }).pipe(
       catchError(error => {
@@ -74,5 +90,29 @@ export class ConfigurationService {
         return throwError(() => error);
       })
     );
+  }
+}
+
+/** Acepta `true` / `"true"` o JSON `{"mostrar":true}` (formato en BD). */
+function parseMonitorBugEnabled(raw: string | null | undefined): boolean {
+  if (raw == null) {
+    return false;
+  }
+  const trimmed = String(raw).trim();
+  if (!trimmed) {
+    return false;
+  }
+  const lower = trimmed.toLowerCase();
+  if (lower === 'true' || lower === '1' || lower === 'yes' || lower === 'si') {
+    return true;
+  }
+  if (lower === 'false' || lower === '0' || lower === 'no') {
+    return false;
+  }
+  try {
+    const parsed = JSON.parse(trimmed) as { mostrar?: unknown };
+    return parsed?.mostrar === true || parsed?.mostrar === 'true';
+  } catch {
+    return false;
   }
 }

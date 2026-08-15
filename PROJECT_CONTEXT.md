@@ -67,15 +67,23 @@ Resumen de decisiones ya codificadas en el repo. Al cambiar estos flujos, revisa
 - En **`tickets.component.html`**, el buscador usa **`(keydown.enter)`** (no `keyup.enter`): al confirmar con Enter dentro del modal **`selector-productos`**, el **keyup** puede reaplicarse al `#productSearchInput` bajo el overlay y disparar otra búsqueda o **reabrir el modal**. El manejador usa **`Event`** + comprobación de **`isComposing`** donde aplica.
 - En **`selector-productos.component.ts`**, al seleccionar con Enter se usa **`preventDefault`** y **`stopPropagation`** en el keydown del `#searchInput`.
 
+### Coordinador de foco POS (`TicketsPosFocusService`)
+
+- Análisis y plan: **`.cursor/rules/tickets-pos-focus-coordinator.md`**.
+- Servicio scoped en **`TicketsComponent`** (`providers: [TicketsPosFocusService]`): `hold` / `release` / `releaseQuiet`, `requestDefaultFocus`, `onFocusOut`, buffer de lectora vía `keydown` en documento.
+- **`focusProductSearch`** delega en **`posFocus.requestDefaultFocus`** (no añadir nuevos `setTimeout` de foco ad hoc).
+- Holds tipicos: `dialog:selector-productos`, `dialog:pago-efectivo`, `dialog:ticket-rapido`, `dialog:editar-tab`, `menu:opciones-recibo`, `edit:producto|unitario|cantidad`.
+- **`DetalleTicketComponent`** inyecta el servicio opcionalmente y declara holds al abrir diálogos / ediciones inline.
+
 ### Foco en `#productSearchInput` al cambiar de tab de ticket
 
-- **`TicketsComponent.focusProductSearch`**: doble **`requestAnimationFrame`**, intento de foco a **~100 ms**, y **reintento** si el foco activo no es el input (p. ej. **~320 ms** y otro intento a **+220 ms**), porque **`mat-tab-link`** a veces **vuelve a enfocar el tab** después del clic.
+- **`TicketsComponent.focusProductSearch`** → **`TicketsPosFocusService.requestDefaultFocus`** (rAF + intento corto + 1 reintento ~180 ms). Evitar reintroducir la cadena antigua 100/320/+220 ms.
 - **`fetchReciboForTicket`** admite un flag **`scheduleSearchFocusAfterApply`**: cuando el cambio de ticket viene de **`selectTicket`**, tras aplicar **`currentReciboId`** en el siguiente tick se programa otra pasada de **`focusProductSearch(false)`** para alinear foco con el recibo ya enlazado.
 
 ### Doble clic en tab → `EditarTabTicketComponent`
 
 - Un doble clic genera **dos `click`** y luego **`dblclick`**. El segundo `click` tiene **`MouseEvent.detail === 2`**: en **`onTicketTabClick`** solo se llama **`focusProductSearch(false)`** cuando **`detail === 1`**, para no encolar dos ráfagas de foco.
-- Al abrir el modal de edición de tab se activa **`suppressProductSearchFocusUntil`** (~1,2 s) para que los **`setTimeout`** ya programados por el primer clic **no roben el foco al `MatDialog`**; se limpia en **`afterClosed`**.
+- Al abrir el modal de edición de tab: **`posFocus.suppressFor(1200)`** + **`hold('dialog:editar-tab')`**; en **`afterClosed`**: `clearSuppress` + `release`.
 - El diálogo de editar tab usa **`autoFocus: true`** para que el primer control del modal (p. ej. cliente) pueda recibir foco una vez suprimida la competencia del buscador.
 
 ### Histórico de acciones en fila (`toggleHistoricoAcciones`)
@@ -87,19 +95,20 @@ Resumen de decisiones ya codificadas en el repo. Al cambiar estos flujos, revisa
 
 - **Debounce búsqueda producto (ticket / recibo)**: **400 ms** en `productSearchCtrl.valueChanges` dentro de **`detalle-ticket.component.ts`**. Es el tiempo de espera **después de que el usuario deja de escribir** antes de disparar la preview; no debe acortarse sin probar lectores de código de barras y tipeo rápido por nombre.
 - **Debounce del modal `selector-productos`**: **400 ms** sobre **`searchCtrl`** en **`selector-productos.component.ts`** — es independiente del debounce del ticket; alimenta la tabla del modal una vez abierto.
-- **Foco tras tab / Material**: reintentos en el orden de **100 ms → ~320 ms → +220 ms** (no son debounce de escritura; son **compensación de carrera** con el foco del navegador y **`mat-tab-link`**).
-- **Supresión de foco al buscador** al abrir editar tab por doble clic: ventana del orden de **1200 ms** (`suppressProductSearchFocusUntil` en **`tickets.component.ts`**).
+- **Foco tras tab / Material**: reintentos coordinados en **`TicketsPosFocusService`** (~40 ms + reintento ~180 ms). Evitar reintroducir la cadena antigua 100/320/+220 ms.
+- **Supresión de foco al buscador** al abrir editar tab por doble clic: **`suppressFor(1200)`** + hold del diálogo.
 - **`toggleHistoricoAcciones`**: **`setTimeout(..., 0)`** solo para ejecutar el **`focusSearchInputRequest`** después del foco nativo del botón, no como debounce de entrada.
 
 ### Mapa rápido de código (ventas)
 
 | Tema | Archivo(s) |
 |------|------------|
-| Input `#productSearchInput`, tabs, `focusProductSearch`, `onTicketTabClick`, supresión de foco, `fetchReciboForTicket(..., scheduleSearchFocusAfterApply)` | `src/app/pages/apps/ventas/tickets/tickets.component.ts`, `tickets.component.html` |
-| `productSearchCtrl`, `performProductSearch`, apertura `SelectorProductos`, `openSelectorProductosDialog`, `focusSearchInputRequest`, `toggleHistoricoAcciones` | `src/app/pages/apps/ventas/detalle-ticket/detalle-ticket.component.ts`, `detalle-ticket.component.html` |
+| Coordinador foco POS (holds, restore, barcode buffer) | `src/app/pages/apps/ventas/tickets/tickets-pos-focus.service.ts`, `.cursor/rules/tickets-pos-focus-coordinator.md` |
+| Input `#productSearchInput`, tabs, `focusProductSearch`, `onTicketTabClick`, `fetchReciboForTicket(..., scheduleSearchFocusAfterApply)` | `src/app/pages/apps/ventas/tickets/tickets.component.ts`, `tickets.component.html` |
+| `productSearchCtrl`, `performProductSearch`, apertura `SelectorProductos`, `openSelectorProductosDialog`, `focusSearchInputRequest`, `toggleHistoricoAcciones`, holds de edición/pago | `src/app/pages/apps/ventas/detalle-ticket/detalle-ticket.component.ts`, `detalle-ticket.component.html` |
 | Modal lista de productos, `#searchInput`, Enter / flechas | `src/app/pages/apps/ventas/selector-productos/selector-productos.component.ts`, `selector-productos.component.html` |
 | Modal doble clic en tab (cliente / nombre ticket) | `src/app/pages/apps/ventas/editar-tab-ticket/editar-tab-ticket.component.html` (+ `.ts`) |
 
-**Regla práctica para nuevas IAs:** si el síntoma es “se pierde texto”, “se abre el modal dos veces” o “el foco no vuelve al buscador”, revisar primero la tabla anterior antes de introducir nuevos `setTimeout` globales; muchas interacciones ya delegan en **`focusSearchInputRequest`** o en **`focusProductSearch`**.
+**Regla práctica para nuevas IAs:** si el síntoma es “se pierde texto”, “se abre el modal dos veces” o “el foco no vuelve al buscador”, revisar primero **`tickets-pos-focus-coordinator.md`** y la tabla anterior; preferir **`hold` / `release` / `requestDefaultFocus`** antes de introducir nuevos `setTimeout` de foco.
 
 Seguridad. La actual web app tiene un interceptor que agrega el tocken en cada peticion, por lo que cuando se vayan a realizar nuevos endpoint no es necesario agregar el tocken manualmente.

@@ -1,26 +1,28 @@
-<div class="bug-reporter-fab">
-  <button
-    mat-mini-fab
-    color="primary"
-    [matBadge]="count$ | async"
-    matBadgeColor="warn"
-    matBadgeSize="small"
-    [matMenuTriggerFor]="menu"
-    aria-label="Monitor">
-    <mat-icon svgIcon="mat:monitor"></mat-icon>
-  </button>
-  <mat-menu #menu="matMenu">
-    <button mat-menu-item (click)="verDetalle()">
-      <mat-icon svgIcon="mat:table_chart"></mat-icon>
-      <span>Ver detalle</span>
+@if (enabled) {
+  <div class="bug-reporter-fab">
+    <button
+      mat-mini-fab
+      color="primary"
+      [matBadge]="count$ | async"
+      matBadgeColor="warn"
+      matBadgeSize="small"
+      [matMenuTriggerFor]="menu"
+      aria-label="Monitor">
+      <mat-icon svgIcon="mat:monitor"></mat-icon>
     </button>
-    <button mat-menu-item (click)="copiarAlPortapapeles()">
-      <mat-icon svgIcon="mat:content_copy"></mat-icon>
-      <span>Copiar al portapapeles</span>
-    </button>
-    <button mat-menu-item (click)="limpiar()">
-      <mat-icon svgIcon="mat:delete_sweep"></mat-icon>
-      <span>Limpiar</span>
-    </button>
-  </mat-menu>
-</div>
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item (click)="verDetalle()">
+        <mat-icon svgIcon="mat:table_chart"></mat-icon>
+        <span>Ver detalle</span>
+      </button>
+      <button mat-menu-item (click)="copiarAlPortapapeles()">
+        <mat-icon svgIcon="mat:content_copy"></mat-icon>
+        <span>Copiar al portapapeles</span>
+      </button>
+      <button mat-menu-item (click)="limpiar()">
+        <mat-icon svgIcon="mat:delete_sweep"></mat-icon>
+        <span>Limpiar</span>
+      </button>
+    </mat-menu>
+  </div>
+}

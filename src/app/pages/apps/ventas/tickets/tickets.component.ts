@@ -9,7 +9,8 @@ import {
   ChangeDetectorRef,
   ChangeDetectionStrategy,
   ApplicationRef,
-  inject
+  inject,
+  HostListener
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatTabsModule, MatTabNav } from '@angular/material/tabs';
@@ -70,6 +71,7 @@ import {
 } from '../imprimir-recibo-preference.constants';
 import { FrontendActivityBufferService } from '../../../../core/monitoring/frontend-activity-buffer.service';
 import { sanitizeActividadTexto } from '../../../../core/monitoring/frontend-ui-activity.util';
+import { TicketsPosFocusService } from './tickets-pos-focus.service';
 const LAST_TICKET_ID_KEY = 'last-ticket-id';
 const FORCED_SELECTION_TICKET_ID_KEY = 'forced-selection-ticket-id';
 /** Preferencia de layout de tabs de tickets (localStorage). */
@@ -100,7 +102,8 @@ export type EstiloTicketsTabs = 'todo-en-linea' | '2-lineas';
     ConfirmacionPagosPanelComponent
   ],
   templateUrl: './tickets.component.html',
-  styleUrls: ['./tickets.component.scss']
+  styleUrls: ['./tickets.component.scss'],
+  providers: [TicketsPosFocusService]
 })
 export class TicketsComponent
   implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy
@@ -162,7 +165,7 @@ export class TicketsComponent
    * `2-lineas` (clientes arriba / anónimos abajo; botones junto al buscador).
    * Persistido en localStorage (`preferencias-estilo-tickets`).
    */
-  estiloTickets: EstiloTicketsTabs = 'todo-en-linea';
+  estiloTickets: EstiloTicketsTabs = '2-lineas';
 
   /** Último ticketId sobre el cual el usuario hizo clic (persistido en localStorage para evitar llamadas HTTP redundantes). */
   private lastFetchedTicketId: number | null = null;
@@ -174,8 +177,19 @@ export class TicketsComponent
   /**
    * Tras doble clic en un tab se abre EditarTabTicket; los click previos ya
    * programaron focusProductSearch — se suprime el foco al buscador hasta esta marca.
+   * @deprecated Preferir TicketsPosFocusService.suppressFor / hold.
    */
-  private suppressProductSearchFocusUntil = 0;
+  private get suppressProductSearchFocusUntil(): number {
+    return 0;
+  }
+  private set suppressProductSearchFocusUntil(value: number) {
+    const ms = Math.max(0, value - Date.now());
+    if (ms > 0) {
+      this.posFocus.suppressFor(ms);
+    } else {
+      this.posFocus.clearSuppress();
+    }
+  }
 
   /** Cantidad de productos movidos acumulados por ticket dividido. */
   private splitTicketProductCounts: Record<number, number> = {};
@@ -184,6 +198,7 @@ export class TicketsComponent
   private splitCommentsByTicketId: Record<number, number> = {};
 
   private readonly actividadUi = inject(FrontendActivityBufferService);
+  private readonly posFocus = inject(TicketsPosFocusService);
 
   constructor(
     private ticketsService: TicketsService,
@@ -242,7 +257,7 @@ export class TicketsComponent
 
   private getEstiloTicketsFromStorage(): EstiloTicketsTabs {
     const v = localStorage.getItem(ESTILO_TICKETS_KEY);
-    return v === '2-lineas' ? '2-lineas' : 'todo-en-linea';
+    return v === 'todo-en-linea' ? 'todo-en-linea' : '2-lineas';
   }
 
   get isEstiloDosLineas(): boolean {
@@ -316,6 +331,7 @@ export class TicketsComponent
   }
 
   ngAfterViewInit(): void {
+    this.initPosFocus();
     this.focusProductSearch(false);
     this.disableBrokenMatTabScrollToLabel();
   }
@@ -339,6 +355,7 @@ export class TicketsComponent
         if (el) {
           this.searchInputEl = el;
           this.searchInputElScheduled = true;
+          this.syncPosFocusInput();
           this.cdr.detectChanges();
         }
         this.reciboForSearch = this.reciboComponent || null;
@@ -349,10 +366,14 @@ export class TicketsComponent
           this.focusProductSearch(false);
         }, 100);
       }, 0);
+    } else {
+      this.syncPosFocusInput();
     }
   }
 
   ngOnDestroy(): void {
+    this.enabledPosFocusListeners = false;
+    this.posFocus.disable();
     this.recentPrintedRecibosSubscription?.unsubscribe();
     for (const t of this.scrollIntoViewTimers) {
       clearTimeout(t);
@@ -401,37 +422,51 @@ export class TicketsComponent
   }
 
   /**
-   * Enfoca #productSearchInput. Usa doble requestAnimationFrame + reintentos
-   * porque mat-tab-nav suele devolver el foco al tab activo unos ms después
-   * del clic, y al cambiar de ticket el reciboId se aplica en un tick distinto.
+   * Enfoca #productSearchInput vía TicketsPosFocusService (holds + restore unificado).
+   * @see `.cursor/rules/tickets-pos-focus-coordinator.md`
    */
   focusProductSearch(select: boolean = true): void {
-    const applyFocus = (): boolean => {
-      if (Date.now() < this.suppressProductSearchFocusUntil) {
-        return false;
-      }
-      const input = this.productSearchInput?.nativeElement;
-      if (!input) {
-        return false;
-      }
-      input.focus({ preventScroll: true });
-      if (select) {
-        input.select();
-      }
-      return document.activeElement === input;
-    };
+    this.syncPosFocusInput();
+    this.posFocus.requestDefaultFocus({ select });
+  }
 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          applyFocus();
-        }, 100);
-        setTimeout(() => {
-          if (!applyFocus()) {
-            setTimeout(() => applyFocus(), 220);
-          }
-        }, 320);
+  @HostListener('document:focusout', ['$event'])
+  onDocumentFocusOut(event: FocusEvent): void {
+    if (!this.enabledPosFocusListeners) {
+      return;
+    }
+    this.posFocus.onFocusOut(event.relatedTarget);
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onDocumentKeydown(event: KeyboardEvent): void {
+    if (!this.enabledPosFocusListeners) {
+      return;
+    }
+    if (this.posFocus.handlePossibleBarcodeKeydown(event)) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }
+
+  private enabledPosFocusListeners = false;
+
+  private syncPosFocusInput(): void {
+    this.posFocus.attachInput(this.productSearchInput?.nativeElement);
+  }
+
+  private initPosFocus(): void {
+    this.syncPosFocusInput();
+    this.posFocus.enable();
+    this.enabledPosFocusListeners = true;
+    this.posFocus.setBarcodeCommitHandler((text) => {
+      if (!this.reciboComponent) {
+        return;
+      }
+      this.reciboComponent.productSearchCtrl.setValue(text, {
+        emitEvent: false
       });
+      this.reciboComponent.searchAndAddProduct();
     });
   }
 
@@ -914,15 +949,20 @@ export class TicketsComponent
     });
   }
 
-  openQuickRecibo(): void {
-    // Verificar si el input de búsqueda ya tiene el foco antes de abrir el diálogo
-    const searchInput = this.productSearchInput?.nativeElement;
-    const hadFocus = searchInput && document.activeElement === searchInput;
+  onOpcionesMenuOpened(): void {
+    this.posFocus.hold('menu:opciones-recibo');
+  }
 
+  onOpcionesMenuClosed(): void {
+    this.posFocus.release('menu:opciones-recibo');
+  }
+
+  openQuickRecibo(): void {
     if (this.sessionId === null) {
       return;
     }
     this.actividadUi.record('despliega modal: ticket-rapido');
+    this.posFocus.hold('dialog:ticket-rapido');
     const dialogRef = this.dialog.open<
       TicketRapidoComponent,
       TicketRapidoData,
@@ -934,32 +974,23 @@ export class TicketsComponent
     });
 
     dialogRef.afterClosed().subscribe((result) => {
+      this.posFocus.release('dialog:ticket-rapido');
       if (result) {
         this.confirmacionPagosPanel?.revisarPendientes();
-      }
-
-      // Restaurar el foco si lo tenía antes
-      if (hadFocus) {
-        setTimeout(() => {
-          this.focusProductSearch(false);
-        }, 100);
       }
     });
   }
 
   editTicket(ticket: TicketDto, event: MouseEvent): void {
     event.stopPropagation();
-    // Verificar si el input de búsqueda ya tiene el foco antes de editar el ticket
-    const searchInput = this.productSearchInput?.nativeElement;
-    const hadFocus = searchInput && document.activeElement === searchInput;
 
     if (this.ticketTabsBusy) {
       return;
     }
 
-    // Evitar que los focusProductSearch ya programados por los click del doble clic
-    // quiten el foco al modal (MatDialog con autoFocus: false).
-    this.suppressProductSearchFocusUntil = Date.now() + 1200;
+    // Evitar que restores pendientes roben el foco al modal.
+    this.posFocus.suppressFor(1200);
+    this.posFocus.hold('dialog:editar-tab');
 
     this.actividadUi.record(
       `despliega modal: editar-tab-ticket (ticket: ${ticket.id}, ${sanitizeActividadTexto(ticket.nombre ?? '', 60)})`
@@ -975,20 +1006,14 @@ export class TicketsComponent
         ticketsSesion: this.tickets,
         tieneProductos: (this.reciboComponent?.detalles?.length ?? 0) > 0
       },
-      // Con supresión del foco en #productSearchInput, el primer control del modal puede enfocarse.
       autoFocus: true
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      this.suppressProductSearchFocusUntil = 0;
+      this.posFocus.clearSuppress();
+      this.posFocus.release('dialog:editar-tab');
 
-      void this.handleEditarTabTicketResult(result).finally(() => {
-        if (hadFocus) {
-          setTimeout(() => {
-            this.focusProductSearch(false);
-          }, 100);
-        }
-      });
+      void this.handleEditarTabTicketResult(result);
     });
   }
 
@@ -1106,6 +1131,7 @@ export class TicketsComponent
     }
 
     if (event.previousIndex === event.currentIndex) {
+      this.focusProductSearch(false);
       return;
     }
 
@@ -1123,6 +1149,7 @@ export class TicketsComponent
     }
 
     this.persistTicketsOrder();
+    this.focusProductSearch(false);
   }
 
   /**
@@ -1137,6 +1164,7 @@ export class TicketsComponent
       return;
     }
     if (event.previousIndex === event.currentIndex) {
+      this.focusProductSearch(false);
       return;
     }
 
@@ -1158,6 +1186,7 @@ export class TicketsComponent
     }
 
     this.persistTicketsOrder();
+    this.focusProductSearch(false);
   }
 
   private persistTicketsOrder(): void {

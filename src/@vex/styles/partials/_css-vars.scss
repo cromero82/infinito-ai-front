@@ -16,8 +16,9 @@ body {
   --vex-sidenav-item-icon-size: theme("space.6");
   --vex-sidenav-item-dropdown-gap: theme("space.3");
 
-  // Toolbar
-  --vex-toolbar-height: 64px;
+  // Toolbar — compacto al alto del chip de nav (p. ej. Financiero).
+  // Antes 64px; ~70% del aire liberado pasa al contenido vía calc del layout.
+  --vex-toolbar-height: 44px;
 
   // Secondary Toolbar
   --vex-secondary-toolbar-height: 54px;

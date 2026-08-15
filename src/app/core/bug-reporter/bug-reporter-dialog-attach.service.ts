@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { BugReporterInDialogComponent } from './bug-reporter-in-dialog.component';
+import { isMonitorBugEnabled } from './bug-reporter.labels';
 
 /**
  * Inyecta el botón Bug a la izquierda de las acciones de cada MatDialog.
@@ -20,7 +21,7 @@ export class BugReporterDialogAttachService {
   private started = false;
 
   start(): void {
-    if (this.started) {
+    if (this.started || !isMonitorBugEnabled()) {
       return;
     }
     this.started = true;
@@ -33,6 +34,9 @@ export class BugReporterDialogAttachService {
     dialogRef: MatDialogRef<unknown>,
     attempt: number
   ): void {
+    if (!isMonitorBugEnabled()) {
+      return;
+    }
     // Evitar Monitor dentro del propio modal de detalle del Monitor.
     if (
       document.querySelector(

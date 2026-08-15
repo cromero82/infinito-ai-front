@@ -99,7 +99,9 @@
               [matMenuTriggerFor]="opcionesReciboMenu"
               [disabled]="headerActionsDisabled"
               [matTooltip]="'Mas opciones de este ticket'"
-              matTooltipPosition="above">
+              matTooltipPosition="above"
+              (menuOpened)="onOpcionesMenuOpened()"
+              (menuClosed)="onOpcionesMenuClosed()">
               <mat-icon
                 class="header-action-icon icon-sm"
                 svgIcon="mat:more_vert"></mat-icon>
@@ -380,6 +382,14 @@
           xPosition="after"
           yPosition="below"
           class="estilo-tabs-menu">
+          <button mat-menu-item (click)="setEstiloTickets('2-lineas')">
+            <mat-icon
+              svgIcon="mat:check"
+              [style.visibility]="
+                isEstiloDosLineas ? 'visible' : 'hidden'
+              "></mat-icon>
+            <span>2 líneas</span>
+          </button>
           <button mat-menu-item (click)="setEstiloTickets('todo-en-linea')">
             <!-- visibility inline: el menú vive en overlay CDK, fuera de :host -->
             <mat-icon
@@ -388,14 +398,6 @@
                 isEstiloTodoEnLinea ? 'visible' : 'hidden'
               "></mat-icon>
             <span>Todo en línea</span>
-          </button>
-          <button mat-menu-item (click)="setEstiloTickets('2-lineas')">
-            <mat-icon
-              svgIcon="mat:check"
-              [style.visibility]="
-                isEstiloDosLineas ? 'visible' : 'hidden'
-              "></mat-icon>
-            <span>2 líneas</span>
           </button>
         </mat-menu>
         <mat-menu

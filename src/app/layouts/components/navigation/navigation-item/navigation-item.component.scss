@@ -5,9 +5,11 @@
   align-items: stretch;
   padding: 0;
   overflow: hidden;
+  line-height: 1.25;
 
-  &:not(.navigation-item--with-shortcuts) {
-    @apply px-4 py-2;
+  /* Misma altura que el chip activo (Financiero): sin py extra en el contenedor. */
+  &:not(:has(.navigation-item__label)) {
+    padding: 0.5rem 1rem;
   }
 }
 
@@ -23,6 +25,8 @@
 .navigation-item--with-shortcuts {
   .navigation-item__label {
     padding-right: 0.35rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
   }
 }
 

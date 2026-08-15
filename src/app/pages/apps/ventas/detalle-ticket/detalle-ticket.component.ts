@@ -95,6 +95,7 @@ import { EdicionTicketComponent } from '../edicion-ticket/edicion-ticket.compone
 import { MetodosPagoComponent } from '../metodos-pago/metodos-pago.component';
 import { FrontendActivityBufferService } from '../../../../core/monitoring/frontend-activity-buffer.service';
 import { sanitizeActividadTexto } from '../../../../core/monitoring/frontend-ui-activity.util';
+import { TicketsPosFocusService } from '../tickets/tickets-pos-focus.service';
 import { FooterService } from '../../../../layouts/services/footer.service';
 import { resolveProductSearchTerm } from '../util/barcode-scan.util';
 
@@ -222,6 +223,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     null;
 
   private readonly actividadUi = inject(FrontendActivityBufferService);
+  /** Presente cuando DetalleTicket vive bajo TicketsComponent (providers). */
+  private readonly posFocus = inject(TicketsPosFocusService, { optional: true });
 
   constructor(
     private reciboService: ReciboService,
@@ -1218,6 +1221,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     this.dialogAbierto = true;
+    this.posFocus?.hold('dialog:selector-productos');
     const termLog = sanitizeActividadTexto(term, 120);
     this.actividadUi.record(
       `despliega modal: selector-productos (#productSearchInput, búsqueda: "${termLog}")`
@@ -1238,6 +1242,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       this.searchingProduct = false;
       this.showCreateProductFromSearchButton = false;
       this.updateSearchDisabled();
+      this.posFocus?.releaseQuiet('dialog:selector-productos');
       if (selected) {
         // Limpia de inmediato para que un keyup tardío u otra acción no relance
         // búsqueda con el mismo término mientras createDetalle sigue en curso.
@@ -1889,6 +1894,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
     // Default: edit cantidad
     this.startingEdit = true;
+    this.posFocus?.hold('edit:cantidad');
     this.editingDetalleIndex = index;
     this.editingCantidadCtrl.setValue(String(detalle.cantidad ?? 1));
     // Focus the input after a short delay to ensure it's rendered
@@ -1923,6 +1929,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     // Activar bandera de doble click
     this.isDoubleClickActive = true;
     this.startingEdit = true;
+    this.posFocus?.hold('edit:unitario');
 
     const currentPrecio = this.getDetalleUnitario(detalle);
     this.editingUnitarioIndex = index;
@@ -2033,6 +2040,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     // Clear editing state immediately to return to normal display
     this.editingDetalleIndex = -1;
     this.editingCantidadCtrl.setValue('');
+    this.posFocus?.release('edit:cantidad');
 
     const updatedList = [...this.detalles];
     updatedList[index] = optimisticDetalle;
@@ -2112,6 +2120,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   cancelCantidadEdit(): void {
     this.editingDetalleIndex = -1;
     this.editingCantidadCtrl.setValue('');
+    this.posFocus?.release('edit:cantidad');
   }
 
   onUnitarioInputKeydown(event: Event, index: number): void {
@@ -2176,6 +2185,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     // Clear editing state immediately
     this.editingUnitarioIndex = -1;
     this.editingUnitarioCtrl.setValue('');
+    this.posFocus?.release('edit:unitario');
 
     // Update product via RelationalProductService
     const productUpdate: Producto = {
@@ -2316,6 +2326,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   cancelUnitarioEdit(): void {
     this.editingUnitarioIndex = -1;
     this.editingUnitarioCtrl.setValue('');
+    this.posFocus?.release('edit:unitario');
   }
 
   onProductoDoubleClick(index: number, event: MouseEvent): void {
@@ -2335,6 +2346,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.isDoubleClickActive = true;
     this.blockFocusRequest = true;
     this.startingEdit = true;
+    this.posFocus?.hold('edit:producto');
 
     this.editingProductoIndex = index;
     this.editingProductoCtrl.setValue(detalle.producto.nombre);
@@ -2372,6 +2384,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     // Activar bandera de doble click
     this.isDoubleClickActive = true;
     this.startingEdit = true;
+    this.posFocus?.hold('edit:cantidad');
 
     this.editingDetalleIndex = index;
     this.editingCantidadCtrl.setValue(String(detalle.cantidad ?? 1));
@@ -2455,6 +2468,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     // Clear editing state immediately
     this.editingProductoIndex = -1;
     this.editingProductoCtrl.setValue('');
+    this.posFocus?.release('edit:producto');
 
     // Update product via RelationalProductService
     const productUpdate: Producto = {
@@ -2496,6 +2510,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   cancelProductoEdit(): void {
     this.editingProductoIndex = -1;
     this.editingProductoCtrl.setValue('');
+    this.posFocus?.release('edit:producto');
   }
 
   deleteSelectedDetalle(): void {
@@ -2885,6 +2900,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       this.snapshotDetallesAntesDelPago();
       this.actualizandoMetodoPago = true;
       this.actividadUi.record('despliega modal: pago-efectivo-cambio (ejecutarPago)');
+      this.posFocus?.hold('dialog:pago-efectivo');
       const dialogRef = this.dialog.open<
         PagoEfectivoCambioComponent,
         PagoEfectivoCambioData,
@@ -2916,7 +2932,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         .afterClosed()
         .pipe(
           takeUntil(this.destroy$),
-          finalize(() => (this.actualizandoMetodoPago = false))
+          finalize(() => {
+            this.actualizandoMetodoPago = false;
+            this.posFocus?.releaseQuiet('dialog:pago-efectivo');
+          })
         )
         .subscribe((resultado) => {
           if (resultado) {
@@ -3111,6 +3130,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       this.actividadUi.record(
         'despliega modal: pago-efectivo-cambio (método pago desde edición ticket)'
       );
+      this.posFocus?.hold('dialog:pago-efectivo');
       const dialogRef = this.dialog.open<
         PagoEfectivoCambioComponent,
         PagoEfectivoCambioData,
@@ -3142,7 +3162,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         .afterClosed()
         .pipe(
           takeUntil(this.destroy$),
-          finalize(() => (this.actualizandoMetodoPago = false))
+          finalize(() => {
+            this.actualizandoMetodoPago = false;
+            this.posFocus?.releaseQuiet('dialog:pago-efectivo');
+          })
         )
         .subscribe((resultado) => {
           if (resultado) {
@@ -3430,6 +3453,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       this.actividadUi.record(
         'despliega modal: pago-efectivo-cambio (seleccionar método pago en barra)'
       );
+      this.posFocus?.hold('dialog:pago-efectivo');
       const dialogRef = this.dialog.open<
         PagoEfectivoCambioComponent,
         PagoEfectivoCambioData,
@@ -3461,7 +3485,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         .afterClosed()
         .pipe(
           takeUntil(this.destroy$),
-          finalize(() => (this.actualizandoMetodoPago = false))
+          finalize(() => {
+            this.actualizandoMetodoPago = false;
+            this.posFocus?.releaseQuiet('dialog:pago-efectivo');
+          })
         )
         .subscribe((resultado) => {
           if (resultado) {
