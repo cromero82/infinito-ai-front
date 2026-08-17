@@ -7,9 +7,14 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTableModule } from '@angular/material/table';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatMenuModule } from '@angular/material/menu';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../../../auth/service/auth.service';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData
+} from '../../../../../core/components/confirm-dialog/confirm-dialog.component';
 import { EstablecimientoService } from '../../../ventas/service/establecimiento.service';
 import { CorteVentaService } from '../../../ventas/service/corte-venta.service';
 import {
@@ -27,6 +32,7 @@ import {
 } from '../origen-movimiento-dialog/origen-movimiento-dialog.component';
 import { OrigenAjusteDialogComponent } from '../origen-ajuste-dialog/origen-ajuste-dialog.component';
 import { MovimientoReferenciaDialogComponent } from '../movimiento-referencia-dialog/movimiento-referencia-dialog.component';
+import { OrigenHijoDialogComponent } from '../origen-hijo-dialog/origen-hijo-dialog.component';
 import {
   agruparOrigenesArbol,
   OrigenFondosArbolItemDto,
@@ -51,7 +57,8 @@ import { FooterItemDto } from '../../../../../layouts/components/footer/footer.c
     MatSnackBarModule,
     MatTooltipModule,
     MatTableModule,
-    MatDialogModule
+    MatDialogModule,
+    MatMenuModule
   ],
   templateUrl: './origenes-list.component.html',
   styleUrl: './origenes-list.component.scss'
@@ -214,6 +221,100 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
   seleccionarCuenta(cuenta: OrigenFondosArbolItemDto): void {
     this.cuentaSeleccionada = cuenta;
     this.cargarMovimientos(cuenta.id);
+  }
+
+  /** Menú ⋮ en todas las cajas excepto «Caja: Efectivo». */
+  muestraMenuGestion(cuenta: OrigenFondosArbolItemDto): boolean {
+    if (!this.esAdmin || !cuenta?.nombre) {
+      return false;
+    }
+    const n = cuenta.nombre.trim().toLowerCase();
+    return n !== 'caja: efectivo' && n !== 'caja efectivo';
+  }
+
+  stopCardEvent(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
+  abrirCrearFondoHijo(cuenta: OrigenFondosArbolItemDto, event?: Event): void {
+    event?.stopPropagation();
+    if (!this.muestraMenuGestion(cuenta)) {
+      return;
+    }
+    // Solo raíces: el árbol UI agrupa un nivel de hijos (como Bancolombia - QR).
+    if (cuenta.parentOrigenFondosId != null && !cuenta.esRaiz) {
+      this.snackBar.open(
+        'Cree fondos hijos desde la caja padre (raíz).',
+        'Cerrar',
+        { duration: 4000 }
+      );
+      return;
+    }
+    const ref = this.dialog.open(OrigenHijoDialogComponent, {
+      width: '440px',
+      data: { parentId: cuenta.id, parentNombre: cuenta.nombre }
+    });
+    ref.afterClosed().subscribe((created) => {
+      if (created) {
+        this.gruposExpandidos.add(cuenta.id);
+        this.cargarCuentas(created.id);
+        this.snackBar.open('Fondo hijo creado', undefined, { duration: 2500 });
+      }
+    });
+  }
+
+  confirmarArchivar(cuenta: OrigenFondosArbolItemDto, event?: Event): void {
+    event?.stopPropagation();
+    if (!this.muestraMenuGestion(cuenta)) {
+      return;
+    }
+    const saldoLedger = cuenta.saldo ?? 0;
+    if (saldoLedger !== 0) {
+      this.snackBar.open(
+        `No se puede archivar «${cuenta.nombre}»: el saldo debe ser $0 (actual: ${saldoLedger}).`,
+        'Cerrar',
+        { duration: 6000 }
+      );
+      return;
+    }
+    const data: ConfirmDialogData = {
+      titulo: 'Confirmar archivación',
+      mensaje: `¿Archivar el origen de fondos <strong>${cuenta.nombre}</strong>?<br/><br/>Quedará con estado <strong>Archivado</strong> y dejará de mostrarse en el árbol. Solo es posible con saldo 0.`
+    };
+    this.dialog
+      .open(ConfirmDialogComponent, {
+        data,
+        width: '420px',
+        disableClose: true
+      })
+      .afterClosed()
+      .subscribe((ok) => {
+        if (!ok) {
+          return;
+        }
+        this.origenService.archivar(cuenta.id).subscribe({
+          next: () => {
+            if (this.cuentaSeleccionada?.id === cuenta.id) {
+              this.cuentaSeleccionada = null;
+              this.movimientos = [];
+            }
+            this.cargarCuentas();
+            this.snackBar.open(
+              `«${cuenta.nombre}» archivado`,
+              undefined,
+              { duration: 2500 }
+            );
+          },
+          error: (err) => {
+            const msg =
+              err?.error?.message ||
+              err?.error?.errores?.[0]?.descripcionError ||
+              'No se pudo archivar el origen.';
+            this.snackBar.open(msg, 'Cerrar', { duration: 7000 });
+          }
+        });
+      });
   }
 
   /** Origen arrastrado actualmente (drag & drop para traslados). */

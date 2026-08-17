@@ -98,6 +98,12 @@ import { sanitizeActividadTexto } from '../../../../core/monitoring/frontend-ui-
 import { TicketsPosFocusService } from '../tickets/tickets-pos-focus.service';
 import { FooterService } from '../../../../layouts/services/footer.service';
 import { resolveProductSearchTerm } from '../util/barcode-scan.util';
+import {
+  MoverDetalleCantidadDialogComponent,
+  MoverDetalleCantidadDialogData,
+  MoverDetalleCantidadDialogResult,
+  MoverDetalleCantidadLinea
+} from './mover-detalle-cantidad-dialog.component';
 
 const ESTADOS_RECIBO = {
   PENDIENTE_PAGO: 1,
@@ -1547,9 +1553,75 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.moveToExistingTicketRequested.emit(ticketId);
   }
 
+  /**
+   * Si alguna línea seleccionada tiene cantidad &gt; 1, pide cuántas mover.
+   * @returns mapa detalleId → cantidad a mover, o null si el usuario cancela.
+   */
+  async confirmMoveQuantitiesIfNeeded(
+    destinoLabel?: string
+  ): Promise<Map<number, number> | null> {
+    const detallesSeleccionados = this.selectedDetalleIndices
+      .map((index) => this.detalles[index])
+      .filter((detalle): detalle is ReciboDetalleDto => !!detalle);
+
+    if (!detallesSeleccionados.length) {
+      return null;
+    }
+
+    const lineasConCantidadMayorAUno = detallesSeleccionados.filter(
+      (d) => Number(d.cantidad ?? 0) > 1
+    );
+
+    const qtyMap = new Map<number, number>();
+    for (const d of detallesSeleccionados) {
+      qtyMap.set(d.id, Number(d.cantidad ?? 0));
+    }
+
+    if (!lineasConCantidadMayorAUno.length) {
+      return qtyMap;
+    }
+
+    const lineas: MoverDetalleCantidadLinea[] =
+      lineasConCantidadMayorAUno.map((d) => ({
+        detalleId: d.id,
+        productoNombre:
+          d.producto?.nombre?.trim() ||
+          `Producto ${d.productoId ?? d.id}`,
+        cantidadActual: Number(d.cantidad ?? 0),
+        cantidadMover: Number(d.cantidad ?? 0)
+      }));
+
+    this.posFocus?.hold('dialog:mover-cantidad');
+    const dialogRef = this.dialog.open<
+      MoverDetalleCantidadDialogComponent,
+      MoverDetalleCantidadDialogData,
+      MoverDetalleCantidadDialogResult | undefined
+    >(MoverDetalleCantidadDialogComponent, {
+      width: '440px',
+      maxWidth: '96vw',
+      disableClose: true,
+      autoFocus: true,
+      data: { lineas, destinoLabel }
+    });
+
+    try {
+      const result = await firstValueFrom(dialogRef.afterClosed());
+      if (!result?.cantidades) {
+        return null;
+      }
+      for (const [idStr, qty] of Object.entries(result.cantidades)) {
+        qtyMap.set(Number(idStr), Number(qty));
+      }
+      return qtyMap;
+    } finally {
+      this.posFocus?.releaseQuiet('dialog:mover-cantidad');
+    }
+  }
+
   async moveSelectedDetallesToTicket(
     targetTicketId: number,
-    reciboPadreId?: number
+    reciboPadreId?: number,
+    cantidadesPorDetalle?: Map<number, number> | null
   ): Promise<TicketSplitMoveResult | null> {
     if (
       !this.reciboId ||
@@ -1572,6 +1644,12 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       .filter((detalle): detalle is ReciboDetalleDto => !!detalle);
 
     if (!detallesSeleccionados.length) {
+      return null;
+    }
+
+    const qtyMap =
+      cantidadesPorDetalle ?? (await this.confirmMoveQuantitiesIfNeeded());
+    if (!qtyMap) {
       return null;
     }
 
@@ -1600,8 +1678,24 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       ]);
 
       let targetDetalles = [...(targetDetallesResponse ?? [])];
+      let movedLinesCount = 0;
 
       for (const detalle of detallesSeleccionados) {
+        const qtyCurrent = Number(detalle.cantidad ?? 0);
+        const qtyMove = Number(qtyMap.get(detalle.id) ?? qtyCurrent);
+        if (!Number.isFinite(qtyMove) || qtyMove <= 0) {
+          continue;
+        }
+        const qtyToMove = Math.min(qtyMove, qtyCurrent);
+        if (qtyToMove <= 0) {
+          continue;
+        }
+
+        const unitPrice = this.getDetalleUnitario(detalle);
+        const subtotalMove = unitPrice * qtyToMove;
+        const qtyRemain = qtyCurrent - qtyToMove;
+        const subtotalRemain = unitPrice * qtyRemain;
+
         const existingTargetIndex = targetDetalles.findIndex(
           (targetDetalle) => targetDetalle.productoId === detalle.productoId
         );
@@ -1614,11 +1708,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             reciboId: detalleDestino.reciboId,
             productoId: detalleDestino.productoId,
             cantidad:
-              Number(detalleDestino.cantidad ?? 0) +
-              Number(detalle.cantidad ?? 0),
+              Number(detalleDestino.cantidad ?? 0) + qtyToMove,
             subtotal:
-              Number(detalleDestino.subtotal ?? 0) +
-              Number(detalle.subtotal ?? 0)
+              Number(detalleDestino.subtotal ?? 0) + subtotalMove
           };
 
           const detalleActualizado = await firstValueFrom(
@@ -1653,8 +1745,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             this.reciboDetalleService.createDetalle({
               reciboId: targetRelation.reciboId,
               productoId: detalle.productoId,
-              cantidad: detalle.cantidad,
-              subtotal: detalle.subtotal
+              cantidad: qtyToMove,
+              subtotal: subtotalMove
             })
           );
 
@@ -1673,21 +1765,43 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         }
 
         try {
-          await firstValueFrom(
-            this.reciboDetalleService.deleteDetalle(detalle.id)
-          );
-        } catch (deleteError) {
+          if (qtyRemain <= 0) {
+            await firstValueFrom(
+              this.reciboDetalleService.deleteDetalle(detalle.id)
+            );
+            this.detalles = this.detalles.filter((d) => d.id !== detalle.id);
+          } else {
+            const sourcePayload: UpdateReciboDetalleRequest = {
+              reciboId: detalle.reciboId,
+              productoId: detalle.productoId,
+              cantidad: qtyRemain,
+              subtotal: subtotalRemain
+            };
+            const sourceUpdated = await firstValueFrom(
+              this.reciboDetalleService.updateDetalle(detalle.id, sourcePayload)
+            );
+            const sourceBackend =
+              await this.prepararDetalleActualizado(sourceUpdated);
+            this.detalles = this.detalles.map((d) =>
+              d.id === detalle.id
+                ? {
+                    ...d,
+                    ...sourceBackend,
+                    cantidad: qtyRemain,
+                    subtotal: subtotalRemain,
+                    producto: sourceBackend.producto ?? d.producto
+                  }
+                : d
+            );
+          }
+        } catch (sourceError) {
           await this.rollbackTargetDetalleChange(rollback);
-          throw deleteError;
+          throw sourceError;
         }
+
+        movedLinesCount += 1;
       }
 
-      const movedDetalleIds = new Set(
-        detallesSeleccionados.map((detalle) => detalle.id)
-      );
-      this.detalles = this.detalles.filter(
-        (detalle) => !movedDetalleIds.has(detalle.id)
-      );
       this.recalculateTotal();
       this.actualizarMostrarColumnaAtendido();
 
@@ -1725,7 +1839,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return {
         sourceTicketId: this.ticket.id,
         targetTicketId,
-        movedItemsCount: detallesSeleccionados.length,
+        movedItemsCount: movedLinesCount,
         targetProductCount: targetDetalles.length
       };
     } catch (error) {

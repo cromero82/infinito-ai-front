@@ -91,12 +91,38 @@
                           "></mat-icon>
                       </button>
                     }
+                    @if (muestraMenuGestion(grupo.raiz)) {
+                      <button
+                        type="button"
+                        class="card-menu-btn"
+                        mat-icon-button
+                        [matMenuTriggerFor]="menuRaiz"
+                        matTooltip="Opciones"
+                        (click)="$event.stopPropagation()">
+                        <mat-icon svgIcon="mat:menu"></mat-icon>
+                      </button>
+                      <mat-menu #menuRaiz="matMenu">
+                        <button
+                          mat-menu-item
+                          type="button"
+                          (click)="abrirCrearFondoHijo(grupo.raiz)">
+                          Crear Fondo Hijo
+                        </button>
+                        <button
+                          mat-menu-item
+                          type="button"
+                          (click)="confirmarArchivar(grupo.raiz)">
+                          Archivar
+                        </button>
+                      </mat-menu>
+                    }
                     <button
                       type="button"
                       class="origen-card raiz"
                       [class.selected]="cuentaSeleccionada?.id === grupo.raiz.id"
                       [class.con-desglose]="svRaiz.mostrarDesglose"
                       [class.con-hijos]="grupo.hijos.length > 0"
+                      [class.con-menu]="muestraMenuGestion(grupo.raiz)"
                       [style.border-top-color]="cardAccent(grupo.raiz)"
                       [draggable]="esAdmin"
                       (click)="seleccionarCuenta(grupo.raiz)"
@@ -146,36 +172,58 @@
                 @if (grupo.hijos.length && estaExpandido(grupo.raiz.id)) {
                   <div class="hijos-col">
                     @for (hijo of grupo.hijos; track hijo.id) {
-                      <button
-                        type="button"
-                        class="origen-card hijo"
-                        [class.selected]="cuentaSeleccionada?.id === hijo.id"
-                        [style.border-top-color]="cardAccent(hijo)"
-                        [draggable]="esAdmin"
-                        (click)="seleccionarCuenta(hijo)"
-                        (dblclick)="copiarInfoHijo(hijo)"
-                        (dragstart)="onDragStart(hijo, $event)"
-                        (dragover)="onDragOver(hijo, $event)"
-                        (drop)="onDrop(hijo, $event)"
-                        (dragend)="onDragEnd()">
-                        <span class="card-head">
-                          @if (iconoMetodoPagoUrl(hijo); as iconUrlHijo) {
-                            <span class="origen-avatar origen-avatar--sm origen-avatar--img">
-                              <img [src]="iconUrlHijo" [alt]="hijo.nombre" />
-                            </span>
-                          } @else {
-                            <span
-                              class="origen-avatar origen-avatar--sm"
-                              [style.background]="cardAccent(hijo) || '#7986cb'">
-                              {{ inicialesOrigen(hijo.nombre) }}
-                            </span>
-                          }
-                          <span class="nombre">{{ hijo.nombre }}</span>
-                        </span>
-                        <span class="saldo" [ngClass]="saldoClass(hijo.saldo)">
-                          {{ hijo.saldo ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
-                        </span>
-                      </button>
+                      <div class="hijo-wrap">
+                        @if (muestraMenuGestion(hijo)) {
+                          <button
+                            type="button"
+                            class="card-menu-btn"
+                            mat-icon-button
+                            [matMenuTriggerFor]="menuHijo"
+                            matTooltip="Opciones"
+                            (click)="$event.stopPropagation()">
+                            <mat-icon svgIcon="mat:menu"></mat-icon>
+                          </button>
+                          <mat-menu #menuHijo="matMenu">
+                            <button
+                              mat-menu-item
+                              type="button"
+                              (click)="confirmarArchivar(hijo)">
+                              Archivar
+                            </button>
+                          </mat-menu>
+                        }
+                        <button
+                          type="button"
+                          class="origen-card hijo"
+                          [class.selected]="cuentaSeleccionada?.id === hijo.id"
+                          [class.con-menu]="muestraMenuGestion(hijo)"
+                          [style.border-top-color]="cardAccent(hijo)"
+                          [draggable]="esAdmin"
+                          (click)="seleccionarCuenta(hijo)"
+                          (dblclick)="copiarInfoHijo(hijo)"
+                          (dragstart)="onDragStart(hijo, $event)"
+                          (dragover)="onDragOver(hijo, $event)"
+                          (drop)="onDrop(hijo, $event)"
+                          (dragend)="onDragEnd()">
+                          <span class="card-head">
+                            @if (iconoMetodoPagoUrl(hijo); as iconUrlHijo) {
+                              <span class="origen-avatar origen-avatar--sm origen-avatar--img">
+                                <img [src]="iconUrlHijo" [alt]="hijo.nombre" />
+                              </span>
+                            } @else {
+                              <span
+                                class="origen-avatar origen-avatar--sm"
+                                [style.background]="cardAccent(hijo) || '#7986cb'">
+                                {{ inicialesOrigen(hijo.nombre) }}
+                              </span>
+                            }
+                            <span class="nombre">{{ hijo.nombre }}</span>
+                          </span>
+                          <span class="saldo" [ngClass]="saldoClass(hijo.saldo)">
+                            {{ hijo.saldo ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                          </span>
+                        </button>
+                      </div>
                     }
                   </div>
                 }

@@ -171,7 +171,8 @@
               selectedProductIndex === i
             "
             [attr.data-selector-row]="i"
-            (click)="onProductRowClick(i, $event)"></tr>
+            (click)="onProductRowClick(i, $event)"
+            (dblclick)="onProductRowDblClick(row, $event)"></tr>
         </table>
       }
     </div>

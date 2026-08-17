@@ -238,6 +238,7 @@
           <code ngNonBindable>{{monto}}</code>,
           <code ngNonBindable>{{referenciaCuenta}}</code>.
           Fechas/horas en la plantilla se tratan como variables. Icono máx. 48×48.
+          El movimiento asociado usa origen_tipo «MOVIMIENTO BANCO POR IDENTIFICAR».
         </p>
         @if (cargandoPlantillas) {
           <mat-spinner diameter="32"></mat-spinner>
@@ -279,6 +280,60 @@
                     <img [src]="iconoUrl(ico)" [alt]="ico" width="40" height="40" />
                   </button>
                 }
+              </div>
+              <div class="plantilla-mov-fields">
+                <mat-form-field appearance="outline">
+                  <mat-label>Naturaleza</mat-label>
+                  <mat-select [(ngModel)]="p.naturaleza">
+                    @for (n of naturalezasPlantilla; track n.value) {
+                      <mat-option [value]="n.value">{{ n.label }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Origen de fondos origen</mat-label>
+                  <mat-select [(ngModel)]="p.origenFondosOrigenId">
+                    <mat-option [value]="null">—</mat-option>
+                    @for (c of origenesArbol; track c.id) {
+                      <mat-option [value]="c.id">
+                        <span class="of-option">
+                          @if (iconoOrigenFondosUrl(c); as iconUrl) {
+                            <span class="of-avatar of-avatar--img">
+                              <img [src]="iconUrl" [alt]="c.nombre" />
+                            </span>
+                          } @else {
+                            <span class="of-avatar" [style.background]="colorOrigen(c)">
+                              {{ inicialesOrigen(c.nombre) }}
+                            </span>
+                          }
+                          <span>{{ c.nombreDisplay }}</span>
+                        </span>
+                      </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Origen de fondos destino</mat-label>
+                  <mat-select [(ngModel)]="p.origenFondosDestinoId">
+                    <mat-option [value]="null">—</mat-option>
+                    @for (c of origenesArbol; track c.id) {
+                      <mat-option [value]="c.id">
+                        <span class="of-option">
+                          @if (iconoOrigenFondosUrl(c); as iconUrl) {
+                            <span class="of-avatar of-avatar--img">
+                              <img [src]="iconUrl" [alt]="c.nombre" />
+                            </span>
+                          } @else {
+                            <span class="of-avatar" [style.background]="colorOrigen(c)">
+                              {{ inicialesOrigen(c.nombre) }}
+                            </span>
+                          }
+                          <span>{{ c.nombreDisplay }}</span>
+                        </span>
+                      </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
               </div>
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Cuerpo</mat-label>

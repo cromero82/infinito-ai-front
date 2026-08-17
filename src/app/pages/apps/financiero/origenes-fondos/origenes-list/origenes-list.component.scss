@@ -179,12 +179,18 @@
   width: 100%;
 }
 
+.hijo-wrap {
+  position: relative;
+  width: 100%;
+}
+
 .origen-card {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
   width: 100%;
+  position: relative;
   /* bottom: 16px → ~6px (−60%) */
   padding: 10px 10px 6px;
   border: 1px solid rgba(0, 0, 0, 0.12);
@@ -198,6 +204,33 @@
 .origen-card.con-hijos {
   padding-right: 36px;
   padding-bottom: 8px;
+}
+
+.origen-card.con-menu {
+  padding-right: 36px;
+}
+
+.card-menu-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  line-height: 28px !important;
+  color: rgba(0, 0, 0, 0.5);
+  z-index: 3;
+
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
+
+  &:hover {
+    color: #3949ab;
+    background: rgba(63, 81, 181, 0.1);
+  }
 }
 
 .expand-hijos-btn {

@@ -17,10 +17,17 @@ export interface OrigenFondosDto {
   visibleEnEgreso?: boolean;
   requiereConciliacion?: boolean;
   activo?: boolean;
+  estado?: string;
   orden?: number;
   color?: string | null;
   notas?: string | null;
   saldo?: number;
+}
+
+export interface CrearOrigenHijoRequest {
+  parentOrigenFondosId: number;
+  nombre: string;
+  tipoOrigenFondosId?: number | null;
 }
 
 @Injectable({
@@ -54,5 +61,18 @@ export class OrigenFondosService {
   findById(id: number): Observable<OrigenFondosDto> {
     const headers = new HttpHeaders({ Accept: 'application/json' });
     return this.http.get<OrigenFondosDto>(`${this.apiUrl}/${id}`, { headers });
+  }
+
+  crearHijo(body: CrearOrigenHijoRequest): Observable<OrigenFondosDto> {
+    const headers = new HttpHeaders({
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    });
+    return this.http.post<OrigenFondosDto>(`${this.apiUrl}/hijo`, body, { headers });
+  }
+
+  archivar(id: number): Observable<OrigenFondosDto> {
+    const headers = new HttpHeaders({ Accept: 'application/json' });
+    return this.http.post<OrigenFondosDto>(`${this.apiUrl}/${id}/archivar`, {}, { headers });
   }
 }

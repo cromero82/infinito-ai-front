@@ -39,6 +39,10 @@ export interface PlantillaNotificacionPagoDto {
   icono: string;
   activo?: boolean;
   orden?: number;
+  naturaleza?: string | null;
+  origenFondosOrigenId?: number | null;
+  origenFondosDestinoId?: number | null;
+  origenTipo?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })

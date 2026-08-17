@@ -253,6 +253,16 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
     this.focusSearchInput();
   }
 
+  /** Doble clic en la fila = mismo efecto que el botón Seleccionar. */
+  onProductRowDblClick(product: Producto, event: MouseEvent): void {
+    if ((event.target as HTMLElement).closest('button')) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    this.selectProduct(product);
+  }
+
   private navigateProductUp(): void {
     if (this.products.length === 0) {
       return;

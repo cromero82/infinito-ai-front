@@ -27,8 +27,15 @@ import {
 import { ConfigurationService } from '../../../../auth/service/configuration.service';
 import { NotificacionEmailDetalleDialogComponent } from './notificacion-email-detalle-dialog.component';
 import { TicketSinNotifProductosDialogComponent } from './ticket-sin-notif-productos-dialog.component';
+import { OrigenFondosService } from '../../financiero/origenes-fondos/service/origen-fondos.service';
+import { OrigenFondosArbolItemDto } from '../../financiero/origenes-fondos/util/origen-fondos-arbol.util';
+import {
+  MetodoPagoDto,
+  MetodoPagoService
+} from '../service/metodo-pago.service';
 
 const KEY_ASUNTOS_PERMITIDOS = 'notificaciones.qr.asuntos-permitidos';
+const ORIGEN_TIPO_MOVIMIENTO_BANCO = 'MOVIMIENTO BANCO POR IDENTIFICAR';
 
 @Component({
   selector: 'app-gestion-notificaciones-medios-electronicos',
@@ -86,9 +93,17 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
   filtroPersona = '';
   filtroValor = '';
   selectedTicketSinNotifId: number | null = null;
+  origenesArbol: OrigenFondosArbolItemDto[] = [];
+  private metodosPagoPorId = new Map<number, MetodoPagoDto>();
+  readonly naturalezasPlantilla = [
+    { value: 'INGRESO', label: 'Ingreso' },
+    { value: 'EGRESO', label: 'Egreso' }
+  ];
 
   constructor(
     private api: GestionNotificacionesMediosService,
+    private origenFondosService: OrigenFondosService,
+    private metodoPagoService: MetodoPagoService,
     private configurationService: ConfigurationService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
@@ -99,6 +114,53 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
     this.cargarLista();
     this.cargarAsuntosPermitidos();
     this.cargarTicketsSinNotificacion();
+    this.cargarOrigenesFondos();
+  }
+
+  private cargarOrigenesFondos(): void {
+    this.origenFondosService.findArbol().subscribe({
+      next: (list) => {
+        this.origenesArbol = list || [];
+      },
+      error: () => {
+        this.origenesArbol = [];
+      }
+    });
+    this.metodoPagoService.obtenerMetodosPago().subscribe({
+      next: (list) => {
+        this.metodosPagoPorId = new Map((list || []).map((m) => [m.id, m]));
+      },
+      error: () => {
+        this.metodosPagoPorId = new Map();
+      }
+    });
+  }
+
+  iconoOrigenFondosUrl(cuenta: OrigenFondosArbolItemDto): string | null {
+    const mpId = cuenta.metodoPagoId;
+    if (mpId == null) {
+      return null;
+    }
+    const file = this.metodosPagoPorId.get(mpId)?.file?.trim();
+    if (!file) {
+      return null;
+    }
+    return `assets/img/icons/payments/${file}`;
+  }
+
+  inicialesOrigen(nombre: string | null | undefined): string {
+    const parts = (nombre ?? '')
+      .replace(/[:\-_/]/g, ' ')
+      .split(/\s+/)
+      .filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return (nombre ?? '?').slice(0, 2).toUpperCase();
+  }
+
+  colorOrigen(cuenta: OrigenFondosArbolItemDto): string {
+    return cuenta.color?.trim() || '#5c6bc0';
   }
 
   cargarAsuntosPermitidos(): void {
@@ -160,7 +222,11 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
       cuerpo: p.cuerpo.trim(),
       icono: p.icono,
       activo: p.activo !== false,
-      orden: p.orden
+      orden: p.orden,
+      naturaleza: p.naturaleza || null,
+      origenFondosOrigenId: p.origenFondosOrigenId ?? null,
+      origenFondosDestinoId: p.origenFondosDestinoId ?? null,
+      origenTipo: ORIGEN_TIPO_MOVIMIENTO_BANCO
     };
     const req$ = p.id
       ? this.api.guardarPlantilla(p.id, body)
@@ -196,7 +262,11 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
         cuerpo: 'recibiste una transferencia de {{nombrePagador}} por {{monto}} en tu cuenta *{{referenciaCuenta}}',
         icono: 'otro-metodo.png',
         activo: true,
-        orden: this.plantillas.length + 1
+        orden: this.plantillas.length + 1,
+        naturaleza: 'INGRESO',
+        origenFondosOrigenId: null,
+        origenFondosDestinoId: null,
+        origenTipo: ORIGEN_TIPO_MOVIMIENTO_BANCO
       }
     ];
   }
@@ -236,7 +306,11 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
       cuerpo: p.cuerpo,
       icono: p.icono,
       activo: p.activo !== false,
-      orden: p.orden
+      orden: p.orden,
+      naturaleza: p.naturaleza || null,
+      origenFondosOrigenId: p.origenFondosOrigenId ?? null,
+      origenFondosDestinoId: p.origenFondosDestinoId ?? null,
+      origenTipo: p.origenTipo || ORIGEN_TIPO_MOVIMIENTO_BANCO
     });
   }
 

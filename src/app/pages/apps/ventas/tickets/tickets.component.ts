@@ -792,11 +792,18 @@ export class TicketsComponent
       return;
     }
 
+    const nextNumber = this.getNextTicketNumber();
+    const nombre = `Ticket ${nextNumber}`;
+    const qtyMap = await this.reciboComponent?.confirmMoveQuantitiesIfNeeded(
+      nombre
+    );
+    if (!qtyMap) {
+      return;
+    }
+
     this.actividadUi.record(
       'acción: mover líneas a nuevo ticket (desde detalle-ticket)'
     );
-    const nextNumber = this.getNextTicketNumber();
-    const nombre = `Ticket ${nextNumber}`;
     const reciboIdPadre = this.currentReciboId ?? undefined;
 
     try {
@@ -806,7 +813,7 @@ export class TicketsComponent
         this.ticketsService.createTicket(this.sessionId, nombre)
       );
       this.tickets = [...this.tickets, nuevoTicket];
-      await this.processDetalleMove(nuevoTicket, true, reciboIdPadre);
+      await this.processDetalleMove(nuevoTicket, true, reciboIdPadre, qtyMap);
     } catch (error) {
       this.loading = false;
       console.error('Error creando ticket para dividir productos', error);
@@ -828,15 +835,27 @@ export class TicketsComponent
       return;
     }
 
-    this.actividadUi.record(
-      `acción: mover líneas a ticket existente (ticket destino id ${ticketId})`
-    );
     const targetTicket = this.tickets.find((ticket) => ticket.id === ticketId);
     if (!targetTicket) {
       return;
     }
 
-    await this.processDetalleMove(targetTicket, false);
+    const destinoLabel =
+      this.getTicketLabel(targetTicket) ||
+      targetTicket.nombre ||
+      `Ticket ${targetTicket.id}`;
+    const qtyMap = await this.reciboComponent?.confirmMoveQuantitiesIfNeeded(
+      destinoLabel
+    );
+    if (!qtyMap) {
+      return;
+    }
+
+    this.actividadUi.record(
+      `acción: mover líneas a ticket existente (ticket destino id ${ticketId})`
+    );
+
+    await this.processDetalleMove(targetTicket, false, undefined, qtyMap);
   }
 
   recargarRecibo(): void {
@@ -1511,13 +1530,14 @@ export class TicketsComponent
               this.tickets = [newTicket];
               this.pruneSplitState();
               this.selectedIndex = 0;
-              this.fetchReciboForTicket(newTicket.id);
+              this.fetchReciboForTicket(newTicket.id, false, true);
               this.loading = false;
               this.ticketTabsBusy = false;
 
               // Forzar actualización completa de la aplicación
               this.cdr.detectChanges();
               this.appRef.tick();
+              setTimeout(() => this.focusProductSearch(false), 100);
               console.log(
                 '🔄 Interfaz actualizada después de crear ticket inicial (tick completo)'
               );
@@ -1536,92 +1556,16 @@ export class TicketsComponent
           this.tickets = tickets;
           this.pruneSplitState();
 
-          // Consultar la sesión para obtener ultimoTicketId y seleccionar ese ticket
-          this.sesionesService.getSesionById(sessionId).subscribe({
-            next: (sesion: SesionDto) => {
-              let targetIndex = 0;
+          const tieneAnonimo = this.tickets.some(
+            (t) => !this.isTicketConCliente(t)
+          );
+          if (!tieneAnonimo) {
+            // Entrada a Tickets con solo cuentas identificadas: dejar al menos 1 anónimo listo.
+            this.ensureAnonymousTicketOnLoad(sessionId);
+            return;
+          }
 
-              // MÁXIMA PRIORIDAD: Usar selección forzada si existe
-              if (this.forcedSelectionTicketId) {
-                const forcedIndex = this.tickets.findIndex(
-                  (t) => t.id === this.forcedSelectionTicketId
-                );
-                if (forcedIndex >= 0) {
-                  targetIndex = forcedIndex;
-                  console.log(
-                    '🎯🎯 USANDO SELECCIÓN FORZADA - ticket ID:',
-                    this.forcedSelectionTicketId,
-                    'índice:',
-                    targetIndex
-                  );
-                  console.log(
-                    '📋 Ticket seleccionado:',
-                    this.tickets[targetIndex]
-                  );
-                } else {
-                  console.log(
-                    '⚠️ Ticket forzado no encontrado, usando selección normal'
-                  );
-                }
-                // Limpiar la selección forzada después de usarla
-                this.forcedSelectionTicketId = null;
-                sessionStorage.removeItem(FORCED_SELECTION_TICKET_ID_KEY);
-                console.log(
-                  '🧹 Selección forzada utilizada y limpiada del sessionStorage'
-                );
-              } else {
-                // Comportamiento normal: usar ultimoTicketId de la sesión
-                const ultimoId = sesion?.ultimoTicketId ?? null;
-                console.log('🎯 Último ticket ID desde sesión:', ultimoId);
-
-                if (ultimoId) {
-                  const index = this.tickets.findIndex(
-                    (t) => t.id === ultimoId
-                  );
-                  targetIndex = index >= 0 ? index : 0;
-                } else {
-                  targetIndex = 0;
-                }
-                console.log('📍 Selección normal - índice:', targetIndex);
-              }
-
-              this.selectedIndex = targetIndex;
-              console.log(
-                '📍📍 SelectedIndex FINAL establecido en:',
-                this.selectedIndex
-              );
-              console.log(
-                '📋📋 Ticket seleccionado:',
-                this.tickets[this.selectedIndex]
-              );
-
-              this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
-              this.loading = false;
-              this.ticketTabsBusy = false;
-
-              // Forzar actualización completa de la aplicación
-              this.cdr.detectChanges();
-              this.appRef.tick();
-              console.log(
-                '🔄 Interfaz actualizada después de cargar tickets (tick completo)'
-              );
-            },
-            error: (err) => {
-              console.error('❌ Error cargando info de sesión:', err);
-              // Fallback al comportamiento anterior
-              this.selectedIndex = 0;
-              this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
-              this.loading = false;
-              this.ticketTabsBusy = false;
-
-              // Forzar actualización completa de la aplicación
-              this.cdr.detectChanges();
-              this.appRef.tick();
-              console.log(
-                '🔄 Interfaz actualizada (fallback con tick completo)'
-              );
-            }
-          });
+          this.selectTicketAfterTicketsLoaded(sessionId);
         }
       },
       error: (err) => {
@@ -1654,6 +1598,86 @@ export class TicketsComponent
           verticalPosition: 'top',
           panelClass: ['error-snackbar']
         });
+      }
+    });
+  }
+
+  /**
+   * Si al cargar solo hay tickets con cliente, crea uno anónimo y lo selecciona.
+   */
+  private ensureAnonymousTicketOnLoad(sessionId: number): void {
+    const nextNumber = this.getNextTicketNumber();
+    const nombre = `Ticket ${nextNumber}`;
+    this.actividadUi.record(
+      `acción: crear ticket anónimo por defecto al entrar a Tickets (${nombre})`
+    );
+    this.ticketsService.createTicket(sessionId, nombre).subscribe({
+      next: (newTicket) => {
+        this.tickets = [...this.tickets, newTicket];
+        this.pruneSplitState();
+        this.selectedIndex = this.tickets.findIndex(
+          (t) => t.id === newTicket.id
+        );
+        if (this.selectedIndex < 0) {
+          this.selectedIndex = this.tickets.length - 1;
+        }
+        this.forcedSelectionTicketId = null;
+        sessionStorage.removeItem(FORCED_SELECTION_TICKET_ID_KEY);
+        this.fetchReciboForTicket(newTicket.id, false, true);
+        this.loading = false;
+        this.ticketTabsBusy = false;
+        this.cdr.detectChanges();
+        this.appRef.tick();
+        setTimeout(() => this.focusProductSearch(false), 100);
+      },
+      error: (err) => {
+        console.error('❌ Error creando ticket anónimo por defecto:', err);
+        // Seguir con la selección normal sobre los tickets identificados.
+        this.selectTicketAfterTicketsLoaded(sessionId);
+      }
+    });
+  }
+
+  /** Selección inicial tras loadTickets (forzada / ultimoTicketId / fallback). */
+  private selectTicketAfterTicketsLoaded(sessionId: number): void {
+    this.sesionesService.getSesionById(sessionId).subscribe({
+      next: (sesion: SesionDto) => {
+        let targetIndex = 0;
+
+        if (this.forcedSelectionTicketId) {
+          const forcedIndex = this.tickets.findIndex(
+            (t) => t.id === this.forcedSelectionTicketId
+          );
+          if (forcedIndex >= 0) {
+            targetIndex = forcedIndex;
+          }
+          this.forcedSelectionTicketId = null;
+          sessionStorage.removeItem(FORCED_SELECTION_TICKET_ID_KEY);
+        } else {
+          const ultimoId = sesion?.ultimoTicketId ?? null;
+          if (ultimoId) {
+            const index = this.tickets.findIndex((t) => t.id === ultimoId);
+            targetIndex = index >= 0 ? index : 0;
+          } else {
+            targetIndex = 0;
+          }
+        }
+
+        this.selectedIndex = targetIndex;
+        this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
+        this.loading = false;
+        this.ticketTabsBusy = false;
+        this.cdr.detectChanges();
+        this.appRef.tick();
+      },
+      error: (err) => {
+        console.error('❌ Error cargando info de sesión:', err);
+        this.selectedIndex = 0;
+        this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
+        this.loading = false;
+        this.ticketTabsBusy = false;
+        this.cdr.detectChanges();
+        this.appRef.tick();
       }
     });
   }
@@ -1777,13 +1801,15 @@ export class TicketsComponent
   private async processDetalleMove(
     targetTicket: TicketDto,
     shouldTrackSplitLabel: boolean,
-    reciboPadreId?: number
+    reciboPadreId?: number,
+    cantidadesPorDetalle?: Map<number, number> | null
   ): Promise<void> {
     try {
       const moveResult =
         await this.reciboComponent?.moveSelectedDetallesToTicket(
           targetTicket.id,
-          reciboPadreId
+          reciboPadreId,
+          cantidadesPorDetalle
         );
       if (!moveResult) {
         return;
