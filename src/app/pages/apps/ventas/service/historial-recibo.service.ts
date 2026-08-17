@@ -24,6 +24,11 @@ export interface HistorialReciboDto {
   restaurado?: boolean | null;
 }
 
+export interface HistorialReciboPagoDto {
+  metodoPagoId: number;
+  monto: number;
+}
+
 export interface DocumentoVentaResumenDto {
   id: number;
   consecutivo: string;
@@ -196,6 +201,14 @@ export class HistorialReciboService {
     const headers = new HttpHeaders({ Accept: 'application/json' });
     return this.http.get<HistorialDocumentosDto>(
       `${this.apiUrl}/${reciboId}/documentos`,
+      { headers }
+    );
+  }
+
+  getPagos(reciboId: number): Observable<HistorialReciboPagoDto[]> {
+    const headers = new HttpHeaders({ Accept: 'application/json' });
+    return this.http.get<HistorialReciboPagoDto[]>(
+      `${this.apiUrl}/${reciboId}/pagos`,
       { headers }
     );
   }

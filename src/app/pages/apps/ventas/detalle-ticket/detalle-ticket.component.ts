@@ -58,6 +58,7 @@ import {
   ReciboDto,
   ActualizarReciboRequest,
   ActualizarReciboResponse,
+  ReciboPagoLinea,
   isReciboPagoResponse
 } from '../service/recibo.service';
 import {
@@ -74,6 +75,7 @@ import { AuthService } from '../../../../auth/service/auth.service';
 import {
   ReciboPrintService,
   ReciboTicketImpresionExtra,
+  ReciboPagoImpresionLinea,
   ReciboImpresionOpciones
 } from '../service/recibo-print.service';
 import { EstablecimientoService } from '../service/establecimiento.service';
@@ -88,6 +90,7 @@ import {
   PagoEfectivoCambioComponent,
   PagoEfectivoCambioData,
   PagoEfectivoCambioResultado,
+  PagoEfectivoConfirmacion,
   ImprimirReciboTrasPagoOpciones
 } from '../pago-efectivo-cambio/pago-efectivo-cambio.component';
 import { IMPRIMIR_RECIBO_KEY } from '../imprimir-recibo-preference.constants';
@@ -1139,7 +1142,14 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.ticketImpresionExtras = {
       metodoPagoLabel: metodo.descripcion ?? null,
       montoRecibido: totalARegistrar,
-      cambio: 0
+      cambio: 0,
+      pagosLineas: [
+        {
+          metodoPagoId: metodo.id,
+          label: metodo.descripcion ?? `Medio ${metodo.id}`,
+          monto: totalARegistrar
+        }
+      ]
     };
   }
 
@@ -3023,8 +3033,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         width: '640px',
         data: {
           total: totalARegistrar,
-          ejecutarPago: (montoRecibido: number) =>
-            this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
+          ejecutarPago: (confirmacion: PagoEfectivoConfirmacion) =>
+            this.ejecutarPagoApi$(metodo, totalARegistrar, confirmacion),
           imprimirRecibo:
             this.recibo && this.detalles?.length
               ? (o) => this.imprimirRecibo(o)
@@ -3033,9 +3043,13 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             this.mostrarSnackbarPagoExitosoSinImpresion(tg),
           registrarDatosImpresion: (d) => {
             this.ticketImpresionExtras = {
-              metodoPagoLabel: metodo.descripcion ?? 'EFECTIVO',
+              metodoPagoLabel: this.labelImpresionDesdePagos(
+                d.pagos,
+                metodo.descripcion ?? 'EFECTIVO'
+              ),
               montoRecibido: d.montoRecibido,
-              cambio: d.cambio
+              cambio: d.cambio,
+              pagosLineas: this.toPagosImpresion(d.pagos)
             };
           }
         },
@@ -3085,7 +3099,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             metodoPagoId: metodo.id,
             total: totalARegistrar.toFixed(2),
             sesionId: sesionId ?? undefined,
-            montoRecibido: montoRecibidoFinal
+            montoRecibido: montoRecibidoFinal,
+            pagos: [{ metodoPagoId: metodo.id, monto: totalARegistrar }]
           };
 
           return this.reciboService
@@ -3253,8 +3268,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         width: '640px',
         data: {
           total: valorParaDialogo,
-          ejecutarPago: (montoRecibido: number) =>
-            this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
+          ejecutarPago: (confirmacion: PagoEfectivoConfirmacion) =>
+            this.ejecutarPagoApi$(metodo, totalARegistrar, confirmacion),
           imprimirRecibo:
             this.recibo && this.detalles?.length
               ? (o) => this.imprimirRecibo(o)
@@ -3263,9 +3278,13 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             this.mostrarSnackbarPagoExitosoSinImpresion(tg),
           registrarDatosImpresion: (d) => {
             this.ticketImpresionExtras = {
-              metodoPagoLabel: metodo.descripcion ?? 'EFECTIVO',
+              metodoPagoLabel: this.labelImpresionDesdePagos(
+                d.pagos,
+                metodo.descripcion ?? 'EFECTIVO'
+              ),
               montoRecibido: d.montoRecibido,
-              cambio: d.cambio
+              cambio: d.cambio,
+              pagosLineas: this.toPagosImpresion(d.pagos)
             };
           }
         },
@@ -3315,7 +3334,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             metodoPagoId: metodo.id,
             total: totalARegistrar.toFixed(2),
             sesionId: sesionId ?? undefined,
-            montoRecibido: montoRecibidoFinal
+            montoRecibido: montoRecibidoFinal,
+            pagos: [{ metodoPagoId: metodo.id, monto: totalARegistrar }]
           };
 
           return this.reciboService
@@ -3576,8 +3596,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         width: '640px',
         data: {
           total: totalARegistrar,
-          ejecutarPago: (montoRecibido: number) =>
-            this.ejecutarPagoApi$(metodo, totalARegistrar, montoRecibido),
+          ejecutarPago: (confirmacion: PagoEfectivoConfirmacion) =>
+            this.ejecutarPagoApi$(metodo, totalARegistrar, confirmacion),
           imprimirRecibo:
             this.recibo && this.detalles?.length
               ? (o) => this.imprimirRecibo(o)
@@ -3586,9 +3606,13 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             this.mostrarSnackbarPagoExitosoSinImpresion(tg),
           registrarDatosImpresion: (d) => {
             this.ticketImpresionExtras = {
-              metodoPagoLabel: metodo.descripcion ?? 'EFECTIVO',
+              metodoPagoLabel: this.labelImpresionDesdePagos(
+                d.pagos,
+                metodo.descripcion ?? 'EFECTIVO'
+              ),
               montoRecibido: d.montoRecibido,
-              cambio: d.cambio
+              cambio: d.cambio,
+              pagosLineas: this.toPagosImpresion(d.pagos)
             };
           }
         },
@@ -3638,7 +3662,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             metodoPagoId: metodo.id,
             total: totalARegistrar.toFixed(2),
             sesionId: sesionId ?? undefined,
-            montoRecibido: montoRecibidoFinal
+            montoRecibido: montoRecibidoFinal,
+            pagos: [{ metodoPagoId: metodo.id, monto: totalARegistrar }]
           };
 
           return this.reciboService
@@ -3807,16 +3832,16 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   private ejecutarPagoApi$(
     metodo: MetodoPagoDto,
     totalARegistrar: number,
-    montoRecibido?: number
+    confirmacion?: PagoEfectivoConfirmacion | number
   ): Observable<number> {
     return this.obtenerTicketAsociado().pipe(
       switchMap((ticketId) => {
         const sesionId = this.getSessionId();
-        // Calcular montoRecibido: si es efectivo y se proporciona, usarlo; si no, igual al total
-        const montoRecibidoFinal =
-          metodo.id === 1 && montoRecibido !== undefined
-            ? montoRecibido
-            : totalARegistrar;
+        const { montoRecibidoFinal, pagos } = this.resolverConfirmacionPago(
+          metodo,
+          totalARegistrar,
+          confirmacion
+        );
 
         const payload: ActualizarReciboRequest = {
           clienteId: this.clienteIdParaRecibo(),
@@ -3825,7 +3850,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           metodoPagoId: metodo.id,
           total: totalARegistrar.toFixed(2),
           sesionId: sesionId ?? undefined,
-          montoRecibido: montoRecibidoFinal
+          montoRecibido: montoRecibidoFinal,
+          pagos
         };
         return this.reciboService
           .actualizarRecibo(this.recibo!.id, payload)
@@ -3881,6 +3907,61 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         )
       )
     );
+  }
+
+  private resolverConfirmacionPago(
+    metodo: MetodoPagoDto,
+    totalARegistrar: number,
+    confirmacion?: PagoEfectivoConfirmacion | number
+  ): { montoRecibidoFinal: number; pagos: ReciboPagoLinea[] } {
+    if (confirmacion != null && typeof confirmacion === 'object') {
+      return {
+        montoRecibidoFinal: confirmacion.montoRecibido,
+        pagos: confirmacion.pagos.map((p) => ({
+          metodoPagoId: p.metodoPagoId,
+          monto: p.monto
+        }))
+      };
+    }
+    const montoRecibidoFinal =
+      metodo.id === 1 && typeof confirmacion === 'number'
+        ? confirmacion
+        : totalARegistrar;
+    return {
+      montoRecibidoFinal,
+      pagos: [{ metodoPagoId: metodo.id, monto: totalARegistrar }]
+    };
+  }
+
+  private toPagosImpresion(
+    pagos?: ReciboPagoLinea[] | null
+  ): ReciboPagoImpresionLinea[] | null {
+    if (!pagos?.length) {
+      return null;
+    }
+    return pagos.map((p) => ({
+      metodoPagoId: p.metodoPagoId,
+      label: this.nombreMetodoPago(p.metodoPagoId),
+      monto: Number(p.monto)
+    }));
+  }
+
+  private labelImpresionDesdePagos(
+    pagos: ReciboPagoLinea[] | undefined,
+    fallback: string
+  ): string {
+    if (!pagos?.length) {
+      return fallback;
+    }
+    if (pagos.length === 1) {
+      return this.nombreMetodoPago(pagos[0].metodoPagoId);
+    }
+    return 'MIXTO';
+  }
+
+  private nombreMetodoPago(metodoPagoId: number): string {
+    const m = this.metodosPago?.find((x) => x.id === metodoPagoId);
+    return (m?.descripcion ?? `Medio ${metodoPagoId}`).trim();
   }
 
   /**

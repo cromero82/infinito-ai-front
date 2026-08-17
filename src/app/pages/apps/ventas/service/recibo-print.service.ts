@@ -17,10 +17,18 @@ export interface PrintableReciboDetalle {
 }
 
 /** Datos extra para la tirilla (pago, cambio, cajero). */
+export interface ReciboPagoImpresionLinea {
+  metodoPagoId?: number;
+  label: string;
+  monto: number;
+}
+
 export interface ReciboTicketImpresionExtra {
   metodoPagoLabel?: string | null;
   montoRecibido?: number | null;
   cambio?: number | null;
+  /** Si hay mixto, se imprimen estas líneas en lugar de un solo PAGO. */
+  pagosLineas?: ReciboPagoImpresionLinea[] | null;
   /** Si no se envía, se usa `localStorage` key `user-nombre`. */
   atendidoNombre?: string | null;
 }
@@ -35,6 +43,7 @@ export interface RecentPrintedReciboItem {
   metodoPagoLabel?: string | null;
   montoRecibido?: number | null;
   cambio?: number | null;
+  pagosLineas?: ReciboPagoImpresionLinea[] | null;
 }
 
 export interface ReciboImpresionEstablecimiento {
@@ -123,7 +132,10 @@ export class ReciboPrintService {
       })),
       metodoPagoLabel: impresionExtra?.metodoPagoLabel ?? undefined,
       montoRecibido: impresionExtra?.montoRecibido ?? undefined,
-      cambio: impresionExtra?.cambio ?? undefined
+      cambio: impresionExtra?.cambio ?? undefined,
+      pagosLineas: impresionExtra?.pagosLineas?.length
+        ? impresionExtra.pagosLineas.map((p) => ({ ...p }))
+        : undefined
     };
 
     const nextItems = [
@@ -145,7 +157,8 @@ export class ReciboPrintService {
       clienteNombre: item.clienteNombre ?? null,
       metodoPagoLabel: item.metodoPagoLabel ?? null,
       montoRecibido: item.montoRecibido ?? null,
-      cambio: item.cambio ?? null
+      cambio: item.cambio ?? null,
+      pagosLineas: item.pagosLineas ?? null
     });
   }
 
@@ -495,18 +508,36 @@ p, div, span { color: #000; text-shadow: none; }
       '</div>'
     );
 
-    const labelMetodo = (opts.metodoPagoLabel ?? '').trim();
-    const tieneMontoPago = opts.montoRecibido != null && Number.isFinite(Number(opts.montoRecibido));
-    if (labelMetodo || tieneMontoPago) {
-      const metodoHtml = this.escapeHtml(labelMetodo || '—');
-      const montoPagoStr = tieneMontoPago ? this.formatCurrency(opts.montoRecibido) : '';
-      lineas.push(
-        '<div class="pos-fila-pago">',
-        '<span>PAGO:</span>',
-        `<span class="pos-fila-pago-metodo">${metodoHtml}</span>`,
-        `<span>${montoPagoStr}</span>`,
-        '</div>'
-      );
+    const pagosLineas = (opts.pagosLineas ?? []).filter(
+      (p) => p && Number(p.monto) > 0 && (p.label ?? '').trim()
+    );
+    if (pagosLineas.length > 0) {
+      for (const linea of pagosLineas) {
+        lineas.push(
+          '<div class="pos-fila-pago">',
+          '<span>PAGO:</span>',
+          `<span class="pos-fila-pago-metodo">${this.escapeHtml(linea.label.trim())}</span>`,
+          `<span>${this.formatCurrency(linea.monto)}</span>`,
+          '</div>'
+        );
+      }
+    } else {
+      const labelMetodo = (opts.metodoPagoLabel ?? '').trim();
+      const tieneMontoPago =
+        opts.montoRecibido != null && Number.isFinite(Number(opts.montoRecibido));
+      if (labelMetodo || tieneMontoPago) {
+        const metodoHtml = this.escapeHtml(labelMetodo || '—');
+        const montoPagoStr = tieneMontoPago
+          ? this.formatCurrency(opts.montoRecibido)
+          : '';
+        lineas.push(
+          '<div class="pos-fila-pago">',
+          '<span>PAGO:</span>',
+          `<span class="pos-fila-pago-metodo">${metodoHtml}</span>`,
+          `<span>${montoPagoStr}</span>`,
+          '</div>'
+        );
+      }
     }
 
     const cambioVal = opts.cambio != null ? Number(opts.cambio) : null;

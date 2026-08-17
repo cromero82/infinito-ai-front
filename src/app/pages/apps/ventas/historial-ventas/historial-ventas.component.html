@@ -264,7 +264,29 @@
             @if (detalles.length > 0) {
               <div class="detalle-footer">
                 <div class="detalle-footer-left">
-                  @if (
+                  @if (esPagoMixtoSeleccionado()) {
+                    <div class="metodo-pago-container metodo-pago-container--mixto">
+                      <span class="metodo-pago-label">Pago mixto:</span>
+                      <div class="pagos-mixto-lineas">
+                        @for (pago of pagosSeleccionados; track pago.metodoPagoId) {
+                          <div class="pago-mixto-linea">
+                            @if (getMetodoPago(pago.metodoPagoId); as mp) {
+                              <img
+                                [src]="'assets/img/icons/payments/' + mp.file"
+                                [alt]="mp.descripcion"
+                                class="metodo-pago-icon metodo-pago-icon--sm" />
+                              <span>{{ mp.descripcion }}</span>
+                            } @else {
+                              <span>Medio {{ pago.metodoPagoId }}</span>
+                            }
+                            <span class="pago-mixto-monto">{{
+                              formatCurrency(pago.monto)
+                            }}</span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  } @else if (
                     getSelectedRecibo() &&
                     getMetodoPago(getSelectedRecibo()!.metodoPagoId)
                   ) {

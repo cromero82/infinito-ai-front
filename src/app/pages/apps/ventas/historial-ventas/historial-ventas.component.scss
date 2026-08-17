@@ -432,6 +432,36 @@
     object-fit: contain;
   }
 
+  .metodo-pago-icon--sm {
+    height: 22px;
+  }
+
+  .metodo-pago-container--mixto {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .pagos-mixto-lineas {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .pago-mixto-linea {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #2e7d32;
+  }
+
+  .pago-mixto-monto {
+    margin-left: auto;
+    font-weight: 600;
+  }
+
   .monto-recibido-label {
     font-size: 14px;
     font-weight: 500;

@@ -21,6 +21,7 @@ import {
   HistorialReciboService,
   HistorialReciboDto,
   HistorialReciboPage,
+  HistorialReciboPagoDto,
   HistorialDocumentosDto
 } from '../service/historial-recibo.service';
 import {
@@ -90,6 +91,8 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   detalles: HistorialReciboDetalleDto[] = [];
   detallesLoading = false;
   detallesError: string | null = null;
+  pagosSeleccionados: HistorialReciboPagoDto[] = [];
+  pagosLoading = false;
 
   // Estados state
   estadosRecibos: EstadoReciboDto[] = [];
@@ -403,10 +406,29 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     this.selectedReciboId = recibo.id;
     this.detalles = [];
     this.detallesError = null;
+    this.pagosSeleccionados = [];
     this.documentos = null;
     this.documentosError = null;
     this.loadDetalles(recibo.id);
+    this.loadPagos(recibo.id);
     this.loadDocumentos(recibo.id);
+  }
+
+  loadPagos(reciboId: number): void {
+    this.pagosLoading = true;
+    this.historialReciboService
+      .getPagos(reciboId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (pagos) => {
+          this.pagosSeleccionados = pagos ?? [];
+          this.pagosLoading = false;
+        },
+        error: () => {
+          this.pagosSeleccionados = [];
+          this.pagosLoading = false;
+        }
+      });
   }
 
   loadDocumentos(reciboId: number): void {
@@ -730,6 +752,10 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     return metodoPagoId === 1;
   }
 
+  esPagoMixtoSeleccionado(): boolean {
+    return (this.pagosSeleccionados?.length ?? 0) > 1;
+  }
+
   getMontoRecibido(recibo: HistorialReciboDto): number | null {
     return recibo.montoRecibido ?? null;
   }
@@ -755,12 +781,26 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
       const total = Number(recibo.total ?? 0);
       const montoRec =
         recibo.montoRecibido != null ? Number(recibo.montoRecibido) : total;
-      const esEfectivo = this.isMetodoPagoEfectivo(recibo.metodoPagoId);
-      const cambioVal = esEfectivo ? Math.max(0, montoRec - total) : 0;
+      const pagosLineas =
+        this.pagosSeleccionados.length > 0
+          ? this.pagosSeleccionados.map((p) => ({
+              metodoPagoId: p.metodoPagoId,
+              label: this.getMetodoPagoNombre(p.metodoPagoId) ?? `Medio ${p.metodoPagoId}`,
+              monto: Number(p.monto)
+            }))
+          : null;
+      const esEfectivoSolo =
+        !pagosLineas ||
+        (pagosLineas.length === 1 && this.isMetodoPagoEfectivo(pagosLineas[0].metodoPagoId!));
+      const cambioVal = esEfectivoSolo ? Math.max(0, montoRec - total) : Math.max(0, montoRec - total);
       const impExtra = {
-        metodoPagoLabel: this.getMetodoPagoNombre(recibo.metodoPagoId),
+        metodoPagoLabel:
+          pagosLineas && pagosLineas.length > 1
+            ? 'MIXTO'
+            : this.getMetodoPagoNombre(recibo.metodoPagoId),
         montoRecibido: montoRec,
-        cambio: esEfectivo && cambioVal > 0 ? cambioVal : null
+        cambio: cambioVal > 0 ? cambioVal : null,
+        pagosLineas
       };
       this.reciboPrintService.registerRecentRecibo(
         recibo,

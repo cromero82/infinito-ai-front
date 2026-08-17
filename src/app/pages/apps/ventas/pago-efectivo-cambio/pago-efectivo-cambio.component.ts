@@ -43,10 +43,22 @@ export interface ImprimirReciboTrasPagoOpciones {
   omitirPreferenciaGlobal?: boolean;
 }
 
+export interface ReciboPagoLineaUi {
+  metodoPagoId: number;
+  monto: number;
+}
+
+export interface PagoEfectivoConfirmacion {
+  /** Total abonado (efectivo tendered + otros); puede incluir cambio. */
+  montoRecibido: number;
+  /** Líneas que liquidan el ticket (SUM = total). Cambio solo afecta efectivo tendered. */
+  pagos: ReciboPagoLineaUi[];
+}
+
 export interface PagoEfectivoCambioData {
   total: number;
   /** Si se proporciona, el modal ejecuta el pago al confirmar y muestra estado éxito/error. */
-  ejecutarPago?: (montoRecibido: number) => Observable<number>;
+  ejecutarPago?: (confirmacion: PagoEfectivoConfirmacion) => Observable<number>;
   /** Imprime el recibo; el modal puede pedir omitir la preferencia global solo para esta impresión. */
   imprimirRecibo?: (opciones?: ImprimirReciboTrasPagoOpciones) => void;
   /** Se llama al cerrar tras éxito (para snackbar). */
@@ -55,6 +67,7 @@ export interface PagoEfectivoCambioData {
   registrarDatosImpresion?: (d: {
     montoRecibido: number;
     cambio: number;
+    pagos?: ReciboPagoLineaUi[];
   }) => void;
 }
 
@@ -369,7 +382,37 @@ export class PagoEfectivoCambioComponent
 
   get confirmarDeshabilitado(): boolean {
     const tp = this.calcularTotalPagado();
-    return tp <= 0 || this.pagoInsuficiente;
+    if (tp <= 0 || this.pagoInsuficiente) {
+      return true;
+    }
+    if (this.modoPagoCtrl.value === 'mixto' && this.sumaMontosMixtos() > this.total) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Líneas que liquidan el ticket (SUM = total).
+   * En mixto, el cambio se toma del efectivo tendered; la línea de efectivo es total − otros.
+   */
+  construirPagosLiquidacion(): ReciboPagoLineaUi[] {
+    if (this.modoPagoCtrl.value !== 'mixto') {
+      return [{ metodoPagoId: 1, monto: this.total }];
+    }
+    const pagos: ReciboPagoLineaUi[] = [];
+    let sumaOtros = 0;
+    for (const m of this.metodosOtros) {
+      const monto = this.parseCurrency(this.montosMixtosPorId[m.id]);
+      if (monto > 0) {
+        pagos.push({ metodoPagoId: m.id, monto });
+        sumaOtros += monto;
+      }
+    }
+    const efectivoAplicado = Math.max(0, this.total - sumaOtros);
+    if (efectivoAplicado > 0) {
+      pagos.unshift({ metodoPagoId: 1, monto: efectivoAplicado });
+    }
+    return pagos;
   }
 
   onPagaConFocus(event: FocusEvent): void {
@@ -623,9 +666,11 @@ export class PagoEfectivoCambioComponent
     const cambio = Math.max(0, totalPagado - this.total);
     this.pagaConResultado = totalPagado;
     this.cambioResultado = cambio;
+    const pagosLiquidacion = this.construirPagosLiquidacion();
     this.data.registrarDatosImpresion?.({
       montoRecibido: this.pagaConResultado,
-      cambio: this.cambioResultado
+      cambio: this.cambioResultado,
+      pagos: pagosLiquidacion
     });
 
     if (this.data.ejecutarPago) {
@@ -635,7 +680,10 @@ export class PagoEfectivoCambioComponent
       const debeImprimir =
         this.imprimirSoloEsteRecibo && !!this.data.imprimirRecibo;
 
-      this.data.ejecutarPago!(totalPagado)
+      this.data.ejecutarPago!({
+        montoRecibido: totalPagado,
+        pagos: pagosLiquidacion
+      })
         .pipe(finalize(() => this.cdr.markForCheck()))
         .subscribe({
           next: (tg) => {

@@ -31,6 +31,7 @@ export interface ReciboPagoResponseDto {
   metodoPagoId?: number;
   clienteId?: number;
   sesionId?: number;
+  pagos?: ReciboPagoLinea[];
 }
 
 export type ActualizarReciboResponse = ReciboDto | ReciboPagoResponseDto;
@@ -46,6 +47,11 @@ export function isReciboPagoResponse(
   );
 }
 
+export interface ReciboPagoLinea {
+  metodoPagoId: number;
+  monto: number;
+}
+
 export interface ActualizarReciboRequest {
   clienteId: number;
   ticketId: number;
@@ -54,6 +60,8 @@ export interface ActualizarReciboRequest {
   total: string;
   sesionId?: number;
   montoRecibido: number;
+  /** Desglose de cobro (1–3). Si se omite, el BE usa metodoPagoId + total. */
+  pagos?: ReciboPagoLinea[];
 }
 
 @Injectable({
