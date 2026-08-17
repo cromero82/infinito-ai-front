@@ -177,14 +177,17 @@
                       }
                     }
                     @if (vistaCtrl.value === "corte") {
-                      @if (cortesVentaListado.length > 0) {
+                      @if (cortesPorDia.length > 0) {
                         <span>
                           {{ cortesVentaListado.length }} corte{{
                             cortesVentaListado.length !== 1 ? "s" : ""
                           }}
+                          · {{ cortesPorDia.length }} día{{
+                            cortesPorDia.length !== 1 ? "s" : ""
+                          }}
                         </span>
                       }
-                      @if (cortesVentaListado.length === 0) {
+                      @if (cortesPorDia.length === 0) {
                         <span class="text-warn">
                           No hay cortes en este período
                         </span>
@@ -247,7 +250,7 @@
               !loading &&
               !error &&
               vistaCtrl.value === "corte" &&
-              cortesVentaListado.length === 0
+              cortesPorDia.length === 0
             ) {
               <div class="text-secondary py-8 text-center">
                 No hay cortes de ventas en el período seleccionado.
@@ -267,30 +270,68 @@
                     [series]="chartSeries"></vex-chart>
                 </div>
                 <div class="ingresos-details-panel mt-4 flex flex-col">
-                  <h3 class="title font-medium mb-3">Detalles por Fecha</h3>
+                  <h3 class="title font-medium mb-2">Detalles por Fecha</h3>
                   <div class="ingresos-details-table">
-                    <table class="w-full border-collapse">
+                    <table class="w-full border-collapse detalles-fecha-table">
                       <thead>
                         <tr class="border-b">
-                          <th class="text-left py-2 px-4">Fecha</th>
-                          <th class="text-right py-2 px-4">Total</th>
-                          <th class="text-left py-2 px-4">Métodos de Pago</th>
+                          <th class="text-left py-1 px-3">Fecha</th>
+                          <th class="text-right py-1 px-3 col-fisico">Físico</th>
+                          <th class="text-left py-1 px-3">Métodos de Pago</th>
                         </tr>
                       </thead>
                       <tbody>
-                        @for (venta of ventasPorFechaVisibles; track venta) {
-                          <tr class="border-b hover:bg-gray-50">
-                            <td class="py-2 px-4">{{ venta.fecha }}</td>
-                            <td class="text-right py-2 px-4 font-medium">
+                        @for (
+                          venta of ventasPorFechaVisibles;
+                          track venta.fechaKey
+                        ) {
+                          <tr
+                            class="border-b hover:bg-gray-50"
+                            [class.selected-row]="
+                              fechaSeleccionadaKey === venta.fechaKey
+                            ">
+                            <td class="py-1 px-3 fecha-cell">
+                              <span class="fecha-label">{{ venta.fecha }}</span>
+                              @if (venta.corteIds.length > 0) {
+                                <button
+                                  type="button"
+                                  mat-flat-button
+                                  color="primary"
+                                  class="btn-ver-ref"
+                                  [matTooltip]="
+                                    venta.cantidadCortes === 1
+                                      ? 'Ver corte de venta'
+                                      : 'Ver ' +
+                                        venta.cantidadCortes +
+                                        ' cortes de venta'
+                                  "
+                                  (click)="verCortesDelDia(venta, $event)">
+                                  Ver
+                                  @if (venta.cantidadCortes > 1) {
+                                    <span class="btn-ver-count"
+                                      >({{ venta.cantidadCortes }})</span
+                                    >
+                                  }
+                                </button>
+                              }
+                            </td>
+                            <td class="text-right py-1 px-3 font-medium col-fisico">
                               {{ formatCurrency(venta.total) }}
                             </td>
-                            <td class="py-2 px-4">
-                              <div class="flex flex-col gap-1">
-                                @for (detalle of venta.detalles; track detalle) {
-                                  <span class="text-sm">
-                                    {{ detalle.metodoPagoNombre }}:
-                                    {{ formatCurrency(detalle.total) }}
-                                  </span>
+                            <td class="py-1 px-3 metodos-pago-cell">
+                              <div class="metodos-pago-tiles">
+                                @for (
+                                  detalle of venta.detalles;
+                                  track detalle.metodoPagoId
+                                ) {
+                                  <div class="metodo-pago-tile">
+                                    <span class="metodo-pago-tile-nombre">{{
+                                      detalle.metodoPagoNombre
+                                    }}</span>
+                                    <span class="metodo-pago-tile-valor">{{
+                                      formatCurrency(detalle.total)
+                                    }}</span>
+                                  </div>
                                 }
                               </div>
                             </td>
@@ -307,11 +348,13 @@
               !loading &&
               !error &&
               vistaCtrl.value === "corte" &&
-              cortesVentaListado.length > 0
+              cortesPorDia.length > 0
             ) {
               <div class="ingresos-content-panel flex flex-col">
                 <div class="ingresos-details-panel flex flex-col">
-                  <h3 class="title font-medium mb-3">Detalles por Fecha</h3>
+                  <h3 class="title font-medium mb-3">
+                    Cortes por día (físico declarado)
+                  </h3>
                   <div
                     class="ingresos-details-table overflow-x-auto -mx-1 px-1">
                     <table class="w-full border-collapse text-sm min-w-[1100px]">
@@ -321,101 +364,134 @@
                           <th class="text-left py-2 px-2">Fecha inicio</th>
                           <th class="text-left py-2 px-2">Fecha fin</th>
                           <th class="text-left py-2 px-2">Estado</th>
-                          <th class="text-right py-2 px-2">Total</th>
-                          <th class="text-right py-2 px-2">Total sistema</th>
+                          <th class="text-right py-2 px-2 col-fisico">Físico</th>
+                          <th class="text-right py-2 px-2">Total caja</th>
                           <th class="text-left py-2 px-2">Métodos de pago</th>
                           <th class="text-left py-2 px-2">Observación</th>
                           <th class="text-center py-2 px-2 w-24"></th>
                         </tr>
                       </thead>
                       <tbody>
-                        @for (corte of cortesVentaListado; track corte.id) {
-                          <tr
-                            class="border-b hover:bg-gray-50 align-top"
-                            [class.cursor-pointer]="
-                              esAdmin && corte.estado === 'creada'
-                            "
-                            (click)="abrirRevisionCorte(corte, $event)">
-                            <td class="py-2 px-2">
-                              {{ nombreUsuarioDesdeCache(corte.usuarioId) }}
-                            </td>
-                            <td class="py-2 px-2 whitespace-nowrap">
-                              {{ formatearFechaHora(corte.fechaIni) }}
-                            </td>
-                            <td class="py-2 px-2 whitespace-nowrap">
-                              {{ formatearFechaHora(corte.fechaFin) }}
-                            </td>
-                            <td class="py-2 px-2">
-                              <span
-                                class="estado-corte"
-                                [class.estado-creada]="corte.estado === 'creada'"
-                                [class.estado-revisada]="
-                                  corte.estado === 'revisada'
-                                "
-                                [class.estado-eliminado]="
-                                  corte.estado === 'eliminado'
-                                ">
-                                {{ corte.estado }}
+                        @for (grupo of cortesPorDia; track grupo.fechaKey) {
+                          <tr class="ingresos-dia-header">
+                            <td class="py-2 px-2 font-semibold" colspan="4">
+                              {{ grupo.fechaLabel }}
+                              <span class="text-secondary font-normal text-xs ml-1">
+                                · {{ grupo.cortes.length }} corte{{
+                                  grupo.cortes.length !== 1 ? "s" : ""
+                                }}
                               </span>
                             </td>
-                            <td class="text-right py-2 px-2 font-medium">
-                              {{ formatCurrency(corte.total) }}
+                            <td class="text-right py-2 px-2 font-semibold col-fisico">
+                              {{ formatCurrency(grupo.totalVentas) }}
                             </td>
-                            <td class="text-right py-2 px-2">
-                              {{ formatCurrency(corte.totalSistema) }}
-                            </td>
-                            <td class="py-2 px-2">
-                              <div class="flex flex-col gap-1">
+                            <td class="py-2 px-2" colspan="4">
+                              <div class="flex flex-wrap gap-x-3 gap-y-1">
                                 @for (
-                                  vt of corte.ventasTipo;
-                                  track vt.id ?? vt.metodoPagoId
+                                  d of grupo.detalles;
+                                  track d.metodoPagoId
                                 ) {
-                                  <span>
-                                    {{ metodoPagoDescripcion(vt.metodoPagoId) }}:
-                                    {{ formatCurrency(vt.total) }}
+                                  <span class="text-sm">
+                                    {{ d.metodoPagoNombre }}:
+                                    {{ formatCurrency(d.total) }}
                                   </span>
+                                }
+                                @if (grupo.detalles.length === 0) {
+                                  <span class="text-secondary text-sm">—</span>
                                 }
                               </div>
                             </td>
-                            <td class="py-2 px-2">
-                              {{ corte.observacion || "—" }}
-                            </td>
-                            <td class="py-2 px-1 text-center">
-                              @if (esAdmin && corte.estado === "creada") {
-                                <button
-                                  mat-icon-button
-                                  type="button"
-                                  color="primary"
-                                  (click)="abrirRevisionCorte(corte, $event)"
-                                  matTooltip="Revisar cierre">
-                                  <mat-icon
-                                    svgIcon="mat:fact_check"></mat-icon>
-                                </button>
-                              }
-                              @if (
-                                esAdmin &&
-                                corte.ultimoVigente &&
-                                corte.estado !== "eliminado"
-                              ) {
-                                <button
-                                  mat-icon-button
-                                  type="button"
-                                  color="warn"
-                                  [disabled]="eliminandoCorteId === corte.id"
-                                  (click)="eliminarCorteVenta(corte, $event)"
-                                  matTooltip="Eliminar último corte">
-                                  @if (eliminandoCorteId === corte.id) {
-                                    <mat-icon
-                                      class="animate-spin"
-                                      svgIcon="mat:hourglass_empty"></mat-icon>
-                                  } @else {
-                                    <mat-icon
-                                      svgIcon="mat:delete_forever"></mat-icon>
-                                  }
-                                </button>
-                              }
-                            </td>
                           </tr>
+                          @for (corte of grupo.cortes; track corte.id) {
+                            <tr
+                              class="border-b hover:bg-gray-50 align-top"
+                              [class.cursor-pointer]="
+                                esAdmin && corte.estado === 'creada'
+                              "
+                              (click)="abrirRevisionCorte(corte, $event)">
+                              <td class="py-2 px-2 pl-4">
+                                {{ nombreUsuarioDesdeCache(corte.usuarioId) }}
+                              </td>
+                              <td class="py-2 px-2 whitespace-nowrap">
+                                {{ formatearFechaHora(corte.fechaIni) }}
+                              </td>
+                              <td class="py-2 px-2 whitespace-nowrap">
+                                {{ formatearFechaHora(corte.fechaFin) }}
+                              </td>
+                              <td class="py-2 px-2">
+                                <span
+                                  class="estado-corte"
+                                  [class.estado-creada]="
+                                    corte.estado === 'creada'
+                                  "
+                                  [class.estado-revisada]="
+                                    corte.estado === 'revisada'
+                                  "
+                                  [class.estado-eliminado]="
+                                    corte.estado === 'eliminado'
+                                  ">
+                                  {{ corte.estado }}
+                                </span>
+                              </td>
+                              <td class="text-right py-2 px-2 font-medium col-fisico">
+                                {{ formatCurrency(totalVentasDeCorte(corte)) }}
+                              </td>
+                              <td class="text-right py-2 px-2">
+                                {{ formatCurrency(corte.total) }}
+                              </td>
+                              <td class="py-2 px-2">
+                                <div class="flex flex-col gap-1">
+                                  @for (
+                                    vt of ventasTipoDeCorte(corte);
+                                    track vt.metodoPagoId
+                                  ) {
+                                    <span>
+                                      {{ vt.label }}:
+                                      {{ formatCurrency(vt.total) }}
+                                    </span>
+                                  }
+                                </div>
+                              </td>
+                              <td class="py-2 px-2">
+                                {{ corte.observacion || "—" }}
+                              </td>
+                              <td class="py-2 px-1 text-center">
+                                @if (esAdmin && corte.estado === "creada") {
+                                  <button
+                                    mat-icon-button
+                                    type="button"
+                                    color="primary"
+                                    (click)="abrirRevisionCorte(corte, $event)"
+                                    matTooltip="Revisar cierre">
+                                    <mat-icon
+                                      svgIcon="mat:fact_check"></mat-icon>
+                                  </button>
+                                }
+                                @if (
+                                  esAdmin &&
+                                  corte.ultimoVigente &&
+                                  corte.estado !== "eliminado"
+                                ) {
+                                  <button
+                                    mat-icon-button
+                                    type="button"
+                                    color="warn"
+                                    [disabled]="eliminandoCorteId === corte.id"
+                                    (click)="eliminarCorteVenta(corte, $event)"
+                                    matTooltip="Eliminar último corte">
+                                    @if (eliminandoCorteId === corte.id) {
+                                      <mat-icon
+                                        class="animate-spin"
+                                        svgIcon="mat:hourglass_empty"></mat-icon>
+                                    } @else {
+                                      <mat-icon
+                                        svgIcon="mat:delete_forever"></mat-icon>
+                                    }
+                                  </button>
+                                }
+                              </td>
+                            </tr>
+                          }
                         }
                       </tbody>
                     </table>

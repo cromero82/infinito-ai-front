@@ -33,17 +33,35 @@ import {
   DistribucionEfectivoDialogComponent,
   DistribucionEfectivoDialogResult
 } from './distribucion-efectivo-dialog/distribucion-efectivo-dialog.component';
+import { MovimientoReferenciaDialogComponent } from '../origenes-fondos/movimiento-referencia-dialog/movimiento-referencia-dialog.component';
 import { SesionesService } from '../../ventas/service/sesiones.service';
 import { Router } from '@angular/router';
 
 interface VentasPorFecha {
   fecha: string;
+  /** Clave YYYY-MM-DD para agrupar / track. */
+  fechaKey: string;
   total: number;
+  cantidadCortes: number;
+  /** Ids de corte_venta del día (para modal Ver). */
+  corteIds: number[];
   detalles: {
     metodoPagoId: number;
     metodoPagoNombre: string;
     total: number;
   }[];
+}
+
+interface CortesPorDiaGrupo {
+  fechaKey: string;
+  fechaLabel: string;
+  totalVentas: number;
+  detalles: {
+    metodoPagoId: number;
+    metodoPagoNombre: string;
+    total: number;
+  }[];
+  cortes: CorteVentaSearchItemDto[];
 }
 
 @Component({
@@ -74,8 +92,12 @@ export class IngresosComponent implements OnInit, OnDestroy {
 
   ventasPorFecha: VentasPorFecha[] = [];
   ventasPorFechaVisibles: VentasPorFecha[] = [];
+  /** Fila activa en Detalles por Fecha mientras el modal de cortes está abierto. */
+  fechaSeleccionadaKey: string | null = null;
   /** Respuesta cruda de search (sin agrupar); modo "Datos corte de ventas". */
   cortesVentaListado: CorteVentaSearchItemDto[] = [];
+  /** Vista datos: cortes agrupados por día con subtotal de ventas. */
+  cortesPorDia: CortesPorDiaGrupo[] = [];
   todosCortesVenta: CorteVentaSearchItemDto[] = [];
   estadoCorteCtrl = new FormControl<
     'vigentes' | 'creada' | 'revisada' | 'eliminado' | 'todos'
@@ -547,6 +569,54 @@ export class IngresosComponent implements OnInit, OnDestroy {
       if (filtro === 'vigentes') return c.estado !== 'eliminado';
       return c.estado === filtro;
     });
+    this.reconstruirCortesPorDia();
+  }
+
+  private reconstruirCortesPorDia(): void {
+    const grupos = new Map<string, CorteVentaSearchItemDto[]>();
+    for (const c of this.cortesVentaListado) {
+      const key = CorteVentaService.fechaCalendarioDesdeIso(c.fechaIni);
+      if (!key) {
+        continue;
+      }
+      const arr = grupos.get(key);
+      if (arr) {
+        arr.push(c);
+      } else {
+        grupos.set(key, [c]);
+      }
+    }
+
+    const keys = Array.from(grupos.keys()).sort((a, b) => b.localeCompare(a));
+    this.cortesPorDia = keys.map((fechaKey) => {
+      const cortes = (grupos.get(fechaKey) ?? []).slice().sort((a, b) =>
+        b.fechaIni.localeCompare(a.fechaIni)
+      );
+      const agregado = this.corteVentaService.agruparPorFechaCalendario(cortes)[0];
+      const detalles = (agregado?.ventasTipo || [])
+        .map((vt) => {
+          const monto = CorteVentaService.montoVentasDeTipo(vt);
+          if (monto === 0) {
+            return null;
+          }
+          const metodoPago = this.metodosPago.find((m) => m.id === vt.metodoPagoId);
+          return {
+            metodoPagoId: vt.metodoPagoId,
+            metodoPagoNombre:
+              metodoPago?.descripcion || `Método ${vt.metodoPagoId}`,
+            total: monto
+          };
+        })
+        .filter((d): d is NonNullable<typeof d> => d != null);
+      const totalVentas = detalles.reduce((s, d) => s + d.total, 0);
+      return {
+        fechaKey,
+        fechaLabel: this.formatearFechaParaLabel(agregado?.fechaIni ?? cortes[0].fechaIni),
+        totalVentas,
+        detalles,
+        cortes
+      };
+    });
   }
 
   private procesarRespuestaDashboardDesdeCortes(cortes: CorteVentaSearchItemDto[]): void {
@@ -554,24 +624,51 @@ export class IngresosComponent implements OnInit, OnDestroy {
       this.corteVentaService.agruparPorFechaCalendario(cortes || []);
 
     this.ventasPorFecha = agrupados.map((item) => {
+      const fechaKey = CorteVentaService.fechaCalendarioDesdeIso(item.fechaIni);
       const fechaLabel = this.formatearFechaParaLabel(item.fechaIni);
-      const detalles = (item.ventasTipo || []).map((vt) => {
-        const metodoPago = this.metodosPago.find(
-          (m) => m.id === vt.metodoPagoId
-        );
-        return {
-          metodoPagoId: vt.metodoPagoId,
-          metodoPagoNombre:
-            metodoPago?.descripcion || `Método ${vt.metodoPagoId}`,
-          total: Number(vt.total) || 0
-        };
-      });
+      const detalles = (item.ventasTipo || [])
+        .map((vt) => {
+          const monto = CorteVentaService.montoVentasDeTipo(vt);
+          if (monto === 0) {
+            return null;
+          }
+          const metodoPago = this.metodosPago.find(
+            (m) => m.id === vt.metodoPagoId
+          );
+          return {
+            metodoPagoId: vt.metodoPagoId,
+            metodoPagoNombre:
+              metodoPago?.descripcion || `Método ${vt.metodoPagoId}`,
+            total: monto
+          };
+        })
+        .filter((d): d is NonNullable<typeof d> => d != null);
+
+      const totalDia = detalles.reduce((s, d) => s + d.total, 0);
+      const delDia = (cortes || []).filter(
+        (c) =>
+          CorteVentaService.fechaCalendarioDesdeIso(c.fechaIni) === fechaKey
+      );
+      const cantidadCortes = delDia.length;
+      const corteIds = delDia
+        .map((c) => c.id)
+        .filter((id) => Number.isFinite(id))
+        .sort((a, b) => a - b);
+
       return {
         fecha: fechaLabel,
-        total: Number(item.total) || 0,
+        fechaKey,
+        total: totalDia,
+        cantidadCortes,
+        corteIds,
         detalles
       };
     });
+
+    // Detalles por Fecha: más reciente primero
+    this.ventasPorFecha.sort((a, b) =>
+      (b.fechaKey || '').localeCompare(a.fechaKey || '')
+    );
 
     this.totalGeneral = this.ventasPorFecha.reduce(
       (sum, v) => sum + (Number(v.total) || 0),
@@ -579,7 +676,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
     );
     this.ventasDiaActual = this.totalGeneral;
 
-    const numItems = agrupados.length;
+    const numItems = this.ventasPorFecha.length;
     this.promedioVentas = numItems > 0 ? this.totalGeneral / numItems : 0;
 
     this.ventasPorFechaVisibles = this.ventasPorFecha;
@@ -601,6 +698,32 @@ export class IngresosComponent implements OnInit, OnDestroy {
   metodoPagoDescripcion(metodoPagoId: number): string {
     const m = this.metodosPago.find((x) => x.id === metodoPagoId);
     return m?.descripcion ?? `Método ${metodoPagoId}`;
+  }
+
+  /** Físico declarado por medio, para la vista de datos / dashboard. */
+  ventasTipoDeCorte(corte: CorteVentaSearchItemDto): {
+    metodoPagoId: number;
+    label: string;
+    total: number;
+  }[] {
+    return (corte.ventasTipo || [])
+      .map((vt) => {
+        const total = CorteVentaService.montoVentasDeTipo(vt);
+        if (total === 0) {
+          return null;
+        }
+        return {
+          metodoPagoId: vt.metodoPagoId,
+          label: this.metodoPagoDescripcion(vt.metodoPagoId),
+          total
+        };
+      })
+      .filter((x): x is NonNullable<typeof x> => x != null);
+  }
+
+  /** Suma del físico declarado del corte (referencia de ingreso real). */
+  totalVentasDeCorte(corte: CorteVentaSearchItemDto): number {
+    return this.ventasTipoDeCorte(corte).reduce((s, v) => s + v.total, 0);
   }
 
   formatearFechaHora(iso: string): string {
@@ -666,6 +789,29 @@ export class IngresosComponent implements OnInit, OnDestroy {
         if (actualizado) {
           this.refrescarDatosIngresosMismoRango();
         }
+      });
+  }
+
+  verCortesDelDia(venta: VentasPorFecha, event?: Event): void {
+    event?.stopPropagation();
+    const ids = venta.corteIds ?? [];
+    if (!ids.length) {
+      return;
+    }
+    this.fechaSeleccionadaKey = venta.fechaKey;
+    this.dialog
+      .open(MovimientoReferenciaDialogComponent, {
+        width: '920px',
+        maxWidth: '96vw',
+        data: {
+          origenTipo: 'CORTE_VENTA',
+          corteIds: ids,
+          idReferencia: ids[0]
+        }
+      })
+      .afterClosed()
+      .subscribe(() => {
+        this.fechaSeleccionadaKey = null;
       });
   }
 

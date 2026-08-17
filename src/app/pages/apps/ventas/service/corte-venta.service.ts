@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 
 /**
@@ -78,8 +78,12 @@ export interface BaseInicialResultDto {
 export interface VentaTipoSearchDto {
   id?: number;
   metodoPagoId: number;
+  /** Declarado / físico del medio (referencia para estadísticas de ingresos). */
   total: number;
   totalSistema: number;
+  /** Ventas del sistema en el corte (sin base). */
+  totalVentasSistema?: number;
+  totalEgresosSistema?: number;
   corteVentaId?: number;
 }
 
@@ -207,7 +211,8 @@ export class CorteVentaService {
 
   /**
    * Agrupa cortes que comparten el mismo día de calendario (según `fechaIni`), **sin** separar por usuario.
-   * Suma totales y fusiona `ventasTipo` por `metodoPagoId`. Sirve para vistas tipo dashboard: un solo valor por día.
+   * Suma totales y fusiona `ventasTipo` por `metodoPagoId` (incluye `totalVentasSistema`).
+   * Sirve para vistas tipo dashboard: un solo valor por día.
    */
   agruparPorFechaCalendario(
     cortes: CorteVentaSearchItemDto[]
@@ -219,6 +224,9 @@ export class CorteVentaService {
     const grupos = new Map<string, CorteVentaSearchItemDto[]>();
     for (const c of cortes) {
       const dia = CorteVentaService.fechaCalendarioDesdeIso(c.fechaIni);
+      if (!dia) {
+        continue;
+      }
       const arr = grupos.get(dia);
       if (arr) {
         arr.push(c);
@@ -278,18 +286,37 @@ export class CorteVentaService {
     items: CorteVentaSearchItemDto[]
   ): CorteVentaSearchItemDto {
     if (items.length === 1) {
-      return { ...items[0] };
+      const only = items[0];
+      const ventasTipo = (only.ventasTipo || []).map((vt) => ({ ...vt }));
+      const totalFisico = ventasTipo.reduce(
+        (s, vt) => s + CorteVentaService.montoVentasDeTipo(vt),
+        0
+      );
+      return {
+        ...only,
+        ventasTipo,
+        total: totalFisico > 0 ? totalFisico : Number(only.total) || 0,
+        totalSistema: Number(only.totalSistema) || 0
+      };
     }
 
     let fechaIniMin = items[0].fechaIni;
     let fechaFinMax = items[0].fechaFin;
     let total = 0;
     let totalSistema = 0;
+    let totalFisicoDia = 0;
     let idMin = items[0].id;
 
     const ventasPorMetodo = new Map<
       number,
-      { total: number; totalSistema: number; corteVentaId?: number; id?: number }
+      {
+        total: number;
+        totalSistema: number;
+        totalVentasSistema: number;
+        totalEgresosSistema: number;
+        corteVentaId?: number;
+        id?: number;
+      }
     >();
 
     for (const it of items) {
@@ -308,13 +335,25 @@ export class CorteVentaService {
         const prev = ventasPorMetodo.get(mid);
         const t = Number(vt.total) || 0;
         const ts = Number(vt.totalSistema) || 0;
+        const tvs =
+          vt.totalVentasSistema != null && Number.isFinite(Number(vt.totalVentasSistema))
+            ? Number(vt.totalVentasSistema)
+            : 0;
+        const te =
+          vt.totalEgresosSistema != null && Number.isFinite(Number(vt.totalEgresosSistema))
+            ? Number(vt.totalEgresosSistema)
+            : 0;
         if (prev) {
           prev.total += t;
           prev.totalSistema += ts;
+          prev.totalVentasSistema += tvs;
+          prev.totalEgresosSistema += te;
         } else {
           ventasPorMetodo.set(mid, {
             total: t,
             totalSistema: ts,
+            totalVentasSistema: tvs,
+            totalEgresosSistema: te,
             corteVentaId: vt.corteVentaId,
             id: vt.id
           });
@@ -324,10 +363,13 @@ export class CorteVentaService {
 
     const ventasTipo: VentaTipoSearchDto[] = [];
     for (const [metodoPagoId, agg] of ventasPorMetodo) {
+      totalFisicoDia += agg.total;
       ventasTipo.push({
         metodoPagoId,
         total: agg.total,
         totalSistema: agg.totalSistema,
+        totalVentasSistema: agg.totalVentasSistema,
+        totalEgresosSistema: agg.totalEgresosSistema,
         corteVentaId: agg.corteVentaId,
         id: agg.id
       });
@@ -344,18 +386,36 @@ export class CorteVentaService {
       fechaIni: fechaIniMin,
       fechaFin: fechaFinMax,
       ultimoHistorialReciboId: base.ultimoHistorialReciboId,
-      total,
+      // Dashboard/ingresos: total físico declarado (valor real de caja).
+      total: totalFisicoDia > 0 ? totalFisicoDia : total,
       totalSistema,
       ventasTipo,
       detalles: [],
       estado: base.estado ?? 'revisada',
-      observacion: base.observacion,
+      observacion:
+        items.length > 1
+          ? `${items.length} cortes del día`
+          : base.observacion,
       revisadoPor: base.revisadoPor,
       fechaRevision: base.fechaRevision,
       ultimoVigente: false,
       ultimoCorte,
       actual
     };
+  }
+
+  /**
+   * Monto de ingreso a mostrar en dashboard/ingresos (por medio).
+   * Usa `total` (físico declarado); si falta, cae a `totalVentasSistema`.
+   */
+  static montoVentasDeTipo(vt: VentaTipoSearchDto): number {
+    if (vt.total != null && Number.isFinite(Number(vt.total))) {
+      return Number(vt.total) || 0;
+    }
+    if (vt.totalVentasSistema != null && Number.isFinite(Number(vt.totalVentasSistema))) {
+      return Number(vt.totalVentasSistema) || 0;
+    }
+    return 0;
   }
 
   /**
@@ -445,6 +505,26 @@ export class CorteVentaService {
 
   obtenerPorId(id: number): Observable<CorteVentaSearchItemDto> {
     return this.http.get<CorteVentaSearchItemDto>(`${this.apiUrl}/${id}`);
+  }
+
+  /**
+   * Carga varios cortes por id (`GET /corte-venta/by-ids?ids=1&ids=2`).
+   * Conserva el orden de `ids` en la respuesta del backend.
+   */
+  obtenerPorIds(ids: number[]): Observable<CorteVentaSearchItemDto[]> {
+    const unique = Array.from(
+      new Set((ids ?? []).filter((id) => Number.isFinite(id)))
+    );
+    if (unique.length === 0) {
+      return of([]);
+    }
+    let params = new HttpParams();
+    for (const id of unique) {
+      params = params.append('ids', String(id));
+    }
+    return this.http.get<CorteVentaSearchItemDto[]>(`${this.apiUrl}/by-ids`, {
+      params
+    });
   }
 
   finalizarRevision(

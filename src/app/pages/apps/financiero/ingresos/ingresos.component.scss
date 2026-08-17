@@ -69,6 +69,132 @@ table td {
   background: #fce8e6;
 }
 
+.ingresos-dia-header {
+  background: rgba(25, 118, 210, 0.06);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.detalles-fecha-table {
+  font-size: 13px;
+
+  th,
+  td {
+    vertical-align: top;
+  }
+
+  th {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+
+  td {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+
+  tr.selected-row {
+    background-color: rgba(63, 81, 181, 0.12) !important;
+
+    td {
+      font-weight: 500;
+    }
+
+    &:hover {
+      background-color: rgba(63, 81, 181, 0.16) !important;
+    }
+
+    // Mantener acento verde de Físico sobre la selección
+    td.col-fisico {
+      background-color: rgba(76, 175, 80, 0.18) !important;
+    }
+  }
+}
+
+.fecha-cell {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+
+.fecha-label {
+  white-space: nowrap;
+}
+
+.metodos-pago-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.25;
+}
+
+.metodo-pago-linea {
+  display: block;
+}
+
+.metodos-pago-cell {
+  min-width: 280px;
+  width: 55%;
+}
+
+.metodos-pago-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+  width: 100%;
+}
+
+.metodo-pago-tile {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.035);
+  font-size: 0.8125rem;
+  line-height: 1.3;
+}
+
+.metodo-pago-tile-nombre {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.metodo-pago-tile-valor {
+  flex: 0 0 auto;
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.btn-ver-ref {
+  flex: 0 0 auto;
+  min-width: 0 !important;
+  height: 24px !important;
+  line-height: 24px !important;
+  padding: 0 10px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em;
+  box-shadow: 0 1px 3px rgb(var(--vex-color-primary-500) / 0.35);
+}
+
+.btn-ver-count {
+  margin-left: 2px;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
 .estado-corte-toggle {
   max-width: 460px;
 }
@@ -284,6 +410,21 @@ table td {
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.02);
+
+  // Misma referencia visual que Precio (admin-productos)
+  th.col-fisico,
+  td.col-fisico {
+    background-color: rgba(76, 175, 80, 0.08);
+    font-variant-numeric: tabular-nums;
+  }
+
+  tr:hover td.col-fisico {
+    background-color: rgba(76, 175, 80, 0.12);
+  }
+
+  tr.ingresos-dia-header td.col-fisico {
+    background-color: rgba(76, 175, 80, 0.14);
+  }
 }
 
 .split-pane-left > * {

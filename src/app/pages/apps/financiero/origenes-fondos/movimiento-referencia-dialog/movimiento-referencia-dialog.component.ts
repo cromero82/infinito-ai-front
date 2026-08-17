@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
 import { DragDropModule, CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { catchError, of } from 'rxjs';
 import { AuthService } from '../../../../../auth/service/auth.service';
@@ -31,7 +32,13 @@ import { OrigenFondosArbolItemDto } from '../util/origen-fondos-arbol.util';
 
 export interface MovimientoReferenciaDialogData {
   origenTipo: string;
-  idReferencia: number;
+  /** Un solo id (flujo OF / egreso / un corte). */
+  idReferencia?: number;
+  /**
+   * Varios cortes (p. ej. Ingresos → Detalles por fecha).
+   * Si viene poblado, tiene prioridad sobre `idReferencia` para vista corte.
+   */
+  corteIds?: number[];
   /** usuario_id del movimiento (quien lo registró). */
   usuarioId?: string | null;
 }
@@ -49,6 +56,7 @@ type VistaReferencia = 'egreso' | 'corte' | 'desconocido';
     MatProgressSpinnerModule,
     MatDividerModule,
     MatTableModule,
+    MatTabsModule,
     DragDropModule,
     CdkDrag,
     CdkDragHandle
@@ -61,10 +69,14 @@ export class MovimientoReferenciaDialogComponent implements OnInit {
   error: string | null = null;
   vista: VistaReferencia = 'desconocido';
   titulo = 'Detalle';
+  /** Fecha del corte en badge: «Sábado, 15 Agosto». */
+  fechaTitulo = '';
   nombreUsuario = '—';
 
   egreso: EgresoDto | null = null;
-  corte: CorteVentaSearchItemDto | null = null;
+  /** Lista de cortes (1..N). El seleccionado es `corte`. */
+  cortes: CorteVentaSearchItemDto[] = [];
+  corteSeleccionadoIndex = 0;
   origenEgresoNombre: string | null = null;
 
   private metodosPorId = new Map<number, MetodoPagoDto>();
@@ -95,11 +107,17 @@ export class MovimientoReferenciaDialogComponent implements OnInit {
     const tipo = (this.data.origenTipo ?? '').toUpperCase();
     if (tipo === 'EGRESO' || tipo === 'EGRESO_REVERSION') {
       this.vista = 'egreso';
+      const id = this.data.idReferencia;
       this.titulo =
         tipo === 'EGRESO_REVERSION'
-          ? `Reversión egreso #${this.data.idReferencia}`
-          : `Egreso #${this.data.idReferencia}`;
-      this.cargarEgreso();
+          ? `Reversión egreso #${id}`
+          : `Egreso #${id}`;
+      if (id == null) {
+        this.loading = false;
+        this.error = 'Falta id de egreso.';
+        return;
+      }
+      this.cargarEgreso(id);
       return;
     }
     if (
@@ -109,14 +127,36 @@ export class MovimientoReferenciaDialogComponent implements OnInit {
       tipo === 'CIERRE_REVERSO'
     ) {
       this.vista = 'corte';
-      this.titulo = `Corte de venta #${this.data.idReferencia}`;
-      this.cargarCorte();
+      const ids = this.resolverCorteIds();
+      this.titulo =
+        ids.length > 1
+          ? `Corte de venta (${ids.length})`
+          : `Corte de venta #${ids[0] ?? ''}`;
+      this.cargarCortes(ids);
       return;
     }
     this.vista = 'desconocido';
     this.titulo = 'Referencia';
     this.loading = false;
     this.error = `No hay vista de solo lectura para origen «${this.data.origenTipo}».`;
+  }
+
+  get corte(): CorteVentaSearchItemDto | null {
+    return this.cortes[this.corteSeleccionadoIndex] ?? null;
+  }
+
+  get esMultiCorte(): boolean {
+    return this.cortes.length > 1;
+  }
+
+  private resolverCorteIds(): number[] {
+    if (this.data.corteIds?.length) {
+      return this.data.corteIds.filter((id) => Number.isFinite(id));
+    }
+    if (this.data.idReferencia != null) {
+      return [this.data.idReferencia];
+    }
+    return [];
   }
 
   private resolverNombreUsuario(usuarioId: string | null | undefined): string {
@@ -130,12 +170,12 @@ export class MovimientoReferenciaDialogComponent implements OnInit {
     return u?.nombre?.trim() || id;
   }
 
-  private cargarEgreso(): void {
+  private cargarEgreso(id: number): void {
     this.egresosService
-      .getEgresoById(this.data.idReferencia)
+      .getEgresoById(id)
       .pipe(
         catchError(() => {
-          this.error = `No se pudo cargar el egreso #${this.data.idReferencia}.`;
+          this.error = `No se pudo cargar el egreso #${id}.`;
           this.loading = false;
           return of(null);
         })
@@ -161,32 +201,146 @@ export class MovimientoReferenciaDialogComponent implements OnInit {
       });
   }
 
-  private cargarCorte(): void {
+  private cargarCortes(ids: number[]): void {
+    if (!ids.length) {
+      this.loading = false;
+      this.error = 'No se indicaron ids de corte.';
+      return;
+    }
     this.metodoPagoService.obtenerMetodosPagoParaTickets().subscribe({
       next: (mps) => {
         this.metodosPorId = new Map((mps ?? []).map((m) => [m.id, m]));
       }
     });
     this.corteVentaService
-      .obtenerPorId(this.data.idReferencia)
+      .obtenerPorIds(ids)
       .pipe(
         catchError(() => {
-          this.error = `No se pudo cargar el corte #${this.data.idReferencia}.`;
+          this.error =
+            ids.length > 1
+              ? `No se pudieron cargar los cortes (${ids.join(', ')}).`
+              : `No se pudo cargar el corte #${ids[0]}.`;
           this.loading = false;
-          return of(null);
+          return of([] as CorteVentaSearchItemDto[]);
         })
       )
-      .subscribe((corte) => {
-        this.corte = corte;
-        if (!this.data.usuarioId && corte?.usuarioId) {
-          this.nombreUsuario = this.resolverNombreUsuario(corte.usuarioId);
+      .subscribe((lista) => {
+        this.cortes = lista ?? [];
+        this.corteSeleccionadoIndex = 0;
+        if (!this.cortes.length) {
+          this.error =
+            ids.length > 1
+              ? 'No se encontraron cortes para los ids indicados.'
+              : `No se encontró el corte #${ids[0]}.`;
+        } else {
+          this.actualizarTituloCortes();
+          if (!this.data.usuarioId && this.corte?.usuarioId) {
+            this.nombreUsuario = this.resolverNombreUsuario(this.corte.usuarioId);
+          }
         }
         this.loading = false;
       });
   }
 
+  private actualizarTituloCortes(): void {
+    const n = this.cortes.length;
+    this.fechaTitulo = this.formatearFechaTitulo(this.cortes[0]?.fechaIni);
+    if (n > 1) {
+      this.titulo = `Corte de venta (${n})`;
+    } else {
+      this.titulo = `Corte de venta #${this.cortes[0].id}`;
+    }
+  }
+
+  /** Ej.: «Sábado, 15 Agosto» */
+  private formatearFechaTitulo(iso: string | null | undefined): string {
+    if (!iso) {
+      return '';
+    }
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) {
+      return '';
+    }
+    const diaSemana = this.capitalizar(
+      d.toLocaleDateString('es-CO', { weekday: 'long' })
+    );
+    const diaMes = d.getDate();
+    const mes = this.capitalizar(
+      d.toLocaleDateString('es-CO', { month: 'long' })
+    );
+    return `${diaSemana}, ${diaMes} ${mes}`;
+  }
+
+  private capitalizar(s: string): string {
+    const t = (s ?? '').trim();
+    return t ? t.charAt(0).toUpperCase() + t.slice(1) : '';
+  }
+
+  onTabChange(index: number): void {
+    this.corteSeleccionadoIndex = index;
+    const c = this.corte;
+    if (c?.usuarioId) {
+      this.nombreUsuario = this.resolverNombreUsuario(c.usuarioId);
+    }
+  }
+
+  etiquetaTabCorte(c: CorteVentaSearchItemDto): string {
+    if (this.mismoDiaCalendario(c.fechaIni, c.fechaFin)) {
+      return `#${c.id} · ${this.formatearHoraAmPm(c.fechaIni)} - ${this.formatearHoraAmPm(c.fechaFin)}`;
+    }
+    return `#${c.id} · ${this.formatearPeriodoCorto(c.fechaIni)} — ${this.formatearPeriodoCorto(c.fechaFin)}`;
+  }
+
+  private mismoDiaCalendario(a: string, b: string): boolean {
+    return (
+      CorteVentaService.fechaCalendarioDesdeIso(a) ===
+      CorteVentaService.fechaCalendarioDesdeIso(b)
+    );
+  }
+
+  private formatearHoraAmPm(iso: string): string {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) {
+      return iso;
+    }
+    let h = d.getHours();
+    const m = String(d.getMinutes()).padStart(2, '0');
+    const suf = h >= 12 ? 'p.m.' : 'a.m.';
+    h = h % 12;
+    if (h === 0) {
+      h = 12;
+    }
+    return `${String(h).padStart(2, '0')}:${m} ${suf}`;
+  }
+
+  private formatearPeriodoCorto(iso: string): string {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) {
+      return iso;
+    }
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy} ${this.formatearHoraAmPm(iso)}`;
+  }
+
   get detallesCorte(): CorteVentaDetalleDto[] {
     return this.corte?.detalles ?? [];
+  }
+
+  get sumaTotalSistemaDetalle(): number {
+    return this.detallesCorte.reduce(
+      (s, d) => s + (Number(d.totalSistema) || 0),
+      0
+    );
+  }
+
+  get sumaTotalFisicoDetalle(): number {
+    return this.detallesCorte.reduce((s, d) => s + (Number(d.total) || 0), 0);
+  }
+
+  get sumaDesfaseDetalle(): number {
+    return this.detallesCorte.reduce((s, d) => s + (Number(d.desfase) || 0), 0);
   }
 
   metodoPagoNombre(metodoPagoId: number | null | undefined): string {
