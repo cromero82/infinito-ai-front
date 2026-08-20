@@ -1072,6 +1072,20 @@ vex-page-layout-header .container {
   }
 }
 
+.tab-context-menu-anchor {
+  position: fixed;
+  z-index: 1200;
+  pointer-events: none;
+}
+
+.tab-context-menu-trigger {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .cxc-footer-chip {
   align-self: flex-start;
   margin: 4px 8px 6px;

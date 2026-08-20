@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../../../environments/environment';
 
 export interface AbrirCuentaPorCobrarRequest {
@@ -15,9 +16,19 @@ export interface AbrirCuentaPorCobrarRequest {
   totalTicket: number;
   /** Abono de contado al abrir (0 = todo a crédito). */
   abono: number;
+  /**
+   * Medio del abono inicial. Obligatorio si abono > 0
+   * (queda en abonos y alimenta historial multipago al liquidar).
+   */
+  metodoPagoId?: number | null;
   /** Saldo a crédito (monto_original / saldo_pendiente). */
   monto: number;
   observacion?: string | null;
+}
+
+export interface CerrarCuentaPorCobrarRequest {
+  motivoTexto?: string | null;
+  motivoOperacionId?: number | null;
 }
 
 export interface CuentaPorCobrarDto {
@@ -33,8 +44,16 @@ export interface CuentaPorCobrarDto {
   fechaOrigen: string;
   montoOriginal: number;
   saldoPendiente: number;
+  /** Total ticket sincronizado (suma productos). */
+  totalTicket?: number | null;
   estado: string;
   observacion?: string | null;
+  fechaCierre?: string | null;
+  motivoCierreTexto?: string | null;
+  movimientoInventarioId?: number | null;
+  valorPerdidaCosto?: number | null;
+  /** Abonos (incl. inicial). Anular solo si 0. */
+  cantidadAbonos?: number | null;
 }
 
 export interface RegistrarAbonoCxcRequest {
@@ -117,12 +136,58 @@ export class CuentaPorCobrarService {
     });
   }
 
+  /**
+   * Ajusta CxC vigente del ticket al nuevo total (agregar/quitar ítems).
+   * 204 → null.
+   */
+  sincronizarTotalTicket(
+    ticketId: number,
+    totalTicket: number
+  ): Observable<CuentaPorCobrarDto | null> {
+    return this.http
+      .post<CuentaPorCobrarDto>(
+        `${this.apiUrl}/por-ticket/${ticketId}/sincronizar-total`,
+        { totalTicket },
+        {
+          headers: this.jsonHeaders(),
+          observe: 'response'
+        }
+      )
+      .pipe(
+        map((res) => (res.status === 204 ? null : (res.body ?? null)))
+      );
+  }
+
   registrarAbono(
     cuentaId: number,
     body: RegistrarAbonoCxcRequest
   ): Observable<AbonoCxcDto> {
     return this.http.post<AbonoCxcDto>(
       `${this.apiUrl}/${cuentaId}/abonos`,
+      body,
+      { headers: this.jsonHeaders() }
+    );
+  }
+
+  /** Anula CxC vigente solo si no hay abonos. */
+  anular(
+    cuentaId: number,
+    body?: CerrarCuentaPorCobrarRequest | null
+  ): Observable<CuentaPorCobrarDto> {
+    return this.http.post<CuentaPorCobrarDto>(
+      `${this.apiUrl}/${cuentaId}/anular`,
+      body ?? {},
+      { headers: this.jsonHeaders() }
+    );
+  }
+
+  /** Castiga cartera: CASTIGADA + salida inventario a costo. */
+  castigar(
+    cuentaId: number,
+    body: CerrarCuentaPorCobrarRequest
+  ): Observable<CuentaPorCobrarDto> {
+    return this.http.post<CuentaPorCobrarDto>(
+      `${this.apiUrl}/${cuentaId}/castigar`,
       body,
       { headers: this.jsonHeaders() }
     );

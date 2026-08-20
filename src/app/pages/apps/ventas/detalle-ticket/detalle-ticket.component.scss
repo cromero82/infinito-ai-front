@@ -520,6 +520,10 @@
     grid-template-columns: var(--detalle-grid-cols-atendido);
   }
 
+  &.detalle-footer--credito .total-externo {
+    grid-column: 4;
+  }
+
   .metodos-pago-container {
     grid-column: 1;
     text-align: left;

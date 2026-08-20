@@ -227,7 +227,9 @@ export class RegistrarAbonoCxcDialogComponent implements OnInit {
           next: (cuenta) => {
             this.saving = false;
             this.snackBar.open(
-              `Abono ${this.formatMoney(abono.monto)} registrado`,
+              cuenta.estado === 'PAGADA'
+                ? `Abono ${this.formatMoney(abono.monto)} · crédito liquidado (ticket cerrado)`
+                : `Abono ${this.formatMoney(abono.monto)} registrado`,
               'Cerrar',
               { duration: 3500 }
             );
@@ -235,8 +237,16 @@ export class RegistrarAbonoCxcDialogComponent implements OnInit {
           },
           error: () => {
             this.saving = false;
+            const saldoNuevo = Math.max(
+              0,
+              this.saldoPendiente - this.montoValue
+            );
+            const estado =
+              saldoNuevo <= 0 ? 'PAGADA' : 'PARCIAL';
             this.snackBar.open(
-              `Abono ${this.formatMoney(abono.monto)} registrado`,
+              estado === 'PAGADA'
+                ? `Abono ${this.formatMoney(abono.monto)} · crédito liquidado (ticket cerrado)`
+                : `Abono ${this.formatMoney(abono.monto)} registrado`,
               'Cerrar',
               { duration: 3500 }
             );
@@ -244,14 +254,8 @@ export class RegistrarAbonoCxcDialogComponent implements OnInit {
               abono,
               cuenta: {
                 ...this.data.cuenta,
-                saldoPendiente: Math.max(
-                  0,
-                  this.saldoPendiente - this.montoValue
-                ),
-                estado:
-                  this.saldoPendiente - this.montoValue <= 0
-                    ? 'PAGADA'
-                    : 'PARCIAL'
+                saldoPendiente: saldoNuevo,
+                estado
               }
             });
           }

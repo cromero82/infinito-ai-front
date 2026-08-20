@@ -171,7 +171,8 @@
                         !ticketsConClienteVisibles && isTicketConCliente(t)
                       "
                       cdkDrag
-                      [cdkDragStartDelay]="200">
+                      [cdkDragStartDelay]="200"
+                      (contextmenu)="onTicketTabContextMenu(i, $event)">
                       <a
                         mat-tab-link
                         [active]="selectedIndex === i"
@@ -228,7 +229,10 @@
                           cdkDrag
                           [cdkDragDisabled]="ticketTabsDisabled"
                           [cdkDragStartDelay]="150"
-                          cdkDragLockAxis="x">
+                          cdkDragLockAxis="x"
+                          (contextmenu)="
+                            onTicketTabContextMenu(ticketIndex(t), $event)
+                          ">
                           <span
                             role="tab"
                             tabindex="0"
@@ -293,7 +297,10 @@
                           cdkDrag
                           [cdkDragDisabled]="ticketTabsDisabled"
                           [cdkDragStartDelay]="150"
-                          cdkDragLockAxis="x">
+                          cdkDragLockAxis="x"
+                          (contextmenu)="
+                            onTicketTabContextMenu(ticketIndex(t), $event)
+                          ">
                           <span
                             role="tab"
                             tabindex="0"
@@ -350,6 +357,7 @@
                       [sessionId]="sessionId"
                       [ticketMoveOptions]="ticketMoveOptions"
                       [splitComment]="activeSplitComment"
+                      [modoCredito]="!!activeTicketCxc"
                       [searchInputElement]="
                         productSearchInput?.nativeElement || null
                       "
@@ -359,7 +367,10 @@
                       (moveToExistingTicketRequested)="
                         onMoveToExistingTicketRequested($event)
                       "
-                      (metodoPagoActualizado)="recargarRecibo()"></detalle-ticket>
+                      (metodoPagoActualizado)="recargarRecibo()"
+                      (ticketTotalChanged)="
+                        onTicketTotalChanged($event)
+                      "></detalle-ticket>
                   </div>
                   @if (activeTicketCxc; as cxc) {
                     <button
@@ -379,7 +390,11 @@
                     [cuenta]="activeTicketCxc"
                     [expanded]="cxcRailExpanded"
                     (toggle)="toggleCxcRail()"
-                    (abonar)="abrirAbonoCxc()"></vex-cxc-ticket-rail>
+                    (abonar)="abrirAbonoCxc()"
+                    (imprimir)="imprimirTicketConCredito()"
+                    (otrasAcciones)="
+                      irACuentasPorCobrarDesdeTicket()
+                    "></vex-cxc-ticket-rail>
                 }
               </div>
             } @else {
@@ -421,9 +436,35 @@
           <button
             mat-menu-item
             type="button"
+            [disabled]="activeTicketYaTieneCredito"
+            [matTooltip]="
+              activeTicketYaTieneCredito
+                ? 'Este ticket ya tiene cuenta por cobrar'
+                : ''
+            "
             (click)="abrirCuentaPorCobrar()">
             <mat-icon svgIcon="mat:handshake"></mat-icon>
             <span>Generar crédito (cuenta por cobrar)</span>
+          </button>
+        </mat-menu>
+        <div
+          class="tab-context-menu-anchor"
+          [style.left.px]="tabContextMenuPosition.x"
+          [style.top.px]="tabContextMenuPosition.y">
+          <button
+            #tabContextMenuTrigger="matMenuTrigger"
+            class="tab-context-menu-trigger"
+            [matMenuTriggerFor]="tabContextMenu"
+            type="button"></button>
+        </div>
+        <mat-menu #tabContextMenu="matMenu" class="tab-context-menu">
+          <button
+            mat-menu-item
+            type="button"
+            [disabled]="activeTicketYaTieneCredito"
+            (click)="abrirCuentaPorCobrar()">
+            <mat-icon svgIcon="mat:handshake"></mat-icon>
+            <span>Generar crédito (Cuenta de cobro)</span>
           </button>
         </mat-menu>
         <mat-menu

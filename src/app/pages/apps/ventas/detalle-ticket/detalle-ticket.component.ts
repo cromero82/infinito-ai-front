@@ -163,11 +163,18 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   @Input() sessionId: number | null = null;
   @Input() ticketMoveOptions: TicketMoveOption[] = [];
   @Input() splitComment: string | null = null;
+  /**
+   * Ticket con CxC vigente: deshabilita medios de pago del footer
+   * (cobranza desde el rail / Financiero → Cuentas por cobrar).
+   */
+  @Input() modoCredito = false;
   @Output() focusSearchInputRequest = new EventEmitter<void>();
   @Output() metodoPagoActualizado = new EventEmitter<void>();
   @Output() ticketProcesado = new EventEmitter<void>();
   @Output() moveToNewTicketRequested = new EventEmitter<void>();
   @Output() moveToExistingTicketRequested = new EventEmitter<number>();
+  /** Total del ticket (suma detalles) tras cada cambio de ítems. */
+  @Output() ticketTotalChanged = new EventEmitter<number>();
 
   recibo: ReciboDto | null = null;
   detalles: ReciboDetalleDto[] = [];
@@ -1273,6 +1280,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   private recalculateTotal(): number {
     if (!this.recibo) {
       this.actualizarFooterSeleccion();
+      this.ticketTotalChanged.emit(0);
       return 0;
     }
     const sum = this.detalles.reduce(
@@ -1284,6 +1292,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       total: sum
     };
     this.actualizarFooterSeleccion();
+    this.ticketTotalChanged.emit(sum);
     return sum;
   }
 
@@ -2937,6 +2946,9 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   onMetodoPagoSeleccionado(metodo: MetodoPagoDto): void {
+    if (this.modoCredito) {
+      return;
+    }
     this.seleccionarMetodoPago(metodo);
   }
 
@@ -4094,6 +4106,35 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       if (s?.parentNode) s.parentNode.removeChild(s);
       if (r?.parentNode) r.parentNode.removeChild(r);
     };
+  }
+
+  /**
+   * Imprime el ticket abierto con bloque de crédito (CxC).
+   * Ignora la preferencia «Imprimir ticket luego de pagar».
+   */
+  imprimirTicketConCredito(resumen: {
+    creditoOriginal: number;
+    abonado: number;
+    saldoPendiente: number;
+    nota?: string | null;
+  }): void {
+    const prevExtras = this.ticketImpresionExtras;
+    this.ticketImpresionExtras = {
+      ...(prevExtras ?? {}),
+      creditoResumen: {
+        creditoOriginal: resumen.creditoOriginal,
+        abonado: resumen.abonado,
+        saldoPendiente: resumen.saldoPendiente,
+        nota:
+          resumen.nota?.trim() ||
+          'Tiene crédito pendiente por pagar.'
+      }
+    };
+    try {
+      this.imprimirRecibo({ omitirPreferenciaGlobal: true });
+    } finally {
+      this.ticketImpresionExtras = prevExtras;
+    }
   }
 
   /**

@@ -84,6 +84,9 @@
   &[data-estado='ANULADA'] {
     color: #757575;
   }
+  &[data-estado='CASTIGADA'] {
+    color: #c62828;
+  }
 }
 
 .riesgo-dot {

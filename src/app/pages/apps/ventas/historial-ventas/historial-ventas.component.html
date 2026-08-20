@@ -268,7 +268,7 @@
                     <div class="metodo-pago-container metodo-pago-container--mixto">
                       <span class="metodo-pago-label">Pago mixto:</span>
                       <div class="pagos-mixto-lineas">
-                        @for (pago of pagosSeleccionados; track pago.metodoPagoId) {
+                        @for (pago of pagosSeleccionados; track $index) {
                           <div class="pago-mixto-linea">
                             @if (getMetodoPago(pago.metodoPagoId); as mp) {
                               <img

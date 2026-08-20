@@ -9,6 +9,7 @@ import {
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ClienteDto, ClienteService } from '../service/cliente.service';
 import { ClienteSelectorComponent } from '../cliente-selector/cliente-selector.component';
@@ -17,6 +18,10 @@ import {
   CuentaPorCobrarDto,
   CuentaPorCobrarService
 } from '../service/cuenta-por-cobrar.service';
+import {
+  MetodoPagoDto,
+  MetodoPagoService
+} from '../service/metodo-pago.service';
 import { TicketDto } from '../service/tickets.service';
 
 const CLIENTE_ANONIMO_ID = 1;
@@ -38,6 +43,7 @@ export interface AbrirCuentaPorCobrarDialogData {
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
     ClienteSelectorComponent
@@ -98,6 +104,17 @@ export interface AbrirCuentaPorCobrarDialogData {
         <mat-hint>0 = todo a crédito. Lo que paga de contado ahora.</mat-hint>
       </mat-form-field>
 
+      @if (abonoValue > 0) {
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Medio de pago del abono</mat-label>
+          <mat-select [(ngModel)]="metodoPagoId" name="metodoPago" required>
+            @for (mp of metodos; track mp.id) {
+              <mat-option [value]="mp.id">{{ mp.descripcion }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>Saldo (Monto a crédito)</mat-label>
         <input
@@ -110,7 +127,8 @@ export interface AbrirCuentaPorCobrarDialogData {
           (blur)="onMoneyBlur('saldo')"
           (input)="onMoneyInput('saldo', $event)" />
         <mat-hint
-          >Lo que queda debiendo. Abono + saldo = {{ formatMoney(totalTicket) }}</mat-hint
+          >Lo que queda debiendo. Abono + saldo =
+          {{ formatMoney(totalTicket) }}</mat-hint
         >
       </mat-form-field>
 
@@ -205,6 +223,8 @@ export class AbrirCuentaPorCobrarDialogComponent implements OnInit {
   saldoDisplay = '';
   abonoValue = 0;
   saldoValue = 0;
+  metodos: MetodoPagoDto[] = [];
+  metodoPagoId: number | null = null;
   /** Quién se editó por último para recalcular el otro. */
   private lastEdited: 'abono' | 'saldo' = 'abono';
   saving = false;
@@ -224,6 +244,7 @@ export class AbrirCuentaPorCobrarDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: AbrirCuentaPorCobrarDialogData,
     private cuentaPorCobrarService: CuentaPorCobrarService,
     private clienteService: ClienteService,
+    private metodoPagoService: MetodoPagoService,
     private snackBar: MatSnackBar
   ) {}
 
@@ -243,6 +264,15 @@ export class AbrirCuentaPorCobrarDialogComponent implements OnInit {
         }
       });
     }
+    this.metodoPagoService.obtenerMetodosPagoParaTickets().subscribe({
+      next: (list) => {
+        this.metodos = list ?? [];
+        const efectivo = this.metodos.find((m) =>
+          (m.descripcion || '').toLowerCase().includes('efectivo')
+        );
+        this.metodoPagoId = efectivo?.id ?? this.metodos[0]?.id ?? null;
+      }
+    });
     // Default: sin abono → todo a crédito (caso más común al abrir CxC).
     this.abonoValue = 0;
     this.saldoValue = this.totalTicket;
@@ -260,12 +290,14 @@ export class AbrirCuentaPorCobrarDialogComponent implements OnInit {
 
   get canSubmit(): boolean {
     const suma = this.abonoValue + this.saldoValue;
+    const medioOk = this.abonoValue <= 0 || this.metodoPagoId != null;
     return (
       this.clienteId != null &&
       this.clienteId !== CLIENTE_ANONIMO_ID &&
       this.telefonoTrim.length > 0 &&
       this.saldoValue > 0 &&
       this.abonoValue >= 0 &&
+      medioOk &&
       suma <= this.totalTicket + 0.01 &&
       this.totalTicket > 0
     );
@@ -367,6 +399,7 @@ export class AbrirCuentaPorCobrarDialogComponent implements OnInit {
       documento: (this.documento ?? '').trim() || null,
       totalTicket: this.totalTicket,
       abono: this.abonoValue,
+      metodoPagoId: this.abonoValue > 0 ? this.metodoPagoId : null,
       monto: this.saldoValue,
       observacion: (this.observacion ?? '').trim() || null
     };

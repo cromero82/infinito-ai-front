@@ -242,12 +242,23 @@
           </span>
         </div>
       }
-      <div class="detalle-footer" [class.has-atendido]="mostrarColumnaAtendido">
-        <div class="metodos-pago-container">
+      <div
+        class="detalle-footer"
+        [class.has-atendido]="mostrarColumnaAtendido"
+        [class.detalle-footer--credito]="modoCredito">
+        <div
+          class="metodos-pago-container"
+          [matTooltip]="
+            modoCredito
+              ? 'Ticket con crédito: registre abonos en el panel o en Cuentas por cobrar'
+              : ''
+          ">
           <metodos-pago
             [recibo]="recibo"
             [detalles]="detalles"
-            [disabled]="actualizandoMetodoPago || estaEnEdicion"
+            [disabled]="
+              actualizandoMetodoPago || estaEnEdicion || modoCredito
+            "
             (metodoPagoSeleccionado)="onMetodoPagoSeleccionado($event)">
           </metodos-pago>
         </div>

@@ -23,6 +23,14 @@ export interface ReciboPagoImpresionLinea {
   monto: number;
 }
 
+export interface ReciboCreditoImpresionResumen {
+  creditoOriginal: number;
+  abonado: number;
+  saldoPendiente: number;
+  /** Nota al pie, p. ej. crédito pendiente por pagar. */
+  nota?: string | null;
+}
+
 export interface ReciboTicketImpresionExtra {
   metodoPagoLabel?: string | null;
   montoRecibido?: number | null;
@@ -31,6 +39,8 @@ export interface ReciboTicketImpresionExtra {
   pagosLineas?: ReciboPagoImpresionLinea[] | null;
   /** Si no se envía, se usa `localStorage` key `user-nombre`. */
   atendidoNombre?: string | null;
+  /** Bloque CxC en la tirilla (abono / saldo / crédito). */
+  creditoResumen?: ReciboCreditoImpresionResumen | null;
 }
 
 export interface RecentPrintedReciboItem {
@@ -547,6 +557,35 @@ p, div, span { color: #000; text-shadow: none; }
         '<span>CAMBIO:</span>',
         `<span>${this.formatCurrency(cambioVal)}</span>`,
         '</div>'
+      );
+    }
+
+    const credito = opts.creditoResumen;
+    if (credito) {
+      lineas.push('<hr class="pos-sep-linea"/>');
+      lineas.push(
+        '<div class="pos-fila-pago">',
+        '<span>CREDITO:</span>',
+        `<span>${this.formatCurrency(credito.creditoOriginal)}</span>`,
+        '</div>'
+      );
+      lineas.push(
+        '<div class="pos-fila-pago">',
+        '<span>ABONO:</span>',
+        `<span>${this.formatCurrency(credito.abonado)}</span>`,
+        '</div>'
+      );
+      lineas.push(
+        '<div class="pos-fila-pago">',
+        '<span>SALDO:</span>',
+        `<span>${this.formatCurrency(credito.saldoPendiente)}</span>`,
+        '</div>'
+      );
+      const nota =
+        (credito.nota ?? '').trim() ||
+        'Tiene crédito pendiente por pagar.';
+      lineas.push(
+        `<p class="pos-pie-linea">${this.escapeHtml(nota)}</p>`
       );
     }
 

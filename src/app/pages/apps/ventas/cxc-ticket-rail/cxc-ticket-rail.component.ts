@@ -19,6 +19,20 @@ import { FechaUtilService } from '../service/fecha-util.service';
 
 /** Defaults alertas.creditos.tiempoRiesgos (días). */
 const RIESGO = { normal: 5, medio: 15, alto: 35 };
+const MESES_CORTO = [
+  'ene',
+  'feb',
+  'mar',
+  'abr',
+  'may',
+  'jun',
+  'jul',
+  'ago',
+  'sep',
+  'oct',
+  'nov',
+  'dic'
+] as const;
 
 @Component({
   selector: 'vex-cxc-ticket-rail',
@@ -49,14 +63,20 @@ const RIESGO = { normal: 5, medio: 15, alto: 35 };
             <div class="title">Crédito</div>
             <div class="cliente">{{ cuenta.clienteNombre || 'Cliente' }}</div>
             <div class="meta">
-              Origen {{ formatFecha(cuenta.fechaOrigen) }} ·
+              Inicio: {{ formatFecha(cuenta.fechaOrigen) }}
               {{ riesgoLabel }}
             </div>
           </header>
 
           <div class="cxc-rail-saldos">
             <div class="row">
-              <span>Original</span>
+              <span>Total ticket</span>
+              <span>{{
+                formatMoney(cuenta.totalTicket ?? cuenta.montoOriginal)
+              }}</span>
+            </div>
+            <div class="row">
+              <span>Original crédito</span>
               <span>{{ formatMoney(cuenta.montoOriginal) }}</span>
             </div>
             <div class="row">
@@ -92,16 +112,35 @@ const RIESGO = { normal: 5, medio: 15, alto: 35 };
             }
           </div>
 
-          @if (cuenta.estado === 'ABIERTA' || cuenta.estado === 'PARCIAL') {
+          <div class="cxc-rail-actions">
             <button
-              mat-flat-button
-              color="primary"
+              mat-stroked-button
               type="button"
               class="cxc-rail-cta"
-              (click)="abonar.emit()">
-              Registrar abono
+              (click)="imprimir.emit()">
+              <mat-icon svgIcon="mat:print"></mat-icon>
+              Imprimir
             </button>
-          }
+            @if (cuenta.estado === 'ABIERTA' || cuenta.estado === 'PARCIAL') {
+              <button
+                mat-flat-button
+                color="primary"
+                type="button"
+                class="cxc-rail-cta"
+                (click)="abonar.emit()">
+                Registrar abono
+              </button>
+              <button
+                mat-stroked-button
+                type="button"
+                class="cxc-rail-cta"
+                matTooltip="Anular, castigar u otras gestiones en Financiero"
+                (click)="otrasAcciones.emit()">
+                <mat-icon svgIcon="mat:more_horiz"></mat-icon>
+                Otras acciones
+              </button>
+            }
+          </div>
         </div>
       }
     </aside>
@@ -210,7 +249,7 @@ const RIESGO = { normal: 5, medio: 15, alto: 35 };
       }
       .abonos-list li {
         display: grid;
-        grid-template-columns: 72px 1fr auto;
+        grid-template-columns: 52px 1fr auto;
         gap: 4px;
         padding: 4px 0;
         border-bottom: 1px solid rgba(0, 0, 0, 0.04);
@@ -228,8 +267,24 @@ const RIESGO = { normal: 5, medio: 15, alto: 35 };
         color: rgba(0, 0, 0, 0.45);
         padding: 8px 0;
       }
+      .cxc-rail-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+        max-width: 220px;
+        padding-right: 4px;
+        margin-bottom: 8px;
+      }
       .cxc-rail-cta {
         width: 100%;
+      }
+      .cxc-rail-cta mat-icon {
+        width: 18px;
+        height: 18px;
+        font-size: 18px;
+        margin-right: 4px;
+        vertical-align: middle;
       }
     `
   ]
@@ -239,6 +294,8 @@ export class CxcTicketRailComponent implements OnChanges {
   @Input() expanded = false;
   @Output() toggle = new EventEmitter<void>();
   @Output() abonar = new EventEmitter<void>();
+  @Output() imprimir = new EventEmitter<void>();
+  @Output() otrasAcciones = new EventEmitter<void>();
 
   abonos: AbonoCxcDto[] = [];
   loadingAbonos = false;
@@ -295,13 +352,15 @@ export class CxcTicketRailComponent implements OnChanges {
   get riesgoLabel(): string {
     const mapa = { normal: 'Normal', medio: 'Medio', alto: 'Alto' } as const;
     const dias = this.cuenta ? this.diasDesdeOrigen(this.cuenta) : 0;
-    return `${mapa[this.riesgo]} (${dias}d)`;
+    const unidad = dias === 1 ? 'dia' : 'dias';
+    return `${mapa[this.riesgo]} (${dias} ${unidad})`;
   }
 
   formatMoney(n: number | null | undefined): string {
     return this.moneyFmt.format(Math.round(Number(n) || 0));
   }
 
+  /** Formato corto: 19/ago */
   formatFecha(fecha: string | null | undefined): string {
     if (!fecha) {
       return '—';
@@ -311,10 +370,7 @@ export class CxcTicketRailComponent implements OnChanges {
       if (isNaN(d.getTime())) {
         return fecha;
       }
-      return d.toLocaleDateString('es-CO', {
-        day: '2-digit',
-        month: '2-digit'
-      });
+      return `${d.getDate()}/${MESES_CORTO[d.getMonth()]}`;
     } catch {
       return fecha;
     }

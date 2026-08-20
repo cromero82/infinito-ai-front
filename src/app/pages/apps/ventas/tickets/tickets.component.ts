@@ -41,7 +41,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatMenuModule } from '@angular/material/menu';
+import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -131,6 +131,9 @@ export class TicketsComponent
   cxcPorTicketId = new Map<number, CuentaPorCobrarDto>();
   /** Rail expandido solo para el ticket activo con crédito. */
   cxcRailExpanded = false;
+  tabContextMenuPosition = { x: 0, y: 0 };
+  private cxcSyncTimer: ReturnType<typeof setTimeout> | null = null;
+  private lastSyncedTotalByTicket = new Map<number, number>();
   private _selectedIndex = 0;
   get selectedIndex(): number {
     return this._selectedIndex;
@@ -138,7 +141,7 @@ export class TicketsComponent
   set selectedIndex(value: number) {
     if (this._selectedIndex !== value) {
       this._selectedIndex = value;
-      this.cxcRailExpanded = false;
+      this.cxcRailExpanded = this.ticketTieneCredito(this.tickets[value]);
       const suppressedUntil = this._suppressAutoScrollUntil;
       // Diferir: MatTabNav._scrollToLabel usa offsetLeft del <a> (roto por .tab-item)
       // y pisa nuestro scroll si corremos solo en el mismo tick.
@@ -166,6 +169,8 @@ export class TicketsComponent
   productSearchInput?: ElementRef<HTMLInputElement>;
   @ViewChild('reciboCmp') reciboComponent?: DetalleTicketComponent;
   @ViewChild('cxcRail') cxcRail?: CxcTicketRailComponent;
+  @ViewChild('tabContextMenuTrigger')
+  tabContextMenuTrigger?: MatMenuTrigger;
   @ViewChild('ticketTabNav', { read: ElementRef })
   ticketTabNavEl?: ElementRef<HTMLElement>;
   @ViewChild('ticketTabNav', { read: MatTabNav })
@@ -417,6 +422,10 @@ export class TicketsComponent
     this.enabledPosFocusListeners = false;
     this.posFocus.disable();
     this.recentPrintedRecibosSubscription?.unsubscribe();
+    if (this.cxcSyncTimer != null) {
+      clearTimeout(this.cxcSyncTimer);
+      this.cxcSyncTimer = null;
+    }
     for (const t of this.scrollIntoViewTimers) {
       clearTimeout(t);
     }
@@ -1043,13 +1052,21 @@ export class TicketsComponent
   }
 
   /**
-   * Abre CxC desde el ticket activo (menú ⋮).
+   * Abre CxC desde el ticket activo (menú ⋮ o clic derecho en tab).
    * Requiere recibo cargado; el diálogo valida cliente y teléfono.
    */
   abrirCuentaPorCobrar(): void {
     const ticket = this.tickets[this.selectedIndex];
     if (!ticket) {
       this.snackBar.open('Seleccione un ticket', 'Cerrar', { duration: 3000 });
+      return;
+    }
+    if (this.ticketTieneCredito(ticket)) {
+      this.snackBar.open(
+        'Este ticket ya tiene una cuenta por cobrar vigente.',
+        'Cerrar',
+        { duration: 4000 }
+      );
       return;
     }
     const reciboId =
@@ -1107,9 +1124,14 @@ export class TicketsComponent
       if (dto) {
         if (dto.ticketId != null) {
           this.cxcPorTicketId.set(dto.ticketId, dto);
+          const t =
+            dto.totalTicket != null
+              ? Math.round(Number(dto.totalTicket) || 0)
+              : Math.round(totalRecibo);
+          this.lastSyncedTotalByTicket.set(dto.ticketId, t);
         }
         this.refreshCxcMap();
-        this.cxcRailExpanded = false;
+        this.cxcRailExpanded = true;
         if (this.sessionId != null) {
           this.loadTickets(this.sessionId);
           this.fetchReciboForTicket(ticket.id, true);
@@ -1129,8 +1151,36 @@ export class TicketsComponent
     return this.getCxcForTicket(this.tickets[this.selectedIndex]);
   }
 
+  get activeTicketYaTieneCredito(): boolean {
+    return this.activeTicketCxc != null;
+  }
+
   ticketTieneCredito(ticket: TicketDto): boolean {
     return this.getCxcForTicket(ticket) != null;
+  }
+
+  /**
+   * Clic derecho en tab: menú «Generar crédito» (sin menú nativo del navegador).
+   */
+  onTicketTabContextMenu(index: number, event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (
+      this.ticketTabsDisabled ||
+      index < 0 ||
+      index >= this.tickets.length
+    ) {
+      return;
+    }
+    if (this.selectedIndex !== index) {
+      this.selectTicket(index);
+    }
+    this.tabContextMenuPosition = {
+      x: event.clientX,
+      y: event.clientY
+    };
+    this.cdr.detectChanges();
+    setTimeout(() => this.tabContextMenuTrigger?.openMenu(), 0);
   }
 
   riesgoTicket(ticket: TicketDto): 'normal' | 'medio' | 'alto' {
@@ -1175,6 +1225,73 @@ export class TicketsComponent
     this.cxcRailExpanded = !this.cxcRailExpanded;
   }
 
+  imprimirTicketConCredito(): void {
+    const cxc = this.activeTicketCxc;
+    if (!cxc) {
+      return;
+    }
+    const abonado = Math.max(
+      0,
+      (Number(cxc.montoOriginal) || 0) - (Number(cxc.saldoPendiente) || 0)
+    );
+    if (!this.reciboComponent) {
+      this.snackBar.open('No hay ticket cargado para imprimir.', 'Cerrar', {
+        duration: 3500
+      });
+      return;
+    }
+    this.actividadUi.record(
+      `botón acción: imprimir ticket con crédito (cxc: ${cxc.id})`
+    );
+    this.reciboComponent.imprimirTicketConCredito({
+      creditoOriginal: Number(cxc.montoOriginal) || 0,
+      abonado,
+      saldoPendiente: Number(cxc.saldoPendiente) || 0,
+      nota: 'Tiene crédito pendiente por pagar.'
+    });
+  }
+
+  /**
+   * Cualquier cambio de ítems del ticket (aunque el rail esté colapsado)
+   * sincroniza saldo/original de la CxC vigente.
+   */
+  onTicketTotalChanged(total: number): void {
+    const ticket = this.tickets[this.selectedIndex];
+    if (!ticket?.id || !this.ticketTieneCredito(ticket)) {
+      return;
+    }
+    const rounded = Math.round(Number(total) || 0);
+    const prev = this.lastSyncedTotalByTicket.get(ticket.id);
+    if (prev === rounded) {
+      return;
+    }
+    if (this.cxcSyncTimer != null) {
+      clearTimeout(this.cxcSyncTimer);
+    }
+    const ticketId = ticket.id;
+    this.cxcSyncTimer = setTimeout(() => {
+      this.sincronizarCxcConTotal(ticketId, rounded);
+    }, 300);
+  }
+
+  private sincronizarCxcConTotal(ticketId: number, total: number): void {
+    this.cuentaPorCobrarService.sincronizarTotalTicket(ticketId, total).subscribe({
+      next: (dto) => {
+        this.lastSyncedTotalByTicket.set(ticketId, total);
+        if (dto) {
+          this.cxcPorTicketId.set(ticketId, dto);
+        } else {
+          this.cxcPorTicketId.delete(ticketId);
+          this.cxcRailExpanded = false;
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        /* no bloquear venta si falla sync CxC */
+      }
+    });
+  }
+
   abrirAbonoCxc(cuenta?: CuentaPorCobrarDto | null): void {
     const cxc = cuenta ?? this.activeTicketCxc;
     if (!cxc) {
@@ -1200,12 +1317,31 @@ export class TicketsComponent
           this.cxcPorTicketId.delete(result.cuenta.ticketId);
         }
         this.cxcRailExpanded = false;
+        this.snackBar.open(
+          'Crédito liquidado: ticket cerrado. Una compra nueva abre ticket nuevo.',
+          'Cerrar',
+          { duration: 5000 }
+        );
+        if (this.sessionId != null) {
+          this.loadTickets(this.sessionId);
+        }
       } else if (result.cuenta.ticketId != null) {
         this.cxcPorTicketId.set(result.cuenta.ticketId, result.cuenta);
       }
       this.refreshCxcMap();
       this.cxcRail?.refreshAbonos();
       this.cdr.markForCheck();
+    });
+  }
+
+  /** Rail → Financiero CxC enfocado en este crédito (anular / castigar / etc.). */
+  irACuentasPorCobrarDesdeTicket(): void {
+    const cxc = this.activeTicketCxc;
+    if (!cxc?.id) {
+      return;
+    }
+    void this.router.navigate(['/apps/financiero/cuentas-por-cobrar'], {
+      queryParams: { cxcId: cxc.id }
     });
   }
 
@@ -1216,9 +1352,19 @@ export class TicketsComponent
         for (const row of rows ?? []) {
           if (row.ticketId != null) {
             map.set(row.ticketId, row);
+            if (row.totalTicket != null) {
+              this.lastSyncedTotalByTicket.set(
+                row.ticketId,
+                Math.round(Number(row.totalTicket) || 0)
+              );
+            }
           }
         }
         this.cxcPorTicketId = map;
+        const active = this.tickets[this.selectedIndex];
+        if (active && map.has(active.id)) {
+          this.cxcRailExpanded = true;
+        }
         this.cdr.markForCheck();
       },
       error: () => {

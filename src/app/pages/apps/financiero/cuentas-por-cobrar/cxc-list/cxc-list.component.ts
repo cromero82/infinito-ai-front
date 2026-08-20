@@ -24,7 +24,7 @@ import {
 } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FooterService } from '../../../../../layouts/services/footer.service';
 import { TableViewportService } from '../../../../../core/table-viewport/table-viewport.service';
 import { FechaUtilService } from '../../../ventas/service/fecha-util.service';
@@ -37,9 +37,16 @@ import {
   RegistrarAbonoCxcDialogData,
   RegistrarAbonoCxcDialogResult
 } from '../../../ventas/registrar-abono-cxc-dialog/registrar-abono-cxc-dialog.component';
+import {
+  CerrarCxcDialogComponent,
+  CerrarCxcDialogData,
+  CerrarCxcDialogResult,
+  CerrarCxcModo
+} from '../../../ventas/cerrar-cxc-dialog/cerrar-cxc-dialog.component';
 
 type TabCxC = 'vigentes' | 'archivados';
 type RiesgoNivel = 'normal' | 'medio' | 'alto' | 'n/a';
+type EstadoArchivado = 'PAGADA' | 'ANULADA' | 'CASTIGADA';
 
 /** Defaults de alertas.creditos.tiempoRiesgos (días desde fecha_origen). */
 const RIESGO_DEFAULT = { normal: 5, medio: 15, alto: 35 };
@@ -81,7 +88,10 @@ export class CxcListComponent implements OnInit, AfterViewInit, OnDestroy {
   loading = false;
   searchCtrl = new UntypedFormControl('');
   riesgoFilterCtrl = new FormControl<RiesgoNivel | ''>('');
+  estadoFilterCtrl = new FormControl<EstadoArchivado | ''>('');
   tableScrollMaxHeight = 400;
+  /** Deep-link desde ticket: ?cxcId= */
+  private pendingCxcId: number | null = null;
 
   private readonly moneyFmt = new Intl.NumberFormat('es-CO', {
     style: 'currency',
@@ -98,17 +108,30 @@ export class CxcListComponent implements OnInit, AfterViewInit, OnDestroy {
     private footerService: FooterService,
     private snackBar: MatSnackBar,
     private router: Router,
+    private route: ActivatedRoute,
     private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
     this.footerService.clearFooterItems();
     this.applyViewport();
-    this.load();
+    this.route.queryParamMap.subscribe((params) => {
+      const raw = params.get('cxcId');
+      const id = raw ? Number(raw) : NaN;
+      this.pendingCxcId = Number.isFinite(id) && id > 0 ? id : null;
+      if (this.pendingCxcId != null) {
+        this.tabIndex = 0;
+        this.searchCtrl.setValue('', { emitEvent: false });
+        this.riesgoFilterCtrl.setValue('', { emitEvent: false });
+        this.estadoFilterCtrl.setValue('', { emitEvent: false });
+      }
+      this.load();
+    });
     this.searchCtrl.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged())
       .subscribe(() => this.applyFilters());
     this.riesgoFilterCtrl.valueChanges.subscribe(() => this.applyFilters());
+    this.estadoFilterCtrl.valueChanges.subscribe(() => this.applyFilters());
   }
 
   ngAfterViewInit(): void {
@@ -138,6 +161,7 @@ export class CxcListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedRowId = null;
     this.searchCtrl.setValue('', { emitEvent: false });
     this.riesgoFilterCtrl.setValue('', { emitEvent: false });
+    this.estadoFilterCtrl.setValue('', { emitEvent: false });
     this.load();
   }
 
@@ -152,6 +176,7 @@ export class CxcListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.dataSource = rows ?? [];
         this.applyFilters();
         this.loading = false;
+        this.focusPendingCxc();
       },
       error: (err: { error?: { message?: string }; message?: string }) => {
         this.loading = false;
@@ -168,13 +193,53 @@ export class CxcListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  /**
+   * Desde ticket (?cxcId=): selecciona la fila y deja el buscador con el cliente.
+   * Si no está en vigentes, prueba archivados.
+   */
+  private focusPendingCxc(): void {
+    const id = this.pendingCxcId;
+    if (id == null) {
+      return;
+    }
+    const row = this.dataSource.find((r) => r.id === id);
+    if (row) {
+      this.selectedRowId = row.id;
+      const q = (row.clienteNombre || '').trim() || String(row.id);
+      this.searchCtrl.setValue(q, { emitEvent: false });
+      this.applyFilters();
+      this.pendingCxcId = null;
+      this.snackBar.open(
+        `Cuenta #${row.id} · ${row.clienteNombre || 'cliente'}`,
+        'Cerrar',
+        { duration: 3500 }
+      );
+      return;
+    }
+    if (this.tabActual === 'vigentes') {
+      this.tabIndex = 1;
+      this.load();
+      return;
+    }
+    this.pendingCxcId = null;
+    this.snackBar.open(
+      `No se encontró la cuenta #${id} en vigentes ni archivados.`,
+      'Cerrar',
+      { duration: 4500 }
+    );
+  }
+
   private applyFilters(): void {
     const q = String(this.searchCtrl.value ?? '')
       .trim()
       .toLowerCase();
     const riesgo = this.riesgoFilterCtrl.value;
+    const estado = this.estadoFilterCtrl.value;
     this.filteredDataSource = this.dataSource.filter((row) => {
       if (riesgo && this.riesgoDe(row) !== riesgo) {
+        return false;
+      }
+      if (estado && row.estado !== estado) {
         return false;
       }
       if (!q) {
@@ -237,7 +302,11 @@ export class CxcListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   riesgoDe(row: CuentaPorCobrarDto): RiesgoNivel {
-    if (row.estado === 'PAGADA' || row.estado === 'ANULADA') {
+    if (
+      row.estado === 'PAGADA' ||
+      row.estado === 'ANULADA' ||
+      row.estado === 'CASTIGADA'
+    ) {
       return 'n/a';
     }
     const dias = this.diasDesdeOrigen(row);
@@ -281,8 +350,77 @@ export class CxcListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
+        if (result.cuenta.estado === 'PAGADA') {
+          this.snackBar.open(
+            'Crédito liquidado: venta formalizada en historial. El ticket quedó cerrado.',
+            'Cerrar',
+            { duration: 5000 }
+          );
+        }
         this.load();
       }
+    });
+  }
+
+  puedeAnular(row: CuentaPorCobrarDto): boolean {
+    return (Number(row.cantidadAbonos) || 0) <= 0 && this.abonado(row) <= 0;
+  }
+
+  abrirCierre(row: CuentaPorCobrarDto, modo: CerrarCxcModo, event: Event): void {
+    event.stopPropagation();
+    if (modo === 'anular' && !this.puedeAnular(row)) {
+      this.snackBar.open(
+        'No se puede anular: ya hay abonos. Use castigo de cartera o cobre el saldo.',
+        'Cerrar',
+        { duration: 4500 }
+      );
+      return;
+    }
+    const dialogRef = this.dialog.open<
+      CerrarCxcDialogComponent,
+      CerrarCxcDialogData,
+      CerrarCxcDialogResult | undefined
+    >(CerrarCxcDialogComponent, {
+      width: '460px',
+      data: { modo, cuenta: row },
+      autoFocus: true
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!result) {
+        return;
+      }
+      const body = { motivoTexto: result.motivoTexto || null };
+      const req =
+        modo === 'anular'
+          ? this.cxcService.anular(row.id, body)
+          : this.cxcService.castigar(row.id, body);
+      req.subscribe({
+        next: (cuenta) => {
+          this.snackBar.open(
+            modo === 'anular'
+              ? 'Crédito anulado. El ticket sigue disponible para cobro.'
+              : `Cartera castigada${
+                  cuenta.valorPerdidaCosto != null
+                    ? ` · costo ${this.formatMoney(cuenta.valorPerdidaCosto)}`
+                    : ''
+                }. Ticket cerrado.`,
+            'Cerrar',
+            { duration: 5000 }
+          );
+          this.load();
+        },
+        error: (err: { error?: { message?: string }; message?: string }) => {
+          this.snackBar.open(
+            err?.error?.message ||
+              err?.message ||
+              (modo === 'anular'
+                ? 'No se pudo anular el crédito'
+                : 'No se pudo castigar la cartera'),
+            'Cerrar',
+            { duration: 5000 }
+          );
+        }
+      });
     });
   }
 
