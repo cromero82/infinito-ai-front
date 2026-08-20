@@ -40,10 +40,12 @@
               mat-tab-link
               queryParamsHandling="preserve"
               routerLinkActive>
-              <span>{{ link.label }}</span>
-              @if (link.badge) {
-                <span class="tab-badge">{{ link.badge }}</span>
-              }
+              <span class="tab-link-stack">
+                <span class="tab-link-label">{{ link.label }}</span>
+                @if (link.badge) {
+                  <span class="tab-badge">{{ link.badge }}</span>
+                }
+              </span>
             </a>
           }
         </nav>

@@ -26,7 +26,15 @@ import {
   CorteVentaSearchItemDto
 } from '../../ventas/service/corte-venta.service';
 import { Subject, Observable, of } from 'rxjs';
-import { takeUntil, switchMap, catchError } from 'rxjs/operators';
+import {
+  takeUntil,
+  switchMap,
+  catchError,
+  map,
+  distinctUntilChanged
+} from 'rxjs/operators';
+import { VexConfigService } from '@vex/config/vex-config.service';
+import { VexColorScheme } from '@vex/config/vex-config.interface';
 import { CierreVentasComponent } from './cierre-ventas/cierre-ventas.component';
 import { CierreRevisionComponent } from './cierre-revision/cierre-revision.component';
 import {
@@ -219,6 +227,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
   });
 
   private destroy$ = new Subject<void>();
+  private chartDarkMode = false;
 
   constructor(
     private corteVentaService: CorteVentaService,
@@ -227,13 +236,22 @@ export class IngresosComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private snackBar: MatSnackBar,
     private sesionesService: SesionesService,
-    private router: Router
+    private router: Router,
+    private configService: VexConfigService
   ) {}
 
   ngOnInit(): void {
     this.esAdmin = this.authService.isAdmin();
     const periodoInicial = this.periodoCtrl.value || 'semanal';
     this.diasVisibles = this.obtenerDiasPorPeriodo(periodoInicial);
+
+    this.configService.config$
+      .pipe(
+        map((c) => c.style.colorScheme === VexColorScheme.DARK),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((isDark) => this.applyChartColorScheme(isDark));
 
     this.periodoCtrl.valueChanges
       .pipe(takeUntil(this.destroy$))
@@ -1045,6 +1063,54 @@ export class IngresosComponent implements OnInit, OnDestroy {
           formatter: (val: number, opts?: any) => {
             const categoria = opts?.w?.globals?.categoryLabels?.[val];
             return categoria ?? (val != null ? String(val) : '');
+          }
+        }
+      }
+    };
+    this.applyChartColorScheme(this.chartDarkMode);
+  }
+
+  /** Apex: ejes/leyenda legibles en dark y light. */
+  private applyChartColorScheme(isDark: boolean): void {
+    this.chartDarkMode = isDark;
+    const fore = isDark ? 'rgba(255,255,255,0.78)' : '#373d3f';
+    const grid = isDark ? 'rgba(255,255,255,0.12)' : '#e0e0e0';
+    this.chartOptions = {
+      ...this.chartOptions,
+      theme: {
+        mode: isDark ? 'dark' : 'light'
+      },
+      chart: {
+        ...this.chartOptions.chart,
+        background: 'transparent',
+        foreColor: fore
+      },
+      grid: {
+        ...this.chartOptions.grid,
+        borderColor: grid
+      },
+      legend: {
+        ...this.chartOptions.legend,
+        labels: {
+          colors: fore
+        }
+      },
+      xaxis: {
+        ...this.chartOptions.xaxis,
+        labels: {
+          ...this.chartOptions.xaxis?.labels,
+          style: {
+            ...(this.chartOptions.xaxis?.labels as { style?: object })?.style,
+            colors: fore
+          }
+        }
+      },
+      yaxis: {
+        ...this.chartOptions.yaxis,
+        labels: {
+          ...(this.chartOptions.yaxis as { labels?: object })?.labels,
+          style: {
+            colors: [fore]
           }
         }
       }

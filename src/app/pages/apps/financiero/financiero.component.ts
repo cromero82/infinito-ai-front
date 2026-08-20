@@ -31,7 +31,7 @@ export class FinancieroComponent {
     {
       label: 'Orígenes de fondos',
       route: './origenes-fondos',
-      badge: 'Medios y cajitas'
+      badge: 'Medios y bolsillos'
     },
     {
       label: 'Cuentas por cobrar',

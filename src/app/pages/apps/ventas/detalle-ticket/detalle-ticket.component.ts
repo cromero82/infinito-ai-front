@@ -175,6 +175,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   @Output() moveToExistingTicketRequested = new EventEmitter<number>();
   /** Total del ticket (suma detalles) tras cada cambio de ítems. */
   @Output() ticketTotalChanged = new EventEmitter<number>();
+  /** Cajero intentó pagar con medios deshabilitados por CxC → mostrar ayuda. */
+  @Output() guiaCreditoSolicitada = new EventEmitter<void>();
 
   recibo: ReciboDto | null = null;
   detalles: ReciboDetalleDto[] = [];
@@ -2947,9 +2949,16 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
   onMetodoPagoSeleccionado(metodo: MetodoPagoDto): void {
     if (this.modoCredito) {
+      this.guiaCreditoSolicitada.emit();
       return;
     }
     this.seleccionarMetodoPago(metodo);
+  }
+
+  onIntentoPagoDeshabilitado(): void {
+    if (this.modoCredito) {
+      this.guiaCreditoSolicitada.emit();
+    }
   }
 
   onFinalizarEdicion(): void {

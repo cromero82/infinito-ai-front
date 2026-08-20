@@ -818,4 +818,124 @@
   }
 }
 
+// —— Dark mode ——
+:host-context(.dark) {
+  .pago-efectivo-dialog-header[cdkDragHandle]:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+  }
+
+  .total-a-pagar {
+    .label {
+      color: rgba(255, 255, 255, 0.65);
+    }
+
+    .value {
+      background-color: rgba(76, 175, 80, 0.22);
+      color: rgba(255, 255, 255, 0.95);
+    }
+  }
+
+  .pago-efectivo-fila-rl > .label,
+  .pago-efectivo-efectivo-grupo > .label {
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  .paga-con-label {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .currency-suffix {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .billete {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.14) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+
+    .billete-label {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .billete-flecha {
+      color: rgba(255, 255, 255, 0.9);
+      filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.85))
+        drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    }
+
+    &.selected {
+      border-color: rgb(var(--vex-color-primary-400) / 0.85) !important;
+      box-shadow: 0 0 0 4px rgb(var(--vex-color-primary-500) / 0.28);
+      background: rgba(121, 134, 203, 0.16);
+    }
+  }
+
+  .otros-metodos-titulo {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .otros-metodos-subtotal {
+    color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .otro-metodo-card {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+
+    &:hover {
+      border-color: rgb(var(--vex-color-primary-400) / 0.55);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+      background: rgba(255, 255, 255, 0.12);
+    }
+  }
+
+  .cambio {
+    background-color: rgba(255, 235, 59, 0.14);
+
+    > .label {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    > .value {
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    &.cambio-insuficiente {
+      background-color: rgba(244, 67, 54, 0.2);
+
+      > .value {
+        color: #ef9a9a;
+      }
+    }
+  }
+
+  .mixto-resumen-fieldset {
+    border-color: rgba(255, 255, 255, 0.14);
+
+    > .resumen-metodos-pago-legend,
+    > .cambio-desglose {
+      color: rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  .estado-procesando {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .estado-exito .mensaje-exito {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .estado-error .mensaje-error {
+    color: rgba(255, 255, 255, 0.8);
+  }
+}
+
 

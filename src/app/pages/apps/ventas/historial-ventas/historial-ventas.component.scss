@@ -18,7 +18,7 @@
 .left-side {
   flex: 0 0 300px;
   width: 300px;
-  padding: 24px;
+  padding: 16px 10px 16px 12px;
   display: flex;
   flex-direction: column;
   border-right: 1px solid rgba(0, 0, 0, 0.12);
@@ -137,6 +137,40 @@
 
 .filter-section {
   margin-bottom: 16px;
+  min-width: 0;
+
+  mat-button-toggle-group {
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+  }
+
+  /* Compacto sin indicador check: cabe Todos…Restaurados en el panel */
+  ::ng-deep {
+    .mat-button-toggle {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .mat-button-toggle-button {
+      min-width: 0;
+      width: 100%;
+    }
+
+    .mat-button-toggle-label-content,
+    .mat-mdc-button-toggle-label-content {
+      padding-left: 2px !important;
+      padding-right: 2px !important;
+      line-height: 30px !important;
+      font-size: 11px;
+      letter-spacing: 0;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center;
+      overflow: visible;
+      text-overflow: clip;
+    }
+  }
 }
 
 .filter-button {
@@ -203,7 +237,7 @@
 .recibo-item {
   padding: 2px 12px;
   border-bottom: 1px solid #DFDFDF;
-  background-color: #FFFFFF;
+  background-color: var(--vex-background-card, #ffffff);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -211,7 +245,7 @@
   transition: background-color 0.2s ease;
 
   &:hover {
-    background-color: rgba(0, 0, 0, 0.02);
+    background-color: var(--pos-mat-table-row-hover, rgba(0, 0, 0, 0.02));
   }
 
   &:first-child {
@@ -402,7 +436,7 @@
   flex-shrink: 0;
   min-height: 60px; /* Reducido altura mínima */
   position: relative;
-  background: white;
+  background: var(--vex-background-card, #fff);
 
   .detalle-footer-left {
     grid-column: 1;
@@ -504,5 +538,151 @@
 ::ng-deep .mat-mdc-snack-bar-container.historial-ventas-snackbar-success {
   padding: 14px 16px;
   min-height: 48px;
+}
+
+// —— Dark mode ——
+:host-context(.dark) {
+  .left-side {
+    border-right-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .imprimir-button {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.75) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+
+    &:hover:not(:disabled) {
+      background-color: rgba(255, 255, 255, 0.14) !important;
+      color: rgba(255, 255, 255, 0.95) !important;
+      border-color: rgba(255, 255, 255, 0.28) !important;
+    }
+
+    &:disabled {
+      background-color: rgba(255, 255, 255, 0.04) !important;
+      color: rgba(255, 255, 255, 0.35) !important;
+      border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+  }
+
+  .recibo-chip.restaurado {
+    background: rgba(76, 175, 80, 0.2);
+    color: #a5d6a7;
+  }
+
+  .doc-row.sub {
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .doc-label {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .doc-badge {
+    color: #90caf9;
+
+    &.nc {
+      color: #ef9a9a;
+    }
+  }
+
+  .filter-label--success {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #a5d6a7;
+  }
+
+  .filter-label--normal {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .recibo-item {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+    background-color: transparent;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.06);
+    }
+
+    &:first-child {
+      border-top-color: rgba(255, 255, 255, 0.1);
+    }
+
+    &.selected {
+      background-color: rgba(121, 134, 203, 0.22);
+      border-left-color: #9fa8da;
+
+      &:hover {
+        background-color: rgba(121, 134, 203, 0.3);
+      }
+    }
+  }
+
+  .recibo-total {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .recibo-consecutivo {
+    color: #9fa8da;
+    background: rgba(121, 134, 203, 0.22);
+  }
+
+  .recibo-fecha {
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .recibo-cliente {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .loading,
+  .loading-more {
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .empty-message {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .detalle-header {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .detalle-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+
+    &:nth-child(even) {
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.06);
+    }
+  }
+
+  .detalle-col {
+    color: rgba(255, 255, 255, 0.87);
+  }
+
+  .detalle-footer {
+    border-top-color: rgba(255, 255, 255, 0.12);
+    background: var(--vex-background-card, transparent);
+
+    .metodo-pago-container {
+      background-color: rgba(76, 175, 80, 0.14);
+      border-color: rgba(76, 175, 80, 0.35);
+    }
+
+    .metodo-pago-label,
+    .pago-mixto-linea,
+    .monto-recibido-label {
+      color: #a5d6a7;
+    }
+
+    .total-value--highlight {
+      background-color: rgba(76, 175, 80, 0.22);
+      color: rgba(255, 255, 255, 0.95);
+    }
+  }
 }
 

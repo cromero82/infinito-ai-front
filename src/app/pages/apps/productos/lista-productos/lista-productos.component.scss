@@ -284,13 +284,13 @@ table.mat-mdc-table {
   // Nota: sticky debe aplicarse a cada th, no al tr (limitación CSS)
   tr.mat-mdc-header-row {
     height: 32px !important;
-    background-color: white !important;
+    background-color: var(--vex-background-card, #fff) !important;
 
     th.mat-mdc-header-cell {
       position: sticky !important;
       top: 0 !important;
       z-index: 2 !important;
-      background-color: white !important;
+      background-color: var(--vex-background-card, #fff) !important;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06) !important;
     }
   }
@@ -352,7 +352,7 @@ $edit-col-width: 140px;
   top: 0 !important;
   right: 0 !important;
   z-index: 3 !important;
-  background: white !important;
+  background: var(--vex-background-card, #fff) !important;
   box-shadow: -4px 0 8px rgba(0, 0, 0, 0.04);
   width: $edit-col-width !important;
   min-width: $edit-col-width !important;
@@ -363,7 +363,7 @@ $edit-col-width: 140px;
   position: sticky !important;
   right: 0 !important;
   z-index: 2 !important;
-  background: white !important;
+  background: var(--vex-background-card, #fff) !important;
   box-shadow: -4px 0 8px rgba(0, 0, 0, 0.04);
   width: $edit-col-width !important;
   min-width: $edit-col-width !important;
@@ -463,6 +463,85 @@ td.col-precio {
 
 :host ::ng-deep .products-list table tr.inactive-row td.col-precio {
   background-color: rgba(76, 175, 80, 0.05) !important;
+}
+
+// Dark mode: hover / sticky / Precio sin fondos claros “sucios”
+:host-context(.dark) {
+  ::ng-deep .products-list table.mat-mdc-table {
+    tr.mat-mdc-row {
+      &:nth-child(even) {
+        background-color: rgba(255, 255, 255, 0.02) !important;
+      }
+
+      &:hover {
+        background-color: var(--pos-mat-table-row-hover) !important;
+      }
+
+      &.selected-row {
+        background-color: rgba(121, 134, 203, 0.22) !important;
+        border-left-color: #9fa8da;
+
+        &:hover {
+          background-color: rgba(121, 134, 203, 0.3) !important;
+        }
+      }
+    }
+
+    tr.mat-mdc-header-row,
+    tr.mat-mdc-header-row th.mat-mdc-header-cell {
+      background-color: var(--vex-background-card, #1e1e1e) !important;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35) !important;
+    }
+
+    tr.inactive-row {
+      td.mat-mdc-cell {
+        color: rgba(255, 255, 255, 0.45) !important;
+      }
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.04) !important;
+      }
+    }
+  }
+
+  .edit-col-header.edit-col-sticky {
+    background: var(--vex-background-card, #1e1e1e) !important;
+    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.35);
+  }
+
+  ::ng-deep .products-list table td.edit-col-cell {
+    background: var(--vex-background-card, #1e1e1e) !important;
+    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.35);
+  }
+
+  ::ng-deep .products-list table tr.inactive-row td.edit-col-cell {
+    background: rgba(255, 255, 255, 0.03) !important;
+  }
+
+  ::ng-deep .products-list table tr:hover td.edit-col-cell {
+    background: var(--pos-mat-table-row-hover) !important;
+  }
+
+  ::ng-deep .products-list table tr.selected-row td.edit-col-cell {
+    background: rgba(121, 134, 203, 0.22) !important;
+  }
+
+  th.col-precio,
+  td.col-precio {
+    background-color: rgba(76, 175, 80, 0.14) !important;
+  }
+
+  ::ng-deep .products-list table tr:hover td.col-precio {
+    background-color: rgba(76, 175, 80, 0.22) !important;
+  }
+
+  ::ng-deep .products-list table tr.inactive-row td.col-precio {
+    background-color: rgba(76, 175, 80, 0.08) !important;
+  }
+
+  ::ng-deep .products-list table tr.selected-row td.col-precio {
+    background-color: rgba(76, 175, 80, 0.22) !important;
+  }
 }
 
 // Encabezados ordenables alineados a la derecha en columnas numéricas

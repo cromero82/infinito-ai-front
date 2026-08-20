@@ -8,7 +8,8 @@
           mat-icon-button
           [matTooltip]="metodo.descripcion"
           (click)="seleccionarMetodoPago(metodo)"
-          [disabled]="disabled"
+          [attr.aria-disabled]="disabled || null"
+          [class.metodo-pago-disabled]="disabled"
           [class.metodo-pago-seleccionado]="isMetodoSeleccionado(metodo)">
           <img
             [src]="'assets/img/icons/payments/' + metodo.file"

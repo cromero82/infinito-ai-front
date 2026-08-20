@@ -6,6 +6,7 @@
     <div class="filter-section">
       <mat-button-toggle-group
         appearance="legacy"
+        hideSingleSelectionIndicator
         [value]="selectedFilter"
         (valueChange)="selectFilter($event)">
         <mat-button-toggle value="todos">Todos</mat-button-toggle>

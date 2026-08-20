@@ -33,6 +33,8 @@ export class MetodosPagoComponent implements OnInit, OnDestroy {
   @Input() permitirReSeleccionar: boolean = false; // Permitir seleccionar de nuevo el mismo método
 
   @Output() metodoPagoSeleccionado = new EventEmitter<MetodoPagoDto>();
+  /** Click en un medio mientras está deshabilitado (p. ej. ticket con CxC). */
+  @Output() intentoMientrasDeshabilitado = new EventEmitter<void>();
 
   metodosPago: MetodoPagoDto[] = [];
   private destroy$ = new Subject<void>();
@@ -62,7 +64,12 @@ export class MetodosPagoComponent implements OnInit, OnDestroy {
   }
 
   seleccionarMetodoPago(metodo: MetodoPagoDto): void {
-    if (!metodo || metodo.estado === 'inactivo' || this.disabled) {
+    if (!metodo || metodo.estado === 'inactivo') {
+      return;
+    }
+
+    if (this.disabled) {
+      this.intentoMientrasDeshabilitado.emit();
       return;
     }
 

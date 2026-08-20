@@ -126,7 +126,7 @@ const MESES_CORTO = [
                 mat-flat-button
                 color="primary"
                 type="button"
-                class="cxc-rail-cta"
+                class="cxc-rail-cta cxc-rail-cta--abonar"
                 (click)="abonar.emit()">
                 Registrar abono
               </button>
@@ -216,7 +216,7 @@ const MESES_CORTO = [
       }
       .cxc-rail-saldos {
         font-size: 0.8125rem;
-        background: #fff;
+        background: var(--vex-background-card, #fff);
         border-radius: 6px;
         padding: 8px 10px;
         border: 1px solid rgba(0, 0, 0, 0.06);
@@ -285,6 +285,33 @@ const MESES_CORTO = [
         font-size: 18px;
         margin-right: 4px;
         vertical-align: middle;
+      }
+
+      :host-context(.dark) .cxc-rail {
+        background: rgba(255, 255, 255, 0.03);
+        border-left-color: rgba(255, 255, 255, 0.1);
+      }
+      :host-context(.dark) .cxc-rail-toggle {
+        color: rgba(255, 255, 255, 0.55);
+      }
+      :host-context(.dark) .cxc-rail-header .title,
+      :host-context(.dark) .cxc-rail-header .meta {
+        color: rgba(255, 255, 255, 0.5);
+      }
+      :host-context(.dark) .cxc-rail-saldos {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+      :host-context(.dark) .cxc-rail-saldos .saldo {
+        border-top-color: rgba(255, 255, 255, 0.1);
+      }
+      :host-context(.dark) .abonos-list li {
+        border-bottom-color: rgba(255, 255, 255, 0.08);
+      }
+      :host-context(.dark) .abonos-list .f,
+      :host-context(.dark) .empty,
+      :host-context(.dark) .loading {
+        color: rgba(255, 255, 255, 0.5);
       }
     `
   ]

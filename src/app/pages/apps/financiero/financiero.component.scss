@@ -18,16 +18,45 @@
   flex-direction: column;
 }
 
+.tab-link-stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.tab-link-label {
+  white-space: nowrap;
+}
+
 .tab-badge {
-  margin-left: 6px;
-  padding: 1px 6px;
+  margin-left: 0;
+  padding: 0 5px;
   border-radius: 999px;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
-  line-height: 1.4;
-  background: rgba(255, 255, 255, 0.18);
-  color: rgba(255, 255, 255, 0.92);
-  vertical-align: middle;
+  line-height: 1.35;
+  max-width: 100%;
+  white-space: nowrap;
+  // Light (default): contraste sobre tabs claros
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.62);
+}
+
+:host-context(.dark) .tab-badge {
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+// Tabs un poco más altos para título + leyenda en columna
+:host ::ng-deep .financiero-tabs .mat-mdc-tab-link {
+  flex-shrink: 0;
+  min-height: 40px !important;
+  height: auto !important;
+  padding: 4px 12px !important;
 }
 
 // Igual que vex-main-route-host: el host de la ruta hija participa en el flex del outlet (si no, altura = contenido y no hay scroll interno en Ingresos)
@@ -39,14 +68,4 @@
 :host ::ng-deep .financiero-tabs .mat-mdc-tab-link-container {
   overflow-x: auto;
   scrollbar-width: thin;
-}
-
-:host ::ng-deep .financiero-tabs .mat-mdc-tab-link {
-  flex-shrink: 0;
-}
-
-// Tabs Egresos/Proveedores más compactos
-:host ::ng-deep .mat-mdc-tab-nav-bar .mat-mdc-tab-link {
-  min-height: 28px !important;
-  padding: 0 12px !important;
 }

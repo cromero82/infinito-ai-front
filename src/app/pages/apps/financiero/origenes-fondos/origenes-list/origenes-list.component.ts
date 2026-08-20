@@ -676,7 +676,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
           tipo: 'sugerencia',
           textoClave: 'Sugerencia',
           valorClave: this.esAdmin
-            ? 'Clic · Arrastra caja o fila (+) · Trasladar (retiro cajero → caja) · Doble clic copia JSON'
+            ? 'Clic · Arrastra y soltar caja o fila'
             : 'Clic para ver movimientos · Doble clic copia JSON (ficha+movs)',
           estiloCssClave: '',
           icono: 'mat:tips_and_updates'

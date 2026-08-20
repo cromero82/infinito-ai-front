@@ -55,11 +55,6 @@ export class NavigationLoaderService {
             label: 'Orígenes de fondos',
             route: '/apps/financiero/origenes-fondos',
             icon: 'mat:account_balance_wallet'
-          },
-          {
-            label: 'Cuentas por cobrar',
-            route: '/apps/financiero/cuentas-por-cobrar',
-            icon: 'mat:request_quote'
           }
         ]
       },

@@ -1,6 +1,5 @@
 .card {
-  background: white;
-  border-radius: 8px;
+  @apply rounded shadow bg-foreground;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -434,4 +433,138 @@ table td {
 .resumen-total {
   font-size: 1.75rem;
   line-height: 1.2;
+}
+
+// —— Dark mode: fondos / textos / bordes (sin forzar blanco) ——
+:host-context(.dark) {
+  .card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  }
+
+  table th {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  table td {
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  .estado-corte {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .estado-creada {
+    color: #ffcc80;
+    background: rgba(255, 193, 7, 0.18);
+  }
+
+  .estado-revisada {
+    color: #a5d6a7;
+    background: rgba(76, 175, 80, 0.2);
+  }
+
+  .estado-eliminado {
+    color: #ef9a9a;
+    background: rgba(244, 67, 54, 0.2);
+  }
+
+  .ingresos-dia-header {
+    background: rgba(144, 202, 249, 0.1);
+    border-top-color: rgba(255, 255, 255, 0.1);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .detalles-fecha-table {
+    tr.selected-row {
+      background-color: rgba(121, 134, 203, 0.22) !important;
+
+      &:hover {
+        background-color: rgba(121, 134, 203, 0.3) !important;
+      }
+
+      td.col-fisico {
+        background-color: rgba(76, 175, 80, 0.22) !important;
+      }
+    }
+
+    tr:hover:not(.selected-row) {
+      background-color: rgba(255, 255, 255, 0.06);
+    }
+  }
+
+  .metodo-pago-tile {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .metodo-pago-tile-nombre {
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  .metodo-pago-tile-valor {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .split-pane-left {
+    border-right-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .split-pane-divider {
+    &:hover:not(.oculto) {
+      background-color: rgba(255, 255, 255, 0.06);
+    }
+
+    &.oculto {
+      background-color: rgba(255, 255, 255, 0.04);
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    .divider-handle {
+      background-color: rgba(255, 255, 255, 0.28);
+    }
+  }
+
+  .toggle-filtros-btn-divider {
+    mat-icon {
+      color: rgba(255, 255, 255, 0.65);
+    }
+
+    &:hover mat-icon {
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  .ingresos-right-scroll {
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.28);
+      background-clip: padding-box;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.42);
+      background-clip: padding-box;
+    }
+
+    scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+  }
+
+  .ingresos-details-table {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+
+    th.col-fisico,
+    td.col-fisico {
+      background-color: rgba(76, 175, 80, 0.14);
+    }
+
+    tr:hover td.col-fisico {
+      background-color: rgba(76, 175, 80, 0.2);
+    }
+
+    tr.ingresos-dia-header td.col-fisico {
+      background-color: rgba(76, 175, 80, 0.22);
+    }
+  }
 }

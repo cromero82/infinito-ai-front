@@ -57,27 +57,27 @@ export const appConfig: ApplicationConfig = {
        */
       availableThemes: [
         {
-          name: 'Default',
+          name: 'Predeterminado',
           className: 'vex-theme-default'
         },
         {
-          name: 'Teal',
+          name: 'Verde azulado',
           className: 'vex-theme-teal'
         },
         {
-          name: 'Green',
+          name: 'Verde',
           className: 'vex-theme-green'
         },
         {
-          name: 'Purple',
+          name: 'Morado',
           className: 'vex-theme-purple'
         },
         {
-          name: 'Red',
+          name: 'Rojo',
           className: 'vex-theme-red'
         },
         {
-          name: 'Orange',
+          name: 'Naranja',
           className: 'vex-theme-orange'
         }
       ]

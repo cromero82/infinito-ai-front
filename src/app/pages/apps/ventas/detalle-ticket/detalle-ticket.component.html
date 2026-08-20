@@ -259,7 +259,8 @@
             [disabled]="
               actualizandoMetodoPago || estaEnEdicion || modoCredito
             "
-            (metodoPagoSeleccionado)="onMetodoPagoSeleccionado($event)">
+            (metodoPagoSeleccionado)="onMetodoPagoSeleccionado($event)"
+            (intentoMientrasDeshabilitado)="onIntentoPagoDeshabilitado()">
           </metodos-pago>
         </div>
         @if (mostrarColumnaAtendido) {

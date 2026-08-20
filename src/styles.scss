@@ -99,6 +99,17 @@ mat-checkbox.mat-mdc-checkbox {
   --pos-mat-table-row-hover: rgba(63, 81, 181, 0.055);
 }
 
+.dark {
+  /* En dark, el azul al 5.5% se ve sucio/oliva; usar velo neutro */
+  --pos-mat-table-row-hover: rgba(255, 255, 255, 0.06);
+}
+
+/* Overlay de ayuda en línea (CDK): pane a pantalla completa sin padding */
+.cdk-overlay-pane.guia-en-linea-overlay-pane {
+  pointer-events: auto !important;
+  max-width: none !important;
+}
+
 /*
   Autocomplete "Tipo de egreso" (proveedor-edit):
   En Material 21 la clase del panel es el input `class` en <mat-autocomplete> (ya no panelClass en overlay).

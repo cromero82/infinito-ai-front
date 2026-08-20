@@ -629,3 +629,88 @@
   pointer-events: none;
 }
 
+// —— Dark mode: hover / selección / textos / inputs ——
+:host-context(.dark) {
+  .detalle-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+
+    &:nth-child(even) {
+      background-color: rgba(255, 255, 255, 0.02) !important;
+    }
+
+    &:hover {
+      background-color: var(--pos-mat-table-row-hover) !important;
+    }
+
+    &.selected-detalle {
+      background-color: rgba(121, 134, 203, 0.22) !important;
+      border-left-color: #9fa8da;
+
+      &:hover {
+        background-color: rgba(121, 134, 203, 0.3) !important;
+      }
+    }
+
+    .detalle-col.atendido .atendido-text {
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .historico-toggle {
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .historico-toggle:hover {
+      color: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .cantidad-input,
+    .valor-unitario-input,
+    .producto-input {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(159, 168, 218, 0.45);
+      color: rgba(255, 255, 255, 0.9);
+
+      &:focus {
+        border-color: #9fa8da;
+        box-shadow: 0 0 0 2px rgba(121, 134, 203, 0.35);
+      }
+    }
+  }
+
+  .atendido-por-info {
+    background-color: rgba(255, 152, 0, 0.14);
+    border-left-color: rgba(255, 183, 77, 0.7);
+
+    .atendido-por-label {
+      color: rgba(255, 255, 255, 0.7);
+
+      strong {
+        color: rgba(255, 255, 255, 0.9);
+      }
+    }
+  }
+
+  .split-ticket-info {
+    background-color: rgba(121, 134, 203, 0.14);
+    border-left-color: rgba(159, 168, 218, 0.65);
+
+    .split-ticket-label {
+      color: rgba(255, 255, 255, 0.75);
+    }
+  }
+
+  .detalle-footer {
+    border-top-color: rgba(255, 255, 255, 0.12);
+
+    .total-label {
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    .total-value--highlight {
+      background-color: rgba(76, 175, 80, 0.22);
+      color: rgba(255, 255, 255, 0.95);
+    }
+  }
+}
+

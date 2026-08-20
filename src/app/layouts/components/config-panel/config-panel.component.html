@@ -2,10 +2,10 @@
   <div class="config-panel">
     <h2 class="headline mb-4">
       <mat-icon class="mr-3" svgIcon="mat:settings"></mat-icon>
-      <span>Configuration</span>
+      <span>Configuración</span>
     </h2>
     <div class="section">
-      <h5 class="subheading">THEME BASE</h5>
+      <h5 class="subheading">BASE DEL TEMA</h5>
       @if (colorScheme$ | async; as colorScheme) {
         <div
           (click)="isDark(colorScheme) ? disableDarkMode() : enableDarkMode()"
@@ -19,12 +19,12 @@
               <mat-icon svgIcon="mat:close"></mat-icon>
             }
           </div>
-          <p class="ml-1 font-medium text-sm">DARK MODE</p>
+          <p class="ml-1 font-medium text-sm">MODO OSCURO</p>
         </div>
       }
     </div>
     <div class="section">
-      <h5 class="subheading">THEME COLORS</h5>
+      <h5 class="subheading">COLORES DEL TEMA</h5>
       @for (theme of themes; track theme) {
         <div
           (click)="selectTheme(theme)"
@@ -50,7 +50,7 @@
       }
     </div>
     <div class="section">
-      <h5 class="subheading">PRE-BUILT LAYOUTS</h5>
+      <h5 class="subheading">DISEÑOS PREDEFINIDOS</h5>
       @for (config of configs; track config; let first = $first) {
         <div [class.mt-6]="!first" class="rounded">
           <div
@@ -63,14 +63,14 @@
                 class="bg-white text-black flex-none !min-w-[70px]"
                 mat-raised-button
                 type="button">
-                LIGHT
+                CLARO
               </button>
               <button
                 (click)="setConfig(config.id, ColorSchemeName.DARK)"
                 class="!bg-black !text-white flex-none !min-w-[70px]"
                 mat-raised-button
                 type="button">
-                DARK
+                OSCURO
               </button>
             </div>
           </div>
@@ -79,7 +79,7 @@
       }
     </div>
     <div class="section">
-      <h5 class="subheading">ROUNDED CORNERS</h5>
+      <h5 class="subheading">ESQUINAS REDONDEADAS</h5>
       <div class="grid grid-cols-4 gap-4">
         @for (borderRadius of roundedCornerValues; track borderRadius) {
           <div
@@ -112,7 +112,7 @@
       </div>
     </div>
     <div class="section">
-      <h5 class="subheading">BUTTON STYLE</h5>
+      <h5 class="subheading">ESTILO DE BOTONES</h5>
       <div class="flex justify-between gap-4">
         <button
           (click)="selectButtonStyle(undefined)"
@@ -125,7 +125,7 @@
           color="primary"
           mat-flat-button
           type="button">
-          INHERIT
+          HEREDAR
         </button>
         <button
           (click)="selectButtonStyle(roundedButtonValue)"
@@ -141,14 +141,14 @@
           color="primary"
           mat-flat-button
           type="button">
-          ROUNDED
+          REDONDEADO
         </button>
       </div>
     </div>
     <div class="section">
-      <h5 class="subheading">Layout</h5>
+      <h5 class="subheading">Diseño</h5>
       <div class="section-content">
-        <h5 class="subheading">Orientation</h5>
+        <h5 class="subheading">Orientación</h5>
         <mat-slide-toggle
           (change)="layoutRTLChange($event)"
           [checked]="isRTL$ | async"
@@ -157,33 +157,33 @@
       </div>
     </div>
     <div class="section">
-      <h5 class="subheading">Toolbar</h5>
+      <h5 class="subheading">Barra superior</h5>
       <div class="section-content">
-        <h5 class="subheading">Position</h5>
+        <h5 class="subheading">Posición</h5>
         <mat-radio-group
           (change)="toolbarPositionChange($event)"
           [value]="setting.toolbar.fixed ? 'fixed' : 'static'"
           class="flex flex-col gap-3">
-          <mat-radio-button value="fixed">Fixed</mat-radio-button>
-          <mat-radio-button value="static">Static</mat-radio-button>
+          <mat-radio-button value="fixed">Fija</mat-radio-button>
+          <mat-radio-button value="static">Estática</mat-radio-button>
         </mat-radio-group>
       </div>
     </div>
     <div class="section">
-      <h5 class="subheading">Footer</h5>
+      <h5 class="subheading">Pie de página</h5>
       <div class="section-content">
         <mat-slide-toggle
           (change)="footerVisibleChange($event)"
           [checked]="setting.footer.visible"
           >Visible
         </mat-slide-toggle>
-        <h5 class="subheading">Position</h5>
+        <h5 class="subheading">Posición</h5>
         <mat-radio-group
           (change)="footerPositionChange($event)"
           [value]="setting.footer.fixed ? 'fixed' : 'static'"
           class="flex flex-col gap-3">
-          <mat-radio-button value="fixed">Fixed</mat-radio-button>
-          <mat-radio-button value="static">Static</mat-radio-button>
+          <mat-radio-button value="fixed">Fijo</mat-radio-button>
+          <mat-radio-button value="static">Estático</mat-radio-button>
         </mat-radio-group>
       </div>
     </div>

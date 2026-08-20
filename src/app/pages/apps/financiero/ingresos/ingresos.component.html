@@ -286,7 +286,7 @@
                           track venta.fechaKey
                         ) {
                           <tr
-                            class="border-b hover:bg-gray-50"
+                            class="border-b hover:bg-hover"
                             [class.selected-row]="
                               fechaSeleccionadaKey === venta.fechaKey
                             ">
@@ -404,7 +404,7 @@
                           </tr>
                           @for (corte of grupo.cortes; track corte.id) {
                             <tr
-                              class="border-b hover:bg-gray-50 align-top"
+                              class="border-b hover:bg-hover align-top"
                               [class.cursor-pointer]="
                                 esAdmin && corte.estado === 'creada'
                               "

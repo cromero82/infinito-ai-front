@@ -87,6 +87,7 @@ import {
 } from '../imprimir-recibo-preference.constants';
 import { FrontendActivityBufferService } from '../../../../core/monitoring/frontend-activity-buffer.service';
 import { sanitizeActividadTexto } from '../../../../core/monitoring/frontend-ui-activity.util';
+import { GuiaEnLineaService } from '../../../../core/components/guia-en-linea';
 import { TicketsPosFocusService } from './tickets-pos-focus.service';
 const LAST_TICKET_ID_KEY = 'last-ticket-id';
 const FORCED_SELECTION_TICKET_ID_KEY = 'forced-selection-ticket-id';
@@ -247,7 +248,8 @@ export class TicketsComponent
     private router: Router,
     private reciboPrintService: ReciboPrintService,
     private establecimientoService: EstablecimientoService,
-    private cuentaPorCobrarService: CuentaPorCobrarService
+    private cuentaPorCobrarService: CuentaPorCobrarService,
+    private guiaEnLinea: GuiaEnLineaService
   ) {}
 
   ngOnInit(): void {
@@ -1223,6 +1225,56 @@ export class TicketsComponent
       return;
     }
     this.cxcRailExpanded = !this.cxcRailExpanded;
+  }
+
+  /**
+   * Ayuda en línea: medios de pago deshabilitados por CxC → apuntar a Registrar abono.
+   */
+  mostrarGuiaAbonoCxc(): void {
+    if (!this.activeTicketCxc || this.guiaEnLinea.isOpen) {
+      return;
+    }
+    const abrirRail = !this.cxcRailExpanded;
+    if (abrirRail) {
+      this.cxcRailExpanded = true;
+      this.cdr.detectChanges();
+    }
+
+    const lanzar = () => {
+      const destino = document.querySelector<HTMLElement>(
+        '.cxc-rail-cta--abonar'
+      );
+      if (!destino) {
+        this.snackBar.open(
+          'Abra el panel de crédito y use «Registrar abono» para cobrar.',
+          'Cerrar',
+          { duration: 4500 }
+        );
+        return;
+      }
+      this.guiaEnLinea.abrir({
+        titulo: 'Cobranza con crédito',
+        mensaje:
+          'Una vez generado un crédito al cliente o pagos parciales al cliente, para continuar registrando pago total o aportes debe utilizar «Registrar abono».',
+        origenes: [
+          {
+            el: '.metodos-pago-container',
+            etiqueta: 'Métodos de pago'
+          }
+        ],
+        destino: {
+          el: '.cxc-rail-cta--abonar',
+          etiqueta: 'Registrar abono'
+        },
+        cerrarLabel: 'Cerrar ayuda en línea'
+      });
+    };
+
+    if (abrirRail) {
+      setTimeout(lanzar, 80);
+    } else {
+      lanzar();
+    }
   }
 
   imprimirTicketConCredito(): void {
