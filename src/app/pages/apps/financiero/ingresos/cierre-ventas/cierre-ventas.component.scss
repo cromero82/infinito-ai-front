@@ -412,6 +412,23 @@
   box-sizing: border-box;
 }
 
+.motivo-accion-hint {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #3949ab;
+  opacity: 0.9;
+}
+
+.btn-traslado-of {
+  align-self: stretch;
+  font-size: 12px;
+  line-height: 1.2;
+  min-height: 32px;
+}
+
 .motivo-desfase-field {
   width: 100%;
 

@@ -156,7 +156,7 @@
                 <td mat-footer-cell *matFooterCellDef></td>
               </ng-container>
               <ng-container matColumnDef="sistema">
-                <th mat-header-cell *matHeaderCellDef>Sistema</th>
+                <th mat-header-cell *matHeaderCellDef>Esperado</th>
                 <td mat-cell *matCellDef="let d">
                   {{
                     d.totalSistema ?? 0
@@ -172,7 +172,7 @@
               </ng-container>
               <ng-container matColumnDef="real">
                 <th mat-header-cell *matHeaderCellDef class="col-fisico">
-                  Físico
+                  Contado
                 </th>
                 <td mat-cell *matCellDef="let d" class="col-fisico">
                   {{ d.total ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
@@ -188,7 +188,7 @@
                 </td>
               </ng-container>
               <ng-container matColumnDef="desfase">
-                <th mat-header-cell *matHeaderCellDef>Desfase</th>
+                <th mat-header-cell *matHeaderCellDef>Diferencia</th>
                 <td mat-cell *matCellDef="let d">
                   {{ d.desfase ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
                 </td>

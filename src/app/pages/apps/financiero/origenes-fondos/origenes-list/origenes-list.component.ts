@@ -4,7 +4,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTableModule } from '@angular/material/table';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
@@ -34,6 +33,12 @@ import { OrigenAjusteDialogComponent } from '../origen-ajuste-dialog/origen-ajus
 import { MovimientoReferenciaDialogComponent } from '../movimiento-referencia-dialog/movimiento-referencia-dialog.component';
 import { OrigenHijoDialogComponent } from '../origen-hijo-dialog/origen-hijo-dialog.component';
 import {
+  EgresoEditComponent
+} from '../../egresos/egreso-edit/egreso-edit.component';
+import {
+  FormalizarEgresoDialogData
+} from '../../egresos/service/egresos.service';
+import {
   agruparOrigenesArbol,
   OrigenFondosArbolItemDto,
   GrupoOrigenFondos,
@@ -42,8 +47,19 @@ import {
   saldoOrigenConVentasSinCorte,
   paramsConsultarRangoHastaAhora
 } from '../util/origen-fondos-arbol.util';
+import {
+  labelClasificacionOperativa,
+  sugerirClasificacionDesdeOf
+} from '../util/clasificacion-operativa.util';
+import {
+  destinosPermitidosTraslado,
+  puedeTrasladarEntreOf
+} from '../util/traslado-of.util';
+import { ClasificacionOperativaReporteDialogComponent } from '../clasificacion-operativa-reporte-dialog/clasificacion-operativa-reporte-dialog.component';
 import { FooterService } from '../../../../../layouts/services/footer.service';
 import { FooterItemDto } from '../../../../../layouts/components/footer/footer.component';
+import { GestionNotificacionesMediosService } from '../../../ventas/service/gestion-notificaciones-medios.service';
+import type { PlantillaNotificacionPagoDto } from '../../../ventas/service/gestion-notificaciones-medios.service';
 
 @Component({
   selector: 'vex-origenes-list',
@@ -55,7 +71,6 @@ import { FooterItemDto } from '../../../../../layouts/components/footer/footer.c
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatTooltipModule,
     MatTableModule,
     MatDialogModule,
     MatMenuModule
@@ -79,7 +94,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
   private ventasSinCortePorMetodo = new Map<number, number>();
   /** Cache localStorage metodos_pago_v2_tickets (vía MetodoPagoService). */
   private metodosPagoPorId = new Map<number, MetodoPagoDto>();
-  /** Raíces con hijos expandidos (por defecto colapsados). */
+  /** Raíces con hijos expandidos. Por defecto colapsados; se abren si una plantilla apunta a un hijo. */
   private gruposExpandidos = new Set<number>();
   periodoSinCorteLabel: string | null = null;
 
@@ -90,6 +105,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
     'valor',
     'impacto',
     'saldoDespues',
+    'clasificacion',
     'usuario',
     'detalle'
   ];
@@ -100,6 +116,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
     private corteVentaService: CorteVentaService,
     private establecimientoService: EstablecimientoService,
     private metodoPagoService: MetodoPagoService,
+    private notificacionesMediosService: GestionNotificacionesMediosService,
     private authService: AuthService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
@@ -120,6 +137,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.limpiarFooterWarningTimer();
+    this.limpiarFooterHoverTimer();
     this.footerService.clearFooterItems();
   }
 
@@ -150,12 +168,16 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
           this.ventasSinCortePorMetodo = new Map();
           return of(null);
         })
+      ),
+      plantillas: this.notificacionesMediosService.listarPlantillas().pipe(
+        catchError(() => of([] as PlantillaNotificacionPagoDto[]))
       )
     }).subscribe({
-      next: ({ arbol, rango }) => {
+      next: ({ arbol, rango, plantillas }) => {
         this.arbol = arbol ?? [];
         this.aplicarVentasSinCorte(rango);
         this.grupos = agruparOrigenesArbol(this.arbol);
+        this.expandirGruposPorDestinoPlantillas(plantillas);
         this.loadingCuentas = false;
         if (this.arbol.length === 0) {
           this.cuentaSeleccionada = null;
@@ -319,7 +341,11 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
 
   /** Origen arrastrado actualmente (drag & drop para traslados). */
   origenArrastrado: OrigenFondosArbolItemDto | null = null;
+  /** Movimiento (entrada +) arrastrado hacia otro OF para reclasificar. */
+  movimientoArrastrado: MovimientoOrigenFondosDto | null = null;
   private footerWarningTimer: ReturnType<typeof setTimeout> | null = null;
+  private footerHoverTimer: ReturnType<typeof setTimeout> | null = null;
+  private footerHoverActivo = false;
   /** Último destino bajo el puntero (por si dropEffect/none no dispara drop). */
   private ultimoDestinoHover: OrigenFondosArbolItemDto | null = null;
   private dropProcesado = false;
@@ -328,28 +354,203 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
     if (!this.esAdmin) {
       return;
     }
+    this.limpiarFooterHoverTimer();
+    this.footerHoverActivo = false;
     this.limpiarFooterWarningTimer();
     this.dropProcesado = false;
     this.ultimoDestinoHover = null;
+    this.movimientoArrastrado = null;
     this.origenArrastrado = cuenta;
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData('text/plain', String(cuenta.id));
+      event.dataTransfer.setData('text/plain', `of:${cuenta.id}`);
     }
     const tipHijo = this.esOrigenHijo(cuenta)
-      ? ` Solo a su padre o hermanos (no a orígenes externos).`
+      ? ` Destino: padres de caja (efectivo) u otros OF permitidos.`
       : '';
     this.actualizarFooterSugerencia(
       `Suelta sobre otra caja para mover saldo desde «${cuenta.nombre}».${tipHijo}`
     );
   }
 
-  onDragOver(destino: OrigenFondosArbolItemDto, event: DragEvent): void {
-    if (!this.esAdmin || !this.origenArrastrado) {
+  onDragStartMovimiento(m: MovimientoOrigenFondosDto, event: DragEvent): void {
+    if (!this.esAdmin || !this.puedeArrastrarMovimiento(m)) {
+      event.preventDefault();
       return;
     }
-    // Siempre preventDefault + dropEffect move: si usamos "none", muchos
-    // navegadores no disparan "drop" y el warning nunca aparece.
+    event.stopPropagation();
+    this.limpiarFooterHoverTimer();
+    this.footerHoverActivo = false;
+    this.limpiarFooterWarningTimer();
+    this.dropProcesado = false;
+    this.ultimoDestinoHover = null;
+    this.origenArrastrado = null;
+    this.movimientoArrastrado = m;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', `mov:${m.id}`);
+    }
+    this.actualizarFooterSugerencia(
+      `Suelta sobre un OF permitido para trasladar ${this.formatCurrencyShort(m.valor)} (p.ej. Caja Efectivo / Caja General).`
+    );
+  }
+
+  puedeArrastrarMovimiento(m: MovimientoOrigenFondosDto): boolean {
+    return this.esAdmin && (m.impacto ?? 0) > 0;
+  }
+
+  puedeTrasladarMovimiento(m: MovimientoOrigenFondosDto): boolean {
+    if (!this.puedeArrastrarMovimiento(m)) {
+      return false;
+    }
+    const origenId = this.cuentaSeleccionada?.id ?? m.origenFondosId;
+    const origen = this.arbol.find((c) => c.id === origenId);
+    if (!origen) {
+      return false;
+    }
+    return destinosPermitidosTraslado(origen, this.arbol).length > 0;
+  }
+
+  /**
+   * Abre el diálogo de traslado (retiro cajero/sucursal → caja física, u otro OF permitido).
+   */
+  trasladarMovimiento(m: MovimientoOrigenFondosDto, event?: Event): void {
+    event?.stopPropagation();
+    if (!this.puedeTrasladarMovimiento(m)) {
+      return;
+    }
+    const origenId = this.cuentaSeleccionada?.id ?? m.origenFondosId;
+    const origen = this.arbol.find((c) => c.id === origenId);
+    if (!origen) {
+      return;
+    }
+    const destinos = destinosPermitidosTraslado(origen, this.arbol);
+    if (destinos.length === 0) {
+      this.snackBar.open('No hay destinos permitidos para este origen', 'Cerrar', {
+        duration: 4000
+      });
+      return;
+    }
+    const valor = Math.abs(Number(m.valor) || Number(m.impacto) || 0);
+    const unico = destinos.length === 1 ? destinos[0] : null;
+    const sugerida = unico
+      ? sugerirClasificacionDesdeOf(unico.nombre)
+      : null;
+    const ref = this.dialog.open(OrigenMovimientoDialogComponent, {
+      width: '520px',
+      data: {
+        tipo: 'traslado' as OrigenMovimientoTipo,
+        cuentaId: origen.id,
+        destinoId: unico?.id,
+        arbol: this.arbol,
+        ventasSinCortePorMetodo: this.ventasSinCortePorMetodo,
+        valor,
+        clasificacionOperativa: sugerida,
+        pedirClasificacion: false,
+        bloquearOrigen: true,
+        titulo: 'Trasladar'
+      }
+    });
+    ref.afterClosed().subscribe((ok) => {
+      if (ok) {
+        this.cargarCuentas(this.cuentaSeleccionada?.id);
+        this.snackBar.open('Traslado registrado', undefined, { duration: 2500 });
+      }
+    });
+  }
+
+  /**
+   * Entrada «por identificar» (email → Para ordenar): formalizar como egreso
+   * sin volver a restar el banco.
+   */
+  puedeFormalizarEgreso(m: MovimientoOrigenFondosDto): boolean {
+    if ((m.impacto ?? 0) <= 0 || m.id == null) {
+      return false;
+    }
+    const tipo = (m.origenTipo ?? '').trim().toUpperCase();
+    return tipo === 'MOVIMIENTO BANCO POR IDENTIFICAR';
+  }
+
+  formalizarEgreso(m: MovimientoOrigenFondosDto, event?: Event): void {
+    event?.stopPropagation();
+    if (!this.puedeFormalizarEgreso(m)) {
+      return;
+    }
+    const data: FormalizarEgresoDialogData = {
+      mode: 'formalizar',
+      fromMovimientoOrigenFondosId: m.id,
+      origenFondosId: m.origenFondosId,
+      valor: m.valor,
+      terceroNombre: m.terceroNombre,
+      idReferencia: m.idReferencia ?? null
+    };
+    const dialogRef = this.dialog.open(EgresoEditComponent, {
+      width: '600px',
+      data
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.snackBar.open('Egreso formalizado', 'Cerrar', { duration: 3500 });
+        this.cargarCuentas();
+        if (this.cuentaSeleccionada) {
+          this.cargarMovimientos(this.cuentaSeleccionada.id);
+        }
+      }
+    });
+  }
+
+  /**
+   * Mismo caso que Formalizar: entrada por identificar en la bolsa.
+   * Requiere que exista el OF «Cuenta del dueño» en el árbol.
+   */
+  puedeClasificarCuentaDueno(m: MovimientoOrigenFondosDto): boolean {
+    return this.puedeFormalizarEgreso(m) && this.findCuentaDelDueno() != null;
+  }
+
+  /**
+   * Equivale a arrastrar la fila (+) → Cuenta del dueño (clasif. personal).
+   */
+  clasificarACuentaDueno(m: MovimientoOrigenFondosDto, event?: Event): void {
+    event?.stopPropagation();
+    if (!this.puedeClasificarCuentaDueno(m)) {
+      return;
+    }
+    const destino = this.findCuentaDelDueno();
+    if (!destino) {
+      this.snackBar.open(
+        'No se encontró el OF «Cuenta del dueño»',
+        'Cerrar',
+        { duration: 4000 }
+      );
+      return;
+    }
+    this.abrirTrasladoDesdeMovimiento(m, destino);
+  }
+
+  /** OF destino personal (mismo criterio que legalizar email). */
+  private findCuentaDelDueno(): OrigenFondosArbolItemDto | undefined {
+    const exact = (nombre: string) =>
+      this.arbol.find(
+        (c) => (c.nombre || '').trim().toLowerCase() === nombre.toLowerCase()
+      );
+    const like = (frag: string) =>
+      this.arbol.find((c) =>
+        (c.nombre || '').toLowerCase().includes(frag.toLowerCase())
+      );
+    return (
+      exact('Cuenta del dueño') ||
+      exact('Cuenta del dueno') ||
+      exact('Personal administrador') ||
+      like('cuenta del dueño') ||
+      like('cuenta del dueno') ||
+      this.arbol.find((c) => sugerirClasificacionDesdeOf(c.nombre) === 'CUENTA_PERSONAL')
+    );
+  }
+
+  onDragOver(destino: OrigenFondosArbolItemDto, event: DragEvent): void {
+    if (!this.esAdmin || (!this.origenArrastrado && !this.movimientoArrastrado)) {
+      return;
+    }
     event.preventDefault();
     this.ultimoDestinoHover = destino;
     if (event.dataTransfer) {
@@ -360,10 +561,30 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
   onDrop(destino: OrigenFondosArbolItemDto, event: DragEvent): void {
     event.preventDefault();
     this.dropProcesado = true;
+    const mov = this.movimientoArrastrado;
     const origen = this.origenArrastrado;
     this.origenArrastrado = null;
+    this.movimientoArrastrado = null;
     this.ultimoDestinoHover = null;
-    if (!this.esAdmin || !origen) {
+
+    if (!this.esAdmin) {
+      this.actualizarFooterSugerencia();
+      return;
+    }
+
+    if (mov) {
+      this.actualizarFooterSugerencia();
+      if (!this.puedeTrasladarMovimientoA(mov, destino)) {
+        this.mostrarFooterWarning(
+          `No se puede trasladar ese movimiento a «${destino.nombre}».`
+        );
+        return;
+      }
+      this.abrirTrasladoDesdeMovimiento(mov, destino);
+      return;
+    }
+
+    if (!origen) {
       this.actualizarFooterSugerencia();
       return;
     }
@@ -373,7 +594,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
     }
     if (!this.puedeTrasladarDrag(origen, destino)) {
       this.mostrarFooterWarning(
-        `Movimiento de fondo hijo a origen externo no permitido («${origen.nombre}» → «${destino.nombre}»). Use el padre primero.`
+        `Traslado no permitido («${origen.nombre}» → «${destino.nombre}»).`
       );
       return;
     }
@@ -385,6 +606,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
     const origen = this.origenArrastrado;
     const destino = this.ultimoDestinoHover;
     this.origenArrastrado = null;
+    this.movimientoArrastrado = null;
     this.ultimoDestinoHover = null;
 
     // Fallback: si no hubo drop (cancelado / dropEffect none) pero soltó sobre inválido.
@@ -396,7 +618,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
       !this.puedeTrasladarDrag(origen, destino)
     ) {
       this.mostrarFooterWarning(
-        `Movimiento de fondo hijo a origen externo no permitido («${origen.nombre}» → «${destino.nombre}»). Use el padre primero.`
+        `Traslado no permitido («${origen.nombre}» → «${destino.nombre}»).`
       );
       this.dropProcesado = false;
       return;
@@ -414,25 +636,26 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Hijo → solo su padre o hermanos.
-   * Raíz → cualquier otro origen (incl. hijos propios u otras raíces).
+   * Electrónico (hijo/raíz) → padres no electrónicos (cajas).
+   * No electrónico → otros OF físicos (padres e hijos).
    */
   private puedeTrasladarDrag(
     origen: OrigenFondosArbolItemDto,
     destino: OrigenFondosArbolItemDto
   ): boolean {
-    if (origen.id === destino.id) {
+    return puedeTrasladarEntreOf(origen, destino, this.arbol);
+  }
+
+  private puedeTrasladarMovimientoA(
+    m: MovimientoOrigenFondosDto,
+    destino: OrigenFondosArbolItemDto
+  ): boolean {
+    const origenId = this.cuentaSeleccionada?.id ?? m.origenFondosId;
+    const origen = this.arbol.find((c) => c.id === origenId);
+    if (!origen) {
       return false;
     }
-    if (!this.esOrigenHijo(origen)) {
-      return true;
-    }
-    const padreId = origen.parentOrigenFondosId!;
-    if (destino.id === padreId) {
-      return true;
-    }
-    // Hermano: mismo padre
-    return destino.parentOrigenFondosId === padreId;
+    return puedeTrasladarEntreOf(origen, destino, this.arbol);
   }
 
   /**
@@ -453,7 +676,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
           tipo: 'sugerencia',
           textoClave: 'Sugerencia',
           valorClave: this.esAdmin
-            ? 'Clic · Doble clic copia JSON (ficha+movs) · Arrastra para mover saldo (hijo → padre/hermanos)'
+            ? 'Clic · Arrastra caja o fila (+) · Trasladar (retiro cajero → caja) · Doble clic copia JSON'
             : 'Clic para ver movimientos · Doble clic copia JSON (ficha+movs)',
           estiloCssClave: '',
           icono: 'mat:tips_and_updates'
@@ -485,11 +708,80 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
     }
   }
 
+  tooltipExpandHijos(grupo: GrupoOrigenFondos): string {
+    return this.estaExpandido(grupo.raiz.id)
+      ? 'Ocultar bolsillos'
+      : `Ver bolsillos (${grupo.hijos.length})`;
+  }
+
+  /**
+   * Muestra ayuda en el footer. Si hay título (p.ej. nombre del botón) se muestra
+   * como «Título : descripción»; si no, solo el texto completo (sin «Ayuda»).
+   */
+  mostrarTipFooter(texto: string | null | undefined, titulo?: string | null): void {
+    if (this.origenArrastrado || this.movimientoArrastrado) {
+      return;
+    }
+    const t = (texto ?? '').replace(/\s+/g, ' ').trim();
+    if (!t || t === '—') {
+      return;
+    }
+    this.limpiarFooterHoverTimer();
+    this.footerHoverActivo = true;
+    this.limpiarFooterWarningTimer();
+    const label = (titulo ?? '').trim();
+    this.footerService.setFooterItems([
+      {
+        tipo: 'sugerencia',
+        textoClave: label ? `${label}:` : '',
+        valorClave: t,
+        estiloCssClave: '',
+        icono: 'mat:info'
+      }
+    ]);
+  }
+
+  onDetalleBotonLeave(m: MovimientoOrigenFondosDto, event: MouseEvent): void {
+    const related = event.relatedTarget as Node | null;
+    const cell = (event.currentTarget as HTMLElement | null)?.closest?.(
+      '.detalle-cell'
+    );
+    if (cell && related && cell.contains(related)) {
+      this.mostrarTipFooter(this.detalleMovimiento(m));
+      return;
+    }
+    this.ocultarTipFooter();
+  }
+
+  ocultarTipFooter(): void {
+    if (!this.footerHoverActivo) {
+      return;
+    }
+    this.limpiarFooterHoverTimer();
+    this.footerHoverTimer = setTimeout(() => {
+      this.footerHoverTimer = null;
+      this.footerHoverActivo = false;
+      if (this.origenArrastrado || this.movimientoArrastrado) {
+        return;
+      }
+      this.actualizarFooterSugerencia();
+    }, 80);
+  }
+
+  private limpiarFooterHoverTimer(): void {
+    if (this.footerHoverTimer != null) {
+      clearTimeout(this.footerHoverTimer);
+      this.footerHoverTimer = null;
+    }
+  }
+
   /**
    * Abre el modal de traslado con origen y destino ya seleccionados
    * (resultado de arrastrar una caja sobre otra).
    */
   private abrirTrasladoDragDrop(origenId: number, destinoId: number): void {
+    const dest = this.arbol.find((c) => c.id === destinoId);
+    const sugerida = sugerirClasificacionDesdeOf(dest?.nombre);
     const ref = this.dialog.open(OrigenMovimientoDialogComponent, {
       width: '520px',
       data: {
@@ -497,7 +789,10 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
         cuentaId: origenId,
         destinoId,
         arbol: this.arbol,
-        ventasSinCortePorMetodo: this.ventasSinCortePorMetodo
+        ventasSinCortePorMetodo: this.ventasSinCortePorMetodo,
+        clasificacionOperativa: sugerida,
+        pedirClasificacion: !!sugerida,
+        titulo: 'Trasladar'
       }
     });
     ref.afterClosed().subscribe((ok) => {
@@ -506,6 +801,84 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
         this.snackBar.open('Movimiento registrado', undefined, { duration: 2500 });
       }
     });
+  }
+
+  /**
+   * Reclasifica saldo: arrastrar una entrada (+) de la tabla hacia otro OF.
+   * Origen = cuenta seleccionada; destino = drop; clasificación sugerida por nombre OF.
+   */
+  private abrirTrasladoDesdeMovimiento(
+    m: MovimientoOrigenFondosDto,
+    destino: OrigenFondosArbolItemDto
+  ): void {
+    const origenId = this.cuentaSeleccionada?.id ?? m.origenFondosId;
+    if (origenId == null) {
+      this.snackBar.open('Seleccione la cuenta origen', 'Cerrar', { duration: 3000 });
+      return;
+    }
+    if (origenId === destino.id) {
+      this.snackBar.open('Suelte en un OF distinto al actual', 'Cerrar', {
+        duration: 3000
+      });
+      return;
+    }
+    if (!this.puedeTrasladarMovimientoA(m, destino)) {
+      this.mostrarFooterWarning(
+        `No se puede trasladar a «${destino.nombre}».`
+      );
+      return;
+    }
+    const valor = Math.abs(Number(m.valor) || Number(m.impacto) || 0);
+    if (!(valor > 0)) {
+      this.snackBar.open('El movimiento no tiene valor arrastrable', 'Cerrar', {
+        duration: 3000
+      });
+      return;
+    }
+    const sugerida =
+      sugerirClasificacionDesdeOf(destino.nombre) || 'OTRO_LEGALIZADO';
+    const ref = this.dialog.open(OrigenMovimientoDialogComponent, {
+      width: '520px',
+      data: {
+        tipo: 'traslado' as OrigenMovimientoTipo,
+        cuentaId: origenId,
+        destinoId: destino.id,
+        arbol: this.arbol,
+        ventasSinCortePorMetodo: this.ventasSinCortePorMetodo,
+        valor,
+        clasificacionOperativa: sugerida,
+        pedirClasificacion: true,
+        bloquearOrigen: true,
+        titulo: 'Trasladar'
+      }
+    });
+    ref.afterClosed().subscribe((ok) => {
+      if (ok) {
+        this.cargarCuentas(this.cuentaSeleccionada?.id);
+        this.snackBar.open('Reclasificación registrada', undefined, {
+          duration: 2500
+        });
+      }
+    });
+  }
+
+  abrirReporteClasificacion(): void {
+    this.dialog.open(ClasificacionOperativaReporteDialogComponent, {
+      width: '920px',
+      maxWidth: '95vw'
+    });
+  }
+
+  labelClasificacion(codigo: string | null | undefined): string {
+    return labelClasificacionOperativa(codigo);
+  }
+
+  private formatCurrencyShort(valor: number | null | undefined): string {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      maximumFractionDigits: 0
+    }).format(Number(valor) || 0);
   }
 
   /**
@@ -656,6 +1029,30 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
 
   estaExpandido(raizId: number): boolean {
     return this.gruposExpandidos.has(raizId);
+  }
+
+  /**
+   * Si una plantilla de extracción tiene destino = OF hijo, expandir su raíz
+   * para que «Sin Clasificar» (u otros bolsillos) se vean al entrar a Orígenes.
+   */
+  private expandirGruposPorDestinoPlantillas(
+    plantillas: PlantillaNotificacionPagoDto[] | null | undefined
+  ): void {
+    if (!plantillas?.length || !this.arbol.length) {
+      return;
+    }
+    const porId = new Map(this.arbol.map((c) => [c.id, c]));
+    for (const p of plantillas) {
+      const destId = p.origenFondosDestinoId;
+      if (destId == null) {
+        continue;
+      }
+      const dest = porId.get(destId);
+      const padreId = dest?.parentOrigenFondosId;
+      if (padreId != null && padreId > 0) {
+        this.gruposExpandidos.add(padreId);
+      }
+    }
   }
 
   toggleHijos(raizId: number, event: Event): void {
@@ -812,7 +1209,8 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
         tipo,
         cuentaId: this.cuentaSeleccionada?.id,
         arbol: this.arbol,
-        ventasSinCortePorMetodo: this.ventasSinCortePorMetodo
+        ventasSinCortePorMetodo: this.ventasSinCortePorMetodo,
+        titulo: tipo === 'traslado' ? 'Trasladar' : undefined
       }
     });
     ref.afterClosed().subscribe((ok) => {

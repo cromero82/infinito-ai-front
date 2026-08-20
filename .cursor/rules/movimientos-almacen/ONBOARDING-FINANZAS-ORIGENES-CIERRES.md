@@ -22,6 +22,18 @@
 - **Monitor** (`src/app/core/bug-reporter/`): FAB + modales; Ver detalle; sanitize HAR
 - SQL `21`–`27` + `apply-migrate-prod-to-dian-v2.sh`
 
+### Delta (2026-08-17) — núcleo ingresos / migración única
+
+- **Ingresos = Ventas sistema** (no Contado). Glosario: `prompts-general-pos/GLOSARIO-NUCLEO-FINANCIERO.md`
+- Canónico de corte: `corte_venta_detalle`; `ventas_tipo` legacy dual-write
+- Ticket rápido: `historial_recibo_pago` + `documento_venta` + flag `ticket_rapido`; oculto si `regimenTributario=RESPONSABLE_IVA`
+- Motivos desfase con `accion_esperada` (traslado / documento / ajuste)
+- Legalizar notificaciones email (`PUT .../legalizar`): clasifica **y** traslada OF desde «Para ordenar» → destino (`LEGALIZACION_NOTIFICACION` + `clasificacion_operativa`)
+- Raíz **Dueños** + **Cuenta del dueño** (`38_…`); no operativo del turno
+- DnD fila movimiento (+) → OF + clasificación; reporte «Por clasificación»
+- Schema CxC: `cuenta_por_cobrar` + `abono_cxc` (UI pendiente)
+- SQL `34`–`37` en `apply-migrate-prod-to-dian-v2.sh`
+
 Paths locales macOS: `/Users/carlosromero/Documents/dev/repos/...`  
 (Branches: BE `dian-v2`, FE `dian-version`.)  
 Paths Linux históricos en el resto del doc (`/home/carlosr/...`) → mapear al path macOS de arriba.

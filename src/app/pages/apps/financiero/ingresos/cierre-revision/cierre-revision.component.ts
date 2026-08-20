@@ -3,6 +3,7 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
   MAT_DIALOG_DATA,
+  MatDialog,
   MatDialogModule,
   MatDialogRef
 } from '@angular/material/dialog';
@@ -29,6 +30,11 @@ import {
   MotivoMovimientoDto,
   MotivoMovimientoService
 } from '../../origenes-fondos/service/motivo-movimiento.service';
+import { OrigenFondosService } from '../../origenes-fondos/service/origen-fondos.service';
+import {
+  OrigenMovimientoDialogComponent
+} from '../../origenes-fondos/origen-movimiento-dialog/origen-movimiento-dialog.component';
+import { OrigenFondosArbolItemDto } from '../../origenes-fondos/util/origen-fondos-arbol.util';
 
 interface RevisionRow {
   detalle: CorteVentaDetalleDto;
@@ -60,8 +66,10 @@ export class CierreRevisionComponent implements OnInit {
   rows: RevisionRow[] = [];
   metodos = new Map<number, MetodoPagoDto>();
   motivos: MotivoMovimientoDto[] = [];
+  private origenArbol: OrigenFondosArbolItemDto[] = [];
   loading = true;
   saving = false;
+  mensajeBloqueo = '';
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { corteId: number },
@@ -69,6 +77,8 @@ export class CierreRevisionComponent implements OnInit {
     private corteService: CorteVentaService,
     private metodoPagoService: MetodoPagoService,
     private motivoService: MotivoMovimientoService,
+    private origenFondosService: OrigenFondosService,
+    private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
 
@@ -76,10 +86,12 @@ export class CierreRevisionComponent implements OnInit {
     forkJoin({
       corte: this.corteService.obtenerPorId(this.data.corteId),
       metodos: this.metodoPagoService.obtenerMetodosPago(),
-      motivos: this.motivoService.findActivos()
+      motivos: this.motivoService.findActivos(),
+      arbol: this.origenFondosService.findArbol()
     }).subscribe({
-      next: ({ corte, metodos, motivos }) => {
+      next: ({ corte, metodos, motivos, arbol }) => {
         this.corte = corte;
+        this.origenArbol = arbol ?? [];
         this.metodos = new Map((metodos ?? []).map((m) => [Number(m.id), m]));
         const todos = motivos ?? [];
         this.motivos = todos.filter((m) => m.categoria === 'DESFASE_CIERRE');
@@ -88,6 +100,7 @@ export class CierreRevisionComponent implements OnInit {
         }
         this.rows = (corte.detalles ?? []).map((detalle) => this.buildRow(detalle));
         this.loading = false;
+        this.refrescarMensajeBloqueo();
       },
       error: () => {
         this.loading = false;
@@ -111,6 +124,9 @@ export class CierreRevisionComponent implements OnInit {
     if (!editable) {
       totalCtrl.disable();
       motivoCtrl.disable();
+    } else {
+      totalCtrl.valueChanges.subscribe(() => this.refrescarMensajeBloqueo());
+      motivoCtrl.valueChanges.subscribe(() => this.refrescarMensajeBloqueo());
     }
     return {
       detalle,
@@ -137,15 +153,125 @@ export class CierreRevisionComponent implements OnInit {
     return total === null ? null : Number(total) - Number(row.detalle.totalSistema);
   }
 
+  private motivoEfectivoId(row: RevisionRow): number | null {
+    if (this.esEditable(row)) {
+      const v = row.motivoCtrl.getRawValue();
+      return v != null && Number(v) > 0 ? Number(v) : null;
+    }
+    const id = row.detalle.motivoDesfaseId;
+    return id != null && Number(id) > 0 ? Number(id) : null;
+  }
+
+  private motivoById(id: number | null): MotivoMovimientoDto | undefined {
+    if (id == null) {
+      return undefined;
+    }
+    return this.motivos.find((m) => m.id === id);
+  }
+
+  private accionEsperada(row: RevisionRow): string {
+    const m = this.motivoById(this.motivoEfectivoId(row));
+    return (m?.accionEsperada || '').trim().toUpperCase();
+  }
+
+  hintAccionMotivo(row: RevisionRow): string | null {
+    const delta = this.desfase(row);
+    if (delta == null || delta === 0) {
+      return null;
+    }
+    const m = this.motivoById(this.motivoEfectivoId(row));
+    if (!m) {
+      return null;
+    }
+    switch (this.accionEsperada(row)) {
+      case 'TRASLADO_OF':
+        return 'Acción: reclasificar con traslado entre orígenes de fondos.';
+      case 'REGISTRAR_DOCUMENTO':
+        return 'Bloqueado: registre el documento faltante; no se puede finalizar con este motivo.';
+      case 'AJUSTE_CIERRE':
+        return 'Acción: se aplicará ajuste de cierre (over/short).';
+      case 'REVISAR':
+        return 'Acción: revisar y preferir reclasificar o documentar.';
+      default:
+        return m.codigo ? `Motivo: ${m.codigo}` : null;
+    }
+  }
+
+  requiereTrasladoOf(row: RevisionRow): boolean {
+    const delta = this.desfase(row);
+    return delta != null && delta !== 0 && this.accionEsperada(row) === 'TRASLADO_OF';
+  }
+
+  abrirTrasladoOf(row: RevisionRow): void {
+    if (!this.origenArbol.length) {
+      this.snackBar.open(
+        'No hay orígenes de fondos cargados. Abra Orígenes de fondos o reintente.',
+        'Cerrar',
+        { duration: 4000 }
+      );
+      return;
+    }
+    const mpId = Number(row.detalle.metodoPagoId);
+    const cuenta = this.origenArbol.find(
+      (o) => o.metodoPagoId != null && Number(o.metodoPagoId) === mpId
+    );
+    this.dialog.open(OrigenMovimientoDialogComponent, {
+      width: '520px',
+      data: {
+        tipo: 'traslado' as const,
+        cuentaId: cuenta?.id,
+        arbol: this.origenArbol
+      }
+    }).afterClosed().subscribe((ok) => {
+      if (ok) {
+        this.snackBar.open(
+          'Traslado registrado. Si el Esperado cambió, reabra la revisión del corte.',
+          'Cerrar',
+          { duration: 5000 }
+        );
+      }
+    });
+  }
+
   seleccionarRevision(row: RevisionRow, estado: 'OK' | 'SUGERENCIA'): void {
     row.revisionEstado = estado;
     if (estado === 'OK') {
       row.comentarioCtrl.setValue('');
     }
+    this.refrescarMensajeBloqueo();
+  }
+
+  onMotivoChange(): void {
+    this.refrescarMensajeBloqueo();
+  }
+
+  private filasBloqueadasDocumento(): string[] {
+    const nombres: string[] = [];
+    for (const row of this.rows) {
+      const delta = this.desfase(row);
+      if (delta == null || delta === 0) {
+        continue;
+      }
+      if (this.accionEsperada(row) === 'REGISTRAR_DOCUMENTO') {
+        nombres.push(this.nombreMetodo(row.detalle.metodoPagoId));
+      }
+    }
+    return nombres;
+  }
+
+  refrescarMensajeBloqueo(): void {
+    const bloqueados = this.filasBloqueadasDocumento();
+    this.mensajeBloqueo =
+      bloqueados.length > 0
+        ? `El motivo exige registrar el egreso/movimiento faltante (no finalizar). Medios: ${bloqueados.join(', ')}.`
+        : '';
   }
 
   puedeFinalizar(): boolean {
     if (!this.corte || this.corte.estado !== 'creada' || this.rows.length === 0) {
+      return false;
+    }
+    if (this.filasBloqueadasDocumento().length > 0) {
       return false;
     }
     return this.rows.every((row) => {
@@ -166,7 +292,13 @@ export class CierreRevisionComponent implements OnInit {
   }
 
   finalizar(): void {
-    if (!this.puedeFinalizar() || !this.corte) return;
+    this.refrescarMensajeBloqueo();
+    if (!this.puedeFinalizar() || !this.corte) {
+      if (this.mensajeBloqueo) {
+        this.snackBar.open(this.mensajeBloqueo, 'Cerrar', { duration: 5000 });
+      }
+      return;
+    }
     const detalles: DetalleRevisionRequest[] = this.rows.map((row) => ({
       detalleId: row.detalle.id!,
       total: this.esEditable(row) ? row.totalCtrl.getRawValue() : null,

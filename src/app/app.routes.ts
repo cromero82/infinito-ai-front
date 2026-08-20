@@ -200,6 +200,14 @@ export const appRoutes: VexRoutes = [
                     './pages/apps/financiero/origenes-fondos/origenes-list/origenes-list.component'
                   ).then((m) => m.OrigenesListComponent),
                 data: { scrollDisabled: true }
+              },
+              {
+                path: 'cuentas-por-cobrar',
+                loadComponent: () =>
+                  import(
+                    './pages/apps/financiero/cuentas-por-cobrar/cxc-list/cxc-list.component'
+                  ).then((m) => m.CxcListComponent),
+                data: { scrollDisabled: true }
               }
             ]
           },

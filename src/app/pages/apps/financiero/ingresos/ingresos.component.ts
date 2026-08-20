@@ -700,7 +700,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
     return m?.descripcion ?? `Método ${metodoPagoId}`;
   }
 
-  /** Físico declarado por medio, para la vista de datos / dashboard. */
+  /** Ventas del sistema (tickets) por medio — fuente del dashboard Ingresos. */
   ventasTipoDeCorte(corte: CorteVentaSearchItemDto): {
     metodoPagoId: number;
     label: string;
@@ -721,7 +721,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
       .filter((x): x is NonNullable<typeof x> => x != null);
   }
 
-  /** Suma del físico declarado del corte (referencia de ingreso real). */
+  /** Suma de ventas sistema del corte (KPI de ingresos). */
   totalVentasDeCorte(corte: CorteVentaSearchItemDto): number {
     return this.ventasTipoDeCorte(corte).reduce((s, v) => s + v.total, 0);
   }

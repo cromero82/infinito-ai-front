@@ -1,0 +1,228 @@
+@use '../../../../../core/table-viewport/table-viewport.scss' as *;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+.cxc-page {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.cxc-card {
+  min-height: 0;
+}
+
+.cxc-hint {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.55);
+  margin-top: 2px !important;
+}
+
+.cxc-tabs {
+  flex: 0 0 auto;
+}
+
+:host ::ng-deep .cxc-tabs .mat-mdc-tab-body-wrapper {
+  display: none;
+}
+
+.cxc-table-section .table-scroll-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.search-input {
+  @apply w-64;
+}
+
+.filter-select {
+  @apply w-36;
+}
+
+.cliente-cell {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  padding: 2px 0;
+
+  .sub {
+    font-size: 11px;
+    color: rgba(0, 0, 0, 0.5);
+  }
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.saldo {
+  font-weight: 600;
+}
+
+.estado-pill {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+
+  &[data-estado='ABIERTA'] {
+    color: #1565c0;
+  }
+  &[data-estado='PARCIAL'] {
+    color: #ef6c00;
+  }
+  &[data-estado='PAGADA'] {
+    color: #2e7d32;
+  }
+  &[data-estado='ANULADA'] {
+    color: #757575;
+  }
+}
+
+.riesgo-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+  background: #9e9e9e;
+
+  &[data-riesgo='normal'] {
+    background: #43a047;
+  }
+  &[data-riesgo='medio'] {
+    background: #fb8c00;
+  }
+  &[data-riesgo='alto'] {
+    background: #e53935;
+  }
+  &[data-riesgo='n/a'] {
+    background: #bdbdbd;
+  }
+}
+
+.riesgo-text {
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 0.875rem;
+}
+
+:host ::ng-deep {
+  .search-input.mat-mdc-form-field,
+  .filter-select.mat-mdc-form-field {
+    font-size: 13px !important;
+
+    .mat-mdc-form-field-flex {
+      height: 28px !important;
+      align-items: center !important;
+    }
+
+    .mat-mdc-form-field-infix {
+      min-height: 24px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      min-height: 0 !important;
+    }
+
+    .mat-mdc-input-element,
+    .mat-mdc-select-value {
+      font-size: 13px !important;
+      line-height: 24px !important;
+    }
+
+    &:not(.mat-form-field-should-float):not(:focus-within) .mat-mdc-floating-label {
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+    }
+
+    &.mat-form-field-should-float .mat-mdc-floating-label,
+    &:focus-within .mat-mdc-floating-label {
+      top: 50% !important;
+      transform: translateY(calc(-50% - 14px)) scale(0.75) !important;
+    }
+  }
+
+  .edit-btn-compact {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    padding: 0 !important;
+
+    .mat-icon {
+      width: 18px !important;
+      height: 18px !important;
+      font-size: 18px !important;
+    }
+  }
+
+  table.cxc-table-compact.mat-mdc-table {
+    font-size: 13px !important;
+    --mat-table-row-item-container-height: 36px;
+    --mat-table-header-container-height: 28px;
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell],
+    td.mat-mdc-cell,
+    td[mat-cell] {
+      font-size: 13px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      line-height: 1.2 !important;
+      height: 36px !important;
+      vertical-align: middle !important;
+    }
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell] {
+      font-weight: 600 !important;
+      height: 28px !important;
+    }
+
+    tr.mat-mdc-row {
+      height: 36px !important;
+      cursor: pointer;
+
+      &:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.005) !important;
+      }
+
+      &:hover {
+        background-color: var(--pos-mat-table-row-hover) !important;
+      }
+
+      &.selected-row {
+        background-color: rgba(63, 81, 181, 0.12) !important;
+      }
+    }
+
+    tr.mat-mdc-header-row {
+      height: 28px !important;
+      background-color: rgba(0, 0, 0, 0.008) !important;
+    }
+  }
+}

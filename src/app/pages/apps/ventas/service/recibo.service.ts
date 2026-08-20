@@ -17,6 +17,8 @@ export interface ReciboDto {
   estado: string;
   metodoPagoId: number | null;
   total: number;
+  /** Monto ya cobrado en el recibo vivo (si el BE lo expone). */
+  montoRecibido?: number | null;
   ticketId?: number;
   sesionId?: number;
 }

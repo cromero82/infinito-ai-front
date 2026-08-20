@@ -16,9 +16,9 @@
             <th>Método / MPOF</th>
             <th>Ventas</th>
             <th>Egresos</th>
-            <th>Neto sistema</th>
-            <th>Total real</th>
-            <th>Desfase / motivo</th>
+            <th>Esperado</th>
+            <th>Contado</th>
+            <th>Diferencia / motivo</th>
             <th>Revisión</th>
           </tr>
         </thead>
@@ -55,7 +55,9 @@
                 @if (esEditable(row) && desfase(row) !== 0) {
                   <mat-form-field appearance="outline" subscriptSizing="dynamic">
                     <mat-label>Motivo</mat-label>
-                    <mat-select [formControl]="row.motivoCtrl">
+                    <mat-select
+                      [formControl]="row.motivoCtrl"
+                      (selectionChange)="onMotivoChange()">
                       @for (motivo of motivos; track motivo.id) {
                         <mat-option [value]="motivo.id">
                           {{ motivo.nombre }}
@@ -63,6 +65,19 @@
                       }
                     </mat-select>
                   </mat-form-field>
+                }
+                @if (hintAccionMotivo(row); as hint) {
+                  <small class="motivo-accion-hint">{{ hint }}</small>
+                }
+                @if (requiereTrasladoOf(row)) {
+                  <button
+                    mat-stroked-button
+                    color="primary"
+                    type="button"
+                    class="btn-traslado-of"
+                    (click)="abrirTrasladoOf(row)">
+                    Abrir traslado OF
+                  </button>
                 }
               </td>
               <td class="revision-cell">
@@ -108,6 +123,9 @@
 </div>
 
 <div mat-dialog-actions align="end">
+  @if (mensajeBloqueo) {
+    <span class="hint-bloqueo">{{ mensajeBloqueo }}</span>
+  }
   <button mat-stroked-button type="button" [mat-dialog-close]="false">
     Cerrar
   </button>

@@ -26,7 +26,7 @@
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Destino</mat-label>
         <mat-select formControlName="origenDestinoId">
-          @for (c of data.arbol; track c.id) {
+          @for (c of destinosTraslado; track c.id) {
             <mat-option [value]="c.id">{{ etiquetaCuenta(c) }}</mat-option>
           }
         </mat-select>
@@ -64,6 +64,20 @@
       </mat-form-field>
     }
 
+    @if (mostrarClasificacion) {
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Clasificación operativa</mat-label>
+        <mat-select formControlName="clasificacionOperativa">
+          @for (c of clasificaciones; track c.value) {
+            <mat-option [value]="c.value">{{ c.label }}</mat-option>
+          }
+        </mat-select>
+        @if (form.get('clasificacionOperativa')?.hasError('required')) {
+          <mat-error>Obligatoria al reclasificar</mat-error>
+        }
+      </mat-form-field>
+    }
+
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Observación</mat-label>
       <textarea matInput rows="2" formControlName="observacion"></textarea>
@@ -79,6 +93,6 @@
     type="button"
     [disabled]="guardando"
     (click)="guardar()">
-    {{ guardando ? 'Guardando...' : 'Registrar' }}
+    {{ guardando ? 'Guardando...' : esTraslado ? 'Trasladar' : 'Registrar' }}
   </button>
 </mat-dialog-actions>

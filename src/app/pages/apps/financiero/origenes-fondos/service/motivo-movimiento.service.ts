@@ -11,6 +11,8 @@ export interface MotivoMovimientoDto {
   sistema?: boolean;
   activo?: boolean;
   orden?: number;
+  /** TRASLADO_OF | REGISTRAR_DOCUMENTO | AJUSTE_CIERRE | REVISAR */
+  accionEsperada?: string | null;
 }
 
 @Injectable({

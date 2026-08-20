@@ -34,6 +34,11 @@ export class FinancieroComponent {
       badge: 'Medios y cajitas'
     },
     {
+      label: 'Cuentas por cobrar',
+      route: './cuentas-por-cobrar',
+      badge: 'Créditos clientes'
+    },
+    {
       label: 'Proveedores',
       route: './proveedores'
     },

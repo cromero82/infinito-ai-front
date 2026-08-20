@@ -40,6 +40,11 @@ import {
   MotivoMovimientoDto,
   MotivoMovimientoService
 } from '../service/motivo-movimiento.service';
+import {
+  CLASIFICACIONES_OPERATIVAS,
+  sugerirClasificacionDesdeOf
+} from '../util/clasificacion-operativa.util';
+import { destinosPermitidosTraslado } from '../util/traslado-of.util';
 
 export type OrigenMovimientoTipo = 'entrada' | 'prestamo' | 'traslado';
 
@@ -50,6 +55,15 @@ export interface OrigenMovimientoDialogData {
   arbol: OrigenFondosArbolItemDto[];
   /** Tickets sin corte por método de pago (mismo mapa que la lista). */
   ventasSinCortePorMetodo?: Map<number, number>;
+  /** Prefill valor (p.ej. DnD desde fila de movimiento). */
+  valor?: number | null;
+  /** Prefill / sugerencia de clasificación operativa. */
+  clasificacionOperativa?: string | null;
+  /** Si true, muestra y exige clasificación en traslados (DnD movimiento→OF). */
+  pedirClasificacion?: boolean;
+  /** Bloquea el select de origen (traslado desde una fila). */
+  bloquearOrigen?: boolean;
+  titulo?: string;
 }
 
 @Component({
@@ -73,6 +87,7 @@ export class OrigenMovimientoDialogComponent implements OnInit, AfterViewInit {
   guardando = false;
   motivos: MotivoMovimientoDto[] = [];
   titulo = 'Movimiento';
+  readonly clasificaciones = CLASIFICACIONES_OPERATIVAS;
 
   @ViewChild('origenSelect') origenSelect?: MatSelect;
   @ViewChild('valorInput') valorInput?: ElementRef<HTMLInputElement>;
@@ -88,21 +103,30 @@ export class OrigenMovimientoDialogComponent implements OnInit, AfterViewInit {
     this.form = this.fb.group({
       origenFondosId: [data.cuentaId ?? null, Validators.required],
       origenDestinoId: [data.destinoId ?? null],
-      valor: [null, [Validators.required, Validators.min(0.01)]],
+      valor: [
+        data.valor != null && data.valor > 0 ? data.valor : null,
+        [Validators.required, Validators.min(0.01)]
+      ],
       fecha: [new Date(), Validators.required],
       terceroNombre: [''],
       motivoMovimientoId: [null],
+      clasificacionOperativa: [data.clasificacionOperativa ?? null],
       observacion: ['']
     });
   }
 
   ngOnInit(): void {
     this.titulo =
-      this.data.tipo === 'entrada'
+      this.data.titulo ||
+      (this.data.tipo === 'entrada'
         ? 'Entrada manual'
         : this.data.tipo === 'prestamo'
           ? 'Préstamo recibido'
-          : 'Mover entre orígenes de fondos';
+          : 'Trasladar');
+
+    if (this.data.bloquearOrigen) {
+      this.form.get('origenFondosId')?.disable({ emitEvent: false });
+    }
 
     if (this.data.tipo === 'entrada') {
       this.motivoService.findActivos().subscribe({
@@ -122,7 +146,45 @@ export class OrigenMovimientoDialogComponent implements OnInit, AfterViewInit {
     if (this.data.tipo === 'traslado') {
       this.form.get('origenDestinoId')?.setValidators([Validators.required]);
       this.form.get('origenDestinoId')?.updateValueAndValidity();
+      if (this.mostrarClasificacion) {
+        this.form
+          .get('clasificacionOperativa')
+          ?.setValidators([Validators.required]);
+        this.form.get('clasificacionOperativa')?.updateValueAndValidity();
+      }
+      this.form
+        .get('origenFondosId')
+        ?.valueChanges.subscribe((origenId: number | null) => {
+          const destId = this.form.get('origenDestinoId')?.value as number | null;
+          if (destId == null) {
+            return;
+          }
+          const permitidos = this.destinosTraslado.map((d) => d.id);
+          if (!permitidos.includes(destId)) {
+            this.form.patchValue({ origenDestinoId: null });
+          }
+        });
+      this.form
+        .get('origenDestinoId')
+        ?.valueChanges.subscribe((destinoId: number | null) => {
+          if (!this.mostrarClasificacion || !destinoId) {
+            return;
+          }
+          const actual = this.form.get('clasificacionOperativa')?.value;
+          if (actual) {
+            return;
+          }
+          const dest = this.data.arbol.find((c) => c.id === destinoId);
+          const sugerida = sugerirClasificacionDesdeOf(dest?.nombre);
+          if (sugerida) {
+            this.form.patchValue({ clasificacionOperativa: sugerida });
+          }
+        });
     }
+  }
+
+  get mostrarClasificacion(): boolean {
+    return this.data.tipo === 'traslado' && this.data.pedirClasificacion === true;
   }
 
   ngAfterViewInit(): void {
@@ -138,6 +200,15 @@ export class OrigenMovimientoDialogComponent implements OnInit, AfterViewInit {
         this.origenSelect?.focus();
       }
     });
+  }
+
+  get destinosTraslado(): OrigenFondosArbolItemDto[] {
+    const origenId = this.form.getRawValue().origenFondosId as number | null;
+    const origen = this.data.arbol.find((c) => c.id === origenId);
+    if (!origen) {
+      return this.data.arbol;
+    }
+    return destinosPermitidosTraslado(origen, this.data.arbol);
   }
 
   get esTraslado(): boolean {
@@ -222,7 +293,7 @@ export class OrigenMovimientoDialogComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    const origenId = this.form.value.origenFondosId;
+    const origenId = this.form.getRawValue().origenFondosId;
     const destinoId = this.form.value.origenDestinoId;
     if (origenId === destinoId) {
       this.guardando = false;
@@ -237,7 +308,9 @@ export class OrigenMovimientoDialogComponent implements OnInit, AfterViewInit {
       origenDestinoId: destinoId,
       valor,
       fecha,
-      observacion
+      observacion,
+      clasificacionOperativa:
+        this.form.value.clasificacionOperativa || undefined
     };
     this.movimientoService
       .traslado(payload)

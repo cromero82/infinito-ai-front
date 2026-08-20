@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule, MatSelectChange } from '@angular/material/select';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { Subject, merge } from 'rxjs';
 import { takeUntil, finalize, debounceTime, filter } from 'rxjs/operators';
@@ -22,6 +23,11 @@ import {
   MotivoMovimientoDto,
   MotivoMovimientoService
 } from '../../origenes-fondos/service/motivo-movimiento.service';
+import { OrigenFondosService } from '../../origenes-fondos/service/origen-fondos.service';
+import {
+  OrigenMovimientoDialogComponent
+} from '../../origenes-fondos/origen-movimiento-dialog/origen-movimiento-dialog.component';
+import { OrigenFondosArbolItemDto } from '../../origenes-fondos/util/origen-fondos-arbol.util';
 import { AuthService } from '../../../../../auth/service/auth.service';
 
 export interface CierreVentasData {}
@@ -64,6 +70,7 @@ interface CorteVentaRow {
         MatSnackBarModule,
         MatCheckboxModule,
         MatSelectModule,
+        MatTooltipModule,
         DragDropModule,
         ReactiveFormsModule
     ],
@@ -119,6 +126,7 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
   fechaIniRespuesta: string | null = null;
   fechaFinRespuesta: string | null = null;
   motivosDesfase: MotivoMovimientoDto[] = [];
+  private origenArbol: OrigenFondosArbolItemDto[] = [];
   /** Flag simple para el botón (no evaluar métodos mutables desde el template). */
   puedeRegistrar = false;
   /** Mensaje bajo las acciones cuando el registro está bloqueado. */
@@ -139,6 +147,8 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
     private metodoPagoService: MetodoPagoService,
     private corteVentaService: CorteVentaService,
     private motivoMovimientoService: MotivoMovimientoService,
+    private origenFondosService: OrigenFondosService,
+    private dialog: MatDialog,
     private authService: AuthService,
     private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef
@@ -166,6 +176,15 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
           { duration: 4000 }
         );
         this.refrescarPuedeRegistrar();
+      }
+    });
+
+    this.origenFondosService.findArbol().subscribe({
+      next: (arbol) => {
+        this.origenArbol = arbol ?? [];
+      },
+      error: () => {
+        this.origenArbol = [];
       }
     });
 
@@ -637,7 +656,88 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
       };
     }
 
+    const bloqueadosDocumento: string[] = [];
+    for (const row of this.corteVentasRows) {
+      if (!this.tieneDesfase(row.desfase) || !this.tieneMotivoSeleccionado(row)) {
+        continue;
+      }
+      if (this.accionEsperadaMotivo(row) === 'REGISTRAR_DOCUMENTO') {
+        bloqueadosDocumento.push(
+          row.metodoPago.descripcion ||
+            row.metodoPago.descripcionEgreso ||
+            `Método ${row.metodoPago.id}`
+        );
+      }
+    }
+    if (bloqueadosDocumento.length > 0) {
+      return {
+        ok: false,
+        mensaje:
+          `El motivo exige registrar el egreso/movimiento faltante, volver a consultar ` +
+          `y, si aún hay diferencia, usar otro motivo (p. ej. error de conteo). ` +
+          `Medios: ${bloqueadosDocumento.join(', ')}.`
+      };
+    }
+
     return { ok: true, mensaje: '' };
+  }
+
+  private motivoSeleccionado(row: CorteVentaRow): MotivoMovimientoDto | undefined {
+    const id = row.motivoDesfaseCtrl.value;
+    if (id == null) {
+      return undefined;
+    }
+    return this.motivosDesfase.find((x) => x.id === Number(id));
+  }
+
+  private accionEsperadaMotivo(row: CorteVentaRow): string {
+    return (this.motivoSeleccionado(row)?.accionEsperada || '').trim().toUpperCase();
+  }
+
+  /** CTA para reclasificar medio vía traslado OF (ERROR_MEDIO_PAGO). */
+  requiereTrasladoOf(row: CorteVentaRow): boolean {
+    return (
+      this.tieneDesfase(row.desfase) &&
+      this.accionEsperadaMotivo(row) === 'TRASLADO_OF'
+    );
+  }
+
+  abrirTrasladoOf(row: CorteVentaRow): void {
+    if (!this.origenArbol.length) {
+      this.snackBar.open(
+        'No hay orígenes de fondos cargados. Abra Orígenes de fondos o reintente.',
+        'Cerrar',
+        { duration: 4000 }
+      );
+      return;
+    }
+    const mpId = Number(row.metodoPago.id);
+    const cuenta = this.origenArbol.find(
+      (o) => o.metodoPagoId != null && Number(o.metodoPagoId) === mpId
+    );
+    const ref = this.dialog.open(OrigenMovimientoDialogComponent, {
+      width: '520px',
+      data: {
+        tipo: 'traslado' as const,
+        cuentaId: cuenta?.id,
+        arbol: this.origenArbol,
+        ventasSinCortePorMetodo: new Map(
+          this.corteVentasRows.map((r) => [
+            Number(r.metodoPago.id),
+            Number(r.totalVentasSistema) || 0
+          ])
+        )
+      }
+    });
+    ref.afterClosed().subscribe((ok) => {
+      if (ok) {
+        this.snackBar.open(
+          'Traslado registrado. Vuelva a consultar el rango para actualizar Esperado.',
+          'Cerrar',
+          { duration: 5000 }
+        );
+      }
+    });
   }
 
   private tieneMotivoSeleccionado(row: CorteVentaRow): boolean {
@@ -656,9 +756,28 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
   }
 
   getDesfaseTexto(desfase: number): string {
-    if (!this.tieneDesfase(desfase)) return 'Sin desfase';
+    if (!this.tieneDesfase(desfase)) return 'Sin diferencia';
     const tipo = desfase > 0 ? 'Más' : 'Menos';
-    return `Desfase: (${tipo}) ${this.formatCurrency(Math.abs(desfase))}`;
+    return `Diferencia: (${tipo}) ${this.formatCurrency(Math.abs(desfase))}`;
+  }
+
+  hintAccionMotivo(row: CorteVentaRow): string | null {
+    const m = this.motivoSeleccionado(row);
+    if (!m) {
+      return null;
+    }
+    switch (this.accionEsperadaMotivo(row)) {
+      case 'TRASLADO_OF':
+        return 'Acción: reclasificar con traslado entre orígenes de fondos.';
+      case 'REGISTRAR_DOCUMENTO':
+        return 'Bloqueado: registre el egreso/movimiento, consulte de nuevo y use otro motivo si queda diferencia.';
+      case 'AJUSTE_CIERRE':
+        return 'Acción: se aplicará ajuste de cierre (over/short) en caja.';
+      case 'REVISAR':
+        return 'Acción: revisar y preferir reclasificar o documentar.';
+      default:
+        return m.codigo ? `Motivo: ${m.codigo}` : null;
+    }
   }
 
   getTotalDesfaseClass(): string {

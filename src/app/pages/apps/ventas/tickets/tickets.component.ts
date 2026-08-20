@@ -45,6 +45,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDividerModule } from '@angular/material/divider';
 import {
   TicketRapidoComponent,
   TicketRapidoData
@@ -54,6 +55,20 @@ import {
   EditarTabTicketData,
   EditarTabTicketResult
 } from '../editar-tab-ticket/editar-tab-ticket.component';
+import {
+  AbrirCuentaPorCobrarDialogComponent,
+  AbrirCuentaPorCobrarDialogData
+} from '../abrir-cuenta-por-cobrar-dialog/abrir-cuenta-por-cobrar-dialog.component';
+import {
+  CuentaPorCobrarDto,
+  CuentaPorCobrarService
+} from '../service/cuenta-por-cobrar.service';
+import { CxcTicketRailComponent } from '../cxc-ticket-rail/cxc-ticket-rail.component';
+import {
+  RegistrarAbonoCxcDialogComponent,
+  RegistrarAbonoCxcDialogData,
+  RegistrarAbonoCxcDialogResult
+} from '../registrar-abono-cxc-dialog/registrar-abono-cxc-dialog.component';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData
@@ -65,6 +80,7 @@ import {
   RecentPrintedReciboItem,
   ReciboPrintService
 } from '../service/recibo-print.service';
+import { EstablecimientoService } from '../service/establecimiento.service';
 import {
   IMPRIMIR_RECIBO_KEY,
   IMPRIMIR_TICKET_LUEGO_DE_PAGAR_LABEL
@@ -97,9 +113,11 @@ export type EstiloTicketsTabs = 'todo-en-linea' | '2-lineas';
     MatSlideToggleModule,
     MatSnackBarModule,
     MatTooltipModule,
+    MatDividerModule,
     DragDropModule,
     DetalleTicketComponent,
-    ConfirmacionPagosPanelComponent
+    ConfirmacionPagosPanelComponent,
+    CxcTicketRailComponent
   ],
   templateUrl: './tickets.component.html',
   styleUrls: ['./tickets.component.scss'],
@@ -109,6 +127,10 @@ export class TicketsComponent
   implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy
 {
   tickets: TicketDto[] = [];
+  /** CxC vigentes indexadas por ticketId. */
+  cxcPorTicketId = new Map<number, CuentaPorCobrarDto>();
+  /** Rail expandido solo para el ticket activo con crédito. */
+  cxcRailExpanded = false;
   private _selectedIndex = 0;
   get selectedIndex(): number {
     return this._selectedIndex;
@@ -116,6 +138,7 @@ export class TicketsComponent
   set selectedIndex(value: number) {
     if (this._selectedIndex !== value) {
       this._selectedIndex = value;
+      this.cxcRailExpanded = false;
       const suppressedUntil = this._suppressAutoScrollUntil;
       // Diferir: MatTabNav._scrollToLabel usa offsetLeft del <a> (roto por .tab-item)
       // y pisa nuestro scroll si corremos solo en el mismo tick.
@@ -142,6 +165,7 @@ export class TicketsComponent
   @ViewChild('productSearchInput')
   productSearchInput?: ElementRef<HTMLInputElement>;
   @ViewChild('reciboCmp') reciboComponent?: DetalleTicketComponent;
+  @ViewChild('cxcRail') cxcRail?: CxcTicketRailComponent;
   @ViewChild('ticketTabNav', { read: ElementRef })
   ticketTabNavEl?: ElementRef<HTMLElement>;
   @ViewChild('ticketTabNav', { read: MatTabNav })
@@ -197,6 +221,12 @@ export class TicketsComponent
   /** Ticket destino asociado al comentario local del ticket origen. */
   private splitCommentsByTicketId: Record<number, number> = {};
 
+  /**
+   * Ticket rápido solo para No responsable de IVA (cuaderno / adaptación).
+   * RESPONSABLE_IVA → oculto.
+   */
+  permiteTicketRapido = true;
+
   private readonly actividadUi = inject(FrontendActivityBufferService);
   private readonly posFocus = inject(TicketsPosFocusService);
 
@@ -210,12 +240,24 @@ export class TicketsComponent
     private reciboDetalleService: ReciboDetalleService,
     private appRef: ApplicationRef,
     private router: Router,
-    private reciboPrintService: ReciboPrintService
+    private reciboPrintService: ReciboPrintService,
+    private establecimientoService: EstablecimientoService,
+    private cuentaPorCobrarService: CuentaPorCobrarService
   ) {}
 
   ngOnInit(): void {
     this.estiloTickets = this.getEstiloTicketsFromStorage();
     this.imprimirReciboActivo = this.getImprimirReciboFromStorage();
+    this.establecimientoService.loadActual().subscribe({
+      next: (est) => {
+        const regimen = (est?.regimenTributario || '').toUpperCase();
+        this.permiteTicketRapido = regimen !== 'RESPONSABLE_IVA';
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.permiteTicketRapido = true;
+      }
+    });
     this.recentPrintedRecibos =
       this.reciboPrintService.getRecentRecibosSnapshot();
     this.recentPrintedRecibosSubscription =
@@ -977,7 +1019,7 @@ export class TicketsComponent
   }
 
   openQuickRecibo(): void {
-    if (this.sessionId === null) {
+    if (this.sessionId === null || !this.permiteTicketRapido) {
       return;
     }
     this.actividadUi.record('despliega modal: ticket-rapido');
@@ -996,6 +1038,191 @@ export class TicketsComponent
       this.posFocus.release('dialog:ticket-rapido');
       if (result) {
         this.confirmacionPagosPanel?.revisarPendientes();
+      }
+    });
+  }
+
+  /**
+   * Abre CxC desde el ticket activo (menú ⋮).
+   * Requiere recibo cargado; el diálogo valida cliente y teléfono.
+   */
+  abrirCuentaPorCobrar(): void {
+    const ticket = this.tickets[this.selectedIndex];
+    if (!ticket) {
+      this.snackBar.open('Seleccione un ticket', 'Cerrar', { duration: 3000 });
+      return;
+    }
+    const reciboId =
+      this.currentReciboId ??
+      ticket.reciboId ??
+      this.reciboComponent?.recibo?.id ??
+      null;
+    if (reciboId == null) {
+      this.snackBar.open(
+        'El ticket aún no tiene recibo. Agregue productos primero.',
+        'Cerrar',
+        { duration: 4500 }
+      );
+      return;
+    }
+    const recibo = this.reciboComponent?.recibo;
+    const totalFromDetalles = (this.reciboComponent?.detalles ?? []).reduce(
+      (acc, d) => acc + (Number(d.subtotal) || 0),
+      0
+    );
+    const totalRecibo =
+      totalFromDetalles > 0
+        ? totalFromDetalles
+        : Number(recibo?.total ?? 0);
+    const montoRecibido = Number(recibo?.montoRecibido ?? 0);
+    if (!(totalRecibo > 0)) {
+      this.snackBar.open(
+        'El ticket no tiene total. Agregue productos antes de generar crédito.',
+        'Cerrar',
+        { duration: 4500 }
+      );
+      return;
+    }
+
+    this.actividadUi.record(
+      `despliega modal: abrir-cuenta-por-cobrar (ticket: ${ticket.id})`
+    );
+    this.posFocus.hold('dialog:abrir-cxc');
+    const dialogRef = this.dialog.open<
+      AbrirCuentaPorCobrarDialogComponent,
+      AbrirCuentaPorCobrarDialogData,
+      CuentaPorCobrarDto | undefined
+    >(AbrirCuentaPorCobrarDialogComponent, {
+      width: '520px',
+      data: {
+        ticket,
+        reciboId,
+        totalRecibo,
+        montoRecibido
+      },
+      autoFocus: true
+    });
+    dialogRef.afterClosed().subscribe((dto) => {
+      this.posFocus.release('dialog:abrir-cxc');
+      if (dto) {
+        if (dto.ticketId != null) {
+          this.cxcPorTicketId.set(dto.ticketId, dto);
+        }
+        this.refreshCxcMap();
+        this.cxcRailExpanded = false;
+        if (this.sessionId != null) {
+          this.loadTickets(this.sessionId);
+          this.fetchReciboForTicket(ticket.id, true);
+        }
+      }
+    });
+  }
+
+  getCxcForTicket(ticket: TicketDto | null | undefined): CuentaPorCobrarDto | null {
+    if (!ticket?.id) {
+      return null;
+    }
+    return this.cxcPorTicketId.get(ticket.id) ?? null;
+  }
+
+  get activeTicketCxc(): CuentaPorCobrarDto | null {
+    return this.getCxcForTicket(this.tickets[this.selectedIndex]);
+  }
+
+  ticketTieneCredito(ticket: TicketDto): boolean {
+    return this.getCxcForTicket(ticket) != null;
+  }
+
+  riesgoTicket(ticket: TicketDto): 'normal' | 'medio' | 'alto' {
+    const cxc = this.getCxcForTicket(ticket);
+    if (!cxc?.fechaOrigen) {
+      return 'normal';
+    }
+    const origen = new Date(cxc.fechaOrigen).getTime();
+    if (Number.isNaN(origen)) {
+      return 'normal';
+    }
+    const dias = Math.max(0, Math.floor((Date.now() - origen) / 86400000));
+    if (dias >= 35) {
+      return 'alto';
+    }
+    if (dias >= 15) {
+      return 'medio';
+    }
+    return 'normal';
+  }
+
+  tooltipCredito(ticket: TicketDto): string {
+    const cxc = this.getCxcForTicket(ticket);
+    if (!cxc) {
+      return '';
+    }
+    return `Crédito · saldo ${this.formatCxcSaldo(cxc)} · ${this.riesgoTicket(ticket)}`;
+  }
+
+  formatCxcSaldo(cxc: CuentaPorCobrarDto): string {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      maximumFractionDigits: 0
+    }).format(Math.round(Number(cxc.saldoPendiente) || 0));
+  }
+
+  toggleCxcRail(): void {
+    if (!this.activeTicketCxc) {
+      return;
+    }
+    this.cxcRailExpanded = !this.cxcRailExpanded;
+  }
+
+  abrirAbonoCxc(cuenta?: CuentaPorCobrarDto | null): void {
+    const cxc = cuenta ?? this.activeTicketCxc;
+    if (!cxc) {
+      return;
+    }
+    this.posFocus.hold('dialog:abono-cxc');
+    const dialogRef = this.dialog.open<
+      RegistrarAbonoCxcDialogComponent,
+      RegistrarAbonoCxcDialogData,
+      RegistrarAbonoCxcDialogResult | undefined
+    >(RegistrarAbonoCxcDialogComponent, {
+      width: '440px',
+      data: { cuenta: cxc },
+      autoFocus: true
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      this.posFocus.release('dialog:abono-cxc');
+      if (!result) {
+        return;
+      }
+      if (result.cuenta.estado === 'PAGADA' || result.cuenta.estado === 'ANULADA') {
+        if (result.cuenta.ticketId != null) {
+          this.cxcPorTicketId.delete(result.cuenta.ticketId);
+        }
+        this.cxcRailExpanded = false;
+      } else if (result.cuenta.ticketId != null) {
+        this.cxcPorTicketId.set(result.cuenta.ticketId, result.cuenta);
+      }
+      this.refreshCxcMap();
+      this.cxcRail?.refreshAbonos();
+      this.cdr.markForCheck();
+    });
+  }
+
+  private refreshCxcMap(): void {
+    this.cuentaPorCobrarService.listarVigentes().subscribe({
+      next: (rows) => {
+        const map = new Map<number, CuentaPorCobrarDto>();
+        for (const row of rows ?? []) {
+          if (row.ticketId != null) {
+            map.set(row.ticketId, row);
+          }
+        }
+        this.cxcPorTicketId = map;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        /* silencioso: listado CxC no debe romper tickets */
       }
     });
   }
@@ -1511,6 +1738,7 @@ export class TicketsComponent
   private loadTickets(sessionId: number): void {
     console.log('📥 Cargando tickets para sesión:', sessionId);
     this.loading = true;
+    this.refreshCxcMap();
     this.ticketsService.getTicketsBySession(sessionId).subscribe({
       next: (resp) => {
         const tickets = resp || [];

@@ -78,10 +78,10 @@ export interface BaseInicialResultDto {
 export interface VentaTipoSearchDto {
   id?: number;
   metodoPagoId: number;
-  /** Declarado / físico del medio (referencia para estadísticas de ingresos). */
+  /** Declarado / físico del medio (control de caja). */
   total: number;
   totalSistema: number;
-  /** Ventas del sistema en el corte (sin base). */
+  /** Ventas del sistema en el corte (sin base). Preferido para dashboard de ingresos. */
   totalVentasSistema?: number;
   totalEgresosSistema?: number;
   corteVentaId?: number;
@@ -288,14 +288,14 @@ export class CorteVentaService {
     if (items.length === 1) {
       const only = items[0];
       const ventasTipo = (only.ventasTipo || []).map((vt) => ({ ...vt }));
-      const totalFisico = ventasTipo.reduce(
+      const totalVentas = ventasTipo.reduce(
         (s, vt) => s + CorteVentaService.montoVentasDeTipo(vt),
         0
       );
       return {
         ...only,
         ventasTipo,
-        total: totalFisico > 0 ? totalFisico : Number(only.total) || 0,
+        total: totalVentas > 0 ? totalVentas : Number(only.total) || 0,
         totalSistema: Number(only.totalSistema) || 0
       };
     }
@@ -304,7 +304,7 @@ export class CorteVentaService {
     let fechaFinMax = items[0].fechaFin;
     let total = 0;
     let totalSistema = 0;
-    let totalFisicoDia = 0;
+    let totalVentasDia = 0;
     let idMin = items[0].id;
 
     const ventasPorMetodo = new Map<
@@ -363,7 +363,7 @@ export class CorteVentaService {
 
     const ventasTipo: VentaTipoSearchDto[] = [];
     for (const [metodoPagoId, agg] of ventasPorMetodo) {
-      totalFisicoDia += agg.total;
+      totalVentasDia += agg.totalVentasSistema;
       ventasTipo.push({
         metodoPagoId,
         total: agg.total,
@@ -386,8 +386,8 @@ export class CorteVentaService {
       fechaIni: fechaIniMin,
       fechaFin: fechaFinMax,
       ultimoHistorialReciboId: base.ultimoHistorialReciboId,
-      // Dashboard/ingresos: total físico declarado (valor real de caja).
-      total: totalFisicoDia > 0 ? totalFisicoDia : total,
+      // Dashboard Ingresos: ventas sistema (tickets), no contado físico.
+      total: totalVentasDia > 0 ? totalVentasDia : total,
       totalSistema,
       ventasTipo,
       detalles: [],
@@ -405,17 +405,14 @@ export class CorteVentaService {
   }
 
   /**
-   * Monto de ingreso a mostrar en dashboard/ingresos (por medio).
-   * Usa `total` (físico declarado); si falta, cae a `totalVentasSistema`.
+   * Monto de ventas para dashboard/ingresos (por medio).
+   * Prefiere `totalVentasSistema`; si falta, cae a `total` (legacy).
    */
   static montoVentasDeTipo(vt: VentaTipoSearchDto): number {
-    if (vt.total != null && Number.isFinite(Number(vt.total))) {
-      return Number(vt.total) || 0;
-    }
     if (vt.totalVentasSistema != null && Number.isFinite(Number(vt.totalVentasSistema))) {
       return Number(vt.totalVentasSistema) || 0;
     }
-    return 0;
+    return Number(vt.total) || 0;
   }
 
   /**

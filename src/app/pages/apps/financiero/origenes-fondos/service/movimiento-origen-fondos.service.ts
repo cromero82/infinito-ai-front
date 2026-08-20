@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 
 export interface MovimientoOrigenFondosDto {
@@ -29,6 +29,9 @@ export interface MovimientoOrigenFondosDto {
   /** @deprecated usar idReferencia */
   origenId?: number | null;
   grupoTrasladoId?: string | null;
+  /** CUENTA_PERSONAL | ANTICIPO_SALARIO | VALE_EMPLEADO | GASTO_NEGOCIO | OTRO_LEGALIZADO */
+  clasificacionOperativa?: string | null;
+  periodoCierreId?: number | null;
 }
 
 export interface MovimientoEntradaRequest {
@@ -53,6 +56,8 @@ export interface MovimientoTrasladoRequest {
   valor: number;
   fecha: string;
   observacion?: string;
+  /** CUENTA_PERSONAL | ANTICIPO_SALARIO | VALE_EMPLEADO | GASTO_NEGOCIO | OTRO_LEGALIZADO */
+  clasificacionOperativa?: string | null;
 }
 
 export interface MovimientoAjusteRequest {
@@ -76,6 +81,46 @@ export class MovimientoOrigenFondosService {
     const headers = new HttpHeaders({ Accept: 'application/json' });
     const params = new HttpParams().set('origenFondosId', String(origenFondosId));
     return this.http.get<MovimientoOrigenFondosDto[]>(this.apiUrl, { headers, params });
+  }
+
+  /**
+   * Movimientos «por identificar» en bolsas, mismo valor, sin egreso vinculado.
+   */
+  findCandidatosFormalizarEgreso(
+    origenFondosIds: number[],
+    valor: number
+  ): Observable<MovimientoOrigenFondosDto[]> {
+    if (!origenFondosIds.length || !(valor > 0)) {
+      return of([]);
+    }
+    const headers = new HttpHeaders({ Accept: 'application/json' });
+    let params = new HttpParams().set('valor', String(valor));
+    for (const id of origenFondosIds) {
+      params = params.append('origenFondosIds', String(id));
+    }
+    return this.http.get<MovimientoOrigenFondosDto[]>(
+      `${this.apiUrl}/candidatos-formalizar-egreso`,
+      { headers, params }
+    );
+  }
+
+  /**
+   * Reporte operativo: piernas con impacto &gt; 0 y clasificación no nula.
+   */
+  findPorClasificacion(
+    desde: string,
+    hasta: string,
+    clasificacionOperativa?: string
+  ): Observable<MovimientoOrigenFondosDto[]> {
+    const headers = new HttpHeaders({ Accept: 'application/json' });
+    let params = new HttpParams().set('desde', desde).set('hasta', hasta);
+    if (clasificacionOperativa) {
+      params = params.set('clasificacionOperativa', clasificacionOperativa);
+    }
+    return this.http.get<MovimientoOrigenFondosDto[]>(
+      `${this.apiUrl}/por-clasificacion`,
+      { headers, params }
+    );
   }
 
   entradaManual(payload: MovimientoEntradaRequest): Observable<MovimientoOrigenFondosDto> {

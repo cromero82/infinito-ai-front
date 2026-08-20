@@ -137,7 +137,7 @@
         </ng-container>
         <ng-container matColumnDef="totalVentasSistema">
           <th mat-header-cell *matHeaderCellDef class="header-cell">
-            Ventas sistema
+            Ventas
           </th>
           <td mat-cell *matCellDef="let row" class="cell">
             {{ formatCurrency(row.totalVentasSistema) }}
@@ -145,7 +145,7 @@
         </ng-container>
         <ng-container matColumnDef="totalEgresosSistema">
           <th mat-header-cell *matHeaderCellDef class="header-cell">
-            Egresos sistema
+            Egresos
           </th>
           <td mat-cell *matCellDef="let row" class="cell">
             {{ formatCurrencyEgreso(row.totalEgresosSistema) }}
@@ -161,7 +161,7 @@
         </ng-container>
         <ng-container matColumnDef="totalSistema">
           <th mat-header-cell *matHeaderCellDef class="header-cell">
-            Neto sistema
+            Esperado
           </th>
           <td mat-cell *matCellDef="let row" class="cell total-sistema-cell">
             <div class="total-sistema-container">
@@ -173,7 +173,7 @@
         </ng-container>
         <ng-container matColumnDef="totalReal">
           <th mat-header-cell *matHeaderCellDef class="header-cell">
-            Total Físico / Real
+            Contado
           </th>
           <td
             mat-cell
@@ -198,7 +198,7 @@
         </ng-container>
         <ng-container matColumnDef="desfase">
           <th mat-header-cell *matHeaderCellDef class="header-cell">
-            Desfase
+            Diferencia
           </th>
           <td mat-cell *matCellDef="let row" class="cell desfase-cell">
             <div class="desfase-stack">
@@ -225,6 +225,19 @@
                     <mat-error>Obligatorio</mat-error>
                   }
                 </mat-form-field>
+                @if (hintAccionMotivo(row); as hint) {
+                  <span class="motivo-accion-hint">{{ hint }}</span>
+                }
+                @if (requiereTrasladoOf(row)) {
+                  <button
+                    mat-stroked-button
+                    color="primary"
+                    type="button"
+                    class="btn-traslado-of"
+                    (click)="abrirTrasladoOf(row)">
+                    Abrir traslado OF
+                  </button>
+                }
               }
             </div>
           </td>
@@ -306,7 +319,7 @@
             <td class="total-cell" aria-hidden="true"></td>
           </tr>
           <tr class="total-row desfases-row">
-            <td class="total-cell total-label">TOTAL DESFASES</td>
+            <td class="total-cell total-label">TOTAL DIFERENCIAS</td>
             @if (esAdmin) {
               <td class="total-cell" aria-hidden="true"></td>
             }

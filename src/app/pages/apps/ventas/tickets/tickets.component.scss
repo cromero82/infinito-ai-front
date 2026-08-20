@@ -893,9 +893,25 @@ vex-page-layout-header .container {
   margin-bottom: 0;
   padding-bottom: 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: stretch;
   flex: 1 1 auto;
   min-height: 0;
+
+  .ticket-panel-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .detalle-wrapper {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
 
   /* detalle-ticket debe llenar todo el panel para que margin-top: auto funcione en el footer */
   ::ng-deep detalle-ticket {
@@ -1035,6 +1051,57 @@ vex-page-layout-header .container {
 
   ::ng-deep .detalle-footer {
     padding: 4px 8px 0 !important;
+  }
+}
+
+.tab-cxc-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-left: 5px;
+  vertical-align: middle;
+  background: #43a047;
+  flex-shrink: 0;
+
+  &[data-riesgo='medio'] {
+    background: #fb8c00;
+  }
+  &[data-riesgo='alto'] {
+    background: #e53935;
+  }
+}
+
+.cxc-footer-chip {
+  align-self: flex-start;
+  margin: 4px 8px 6px;
+  border: 0;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(0, 0, 0, 0.7);
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.07);
+  }
+
+  .cxc-footer-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #43a047;
+  }
+
+  &[data-riesgo='medio'] .cxc-footer-dot {
+    background: #fb8c00;
+  }
+  &[data-riesgo='alto'] .cxc-footer-dot {
+    background: #e53935;
   }
 }
 

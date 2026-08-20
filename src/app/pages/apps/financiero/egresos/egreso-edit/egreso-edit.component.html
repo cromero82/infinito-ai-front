@@ -5,7 +5,7 @@
   cdkDragRootElement=".cdk-overlay-pane">
   <div class="flex items-center dialog-header" mat-dialog-title cdkDragHandle>
     <h2 class="headline m-0 flex-auto">
-      {{ data ? "Editar egreso" : "Nuevo egreso" }}
+      {{ dialogTitle }}
     </h2>
     <button
       class="text-secondary"
@@ -17,6 +17,28 @@
   </div>
   <mat-divider class="text-border"></mat-divider>
   <mat-dialog-content class="flex flex-col">
+    @if (formalizarData) {
+      <p class="formalizar-hint text-secondary">
+        El dinero ya está en la bolsa (p.ej. Sin Clasificar). Se registra el egreso
+        y sale de esa cuenta — sin restar de nuevo el banco.
+      </p>
+    }
+    @if (!formalizarData && !isEditMode && mensajePagoLinea) {
+      <div
+        class="pago-linea-banner"
+        [class.pago-linea-banner--ok]="!!movimientoPagoLinea"
+        [class.pago-linea-banner--wait]="!movimientoPagoLinea">
+        @if (buscandoMatchPagoLinea && !movimientoPagoLinea) {
+          <mat-spinner diameter="18"></mat-spinner>
+        } @else {
+          <mat-icon
+            [svgIcon]="
+              movimientoPagoLinea ? 'mat:check_circle' : 'mat:hourglass_empty'
+            "></mat-icon>
+        }
+        <p class="pago-linea-msg">{{ mensajePagoLinea }}</p>
+      </div>
+    }
     <mat-form-field class="mt-6 flex-1" appearance="outline">
       <mat-label>Fecha</mat-label>
       <input
@@ -98,7 +120,13 @@
         }
       </mat-select>
       <mat-icon matIconPrefix svgIcon="mat:account_balance_wallet"></mat-icon>
-      <mat-hint>Saldo = total parcial (movimientos + tickets sin corte)</mat-hint>
+      @if (formalizarData) {
+        <mat-hint>Fijado por el movimiento a formalizar</mat-hint>
+      } @else if (movimientoPagoLinea) {
+        <mat-hint>Al guardar, la salida será desde la bolsa identificada</mat-hint>
+      } @else {
+        <mat-hint>Saldo = total parcial (movimientos + tickets sin corte)</mat-hint>
+      }
       @if (form.get("origenCuentaId")?.hasError("required")) {
         <mat-error>Seleccione el origen</mat-error>
       }
@@ -118,7 +146,7 @@
       [color]="isEditMode ? 'accent' : 'primary'"
       mat-flat-button
       type="submit"
-      [disabled]="form.invalid">
+      [disabled]="submitDisabled">
       {{ buttonLabel }}
     </button>
   </mat-dialog-actions>

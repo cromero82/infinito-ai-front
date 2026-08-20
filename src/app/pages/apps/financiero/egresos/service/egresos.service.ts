@@ -28,7 +28,24 @@ export interface CreateEgresoRequest {
   metodoPagoId?: number | null;
   origenFondosId: number;
   proveedor: { id: number };
+  /**
+   * Formalizar egreso: movimiento «por identificar» (p.ej. en Sin Clasificar).
+   * El BE fuerza origen = OF del movimiento (sin restar de nuevo el banco).
+   */
+  fromMovimientoOrigenFondosId?: number | null;
 }
+
+/** Prefill al abrir Nuevo egreso desde un movimiento OF por identificar. */
+export interface FormalizarEgresoDialogData {
+  mode: 'formalizar';
+  fromMovimientoOrigenFondosId: number;
+  origenFondosId: number;
+  valor: number;
+  terceroNombre?: string | null;
+  idReferencia?: number | null;
+}
+
+export type EgresoEditDialogData = EgresoDto | FormalizarEgresoDialogData | null;
 
 export interface EgresoSearchParams {
   descripcion?: string;

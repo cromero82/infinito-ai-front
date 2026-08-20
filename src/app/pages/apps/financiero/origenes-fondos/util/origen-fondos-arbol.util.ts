@@ -12,6 +12,8 @@ export interface OrigenFondosArbolItemDto {
   color?: string | null;
   orden?: number;
   saldo?: number;
+  /** FISICA | ELECTRONICA | MIXTA */
+  naturaleza?: string | null;
 }
 
 export interface GrupoOrigenFondos {

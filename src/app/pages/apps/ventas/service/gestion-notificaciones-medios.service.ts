@@ -19,6 +19,9 @@ export interface NotificacionEmailPagoDto {
   plantillaNotificacionId?: number | null;
   plantillaNombre?: string | null;
   plantillaIcono?: string | null;
+  clasificacion?: string | null;
+  clasificacionObservacion?: string | null;
+  clasificadoEn?: string | null;
 }
 
 export interface TicketSinNotificacionDto {
@@ -75,6 +78,22 @@ export class GestionNotificacionesMediosService {
     return this.http.put<NotificacionEmailPagoDto>(
       `${this.base}/api/notificaciones-email/${id}/archivar`,
       {}
+    );
+  }
+
+  legalizar(
+    id: number,
+    clasificacion: string,
+    observacion?: string,
+    origenFondosDestinoId?: number | null
+  ): Observable<NotificacionEmailPagoDto> {
+    const body: Record<string, unknown> = { clasificacion, observacion };
+    if (origenFondosDestinoId != null) {
+      body['origenFondosDestinoId'] = origenFondosDestinoId;
+    }
+    return this.http.put<NotificacionEmailPagoDto>(
+      `${this.base}/api/notificaciones-email/${id}/legalizar`,
+      body
     );
   }
 

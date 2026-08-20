@@ -1,4 +1,4 @@
-<div class="origenes-page p-4 sm:p-6 flex flex-col h-full min-h-0">
+<div class="origenes-page px-2 py-3 sm:px-3 sm:py-4 flex flex-col h-full min-h-0">
   <div class="header-row">
     <h2 class="title mt-0 mb-0">Orígenes de fondos</h2>
     <div class="legend-row">
@@ -21,7 +21,7 @@
             type="button"
             (click)="abrirMovimiento('traslado')">
             <mat-icon svgIcon="mat:swap_horiz"></mat-icon>
-            Mover saldo
+            Trasladar
           </button>
           <button mat-stroked-button type="button" (click)="abrirMovimiento('entrada')">
             <mat-icon svgIcon="mat:add"></mat-icon>
@@ -34,6 +34,13 @@
           <button mat-stroked-button type="button" (click)="abrirAjuste()">
             <mat-icon svgIcon="mat:tune"></mat-icon>
             Ajuste
+          </button>
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="abrirReporteClasificacion()">
+            <mat-icon svgIcon="mat:assessment"></mat-icon>
+            Por clasificación
           </button>
         </div>
       }
@@ -65,9 +72,9 @@
   @if (!loadingCuentas && grupos.length > 0) {
     <div class="body-split">
       <div class="origenes-panel">
-        <div class="origenes-scroll flex flex-row gap-4 overflow-x-auto">
+        <div class="origenes-scroll flex flex-row gap-2 overflow-x-auto">
           @for (grupo of grupos; track grupo.raiz.id) {
-            <section class="grupo-origen flex-shrink-0 min-w-[210px]">
+            <section class="grupo-origen flex-shrink-0 min-w-[200px]">
               <div class="cards-stack">
                 @if (saldoVista(grupo.raiz); as svRaiz) {
                   <div
@@ -78,12 +85,10 @@
                         type="button"
                         class="expand-hijos-btn"
                         mat-icon-button
-                        [matTooltip]="
-                          estaExpandido(grupo.raiz.id)
-                            ? 'Ocultar bolsillos'
-                            : 'Ver bolsillos (' + grupo.hijos.length + ')'
-                        "
+                        [attr.aria-label]="tooltipExpandHijos(grupo)"
                         [attr.aria-expanded]="estaExpandido(grupo.raiz.id)"
+                        (mouseenter)="mostrarTipFooter(tooltipExpandHijos(grupo))"
+                        (mouseleave)="ocultarTipFooter()"
                         (click)="toggleHijos(grupo.raiz.id, $event)">
                         <mat-icon
                           [svgIcon]="
@@ -97,7 +102,9 @@
                         class="card-menu-btn"
                         mat-icon-button
                         [matMenuTriggerFor]="menuRaiz"
-                        matTooltip="Opciones"
+                        aria-label="Opciones"
+                        (mouseenter)="mostrarTipFooter('Opciones')"
+                        (mouseleave)="ocultarTipFooter()"
                         (click)="$event.stopPropagation()">
                         <mat-icon svgIcon="mat:menu"></mat-icon>
                       </button>
@@ -179,7 +186,9 @@
                             class="card-menu-btn"
                             mat-icon-button
                             [matMenuTriggerFor]="menuHijo"
-                            matTooltip="Opciones"
+                            aria-label="Opciones"
+                            (mouseenter)="mostrarTipFooter('Opciones')"
+                            (mouseleave)="ocultarTipFooter()"
                             (click)="$event.stopPropagation()">
                             <mat-icon svgIcon="mat:menu"></mat-icon>
                           </button>
@@ -238,6 +247,13 @@
           <h3 class="historial-title">
             Movimientos — {{ cuentaSeleccionada.nombre }}
           </h3>
+          @if (esAdmin) {
+            <p class="historial-hint text-secondary">
+              Arrastre una fila con impacto + hacia un OF permitido, o use
+              <strong>Trasladar</strong> (retiro de banco/cajero → caja física).
+              En movimientos por identificar también: Formalizar egreso o A Cuenta del dueño.
+            </p>
+          }
 
           @if (loadingMovimientos) {
             <mat-spinner diameter="28"></mat-spinner>
@@ -251,7 +267,8 @@
                   <td mat-cell *matCellDef="let m" class="icono-col">
                     <span
                       class="mov-tipo-icon"
-                      [attr.title]="tipoMovimientoLabel(m.tipoMovimiento)">
+                      (mouseenter)="mostrarTipFooter(tipoMovimientoLabel(m.tipoMovimiento))"
+                      (mouseleave)="ocultarTipFooter()">
                       <mat-icon [svgIcon]="iconoTipoMovimiento(m.tipoMovimiento)"></mat-icon>
                     </span>
                   </td>
@@ -288,20 +305,33 @@
                   </td>
                 </ng-container>
 
+                <ng-container matColumnDef="clasificacion">
+                  <th mat-header-cell *matHeaderCellDef>Clasif.</th>
+                  <td mat-cell *matCellDef="let m" class="clasif-col">
+                    {{ labelClasificacion(m.clasificacionOperativa) }}
+                  </td>
+                </ng-container>
+
                 <ng-container matColumnDef="usuario">
                   <th mat-header-cell *matHeaderCellDef>Usuario</th>
                   <td
                     mat-cell
                     *matCellDef="let m"
                     class="usuario-col"
-                    [matTooltip]="nombreUsuarioMovimiento(m)">
+                    (mouseenter)="mostrarTipFooter(nombreUsuarioMovimiento(m))"
+                    (mouseleave)="ocultarTipFooter()">
                     {{ nombreUsuarioMovimiento(m) }}
                   </td>
                 </ng-container>
 
                 <ng-container matColumnDef="detalle">
                   <th mat-header-cell *matHeaderCellDef>Detalle</th>
-                  <td mat-cell *matCellDef="let m" class="detalle-cell">
+                  <td
+                    mat-cell
+                    *matCellDef="let m"
+                    class="detalle-cell"
+                    (mouseenter)="mostrarTipFooter(detalleMovimiento(m))"
+                    (mouseleave)="ocultarTipFooter()">
                     <span class="detalle-inner">
                       @if (tieneReferenciaVer(m)) {
                         <button
@@ -309,12 +339,52 @@
                           mat-flat-button
                           color="primary"
                           class="btn-ver-ref"
-                          matTooltip="Ver documento de origen"
+                          aria-label="Ver documento de origen"
+                          (mouseenter)="mostrarTipFooter('Ver documento de origen', 'Ver')"
+                          (mouseleave)="onDetalleBotonLeave(m, $event)"
                           (click)="verReferencia(m, $event)">
                           Ver
                         </button>
                       }
                       <span class="detalle-texto">{{ detalleMovimiento(m) }}</span>
+                      @if (puedeTrasladarMovimiento(m)) {
+                        <button
+                          type="button"
+                          mat-flat-button
+                          color="primary"
+                          class="btn-formalizar"
+                          aria-label="Trasladar"
+                          (mouseenter)="mostrarTipFooter('Mover este saldo a otro OF (p.ej. caja física tras un retiro)', 'Trasladar')"
+                          (mouseleave)="onDetalleBotonLeave(m, $event)"
+                          (click)="trasladarMovimiento(m, $event)">
+                          Trasladar
+                        </button>
+                      }
+                      @if (puedeFormalizarEgreso(m)) {
+                        <button
+                          type="button"
+                          mat-stroked-button
+                          color="primary"
+                          class="btn-formalizar"
+                          aria-label="Formalizar egreso"
+                          (mouseenter)="mostrarTipFooter('Crear egreso desde Sin Clasificar (sin restar el banco otra vez)', 'Formalizar egreso')"
+                          (mouseleave)="onDetalleBotonLeave(m, $event)"
+                          (click)="formalizarEgreso(m, $event)">
+                          Formalizar egreso
+                        </button>
+                      }
+                      @if (puedeClasificarCuentaDueno(m)) {
+                        <button
+                          type="button"
+                          mat-stroked-button
+                          class="btn-clasificar-dueno"
+                          aria-label="A Cuenta del dueño"
+                          (mouseenter)="mostrarTipFooter('Igual que arrastrar esta fila a Cuenta del dueño (personal / no gasto del negocio)', 'A Cuenta del dueño')"
+                          (mouseleave)="onDetalleBotonLeave(m, $event)"
+                          (click)="clasificarACuentaDueno(m, $event)">
+                          A Cuenta del dueño
+                        </button>
+                      }
                     </span>
                   </td>
                 </ng-container>
@@ -325,6 +395,10 @@
                   *matRowDef="let row; columns: movimientoColumns"
                   class="mov-row"
                   [class.selected-row]="isMovimientoSelected(row)"
+                  [class.mov-row-draggable]="puedeArrastrarMovimiento(row)"
+                  [attr.draggable]="puedeArrastrarMovimiento(row) ? true : null"
+                  (dragstart)="onDragStartMovimiento(row, $event)"
+                  (dragend)="onDragEnd()"
                   (click)="selectMovimiento(row)"></tr>
               </table>
             </div>

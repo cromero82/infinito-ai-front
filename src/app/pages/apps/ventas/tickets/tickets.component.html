@@ -80,18 +80,20 @@
                 svgIcon="mat:add"></mat-icon>
               <span>Nuevo ticket</span>
             </button>
-            <button
-              mat-flat-button
-              color="accent"
-              class="header-action-btn quick-recibo-btn flex-none"
-              type="button"
-              [disabled]="headerActionsDisabled"
-              (click)="openQuickRecibo()">
-              <mat-icon
-                class="header-action-icon icon-sm"
-                svgIcon="mat:bolt"></mat-icon>
-              <span>Ticket rápido</span>
-            </button>
+            @if (permiteTicketRapido) {
+              <button
+                mat-flat-button
+                color="accent"
+                class="header-action-btn quick-recibo-btn flex-none"
+                type="button"
+                [disabled]="headerActionsDisabled"
+                (click)="openQuickRecibo()">
+                <mat-icon
+                  class="header-action-icon icon-sm"
+                  svgIcon="mat:bolt"></mat-icon>
+                <span>Ticket rápido</span>
+              </button>
+            }
             <button
               mat-flat-button
               class="opciones-recibo-btn flex-none"
@@ -178,6 +180,12 @@
                         (dblclick)="editTicket(t, $event)"
                         class="tab-link">
                         {{ getTicketLabel(t) }}
+                        @if (ticketTieneCredito(t)) {
+                          <span
+                            class="tab-cxc-dot"
+                            [attr.data-riesgo]="riesgoTicket(t)"
+                            [matTooltip]="tooltipCredito(t)"></span>
+                        }
                       </a>
                       <button
                         mat-icon-button
@@ -239,6 +247,12 @@
                             "
                             (dblclick)="editTicket(t, $event)">
                             {{ getTicketLabel(t) }}
+                            @if (ticketTieneCredito(t)) {
+                              <span
+                                class="tab-cxc-dot"
+                                [attr.data-riesgo]="riesgoTicket(t)"
+                                [matTooltip]="tooltipCredito(t)"></span>
+                            }
                           </span>
                           <button
                             mat-icon-button
@@ -298,6 +312,12 @@
                             "
                             (dblclick)="editTicket(t, $event)">
                             {{ getTicketLabel(t) }}
+                            @if (ticketTieneCredito(t)) {
+                              <span
+                                class="tab-cxc-dot"
+                                [attr.data-riesgo]="riesgoTicket(t)"
+                                [matTooltip]="tooltipCredito(t)"></span>
+                            }
                           </span>
                           <button
                             mat-icon-button
@@ -321,25 +341,46 @@
 
             @if (tickets[selectedIndex]; as activeTicket) {
               <div class="ticket-panel">
-                <div class="detalle-wrapper">
-                  <detalle-ticket
-                    #reciboCmp
-                    [ticket]="activeTicket"
-                    [reciboId]="currentReciboId"
-                    [sessionId]="sessionId"
-                    [ticketMoveOptions]="ticketMoveOptions"
-                    [splitComment]="activeSplitComment"
-                    [searchInputElement]="
-                      productSearchInput?.nativeElement || null
-                    "
-                    (focusSearchInputRequest)="focusProductSearch()"
-                    (ticketProcesado)="onTicketProcesado()"
-                    (moveToNewTicketRequested)="onMoveToNewTicketRequested()"
-                    (moveToExistingTicketRequested)="
-                      onMoveToExistingTicketRequested($event)
-                    "
-                    (metodoPagoActualizado)="recargarRecibo()"></detalle-ticket>
+                <div class="ticket-panel-main">
+                  <div class="detalle-wrapper">
+                    <detalle-ticket
+                      #reciboCmp
+                      [ticket]="activeTicket"
+                      [reciboId]="currentReciboId"
+                      [sessionId]="sessionId"
+                      [ticketMoveOptions]="ticketMoveOptions"
+                      [splitComment]="activeSplitComment"
+                      [searchInputElement]="
+                        productSearchInput?.nativeElement || null
+                      "
+                      (focusSearchInputRequest)="focusProductSearch()"
+                      (ticketProcesado)="onTicketProcesado()"
+                      (moveToNewTicketRequested)="onMoveToNewTicketRequested()"
+                      (moveToExistingTicketRequested)="
+                        onMoveToExistingTicketRequested($event)
+                      "
+                      (metodoPagoActualizado)="recargarRecibo()"></detalle-ticket>
+                  </div>
+                  @if (activeTicketCxc; as cxc) {
+                    <button
+                      type="button"
+                      class="cxc-footer-chip"
+                      [attr.data-riesgo]="riesgoTicket(activeTicket)"
+                      (click)="toggleCxcRail()"
+                      [matTooltip]="tooltipCredito(activeTicket)">
+                      <span class="cxc-footer-dot"></span>
+                      Ticket con crédito · {{ formatCxcSaldo(cxc) }}
+                    </button>
+                  }
                 </div>
+                @if (activeTicketCxc) {
+                  <vex-cxc-ticket-rail
+                    #cxcRail
+                    [cuenta]="activeTicketCxc"
+                    [expanded]="cxcRailExpanded"
+                    (toggle)="toggleCxcRail()"
+                    (abonar)="abrirAbonoCxc()"></vex-cxc-ticket-rail>
+                }
               </div>
             } @else {
               <div class="ticket-panel-empty"></div>
@@ -375,6 +416,14 @@
               (change)="toggleImprimirRecibo($event)"
               (click)="$event.stopPropagation()">
             </mat-slide-toggle>
+          </button>
+          <mat-divider></mat-divider>
+          <button
+            mat-menu-item
+            type="button"
+            (click)="abrirCuentaPorCobrar()">
+            <mat-icon svgIcon="mat:handshake"></mat-icon>
+            <span>Generar crédito (cuenta por cobrar)</span>
           </button>
         </mat-menu>
         <mat-menu

@@ -51,6 +51,50 @@
   line-height: 1.4;
 }
 
+.formalizar-hint {
+  margin: 12px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.pago-linea-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+
+  mat-icon,
+  mat-spinner {
+    flex: 0 0 auto;
+    margin-top: 1px;
+  }
+
+  mat-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+  }
+}
+
+.pago-linea-banner--wait {
+  background: rgba(255, 152, 0, 0.12);
+  color: #e65100;
+}
+
+.pago-linea-banner--ok {
+  background: rgba(46, 125, 50, 0.1);
+  color: #1b5e20;
+}
+
+.pago-linea-msg {
+  margin: 0;
+  flex: 1 1 auto;
+}
+
 :host ::ng-deep .opcion-hijo .mdc-list-item__primary-text {
   font-size: 0.9rem;
   color: rgba(0, 0, 0, 0.75);

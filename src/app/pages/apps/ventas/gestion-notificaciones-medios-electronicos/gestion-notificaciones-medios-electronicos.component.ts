@@ -69,7 +69,7 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
   cargandoPlantillas = true;
   guardandoPlantillaId: number | null = null;
 
-  estadoVista = 'TODAS';
+  estadoVista = 'POR_IDENTIFICAR';
   busqueda = '';
   items: NotificacionEmailPagoDto[] = [];
   cargandoLista = false;
@@ -80,6 +80,7 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
     'cuerpoTexto',
     'monto',
     'nombrePagador',
+    'clasificacion',
     'estadoVista',
     'acciones'
   ];
@@ -471,9 +472,20 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
   }
 
   ver(row: NotificacionEmailPagoDto): void {
-    this.dialog.open(NotificacionEmailDetalleDialogComponent, {
+    const ref = this.dialog.open(NotificacionEmailDetalleDialogComponent, {
       width: '680px',
-      data: row
+      data: {
+        ...row,
+        origenesArbol: this.origenesArbol,
+        plantillas: this.plantillas
+      }
+    });
+    ref.afterClosed().subscribe((updated) => {
+      if (updated) {
+        this.snackBar.open('Notificación legalizada', 'Cerrar', { duration: 2500 });
+        this.cargarLista();
+        this.cargarOrigenesFondos();
+      }
     });
   }
 

@@ -8,12 +8,14 @@ export interface ClienteDto {
   nombre: string;
   telefono?: string;
   documento?: string;
+  correo?: string;
 }
 
 export interface CreateClienteRequest {
   nombre: string;
   telefono?: string;
   documento?: string;
+  correo?: string;
 }
 
 @Injectable({
