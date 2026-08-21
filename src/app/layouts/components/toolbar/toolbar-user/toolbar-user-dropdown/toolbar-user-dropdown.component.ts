@@ -32,6 +32,7 @@ import {
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { forkJoin, of } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
+import { environment } from '../../../../../../environments/environment';
 
 export interface OnlineStatus {
   id: 'online' | 'away' | 'dnd' | 'offline';
@@ -182,6 +183,17 @@ export class ToolbarUserDropdownComponent implements OnInit {
           }
         ]
       });
+
+      if (environment.sandbox === true) {
+        this.items.push({
+          id: '9',
+          icon: 'mat:warning',
+          label: 'Reset datos transaccionales',
+          description: 'Solo sandbox: vacía ventas/cortes/ledger; conserva catálogos',
+          colorClass: 'text-red-600',
+          action: () => this.resetDatosTransaccionalesSandbox()
+        });
+      }
     }
   }
 
@@ -258,6 +270,59 @@ export class ToolbarUserDropdownComponent implements OnInit {
         );
       }
     });
+  }
+
+  /** Solo sandbox: vacía transacciones; conserva catálogos / paramétricas. */
+  resetDatosTransaccionalesSandbox(): void {
+    this.close();
+    if (environment.sandbox !== true) {
+      this.snackBar.open(
+        'Esta acción solo está disponible en Sandbox Mode',
+        'Cerrar',
+        { duration: 4000 }
+      );
+      return;
+    }
+    const dialogData: ConfirmDialogData = {
+      titulo: 'Reset datos transaccionales',
+      mensaje:
+        'Se vaciarán <b>ventas, cortes, movimientos OF, egresos, CxC y notificaciones</b>. ' +
+        'Se conservan catálogos (orígenes, medios de pago, productos, plantillas, etc.).<br/><br/>' +
+        'Después debe <b>cerrar sesión y volver a entrar como ADMIN</b> para registrar la base inicial.<br/><br/>' +
+        '¿Continuar? Esta acción no se puede deshacer.'
+    };
+    this.dialog
+      .open(ConfirmDialogComponent, {
+        data: dialogData,
+        width: '480px',
+        disableClose: true
+      })
+      .afterClosed()
+      .subscribe((ok: boolean) => {
+        if (!ok) {
+          return;
+        }
+        this.copiasSeguridadService.resetDatosTransaccionales().subscribe({
+          next: (res) => {
+            this.snackBar.open(
+              res?.mensaje ||
+                'Reset OK. Cierre sesión y vuelva a entrar como ADMIN.',
+              'Cerrar',
+              { duration: 8000, panelClass: ['error-snackbar'] }
+            );
+          },
+          error: (err) => {
+            const msg =
+              err?.error?.error ||
+              err?.error?.message ||
+              'No se pudo resetear los datos transaccionales';
+            this.snackBar.open(msg, 'Cerrar', {
+              duration: 7000,
+              panelClass: ['error-snackbar']
+            });
+          }
+        });
+      });
   }
 
   close() {

@@ -12,6 +12,8 @@ const isDevServer = loc?.port === '4200';
 
 export const environment = {
   production: false,
+  /** true solo en environment.sandbox.ts (tester). */
+  sandbox: false,
   builderApiKey: '06e0922284dc424bb6ca15d07296678f',
   apiHost,
   apiUrlRelationalDb: isDevServer ? `http://${apiHost}:8088` : '',

@@ -24,7 +24,10 @@
     "e2e": "ng e2e",
     "serve:prod": "node server.js --serve-static",
     "health:server": "node server.js",
-    "health:dev": "node server.js"
+    "health:dev": "node server.js",
+    "sandbox:up": "bash scripts/sandbox/start-sandbox-env.sh",
+    "sandbox:up:tunnel": "bash scripts/sandbox/start-sandbox-env.sh --tunnel",
+    "sandbox:down": "bash scripts/sandbox/stop-sandbox-env.sh"
   },
   "dependencies": {
     "@angular/animations": "^21.2.9",

@@ -1,0 +1,39 @@
+---
+description: Guía en línea (overlay origen→destino) — componente genérico y caso CxC
+globs:
+  - src/app/core/components/guia-en-linea/**
+  - src/app/pages/apps/ventas/tickets/**
+  - src/app/pages/apps/ventas/metodos-pago/**
+  - src/app/pages/apps/ventas/cxc-ticket-rail/**
+  - src/app/pages/apps/ventas/detalle-ticket/**
+alwaysApply: false
+---
+
+# Guía en línea (FE)
+
+Componente genérico: `src/app/core/components/guia-en-linea/` (`GuiaEnLineaService`).
+
+**Contexto completo (prompts):**  
+`prompts-general-pos/contextos-ia/guia-en-linea.md`  
+**Copy / catálogo humano:**  
+`prompts-general-pos/ayuda-documental/tickets-cxc/`
+
+## Uso rápido
+
+```ts
+this.guiaEnLinea.abrir({
+  titulo: '…',
+  mensaje: '…',
+  origenes: [{ el: '.selector', etiqueta: '…' }],
+  destino: { el: '.selector-destino', etiqueta: '…' },
+  cerrarLabel: 'Cerrar ayuda en línea'
+});
+```
+
+## Caso Tickets + CxC
+
+- Medios de pago “disabled” siguen recibiendo click (`metodo-pago-disabled`).
+- Emite → `guiaCreditoSolicitada` → `tickets.mostrarGuiaAbonoCxc()`.
+- Destino: `.cxc-rail-cta--abonar` (expande rail si hace falta).
+
+Al extender: reutilizar el servicio; no inventar otro overlay ad hoc. Alinear textos con `ayuda-documental/` cuando sea posible.

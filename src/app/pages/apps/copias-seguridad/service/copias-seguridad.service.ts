@@ -27,4 +27,23 @@ export class CopiasSeguridadService {
     });
     return this.http.get<any>(`${this.apiUrl}/exportar-a-correo`, { headers });
   }
+
+  /**
+   * Sandbox only: vacía tablas transaccionales (conserva catálogos).
+   * BE: POST /sandbox/reset-datos-transaccionales
+   */
+  resetDatosTransaccionales(): Observable<{
+    ok?: boolean;
+    mensaje?: string;
+    error?: string;
+    conteos?: Record<string, number>;
+  }> {
+    const headers = new HttpHeaders({ Accept: 'application/json' });
+    return this.http.post<{
+      ok?: boolean;
+      mensaje?: string;
+      error?: string;
+      conteos?: Record<string, number>;
+    }>(`${environment.apiUrlRelationalDb}/sandbox/reset-datos-transaccionales`, {}, { headers });
+  }
 }

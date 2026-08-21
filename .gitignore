@@ -55,6 +55,8 @@ Thumbs.db
 
 # Sandbox tester secrets (DBeaver)
 scripts/sandbox/credentials.tester.local
+scripts/sandbox/logs/
+scripts/sandbox/.run/
 
 # Documentación Cursor en .cursor/ (override: ~/.gitignore_global ignora *.md)
 !.cursor/
