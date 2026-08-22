@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Arranca el ambiente sandbox completo (paralelo a tu dev).
+# Arranca el ambiente sandbox (copia ESTABLE bajo .../repos/sandbox).
+#
+# Hogar canónico:
+#   /Users/carlosromero/Documents/dev/repos/sandbox
+#   → ./up.sh   o   cd infinito-ai-front && npm run sandbox:up
 #
 # Uso:
 #   ./scripts/sandbox/start-sandbox-env.sh
@@ -12,6 +16,7 @@
 #
 # Parar:
 #   ./scripts/sandbox/stop-sandbox-env.sh
+#   o desde repos/sandbox: ./down.sh
 #
 # Puertos sandbox: FE 4210 · Caddy 8180 · Auth 8181 · Relacional 8188 · Puente 8195 · Health 3011
 # URL local:  http://localhost:4210
@@ -21,9 +26,17 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FRONT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+# Padre del front = carpeta sandbox (MS hermanos: security, relational, puente, mail)
 REPOS_ROOT="$(cd "$FRONT_ROOT/.." && pwd)"
 RUN_DIR="$SCRIPT_DIR/.run"
 LOG_DIR="$SCRIPT_DIR/logs"
+
+if [[ "$(basename "$REPOS_ROOT")" != "sandbox" ]]; then
+  echo "ERROR: este script debe ejecutarse desde .../repos/sandbox/infinito-ai-front" >&2
+  echo "       (REPOS_ROOT actual: $REPOS_ROOT)" >&2
+  echo "       Usa: /Users/carlosromero/Documents/dev/repos/sandbox/up.sh" >&2
+  exit 1
+fi
 
 DO_CLONE=0
 DO_TUNNEL=0
@@ -40,8 +53,9 @@ for arg in "$@"; do
     --with-mail) WITH_MAIL=1 ;;
     -h|--help)
       cat <<'EOF'
-Arranca el ambiente sandbox (MS + Angular + Caddy).
+Arranca el ambiente sandbox (MS + Angular + Caddy) desde la copia estable.
 
+  cd /Users/carlosromero/Documents/dev/repos/sandbox && ./up.sh
   ./scripts/sandbox/start-sandbox-env.sh
   ./scripts/sandbox/start-sandbox-env.sh --clone
   ./scripts/sandbox/start-sandbox-env.sh --tunnel
@@ -49,7 +63,8 @@ Arranca el ambiente sandbox (MS + Angular + Caddy).
   ./scripts/sandbox/start-sandbox-env.sh --skip-fe
   ./scripts/sandbox/start-sandbox-env.sh --with-mail
 
-Parar: ./scripts/sandbox/stop-sandbox-env.sh
+Parar: ./down.sh (desde repos/sandbox)
+  o:    ./scripts/sandbox/stop-sandbox-env.sh
   o:    npm run sandbox:down
 
 Puertos: 4210 FE · 8180 Caddy · 8181 auth · 8188 relacional · 8195 puente · 3011 health
