@@ -126,7 +126,9 @@
                     <button
                       type="button"
                       class="origen-card raiz"
+                      [attr.data-of-id]="grupo.raiz.id"
                       [class.selected]="cuentaSeleccionada?.id === grupo.raiz.id"
+                      [class.origen-card--nav-flash]="cuentaResaltadaId === grupo.raiz.id"
                       [class.con-desglose]="svRaiz.mostrarDesglose"
                       [class.con-hijos]="grupo.hijos.length > 0"
                       [class.con-menu]="muestraMenuGestion(grupo.raiz)"
@@ -204,7 +206,9 @@
                         <button
                           type="button"
                           class="origen-card hijo"
+                          [attr.data-of-id]="hijo.id"
                           [class.selected]="cuentaSeleccionada?.id === hijo.id"
+                          [class.origen-card--nav-flash]="cuentaResaltadaId === hijo.id"
                           [class.con-menu]="muestraMenuGestion(hijo)"
                           [style.border-top-color]="cardAccent(hijo)"
                           [draggable]="esAdmin"
@@ -346,6 +350,32 @@
                           Ver
                         </button>
                       }
+                      @if (puedeNavegarTrasladoAtras(m)) {
+                        <button
+                          type="button"
+                          mat-stroked-button
+                          class="btn-nav-traslado"
+                          aria-label="Ir al OF origen del traslado"
+                          (mouseenter)="mostrarTipFooter('Ir al OF de donde salió este dinero', 'Atrás')"
+                          (mouseleave)="onDetalleBotonLeave(m, $event)"
+                          (click)="navegarTraslado(m, 'atras', $event)">
+                          <mat-icon svgIcon="mat:arrow_back"></mat-icon>
+                          Atrás
+                        </button>
+                      }
+                      @if (puedeNavegarTrasladoAdelante(m)) {
+                        <button
+                          type="button"
+                          mat-stroked-button
+                          class="btn-nav-traslado"
+                          aria-label="Ir al OF destino del traslado"
+                          (mouseenter)="mostrarTipFooter('Seguir el dinero al OF destino', 'Adelante')"
+                          (mouseleave)="onDetalleBotonLeave(m, $event)"
+                          (click)="navegarTraslado(m, 'adelante', $event)">
+                          Adelante
+                          <mat-icon svgIcon="mat:arrow_forward"></mat-icon>
+                        </button>
+                      }
                       <span class="detalle-texto">{{ detalleMovimiento(m) }}</span>
                       @if (puedeTrasladarMovimiento(m)) {
                         <button
@@ -394,7 +424,9 @@
                   mat-row
                   *matRowDef="let row; columns: movimientoColumns"
                   class="mov-row"
+                  [attr.data-mov-id]="row.id"
                   [class.selected-row]="isMovimientoSelected(row)"
+                  [class.mov-row--nav-flash]="movimientoResaltadoId === row.id"
                   [class.mov-row-draggable]="puedeArrastrarMovimiento(row)"
                   [attr.draggable]="puedeArrastrarMovimiento(row) ? true : null"
                   (dragstart)="onDragStartMovimiento(row, $event)"

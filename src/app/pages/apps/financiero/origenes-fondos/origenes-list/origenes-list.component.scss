@@ -325,6 +325,28 @@
     0 0 0 5px rgb(var(--vex-color-primary-400) / 0.22);
 }
 
+.origen-card.origen-card--nav-flash {
+  animation: of-nav-flash 1.8s ease;
+}
+
+@keyframes of-nav-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.55);
+    border-color: #fb8c00;
+  }
+  35% {
+    box-shadow:
+      0 0 0 3px rgba(255, 152, 0, 0.45),
+      0 4px 14px rgba(255, 152, 0, 0.35);
+    border-color: #ef6c00;
+    transform: translateY(-1px);
+  }
+  100% {
+    box-shadow: none;
+    transform: none;
+  }
+}
+
 .tipo-chip {
   font-size: 0.7rem;
   text-transform: uppercase;
@@ -482,12 +504,32 @@ table.mov-table-compact.mat-mdc-table {
       cursor: grab;
     }
 
+    /* Zebra — mismo estándar que cliente-list / productos / egresos */
     &:nth-child(even) {
       background-color: rgba(0, 0, 0, 0.005) !important;
+
+      td.mat-mdc-cell,
+      td[mat-cell] {
+        background-color: rgba(0, 0, 0, 0.005) !important;
+      }
+    }
+
+    &:nth-child(odd) {
+      background-color: transparent !important;
+
+      td.mat-mdc-cell,
+      td[mat-cell] {
+        background-color: transparent !important;
+      }
     }
 
     &:hover {
       background-color: var(--pos-mat-table-row-hover) !important;
+
+      td.mat-mdc-cell,
+      td[mat-cell] {
+        background-color: var(--pos-mat-table-row-hover) !important;
+      }
     }
 
     /* Persistente: no usa :focus / :focus-within (sigue al cambiar de ventana). */
@@ -497,11 +539,21 @@ table.mov-table-compact.mat-mdc-table {
       td.mat-mdc-cell,
       td[mat-cell] {
         font-weight: 500;
+        background-color: rgba(63, 81, 181, 0.12) !important;
       }
     }
 
     &.selected-row:hover {
       background-color: rgba(63, 81, 181, 0.18) !important;
+
+      td.mat-mdc-cell,
+      td[mat-cell] {
+        background-color: rgba(63, 81, 181, 0.18) !important;
+      }
+    }
+
+    &.mov-row--nav-flash {
+      animation: mov-nav-flash 1.8s ease;
     }
   }
 
@@ -562,6 +614,36 @@ table.mov-table-compact.mat-mdc-table {
   font-size: 11px !important;
   font-weight: 600 !important;
   white-space: nowrap;
+}
+
+.btn-nav-traslado {
+  flex: 0 0 auto;
+  min-width: 0 !important;
+  height: 24px !important;
+  line-height: 24px !important;
+  padding: 0 6px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  white-space: nowrap;
+  gap: 2px;
+
+  mat-icon {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+  }
+}
+
+@keyframes mov-nav-flash {
+  0% {
+    background-color: rgba(255, 152, 0, 0.35) !important;
+  }
+  40% {
+    background-color: rgba(255, 152, 0, 0.22) !important;
+  }
+  100% {
+    background-color: transparent;
+  }
 }
 
 .btn-clasificar-dueno {

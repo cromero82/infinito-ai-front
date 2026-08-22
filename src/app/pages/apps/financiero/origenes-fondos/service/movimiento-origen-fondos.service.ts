@@ -83,6 +83,15 @@ export class MovimientoOrigenFondosService {
     return this.http.get<MovimientoOrigenFondosDto[]>(this.apiUrl, { headers, params });
   }
 
+  /** Ambas patas de un traslado/distribución (orden id ASC). */
+  findByGrupoTrasladoId(grupoTrasladoId: string): Observable<MovimientoOrigenFondosDto[]> {
+    const headers = new HttpHeaders({ Accept: 'application/json' });
+    return this.http.get<MovimientoOrigenFondosDto[]>(
+      `${this.apiUrl}/grupo/${encodeURIComponent(grupoTrasladoId)}`,
+      { headers }
+    );
+  }
+
   /**
    * Movimientos «por identificar» en bolsas, mismo valor, sin egreso vinculado.
    */

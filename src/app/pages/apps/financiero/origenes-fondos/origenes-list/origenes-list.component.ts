@@ -61,6 +61,8 @@ import { FooterItemDto } from '../../../../../layouts/components/footer/footer.c
 import { GestionNotificacionesMediosService } from '../../../ventas/service/gestion-notificaciones-medios.service';
 import type { PlantillaNotificacionPagoDto } from '../../../ventas/service/gestion-notificaciones-medios.service';
 
+const NAV_FLASH_MS = 1800;
+
 @Component({
   selector: 'vex-origenes-list',
   imports: [
@@ -84,6 +86,10 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
   movimientos: MovimientoOrigenFondosDto[] = [];
   /** Fila de movimiento seleccionada (estilo persistente, no depende del focus). */
   selectedMovimientoId: number | null = null;
+  /** Resaltado temporal al navegar Atrás/Adelante entre patas de un traslado. */
+  cuentaResaltadaId: number | null = null;
+  movimientoResaltadoId: number | null = null;
+  private navFlashTimer: ReturnType<typeof setTimeout> | null = null;
   cuentaSeleccionada: OrigenFondosArbolItemDto | null = null;
   loadingCuentas = false;
   loadingMovimientos = false;
@@ -138,6 +144,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.limpiarFooterWarningTimer();
     this.limpiarFooterHoverTimer();
+    this.limpiarNavFlashTimer();
     this.footerService.clearFooterItems();
   }
 
@@ -991,7 +998,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
     }
   }
 
-  cargarMovimientos(cuentaId: number): void {
+  cargarMovimientos(cuentaId: number, highlightMovimientoId?: number): void {
     this.loadingMovimientos = true;
     this.selectedMovimientoId = null;
     this.movimientoService.findByCuenta(cuentaId).subscribe({
@@ -1000,12 +1007,108 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
           (a, b) => b.fecha.localeCompare(a.fecha) || (b.id - a.id)
         );
         this.loadingMovimientos = false;
+        if (highlightMovimientoId != null) {
+          this.aplicarResaltadoNavegacion(cuentaId, highlightMovimientoId);
+        }
       },
       error: () => {
         this.loadingMovimientos = false;
         this.movimientos = [];
       }
     });
+  }
+
+  /** Salida (impacto &lt; 0) → ir al OF de la entrada del mismo grupo. */
+  puedeNavegarTrasladoAdelante(m: MovimientoOrigenFondosDto): boolean {
+    return !!m.grupoTrasladoId && (m.impacto ?? 0) < 0;
+  }
+
+  /** Entrada (impacto &gt; 0) → ir al OF de la salida del mismo grupo. */
+  puedeNavegarTrasladoAtras(m: MovimientoOrigenFondosDto): boolean {
+    return !!m.grupoTrasladoId && (m.impacto ?? 0) > 0;
+  }
+
+  navegarTraslado(
+    m: MovimientoOrigenFondosDto,
+    direccion: 'adelante' | 'atras',
+    event?: Event
+  ): void {
+    event?.stopPropagation();
+    event?.preventDefault();
+    const grupoId = m.grupoTrasladoId?.trim();
+    if (!grupoId) {
+      return;
+    }
+    if (direccion === 'adelante' && !this.puedeNavegarTrasladoAdelante(m)) {
+      return;
+    }
+    if (direccion === 'atras' && !this.puedeNavegarTrasladoAtras(m)) {
+      return;
+    }
+    this.movimientoService.findByGrupoTrasladoId(grupoId).subscribe({
+      next: (patas) => {
+        const hermano = (patas ?? []).find((p) => p.id !== m.id);
+        if (!hermano?.origenFondosId) {
+          this.snackBar.open(
+            'No se encontró el movimiento vinculado.',
+            'Cerrar',
+            { duration: 3500 }
+          );
+          return;
+        }
+        const cuenta = this.arbol.find((c) => c.id === hermano.origenFondosId);
+        if (!cuenta) {
+          this.snackBar.open(
+            'El OF vinculado no está visible en el árbol.',
+            'Cerrar',
+            { duration: 4000 }
+          );
+          return;
+        }
+        if (cuenta.parentOrigenFondosId != null && cuenta.parentOrigenFondosId > 0) {
+          this.gruposExpandidos.add(cuenta.parentOrigenFondosId);
+        }
+        this.cuentaSeleccionada = cuenta;
+        this.cargarMovimientos(cuenta.id, hermano.id);
+      },
+      error: () => {
+        this.snackBar.open(
+          'No se pudo cargar el par del traslado.',
+          'Cerrar',
+          { duration: 4000 }
+        );
+      }
+    });
+  }
+
+  private aplicarResaltadoNavegacion(
+    cuentaId: number,
+    movimientoId: number
+  ): void {
+    this.cuentaResaltadaId = cuentaId;
+    this.movimientoResaltadoId = movimientoId;
+    this.selectedMovimientoId = movimientoId;
+    this.limpiarNavFlashTimer();
+    this.navFlashTimer = setTimeout(() => {
+      this.cuentaResaltadaId = null;
+      this.movimientoResaltadoId = null;
+      this.navFlashTimer = null;
+    }, NAV_FLASH_MS);
+    requestAnimationFrame(() => {
+      document
+        .querySelector(`[data-of-id="${cuentaId}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      document
+        .querySelector(`[data-mov-id="${movimientoId}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }
+
+  private limpiarNavFlashTimer(): void {
+    if (this.navFlashTimer != null) {
+      clearTimeout(this.navFlashTimer);
+      this.navFlashTimer = null;
+    }
   }
 
   selectMovimiento(m: MovimientoOrigenFondosDto): void {
