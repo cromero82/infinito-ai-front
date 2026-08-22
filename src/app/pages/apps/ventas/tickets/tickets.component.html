@@ -534,5 +534,7 @@
       </div>
     </div>
   </vex-page-layout-content>
-  <app-confirmacion-pagos-panel [sesionId]="sessionId" />
+  <app-confirmacion-pagos-panel
+    [sesionId]="sessionId"
+    (creditoDesdeFaltante)="onCreditoDesdeFaltanteQr($event)" />
 </vex-page-layout>

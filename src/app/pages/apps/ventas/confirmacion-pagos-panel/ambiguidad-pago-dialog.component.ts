@@ -33,7 +33,13 @@ export interface AmbiguidadPagoDialogData {
             mat-stroked-button
             class="cand"
             (click)="choose(c.historialElectronicoId)">
-            Ticket #{{ c.historialReciboId }} —
+            Ticket
+            @if (c.abonoCxcId) {
+              Abono CxC #{{ c.abonoCxcId }}
+            } @else {
+              #{{ c.historialReciboId }}
+            }
+            —
             {{ c.montoEsperado | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
           </button>
         }

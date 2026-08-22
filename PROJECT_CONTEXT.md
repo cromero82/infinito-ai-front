@@ -111,4 +111,10 @@ Resumen de decisiones ya codificadas en el repo. Al cambiar estos flujos, revisa
 
 **Regla práctica para nuevas IAs:** si el síntoma es “se pierde texto”, “se abre el modal dos veces” o “el foco no vuelve al buscador”, revisar primero **`tickets-pos-focus-coordinator.md`** y la tabla anterior; preferir **`hold` / `release` / `requestDefaultFocus`** antes de introducir nuevos `setTimeout` de foco.
 
+### Confirmación pagos electrónicos (QR / email)
+
+- Narrativo + mapa: ver en monorepo `prompts-general-pos/contextos-ia/confirmacion-pagos-electronicos.md`
+- Contratos OpenSpec: `prompts-general-pos/openspec/specs/confirmacion-pagos-electronicos/spec.md`
+- Rule FE: `.cursor/rules/confirmacion-pagos-electronicos.mdc`
+
 Seguridad. La actual web app tiene un interceptor que agrega el tocken en cada peticion, por lo que cuando se vayan a realizar nuevos endpoint no es necesario agregar el tocken manualmente.

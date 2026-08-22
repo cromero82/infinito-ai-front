@@ -2,11 +2,13 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  EventEmitter,
   HostListener,
   Input,
   OnChanges,
   OnDestroy,
   OnInit,
+  Output,
   SimpleChanges
 } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
@@ -18,9 +20,12 @@ import { Subscription, interval, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import {
   ConfirmacionPagoService,
+  MontoDistintoConfirmacionDto,
   PendienteConfirmacionDto
 } from '../service/confirmacion-pago.service';
 import { AmbiguidadPagoDialogComponent } from './ambiguidad-pago-dialog.component';
+import { AsociarNotificacionDialogComponent } from './asociar-notificacion-dialog.component';
+import { MontoDistintoPagoDialogComponent, MontoDistintoDialogResult } from './monto-distinto-pago-dialog.component';
 import { TicketSinNotifProductosDialogComponent } from '../gestion-notificaciones-medios-electronicos/ticket-sin-notif-productos-dialog.component';
 import { FechaUtilService } from '../service/fecha-util.service';
 
@@ -40,6 +45,8 @@ const PANEL_H_MIN = 120;
 })
 export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDestroy {
   @Input() sesionId: number | null = null;
+  /** Tras faltante QR → ticket reabierto; el padre abre modal Generar crédito. */
+  @Output() creditoDesdeFaltante = new EventEmitter<PendienteConfirmacionDto>();
 
   items: PendienteConfirmacionDto[] = [];
   countdowns = new Map<number, number>();
@@ -348,15 +355,79 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
     ref.afterClosed().subscribe((chosenId: number | null) => {
       this.ambiguityOpen = false;
       if (chosenId && item.notificacionId) {
-        this.confirmacionPago.asignar(chosenId, item.notificacionId).subscribe({
-          next: () => {
-            if (this.sesionId != null) {
-              this.confirmacionPago.getPendientes(this.sesionId).subscribe((list) => this.applyList(list));
-            }
-          }
-        });
+        this.asignarConConfirmacionSiDistinto(chosenId, item.notificacionId);
       }
     });
+  }
+
+  asociarPago(item: PendienteConfirmacionDto, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (item.estado !== 'CREADA' && item.estado !== 'AMBIGUA') {
+      return;
+    }
+    // Abrir de inmediato: el dialog hace polling de emails sin asignar.
+    const ref = this.dialog.open(AsociarNotificacionDialogComponent, {
+      width: '420px',
+      data: {
+        montoEsperado: item.montoEsperado,
+        abonoCxcId: item.abonoCxcId,
+        historialReciboId: item.historialReciboId,
+        notificaciones: []
+      }
+    });
+    ref.afterClosed().subscribe((notifId: number | null) => {
+      if (notifId) {
+        this.asignarConConfirmacionSiDistinto(item.id, notifId);
+      }
+    });
+  }
+
+  private asignarConConfirmacionSiDistinto(
+    historialElectronicoId: number,
+    notificacionId: number
+  ): void {
+    this.confirmacionPago.asignar(historialElectronicoId, notificacionId, false).subscribe({
+      next: () => this.refreshTrasAsignar(),
+      error: (err: MontoDistintoConfirmacionDto | unknown) => {
+        if (err && typeof err === 'object' && (err as MontoDistintoConfirmacionDto).code === 'MONTO_DISTINTO') {
+          const data = err as MontoDistintoConfirmacionDto;
+          const esFaltante = Number(data.diferencia) < 0;
+          const ref = this.dialog.open(MontoDistintoPagoDialogComponent, {
+            width: '440px',
+            disableClose: true,
+            data
+          });
+          ref.afterClosed().subscribe((result: MontoDistintoDialogResult | null) => {
+            if (!result?.confirmed) {
+              return;
+            }
+            this.confirmacionPago
+              .asignar(
+                historialElectronicoId,
+                notificacionId,
+                true,
+                result.origenFondosDevolucionId
+              )
+              .subscribe({
+                next: (dto) => {
+                  this.refreshTrasAsignar();
+                  if (esFaltante) {
+                    this.creditoDesdeFaltante.emit(dto);
+                  }
+                }
+              });
+          });
+          return;
+        }
+      }
+    });
+  }
+
+  private refreshTrasAsignar(): void {
+    if (this.sesionId != null) {
+      this.confirmacionPago.getPendientes(this.sesionId).subscribe((list) => this.applyList(list));
+    }
   }
 
   countdownOf(id: number): number | null {

@@ -132,6 +132,14 @@
   text-overflow: ellipsis;
 }
 
+.panel-origen {
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  opacity: 0.7;
+  white-space: nowrap;
+  color: rgba(180, 210, 255, 0.9);
+}
+
 .panel-sublinea {
   grid-column: 2 / 4;
   grid-row: 2;
@@ -153,6 +161,29 @@
   flex-shrink: 0;
   align-self: start;
   margin-top: -1px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 140px;
+}
+
+.panel-asociar {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 2px 6px;
+  font-size: 10px;
+  line-height: 1.3;
+  color: #b4d2ff;
+  background: transparent;
+  border: 1px solid rgba(180, 210, 255, 0.35);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.panel-asociar:hover {
+  color: #fff;
+  border-color: rgba(180, 210, 255, 0.7);
+  background: rgba(180, 210, 255, 0.1);
 }
 
 .panel-detalle {

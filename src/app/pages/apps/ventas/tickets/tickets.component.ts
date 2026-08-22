@@ -63,6 +63,7 @@ import {
   CuentaPorCobrarDto,
   CuentaPorCobrarService
 } from '../service/cuenta-por-cobrar.service';
+import { PendienteConfirmacionDto } from '../service/confirmacion-pago.service';
 import { CxcTicketRailComponent } from '../cxc-ticket-rail/cxc-ticket-rail.component';
 import {
   RegistrarAbonoCxcDialogComponent,
@@ -1117,13 +1118,15 @@ export class TicketsComponent
         ticket,
         reciboId,
         totalRecibo,
-        montoRecibido
+        montoRecibido,
+        sesionId: this.sessionId
       },
       autoFocus: true
     });
     dialogRef.afterClosed().subscribe((dto) => {
       this.posFocus.release('dialog:abrir-cxc');
       if (dto) {
+        this.confirmacionPagosPanel?.revisarPendientes();
         if (dto.ticketId != null) {
           this.cxcPorTicketId.set(dto.ticketId, dto);
           const t =
@@ -1344,6 +1347,122 @@ export class TicketsComponent
     });
   }
 
+  /**
+   * Panel QR faltante → ticket reabierto: recarga tabs y abre modal Generar crédito
+   * con abono/saldo/medio fijos (email ya confirmado).
+   */
+  onCreditoDesdeFaltanteQr(dto: PendienteConfirmacionDto): void {
+    const ticketId = dto?.ticketIdReabierto ?? null;
+    const reciboId = dto?.reciboIdReabierto ?? null;
+    const total = Number(dto?.totalTicketReabierto ?? dto?.montoEsperado ?? 0);
+    const abono = Number(dto?.montoRecibido ?? 0);
+    const saldo = Number(
+      dto?.faltante ?? Math.max(0, total - abono)
+    );
+
+    const openModal = (ticket: TicketDto) => {
+      if (reciboId == null || !(total > 0)) {
+        this.snackBar.open(
+          'Ticket reabierto. Use «Generar crédito» para registrar el faltante.',
+          'Cerrar',
+          { duration: 5000 }
+        );
+        return;
+      }
+      this.posFocus.hold('dialog:abrir-cxc');
+      const dialogRef = this.dialog.open<
+        AbrirCuentaPorCobrarDialogComponent,
+        AbrirCuentaPorCobrarDialogData,
+        CuentaPorCobrarDto | undefined
+      >(AbrirCuentaPorCobrarDialogComponent, {
+        width: '520px',
+        disableClose: true,
+        data: {
+          ticket,
+          reciboId,
+          totalRecibo: total,
+          montoRecibido: abono,
+          sesionId: this.sessionId,
+          bloquearMontos: true,
+          abonoFijo: abono,
+          saldoFijo: saldo,
+          metodoPagoIdFijo: dto.metodoPagoId ?? null,
+          historialElectronicoId: dto.id ?? null
+        },
+        autoFocus: true
+      });
+      dialogRef.afterClosed().subscribe((cxc) => {
+        this.posFocus.release('dialog:abrir-cxc');
+        if (cxc) {
+          this.confirmacionPagosPanel?.revisarPendientes();
+          if (cxc.ticketId != null) {
+            this.cxcPorTicketId.set(cxc.ticketId, cxc);
+            this.lastSyncedTotalByTicket.set(
+              cxc.ticketId,
+              Math.round(Number(cxc.totalTicket) || total)
+            );
+          }
+          this.refreshCxcMap();
+          this.cxcRailExpanded = true;
+          if (this.sessionId != null) {
+            this.loadTickets(this.sessionId);
+            this.fetchReciboForTicket(ticket.id, true);
+          }
+        } else {
+          this.snackBar.open(
+            'Ticket reabierto sin crédito. Puede usar «Generar crédito» cuando identifique al cliente.',
+            'Cerrar',
+            { duration: 5500 }
+          );
+          if (this.sessionId != null) {
+            this.loadTickets(this.sessionId);
+          }
+        }
+        this.cdr.markForCheck();
+      });
+    };
+
+    if (this.sessionId == null) {
+      return;
+    }
+
+    this.snackBar.open(
+      'Ticket reabierto por faltante QR. Identifique el cliente y cree el crédito.',
+      'Cerrar',
+      { duration: 4500 }
+    );
+
+    this.ticketsService.getTicketsBySession(this.sessionId).subscribe({
+      next: (tickets) => {
+        this.tickets = tickets ?? [];
+        this.pruneSplitState();
+        const ticket =
+          (ticketId != null
+            ? this.tickets.find((t) => t.id === ticketId)
+            : null) ?? null;
+        if (!ticket) {
+          this.selectTicketAfterTicketsLoaded(this.sessionId!);
+          this.snackBar.open(
+            'No se encontró el ticket reabierto. Use «Generar crédito» en el tab correspondiente.',
+            'Cerrar',
+            { duration: 5500 }
+          );
+          this.cdr.markForCheck();
+          return;
+        }
+        const idx = this.tickets.findIndex((t) => t.id === ticket.id);
+        this.selectedIndex = idx >= 0 ? idx : 0;
+        this.forcedSelectionTicketId = ticket.id;
+        this.fetchReciboForTicket(ticket.id, true);
+        openModal(ticket);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loadTickets(this.sessionId!);
+      }
+    });
+  }
+
   abrirAbonoCxc(cuenta?: CuentaPorCobrarDto | null): void {
     const cxc = cuenta ?? this.activeTicketCxc;
     if (!cxc) {
@@ -1356,7 +1475,7 @@ export class TicketsComponent
       RegistrarAbonoCxcDialogResult | undefined
     >(RegistrarAbonoCxcDialogComponent, {
       width: '440px',
-      data: { cuenta: cxc },
+      data: { cuenta: cxc, sesionId: this.sessionId },
       autoFocus: true
     });
     dialogRef.afterClosed().subscribe((result) => {
@@ -1364,6 +1483,7 @@ export class TicketsComponent
       if (!result) {
         return;
       }
+      this.confirmacionPagosPanel?.revisarPendientes();
       if (result.cuenta.estado === 'PAGADA' || result.cuenta.estado === 'ANULADA') {
         if (result.cuenta.ticketId != null) {
           this.cxcPorTicketId.delete(result.cuenta.ticketId);
