@@ -15,7 +15,7 @@
     "start:angular:sandbox": "wait-on http://localhost:3011/health && ng serve --host 0.0.0.0 --port 4210 --configuration sandbox",
     "start:caddy": "wait-on tcp:4200 && caddy run --config Caddyfile",
     "start:caddy:sandbox": "wait-on tcp:4210 && caddy run --config Caddyfile.sandbox",
-    "start:sandbox": "concurrently -k -n health,angular,caddy -c blue,green,magenta \"PORT=3011 npm run health:server\" \"npm run start:angular:sandbox\" \"npm run start:caddy:sandbox\"",
+    "start:sandbox": "npm --prefix \"/Users/carlosromero/Documents/dev/repos/sandbox/infinito-ai-front\" run start:sandbox",
     "start:cloudflared": "wait-on tcp:8080 && cloudflared tunnel --url http://localhost:8080 --no-autoupdate",
     "start:cloudflared:named": "wait-on tcp:8080 && cloudflared tunnel --config \"$HOME/.cloudflared/config.yml\" run pos-local",
     "build": "ng build --configuration production",

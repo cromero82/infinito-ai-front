@@ -34,6 +34,9 @@
                 <span class="panel-monto">{{
                   item.montoEsperado | currency: 'COP' : 'symbol-narrow' : '1.0-0'
                 }}</span>
+                @if (item.abonoCxcId) {
+                  <span class="panel-origen">Abono CxC</span>
+                }
                 @if (item.estado !== 'CREADA') {
                   <span class="panel-estado">
                     @if (item.estado === 'CONFIRMADA') {
@@ -63,6 +66,13 @@
 
             <div class="panel-item-actions">
               @if (item.estado === 'CREADA' || item.estado === 'AMBIGUA') {
+                <button
+                  type="button"
+                  class="panel-asociar"
+                  matTooltip="Asociar email bancario (también si el monto difiere)"
+                  (click)="asociarPago(item, $event)">
+                  Asociar
+                </button>
                 <button
                   type="button"
                   class="panel-skip"

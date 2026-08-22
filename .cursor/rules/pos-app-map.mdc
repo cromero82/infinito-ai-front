@@ -88,6 +88,16 @@ Variables y tokens Vex: inspeccionar `--vex-*` en DevTools o revisar `src/@vex/s
 - Pantallas: `src/app/auth/` (`login`, `register`, `forgot-password`).
 - Servicios de sesión/token según el patrón del proyecto (p. ej. integración con `AuthService` e interceptor en `core`).
 
+## Sandbox (tester) vs desarrollo
+
+| | Desarrollo | Sandbox estable |
+|---|---|---|
+| Código | este repo y hermanos en `repos/` | `/Users/carlosromero/Documents/dev/repos/sandbox/{proyecto}` |
+| Arranque | `npm start` `:4200` | `cd .../repos/sandbox && ./up.sh` |
+| BD | `controlneg_rmx_db` | `controlneg_rmx_db_sandbox` |
+
+Desde este repo de desarrollo, `npm run sandbox:up` **delega** al árbol `repos/sandbox`. No levantar FE sandbox con código inestable de aquí.
+
 ## Cómo usar este documento en Cursor
 
 - Está en **`.cursor/rules/pos-app-map.mdc`** con `alwaysApply: false`: sirve como **mapa de onboarding** sin inyectarse en cada chat.

@@ -33,6 +33,18 @@ export interface AbrirCuentaPorCobrarDialogData {
   totalRecibo: number;
   /** Ya cobrado en el recibo (si aplica). */
   montoRecibido?: number;
+  /** Sesión de caja activa (panel QR abono inicial). */
+  sesionId?: number | null;
+  /**
+   * Faltante QR: abono/saldo/medio fijos (email ya confirmado).
+   * El cajero solo identifica cliente y pulsa Crear crédito.
+   */
+  bloquearMontos?: boolean;
+  abonoFijo?: number;
+  saldoFijo?: number;
+  metodoPagoIdFijo?: number | null;
+  /** HRE CONFIRMADA a retargetar al abono inicial. */
+  historialElectronicoId?: number | null;
 }
 
 @Component({
@@ -52,9 +64,15 @@ export interface AbrirCuentaPorCobrarDialogData {
     <h2 mat-dialog-title>Abrir cuenta por cobrar</h2>
     <mat-dialog-content class="flex flex-col gap-3">
       <p class="text-secondary hint m-0">
-        Ticket «{{ data.ticket.nombre }}». Indique cuánto abona ahora y cuánto
-        queda debiendo (saldo a crédito). El crédito puede crecer si siguen
-        agregando productos al ticket.
+        @if (montosBloqueados) {
+          Ticket «{{ data.ticket.nombre }}». El abono es el monto confirmado del
+          email QR; el saldo a crédito es el faltante. Identifique al cliente y
+          cree el crédito.
+        } @else {
+          Ticket «{{ data.ticket.nombre }}». Indique cuánto abona ahora y cuánto
+          queda debiendo (saldo a crédito). El crédito puede crecer si siguen
+          agregando productos al ticket.
+        }
       </p>
 
       <div class="resumen-box">
@@ -98,16 +116,27 @@ export interface AbrirCuentaPorCobrarDialogData {
           inputmode="numeric"
           [(ngModel)]="abonoDisplay"
           name="abono"
+          [disabled]="montosBloqueados"
           (focus)="onMoneyFocus('abono')"
           (blur)="onMoneyBlur('abono')"
           (input)="onMoneyInput('abono', $event)" />
-        <mat-hint>0 = todo a crédito. Lo que paga de contado ahora.</mat-hint>
+        <mat-hint>
+          @if (montosBloqueados) {
+            Monto recibido del email QR (no editable).
+          } @else {
+            0 = todo a crédito. Lo que paga de contado ahora.
+          }
+        </mat-hint>
       </mat-form-field>
 
       @if (abonoValue > 0) {
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>Medio de pago del abono</mat-label>
-          <mat-select [(ngModel)]="metodoPagoId" name="metodoPago" required>
+          <mat-select
+            [(ngModel)]="metodoPagoId"
+            name="metodoPago"
+            [disabled]="montosBloqueados"
+            required>
             @for (mp of metodos; track mp.id) {
               <mat-option [value]="mp.id">{{ mp.descripcion }}</mat-option>
             }
@@ -123,13 +152,18 @@ export interface AbrirCuentaPorCobrarDialogData {
           inputmode="numeric"
           [(ngModel)]="saldoDisplay"
           name="saldo"
+          [disabled]="montosBloqueados"
           (focus)="onMoneyFocus('saldo')"
           (blur)="onMoneyBlur('saldo')"
           (input)="onMoneyInput('saldo', $event)" />
-        <mat-hint
-          >Lo que queda debiendo. Abono + saldo =
-          {{ formatMoney(totalTicket) }}</mat-hint
-        >
+        <mat-hint>
+          @if (montosBloqueados) {
+            Faltante del pago QR (no editable).
+          } @else {
+            Lo que queda debiendo. Abono + saldo =
+            {{ formatMoney(totalTicket) }}
+          }
+        </mat-hint>
       </mat-form-field>
 
       <div class="resumen-box resumen-box--ok">
@@ -153,9 +187,11 @@ export interface AbrirCuentaPorCobrarDialogData {
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button type="button" [disabled]="saving" (click)="cancelar()">
-        Cancelar
-      </button>
+      @if (!montosBloqueados) {
+        <button mat-button type="button" [disabled]="saving" (click)="cancelar()">
+          Cancelar
+        </button>
+      }
       <button
         mat-flat-button
         color="primary"
@@ -267,17 +303,42 @@ export class AbrirCuentaPorCobrarDialogComponent implements OnInit {
     this.metodoPagoService.obtenerMetodosPagoParaTickets().subscribe({
       next: (list) => {
         this.metodos = list ?? [];
-        const efectivo = this.metodos.find((m) =>
-          (m.descripcion || '').toLowerCase().includes('efectivo')
-        );
-        this.metodoPagoId = efectivo?.id ?? this.metodos[0]?.id ?? null;
+        if (this.data.metodoPagoIdFijo != null) {
+          this.metodoPagoId = this.data.metodoPagoIdFijo;
+        } else {
+          const efectivo = this.metodos.find((m) =>
+            (m.descripcion || '').toLowerCase().includes('efectivo')
+          );
+          this.metodoPagoId = efectivo?.id ?? this.metodos[0]?.id ?? null;
+        }
       }
     });
-    // Default: sin abono → todo a crédito (caso más común al abrir CxC).
-    this.abonoValue = 0;
-    this.saldoValue = this.totalTicket;
+    if (this.montosBloqueados) {
+      this.abonoValue = Math.max(
+        0,
+        Math.round(Number(this.data.abonoFijo ?? this.data.montoRecibido ?? 0))
+      );
+      this.saldoValue = Math.max(
+        0,
+        Math.round(
+          Number(
+            this.data.saldoFijo ??
+              Math.max(0, this.totalTicket - this.abonoValue)
+          )
+        )
+      );
+      this.lastEdited = 'abono';
+    } else {
+      // Default: sin abono → todo a crédito (caso más común al abrir CxC).
+      this.abonoValue = 0;
+      this.saldoValue = this.totalTicket;
+    }
     this.abonoDisplay = this.formatDigits(this.abonoValue);
     this.saldoDisplay = this.formatDigits(this.saldoValue);
+  }
+
+  get montosBloqueados(): boolean {
+    return !!this.data.bloquearMontos;
   }
 
   get totalTicket(): number {
@@ -333,6 +394,9 @@ export class AbrirCuentaPorCobrarDialogComponent implements OnInit {
   }
 
   onMoneyFocus(field: 'abono' | 'saldo'): void {
+    if (this.montosBloqueados) {
+      return;
+    }
     this.lastEdited = field;
     if (field === 'abono') {
       this.abonoDisplay = String(Math.round(this.abonoValue || 0));
@@ -342,6 +406,9 @@ export class AbrirCuentaPorCobrarDialogComponent implements OnInit {
   }
 
   onMoneyInput(field: 'abono' | 'saldo', event: Event): void {
+    if (this.montosBloqueados) {
+      return;
+    }
     const digits = (event.target as HTMLInputElement).value.replace(
       /[^\d]/g,
       ''
@@ -362,7 +429,9 @@ export class AbrirCuentaPorCobrarDialogComponent implements OnInit {
   }
 
   onMoneyBlur(field: 'abono' | 'saldo'): void {
-    if (field === 'abono') {
+    if (this.montosBloqueados) {
+      return;
+    }    if (field === 'abono') {
       this.abonoValue = this.parseMoney(this.abonoDisplay);
       if (this.abonoValue > this.totalTicket) {
         this.abonoValue = this.totalTicket;
@@ -401,7 +470,9 @@ export class AbrirCuentaPorCobrarDialogComponent implements OnInit {
       abono: this.abonoValue,
       metodoPagoId: this.abonoValue > 0 ? this.metodoPagoId : null,
       monto: this.saldoValue,
-      observacion: (this.observacion ?? '').trim() || null
+      observacion: (this.observacion ?? '').trim() || null,
+      sesionId: this.data.sesionId ?? null,
+      historialElectronicoId: this.data.historialElectronicoId ?? null
     };
     this.cuentaPorCobrarService.abrir(body).subscribe({
       next: (dto) => {

@@ -24,6 +24,8 @@ import {
 
 export interface RegistrarAbonoCxcDialogData {
   cuenta: CuentaPorCobrarDto;
+  /** Sesión de caja activa (panel QR). */
+  sesionId?: number | null;
 }
 
 export interface RegistrarAbonoCxcDialogResult {
@@ -219,7 +221,8 @@ export class RegistrarAbonoCxcDialogComponent implements OnInit {
     const body: RegistrarAbonoCxcRequest = {
       monto: this.montoValue,
       metodoPagoId: this.metodoPagoId,
-      observacion: (this.observacion ?? '').trim() || null
+      observacion: (this.observacion ?? '').trim() || null,
+      sesionId: this.data.sesionId ?? null
     };
     this.cxcService.registrarAbono(this.data.cuenta.id, body).subscribe({
       next: (abono) => {

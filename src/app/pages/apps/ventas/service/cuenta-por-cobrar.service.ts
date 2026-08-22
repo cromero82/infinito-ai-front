@@ -24,6 +24,12 @@ export interface AbrirCuentaPorCobrarRequest {
   /** Saldo a crédito (monto_original / saldo_pendiente). */
   monto: number;
   observacion?: string | null;
+  /** Sesión de caja activa (panel confirmación QR). */
+  sesionId?: number | null;
+  /**
+   * HRE ya confirmado (faltante QR): retarget a abono en vez de pendiente nuevo.
+   */
+  historialElectronicoId?: number | null;
 }
 
 export interface CerrarCuentaPorCobrarRequest {
@@ -61,6 +67,8 @@ export interface RegistrarAbonoCxcRequest {
   metodoPagoId: number;
   origenFondosId?: number | null;
   observacion?: string | null;
+  /** Sesión de caja activa (panel confirmación QR). */
+  sesionId?: number | null;
 }
 
 export interface AbonoCxcDto {
@@ -73,6 +81,8 @@ export interface AbonoCxcDto {
   origenFondosId?: number | null;
   movimientoOrigenFondosId?: number | null;
   observacion?: string | null;
+  /** True si el abono fue QR y quedó pendiente de confirmación email. */
+  requiereConfirmacionElectronica?: boolean | null;
 }
 
 @Injectable({ providedIn: 'root' })
