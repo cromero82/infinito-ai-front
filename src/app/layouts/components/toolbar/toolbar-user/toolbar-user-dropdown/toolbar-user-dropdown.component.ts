@@ -26,6 +26,7 @@ import { ReciboDetalleService } from '../../../../../pages/apps/ventas/service/r
 import { BitacoraUsuarioService } from '../../../../../pages/apps/usuario/gestion-usuarios/service/bitacora-usuario.service';
 import { CopiasSeguridadService } from '../../../../../pages/apps/copias-seguridad/service/copias-seguridad.service';
 import { TipoEgresoGestionDialogComponent } from '../../../../../pages/apps/dominios/tipo-egreso/tipo-egreso-gestion-dialog.component';
+import { NaturalezaTipoEgresoGestionDialogComponent } from '../../../../../pages/apps/dominios/naturaleza-tipo-egreso/naturaleza-tipo-egreso-gestion-dialog.component';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData
@@ -199,6 +200,14 @@ export class ToolbarUserDropdownComponent implements OnInit {
             description: 'CRUD tipo_egreso',
             colorClass: 'text-slate-700',
             action: () => this.openTipoEgresoGestion()
+          },
+          {
+            id: '10-2',
+            icon: 'mat:label',
+            label: 'Naturalezas de tipo egreso',
+            description: 'Catálogo 1→N para tipos',
+            colorClass: 'text-slate-700',
+            action: () => this.openNaturalezaTipoEgresoGestion()
           }
         ]
       });
@@ -220,6 +229,15 @@ export class ToolbarUserDropdownComponent implements OnInit {
     this.close();
     this.dialog.open(TipoEgresoGestionDialogComponent, {
       width: '980px',
+      maxWidth: '96vw',
+      autoFocus: false
+    });
+  }
+
+  openNaturalezaTipoEgresoGestion(): void {
+    this.close();
+    this.dialog.open(NaturalezaTipoEgresoGestionDialogComponent, {
+      width: '900px',
       maxWidth: '96vw',
       autoFocus: false
     });

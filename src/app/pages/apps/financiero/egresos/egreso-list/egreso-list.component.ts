@@ -64,8 +64,15 @@ import {
 import { OrigenFondosArbolItemDto } from '../../origenes-fondos/util/origen-fondos-arbol.util';
 import { etiquetaMetodoPagoEgresoPorId } from '../util/metodo-pago-egreso-label.util';
 import { egresoPermiteEntradaInventario } from '../util/egreso-permite-entrada-inventario.util';
-
-@Component({
+import {
+  labelNaturalezaEgreso,
+  NATURALEZAS_EGRESO_FALLBACK
+} from '../util/naturaleza-egreso.util';
+import {
+  NaturalezaTipoEgresoDto,
+  NaturalezaTipoEgresoService
+} from '../service/naturaleza-tipo-egreso.service';
+import { firstValueFrom } from 'rxjs';@Component({
   selector: 'gm-egreso-list',
   imports: [
     MatButtonModule,
@@ -92,6 +99,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     'valor',
     'origen',
     'proveedor',
+    'naturaleza',
     'tipoEgreso',
     'descripcion',
     'entradaInventario',
@@ -104,16 +112,18 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   activeFilters: Array<{ label: string; value: string }> = [];
   selectedRowId: number | null = null;
   eliminandoEgresoId: number | null = null;
+  exporting = false;
   loading = false;
   loadingMore = false;
   descripcionCtrl = new UntypedFormControl('');
   tipoEgresoIdCtrl = new FormControl<number | ''>('');
+  naturalezaCtrl = new FormControl<string | ''>('');
   proveedorIdCtrl = new FormControl<number | ''>('');
   filterFechaInicioCtrl = new FormControl<Date | null>(null);
   filterFechaFinCtrl = new FormControl<Date | null>(null);
   tiposEgreso: TipoEgresoDto[] = [];
+  naturalezas: Array<{ value: string; label: string }> = [...NATURALEZAS_EGRESO_FALLBACK];
   proveedores: ProveedorDto[] = [];
-
   pageSize = 10;
   pageIndex = 0;
   totalElements = 0;
@@ -133,6 +143,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private egresosService: EgresosService,
     private tipoEgresoService: TipoEgresoService,
+    private naturalezaTipoEgresoService: NaturalezaTipoEgresoService,
     private proveedorService: ProveedorService,
     private dialog: MatDialog,
     private tableViewportService: TableViewportService,
@@ -162,6 +173,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
       });
 
     this.tipoEgresoIdCtrl.valueChanges.subscribe(() => this.searchEgresos());
+    this.naturalezaCtrl.valueChanges.subscribe(() => this.searchEgresos());
     this.proveedorIdCtrl.valueChanges.subscribe(() => this.searchEgresos());
 
     // Shortcut Financiero → Crear Egreso: /egresos?nuevo=1
@@ -229,6 +241,16 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.proveedorService
       .getProveedores()
       .subscribe((p) => (this.proveedores = p));
+    this.naturalezaTipoEgresoService.getAll(true).subscribe({
+      next: (nats: NaturalezaTipoEgresoDto[]) => {
+        if (nats?.length) {
+          this.naturalezas = nats.map((n) => ({
+            value: n.codigo,
+            label: n.nombre
+          }));
+        }
+      }
+    });
   }
 
   ngAfterViewInit() {
@@ -346,17 +368,115 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   limpiarFiltros() {
     this.descripcionCtrl.setValue('');
     this.tipoEgresoIdCtrl.setValue('');
+    this.naturalezaCtrl.setValue('');
     this.proveedorIdCtrl.setValue('');
     this.clearActiveFilter(false);
     this.searchEgresos();
   }
 
+  tipoEgresoLabel(egreso: EgresoDto): string {
+    return (
+      egreso.tipoEgreso?.nombre ||
+      egreso.proveedor?.tipoEgreso?.nombre ||
+      '—'
+    );
+  }
+
+  naturalezaLabel(egreso: EgresoDto): string {
+    return labelNaturalezaEgreso(
+      egreso.naturaleza,
+      this.naturalezas.map((n) => ({ codigo: n.value, nombre: n.label }))
+    );
+  }
+
+  async exportarCsv(): Promise<void> {
+    if (this.exporting) {
+      return;
+    }
+    this.exporting = true;
+    try {
+      const rows: EgresoDto[] = [];
+      let page = 0;
+      let last = false;
+      while (!last) {
+        const resp = await firstValueFrom(
+          this.egresosService.searchEgresos({
+            ...this.buildSearchParams(page),
+            size: 200
+          })
+        );
+        rows.push(...(resp.content || []));
+        last = resp.last || (resp.content?.length ?? 0) === 0;
+        page += 1;
+        if (page > 100) {
+          break;
+        }
+      }
+      if (rows.length === 0) {
+        this.snackBar.open('No hay egresos para exportar', 'Cerrar', {
+          duration: 3000
+        });
+        return;
+      }
+      const header = [
+        'id',
+        'fecha',
+        'valor',
+        'proveedor',
+        'documento_proveedor',
+        'naturaleza',
+        'tipo',
+        'origen_fondos_id',
+        'origen',
+        'observacion'
+      ];
+      const lines = [
+        header.join(','),
+        ...rows.map((e) =>
+          [
+            e.id,
+            e.fecha,
+            e.valor,
+            this.csvEscape(e.proveedor?.nombre || ''),
+            this.csvEscape(e.proveedor?.documento || ''),
+            this.csvEscape(String(e.naturaleza || '')),
+            this.csvEscape(this.tipoEgresoLabel(e)),
+            e.origenFondosId ?? '',
+            this.csvEscape(this.origenLabel(e)),
+            this.csvEscape(e.descripcion || '')
+          ].join(',')
+        )
+      ];
+      const blob = new Blob(['\ufeff' + lines.join('\n')], {
+        type: 'text/csv;charset=utf-8;'
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+      a.href = url;
+      a.download = `egresos-${stamp}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      this.snackBar.open(`Exportados ${rows.length} egresos`, 'Cerrar', {
+        duration: 3000
+      });
+    } catch {
+      this.snackBar.open('No se pudo exportar', 'Cerrar', { duration: 4000 });
+    } finally {
+      this.exporting = false;
+    }
+  }
+
+  private csvEscape(value: string): string {
+    const v = value.replace(/"/g, '""');
+    return `"${v}"`;
+  }
+
   createEgreso() {
     const dialogRef = this.dialog.open(EgresoEditComponent, {
-      width: '600px',
+      width: '640px',
       data: null
     });
-
     dialogRef.afterClosed().subscribe((result) => {
       this.justClosedDialog = true;
       if (result) {
@@ -368,7 +488,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   editEgreso(egreso: EgresoDto) {
     const dialogRef = this.dialog.open(EgresoEditComponent, {
-      width: '600px',
+      width: '640px',
       data: egreso
     });
 
@@ -587,6 +707,10 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
       tipoEgresoId:
         this.tipoEgresoIdCtrl.value !== ''
           ? Number(this.tipoEgresoIdCtrl.value)
+          : undefined,
+      naturaleza:
+        this.naturalezaCtrl.value !== ''
+          ? String(this.naturalezaCtrl.value)
           : undefined,
       proveedorId:
         this.proveedorIdCtrl.value !== ''

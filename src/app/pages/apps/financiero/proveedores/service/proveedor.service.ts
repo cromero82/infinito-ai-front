@@ -21,7 +21,12 @@ export interface ProveedorDto {
   nombre: string;
   telefono: string;
   correo: string;
-  tipoEgreso?: { id: number; nombre?: string; descripcion?: string };
+  tipoEgreso?: {
+    id: number;
+    nombre?: string;
+    descripcion?: string;
+    naturaleza?: { id: number; codigo?: string; nombre?: string };
+  };
 }
 
 export interface CreateProveedorRequest {

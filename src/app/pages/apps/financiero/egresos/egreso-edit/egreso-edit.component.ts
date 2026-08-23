@@ -58,6 +58,19 @@ import {
   ProveedorService,
   ProveedorDto
 } from '../../proveedores/service/proveedor.service';
+import {
+  TipoEgresoService,
+  TipoEgresoDto
+} from '../service/tipo-egreso.service';
+import {
+  naturalezaCodigoFromTipo,
+  NATURALEZAS_EGRESO_FALLBACK,
+  NaturalezaEgreso
+} from '../util/naturaleza-egreso.util';
+import {
+  NaturalezaTipoEgresoDto,
+  NaturalezaTipoEgresoService
+} from '../service/naturaleza-tipo-egreso.service';
 import { ProveedorEditComponent } from '../../proveedores/proveedor-edit/proveedor-edit.component';
 import { FechaUtilService } from '../../../ventas/service/fecha-util.service';
 import { OrigenFondosService } from '../../origenes-fondos/service/origen-fondos.service';
@@ -107,6 +120,11 @@ import {
 export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
   form: FormGroup;
   proveedores: ProveedorDto[] = [];
+  tiposEgreso: TipoEgresoDto[] = [];
+  naturalezasOptions: Array<{ value: string; label: string }> = [...NATURALEZAS_EGRESO_FALLBACK];
+  get naturalezas() {
+    return this.naturalezasOptions;
+  }
   origenesArbol: OrigenFondosArbolItemDto[] = [];
   /** Árbol completo (incluye hijos) para cruzar plantillas destino ↔ padre. */
   private arbolCompleto: OrigenFondosArbolItemDto[] = [];
@@ -116,6 +134,8 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
   filteredProveedores$!: Observable<ProveedorDto[]>;
   mostrarBotonCrearProveedor$!: Observable<boolean>;
   valorEditando = false;
+  /** Evita pisar naturaleza/tipo elegidos a mano al cambiar proveedor. */
+  private aplicandoDefaultTipo = false;
 
   /**
    * Pago QR / plantilla: el OF elegido tiene bolsa hija destino → no egresar del padre
@@ -152,6 +172,8 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     @Inject(MAT_DIALOG_DATA) public data: EgresoEditDialogData,
     private egresosService: EgresosService,
     private proveedorService: ProveedorService,
+    private tipoEgresoService: TipoEgresoService,
+    private naturalezaTipoEgresoService: NaturalezaTipoEgresoService,
     private origenFondosService: OrigenFondosService,
     private movimientoOrigenFondosService: MovimientoOrigenFondosService,
     private notificacionesMediosService: GestionNotificacionesMediosService,
@@ -166,7 +188,9 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
       valor: ['', [Validators.required, this.validarValorMonto.bind(this)]],
       descripcion: [''],
       proveedor: [null as ProveedorDto | null, Validators.required],
-      origenCuentaId: [null as number | null, Validators.required]
+      origenCuentaId: [null as number | null, Validators.required],
+      tipoEgresoId: [null as number | null, Validators.required],
+      naturaleza: [null as string | null, Validators.required]
     });
   }
 
@@ -249,12 +273,36 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     });
     this.loadProveedores();
+    this.loadTiposEgreso();
     this.loadOrigenesArbol();
 
     this.filteredProveedores$ = this.form.get('proveedor')!.valueChanges.pipe(
       startWith(this.form.get('proveedor')!.value),
       map((value) => this.filterProveedores(value))
     );
+
+    this.form
+      .get('proveedor')!
+      .valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((prov) => {
+        if (typeof prov === 'object' && prov !== null && (prov as ProveedorDto).id) {
+          this.aplicarDefaultDesdeProveedor(prov as ProveedorDto);
+        }
+      });
+
+    this.form
+      .get('tipoEgresoId')!
+      .valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((tipoId) => {
+        if (this.aplicandoDefaultTipo || tipoId == null) {
+          return;
+        }
+        const tipo = this.tiposEgreso.find((t) => t.id === Number(tipoId));
+        const codigo = naturalezaCodigoFromTipo(tipo);
+        if (codigo) {
+          this.form.patchValue({ naturaleza: codigo }, { emitEvent: false });
+        }
+      });
 
     this.mostrarBotonCrearProveedor$ = this.filteredProveedores$.pipe(
       combineLatestWith(
@@ -292,7 +340,13 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
         proveedor: prov
           ? { id: prov.id, nombre: prov.nombre, tipoEgreso: prov.tipoEgreso }
           : null,
-        origenCuentaId: egreso.origenFondosId ?? null
+        origenCuentaId: egreso.origenFondosId ?? null,
+        tipoEgresoId:
+          egreso.tipoEgreso?.id ?? egreso.proveedor?.tipoEgreso?.id ?? null,
+        naturaleza:
+          egreso.naturaleza ??
+          naturalezaCodigoFromTipo(egreso.tipoEgreso) ??
+          naturalezaCodigoFromTipo(egreso.proveedor?.tipoEgreso)
       });
       this.patchProveedorAfterLoad();
     } else {
@@ -581,6 +635,47 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  private loadTiposEgreso() {
+    this.tipoEgresoService.getTiposEgreso().subscribe({
+      next: (tipos) => {
+        this.tiposEgreso = tipos || [];
+      }
+    });
+    this.naturalezaTipoEgresoService.getAll(true).subscribe({
+      next: (nats: NaturalezaTipoEgresoDto[]) => {
+        if (nats?.length) {
+          this.naturalezasOptions = nats.map((n) => ({
+            value: n.codigo,
+            label: n.nombre
+          }));
+        }
+      }
+    });
+  }
+
+  private aplicarDefaultDesdeProveedor(prov: ProveedorDto): void {
+    if (this.isEditMode) {
+      return;
+    }
+    const tipoId = prov.tipoEgreso?.id ?? null;
+    if (tipoId == null) {
+      return;
+    }
+    this.aplicandoDefaultTipo = true;
+    const tipo =
+      this.tiposEgreso.find((t) => t.id === tipoId) ||
+      (prov.tipoEgreso as TipoEgresoDto | undefined);
+    const naturaleza = (naturalezaCodigoFromTipo(tipo) || null) as NaturalezaEgreso | null;
+    this.form.patchValue(
+      {
+        tipoEgresoId: tipoId,
+        ...(naturaleza ? { naturaleza } : {})
+      },
+      { emitEvent: false }
+    );
+    this.aplicandoDefaultTipo = false;
+  }
+
   private patchProveedorAfterLoad() {
     const formalizar = this.formalizarData;
     if (formalizar) {
@@ -596,6 +691,7 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
       );
       if (match) {
         this.form.patchValue({ proveedor: match }, { emitEvent: false });
+        this.aplicarDefaultDesdeProveedor(match);
       } else {
         this.form.patchValue({ proveedor: nombre }, { emitEvent: true });
       }
@@ -802,6 +898,8 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
       metodoPagoId: origen?.metodoPagoId ?? null,
       origenFondosId: origenId,
       proveedor: { id: prov.id },
+      tipoEgreso: { id: Number(form.tipoEgresoId) },
+      naturaleza: form.naturaleza as NaturalezaEgreso,
       ...(fromMovId != null ? { fromMovimientoOrigenFondosId: fromMovId } : {})
     };
 

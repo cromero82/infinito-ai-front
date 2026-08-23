@@ -2,16 +2,19 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
+import { NaturalezaTipoEgresoDto } from './naturaleza-tipo-egreso.service';
 
 export interface TipoEgresoDto {
   id: number;
   nombre: string;
   descripcion?: string | null;
+  naturaleza?: NaturalezaTipoEgresoDto | null;
 }
 
 export interface TipoEgresoWriteDto {
   nombre: string;
   descripcion?: string | null;
+  naturaleza: { id: number };
 }
 
 @Injectable({

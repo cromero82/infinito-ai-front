@@ -74,13 +74,13 @@
       }
     </mat-form-field>
     <mat-form-field class="flex-1">
-      <mat-label>Tipo de egreso</mat-label>
+      <mat-label>Tipo de egreso (usual)</mat-label>
       <input
         #tipoEgresoInput
         matInput
         formControlName="tipoEgreso"
         [matAutocomplete]="autoTipo"
-        placeholder="Escriba para filtrar por nombre o descripción" />
+        placeholder="El más común al registrar egresos con este proveedor" />
       <mat-icon matIconPrefix svgIcon="mat:category"></mat-icon>
       <mat-autocomplete
         #autoTipo="matAutocomplete"
@@ -90,7 +90,11 @@
           <mat-option [value]="tipo">
             <div class="proveedor-tipo-egreso-option-lines">
               <span class="font-medium">{{ tipo.nombre }}</span>
-              @if (tipo.descripcion) {
+              @if (tipo.naturaleza?.nombre) {
+                <span class="text-secondary text-sm block"
+                  >Usual → {{ tipo.naturaleza?.nombre }}</span
+                >
+              } @else if (tipo.descripcion) {
                 <span class="text-secondary text-sm block">{{
                   tipo.descripcion
                 }}</span>
@@ -100,7 +104,7 @@
         }
       </mat-autocomplete>
       @if (form.get("tipoEgreso")?.hasError("required")) {
-        <mat-error>Seleccione un tipo</mat-error>
+        <mat-error>Seleccione el tipo usual</mat-error>
       }
     </mat-form-field>
     <mat-form-field class="flex-1">

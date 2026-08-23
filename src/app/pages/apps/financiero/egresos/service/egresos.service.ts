@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
+import { NaturalezaEgreso } from '../util/naturaleza-egreso.util';
 
 export interface EgresoDto {
   id: number;
@@ -10,13 +11,25 @@ export interface EgresoDto {
   descripcion: string;
   metodoPagoId?: number;
   origenFondosId?: number;
+  naturaleza?: NaturalezaEgreso | string | null;
+  tipoEgreso?: {
+    id: number;
+    nombre?: string;
+    descripcion?: string;
+    naturaleza?: { id?: number; codigo?: string; nombre?: string } | null;
+  } | null;
   proveedor: {
     id: number;
     nombre?: string;
     documento?: string;
     telefono?: string;
     correo?: string;
-    tipoEgreso?: { id: number; nombre?: string; descripcion?: string };
+    tipoEgreso?: {
+      id: number;
+      nombre?: string;
+      descripcion?: string;
+      naturaleza?: { id?: number; codigo?: string; nombre?: string } | null;
+    };
   };
 }
 
@@ -28,6 +41,8 @@ export interface CreateEgresoRequest {
   metodoPagoId?: number | null;
   origenFondosId: number;
   proveedor: { id: number };
+  tipoEgreso?: { id: number };
+  naturaleza?: NaturalezaEgreso | string;
   /**
    * Formalizar egreso: movimiento «por identificar» (p.ej. en Sin Clasificar).
    * El BE fuerza origen = OF del movimiento (sin restar de nuevo el banco).
@@ -50,6 +65,7 @@ export type EgresoEditDialogData = EgresoDto | FormalizarEgresoDialogData | null
 export interface EgresoSearchParams {
   descripcion?: string;
   tipoEgresoId?: number;
+  naturaleza?: string;
   proveedorId?: number;
   fechaInicio?: string;
   fechaFin?: string;
@@ -78,7 +94,7 @@ export class EgresosService {
   constructor(private http: HttpClient) {}
 
   searchEgresos(params: EgresoSearchParams): Observable<PageResponse<EgresoDto>> {
-    const headers = new HttpHeaders({ 'Accept': 'application/json' });
+    const headers = new HttpHeaders({ Accept: 'application/json' });
     let httpParams = new HttpParams()
       .set('page', (params.page ?? 0).toString())
       .set('size', (params.size ?? 10).toString());
@@ -88,6 +104,9 @@ export class EgresosService {
     }
     if (params.tipoEgresoId != null) {
       httpParams = httpParams.set('tipoEgresoId', params.tipoEgresoId.toString());
+    }
+    if (params.naturaleza) {
+      httpParams = httpParams.set('naturaleza', params.naturaleza);
     }
     if (params.proveedorId != null) {
       httpParams = httpParams.set('proveedorId', params.proveedorId.toString());
@@ -99,7 +118,10 @@ export class EgresosService {
       httpParams = httpParams.set('fechaFin', params.fechaFin);
     }
 
-    return this.http.get<PageResponse<EgresoDto>>(`${this.apiUrl}/search`, { headers, params: httpParams });
+    return this.http.get<PageResponse<EgresoDto>>(`${this.apiUrl}/search`, {
+      headers,
+      params: httpParams
+    });
   }
 
   createEgreso(egreso: CreateEgresoRequest): Observable<EgresoDto> {

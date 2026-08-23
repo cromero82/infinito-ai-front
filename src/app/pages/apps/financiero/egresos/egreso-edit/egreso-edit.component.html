@@ -111,6 +111,28 @@
       }
     </mat-form-field>
     <mat-form-field class="flex-1" appearance="outline">
+      <mat-label>Tipo de egreso</mat-label>
+      <mat-select formControlName="tipoEgresoId">
+        @for (t of tiposEgreso; track t.id) {
+          <mat-option [value]="t.id">{{ t.nombre }}</mat-option>
+        }
+      </mat-select>
+      @if (form.get("tipoEgresoId")?.hasError("required")) {
+        <mat-error>Seleccione el tipo</mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field class="flex-1" appearance="outline">
+      <mat-label>Naturaleza</mat-label>
+      <mat-select formControlName="naturaleza">
+        @for (n of naturalezas; track n.value) {
+          <mat-option [value]="n.value">{{ n.label }}</mat-option>
+        }
+      </mat-select>
+      @if (form.get("naturaleza")?.hasError("required")) {
+        <mat-error>Seleccione la naturaleza</mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field class="flex-1" appearance="outline">
       <mat-label>Origen del egreso</mat-label>
       <mat-select formControlName="origenCuentaId">
         @for (op of origenesArbol; track op.id) {

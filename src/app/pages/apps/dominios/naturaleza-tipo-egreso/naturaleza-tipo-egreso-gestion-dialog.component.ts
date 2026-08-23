@@ -15,7 +15,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -26,19 +26,15 @@ import {
   ConfirmDialogData
 } from '../../../../core/components/confirm-dialog/confirm-dialog.component';
 import {
-  TipoEgresoDto,
-  TipoEgresoService,
-  TipoEgresoWriteDto
-} from '../../financiero/egresos/service/tipo-egreso.service';
-import {
   NaturalezaTipoEgresoDto,
-  NaturalezaTipoEgresoService
+  NaturalezaTipoEgresoService,
+  NaturalezaTipoEgresoWriteDto
 } from '../../financiero/egresos/service/naturaleza-tipo-egreso.service';
 
 @Component({
-  selector: 'vex-tipo-egreso-gestion-dialog',
-  templateUrl: './tipo-egreso-gestion-dialog.component.html',
-  styleUrls: ['./tipo-egreso-gestion-dialog.component.scss'],
+  selector: 'vex-naturaleza-tipo-egreso-gestion-dialog',
+  templateUrl: './naturaleza-tipo-egreso-gestion-dialog.component.html',
+  styleUrls: ['./naturaleza-tipo-egreso-gestion-dialog.component.scss'],
   imports: [
     ReactiveFormsModule,
     MatDialogModule,
@@ -46,18 +42,17 @@ import {
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
+    MatSlideToggleModule,
     MatTableModule,
     MatTooltipModule,
     MatProgressSpinnerModule,
     MatSnackBarModule
   ]
 })
-export class TipoEgresoGestionDialogComponent implements OnInit {
-  displayedColumns = ['id', 'nombre', 'naturaleza', 'descripcion', 'acciones'];
-  rows: TipoEgresoDto[] = [];
-  filtered: TipoEgresoDto[] = [];
-  naturalezas: NaturalezaTipoEgresoDto[] = [];
+export class NaturalezaTipoEgresoGestionDialogComponent implements OnInit {
+  displayedColumns = ['id', 'codigo', 'nombre', 'activo', 'acciones'];
+  rows: NaturalezaTipoEgresoDto[] = [];
+  filtered: NaturalezaTipoEgresoDto[] = [];
   loading = false;
   saving = false;
   mode: 'list' | 'form' = 'list';
@@ -67,21 +62,20 @@ export class TipoEgresoGestionDialogComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private tipoEgresoService: TipoEgresoService,
     private naturalezaService: NaturalezaTipoEgresoService,
-    private dialogRef: MatDialogRef<TipoEgresoGestionDialogComponent>,
+    private dialogRef: MatDialogRef<NaturalezaTipoEgresoGestionDialogComponent>,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {
     this.form = this.fb.group({
-      nombre: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      codigo: ['', [Validators.required, Validators.maxLength(40)]],
+      nombre: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(120)]],
       descripcion: ['', [Validators.maxLength(2000)]],
-      naturalezaId: [null as number | null, Validators.required]
+      activo: [true]
     });
   }
 
   ngOnInit(): void {
-    this.loadNaturalezas();
     this.load();
     this.searchCtrl.valueChanges
       .pipe(debounceTime(250), distinctUntilChanged())
@@ -92,22 +86,10 @@ export class TipoEgresoGestionDialogComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  loadNaturalezas(): void {
-    this.naturalezaService.getAll(true).subscribe({
-      next: (data) => {
-        this.naturalezas = data || [];
-      },
-      error: () => {
-        this.naturalezas = [];
-        this.toast('No se pudieron cargar naturalezas', true);
-      }
-    });
-  }
-
   load(): void {
     this.loading = true;
-    this.tipoEgresoService.getTiposEgreso().subscribe({
-      next: (data: TipoEgresoDto[]) => {
+    this.naturalezaService.getAll(false).subscribe({
+      next: (data) => {
         this.rows = [...(data || [])].sort((a, b) => a.id - b.id);
         this.applyFilter(this.searchCtrl.value);
         this.loading = false;
@@ -116,7 +98,7 @@ export class TipoEgresoGestionDialogComponent implements OnInit {
         this.rows = [];
         this.filtered = [];
         this.loading = false;
-        this.toast('No se pudieron cargar los tipos de egreso', true);
+        this.toast('No se pudieron cargar naturalezas', true);
       }
     });
   }
@@ -129,34 +111,35 @@ export class TipoEgresoGestionDialogComponent implements OnInit {
     }
     this.filtered = this.rows.filter(
       (r) =>
+        (r.codigo || '').toLowerCase().includes(q) ||
         (r.nombre || '').toLowerCase().includes(q) ||
         (r.descripcion || '').toLowerCase().includes(q) ||
-        (r.naturaleza?.nombre || '').toLowerCase().includes(q) ||
-        (r.naturaleza?.codigo || '').toLowerCase().includes(q) ||
         String(r.id).includes(q)
     );
   }
 
   startCreate(): void {
     this.editingId = null;
-    this.form.reset({ nombre: '', descripcion: '', naturalezaId: null });
+    this.form.reset({ codigo: '', nombre: '', descripcion: '', activo: true });
+    this.form.get('codigo')?.enable({ emitEvent: false });
     this.mode = 'form';
   }
 
-  startEdit(row: TipoEgresoDto): void {
+  startEdit(row: NaturalezaTipoEgresoDto): void {
     this.editingId = row.id;
     this.form.reset({
+      codigo: row.codigo || '',
       nombre: row.nombre || '',
       descripcion: row.descripcion || '',
-      naturalezaId: row.naturaleza?.id ?? null
+      activo: row.activo !== false
     });
+    // codigo estable: editable con cuidado; permitimos editar
     this.mode = 'form';
   }
 
   cancelForm(): void {
     this.mode = 'list';
     this.editingId = null;
-    this.form.reset({ nombre: '', descripcion: '', naturalezaId: null });
   }
 
   save(): void {
@@ -164,23 +147,22 @@ export class TipoEgresoGestionDialogComponent implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
-    const dto: TipoEgresoWriteDto = {
+    const dto: NaturalezaTipoEgresoWriteDto = {
+      codigo: (this.form.value.codigo || '').trim().toUpperCase(),
       nombre: (this.form.value.nombre || '').trim(),
       descripcion: (this.form.value.descripcion || '').trim() || null,
-      naturaleza: { id: Number(this.form.value.naturalezaId) }
+      activo: !!this.form.value.activo
     };
     this.saving = true;
     const req$ =
       this.editingId != null
-        ? this.tipoEgresoService.update(this.editingId, dto)
-        : this.tipoEgresoService.create(dto);
+        ? this.naturalezaService.update(this.editingId, dto)
+        : this.naturalezaService.create(dto);
 
     req$.subscribe({
       next: () => {
         this.saving = false;
-        this.toast(
-          this.editingId != null ? 'Tipo de egreso actualizado' : 'Tipo de egreso creado'
-        );
+        this.toast(this.editingId != null ? 'Naturaleza actualizada' : 'Naturaleza creada');
         this.cancelForm();
         this.load();
       },
@@ -191,10 +173,10 @@ export class TipoEgresoGestionDialogComponent implements OnInit {
     });
   }
 
-  confirmDelete(row: TipoEgresoDto): void {
+  confirmDelete(row: NaturalezaTipoEgresoDto): void {
     const data: ConfirmDialogData = {
-      titulo: 'Eliminar tipo de egreso',
-      mensaje: `¿Eliminar «${row.nombre}»? Si está en uso, la operación puede fallar.`
+      titulo: 'Eliminar naturaleza',
+      mensaje: `¿Eliminar «${row.nombre}» (${row.codigo})? Solo si ningún tipo de egreso la usa.`
     };
     this.dialog
       .open(ConfirmDialogComponent, { width: '420px', data })
@@ -203,9 +185,9 @@ export class TipoEgresoGestionDialogComponent implements OnInit {
         if (!ok) {
           return;
         }
-        this.tipoEgresoService.delete(row.id).subscribe({
+        this.naturalezaService.delete(row.id).subscribe({
           next: () => {
-            this.toast('Tipo de egreso eliminado');
+            this.toast('Naturaleza eliminada');
             this.load();
           },
           error: (err: { error?: { message?: string }; message?: string }) => {
