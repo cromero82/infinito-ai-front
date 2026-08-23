@@ -27,7 +27,10 @@
     "health:dev": "node server.js",
     "sandbox:up": "bash scripts/sandbox/start-sandbox-env.sh",
     "sandbox:up:tunnel": "bash scripts/sandbox/start-sandbox-env.sh --tunnel",
-    "sandbox:down": "bash scripts/sandbox/stop-sandbox-env.sh"
+    "sandbox:down": "bash scripts/sandbox/stop-sandbox-env.sh",
+    "sandbox:rebuild": "bash scripts/sandbox/rebuild-sandbox-ms.sh",
+    "sandbox:restart": "bash scripts/sandbox/restart-sandbox-env.sh",
+    "sandbox:restart:tunnel": "bash scripts/sandbox/restart-sandbox-env.sh --tunnel"
   },
   "dependencies": {
     "@angular/animations": "^21.2.9",

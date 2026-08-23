@@ -26,11 +26,17 @@ export class VexLayoutService {
   private _searchOpen = new BehaviorSubject<boolean>(false);
   searchOpen$ = this._searchOpen.asObservable();
 
+  /**
+   * Ancho a partir del cual el menú superior (Tickets, Productos, …) se muestra
+   * en toolbar y deja de depender solo del sidenav. Template Vex usaba 1280 (lg).
+   */
+  static readonly DESKTOP_MIN_WIDTH_PX = 730;
+
   isDesktop$ = this.breakpointObserver
-    .observe(`(min-width: 1280px)`)
+    .observe(`(min-width: ${VexLayoutService.DESKTOP_MIN_WIDTH_PX}px)`)
     .pipe(map((state) => state.matches));
   ltLg$ = this.breakpointObserver
-    .observe(`(max-width: 1279px)`)
+    .observe(`(max-width: ${VexLayoutService.DESKTOP_MIN_WIDTH_PX - 1}px)`)
     .pipe(map((state) => state.matches));
   gtMd$ = this.breakpointObserver
     .observe(`(min-width: 960px)`)
@@ -45,7 +51,10 @@ export class VexLayoutService {
     .observe(`(max-width: 599px)`)
     .pipe(map((state) => state.matches));
 
-  isLtLg = () => this.breakpointObserver.isMatched(`(max-width: 1279px)`);
+  isLtLg = () =>
+    this.breakpointObserver.isMatched(
+      `(max-width: ${VexLayoutService.DESKTOP_MIN_WIDTH_PX - 1}px)`
+    );
 
   isMobile = () => this.breakpointObserver.isMatched(`(max-width: 599px)`);
   configPanelOpen$ = this._configPanelOpenSubject.asObservable();
