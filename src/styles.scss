@@ -303,3 +303,12 @@ mat-checkbox.mat-mdc-checkbox {
   gap: 8px;
 }
 
+/* Tooltip descripción completa — Dominios / tipo_egreso */
+.tipo-egreso-desc-tooltip {
+  max-width: min(420px, 90vw);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 13px;
+  line-height: 1.35;
+}
+

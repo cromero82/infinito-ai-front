@@ -25,6 +25,7 @@ import { TicketReciboService } from '../../../../../pages/apps/ventas/service/ti
 import { ReciboDetalleService } from '../../../../../pages/apps/ventas/service/recibo-detalle.service';
 import { BitacoraUsuarioService } from '../../../../../pages/apps/usuario/gestion-usuarios/service/bitacora-usuario.service';
 import { CopiasSeguridadService } from '../../../../../pages/apps/copias-seguridad/service/copias-seguridad.service';
+import { TipoEgresoGestionDialogComponent } from '../../../../../pages/apps/dominios/tipo-egreso/tipo-egreso-gestion-dialog.component';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData
@@ -184,6 +185,24 @@ export class ToolbarUserDropdownComponent implements OnInit {
         ]
       });
 
+      this.items.push({
+        id: '10',
+        icon: 'mat:folder',
+        label: 'Dominios',
+        description: 'Catálogos y tablas maestras',
+        colorClass: 'text-slate-700',
+        submenu: [
+          {
+            id: '10-1',
+            icon: 'mat:receipt',
+            label: 'Tipos de egreso',
+            description: 'CRUD tipo_egreso',
+            colorClass: 'text-slate-700',
+            action: () => this.openTipoEgresoGestion()
+          }
+        ]
+      });
+
       if (environment.sandbox === true) {
         this.items.push({
           id: '9',
@@ -195,6 +214,15 @@ export class ToolbarUserDropdownComponent implements OnInit {
         });
       }
     }
+  }
+
+  openTipoEgresoGestion(): void {
+    this.close();
+    this.dialog.open(TipoEgresoGestionDialogComponent, {
+      width: '980px',
+      maxWidth: '96vw',
+      autoFocus: false
+    });
   }
 
   generarBackup(): void {

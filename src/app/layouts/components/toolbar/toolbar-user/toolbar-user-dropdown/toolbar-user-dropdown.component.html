@@ -57,7 +57,13 @@
       <!-- Item con submenú -->
       @if (item.submenu) {
         <div
-          [matMenuTriggerFor]="item.id === '6' ? copiasSeguridadMenu : null"
+          [matMenuTriggerFor]="
+            item.id === '6'
+              ? copiasSeguridadMenu
+              : item.id === '10'
+                ? dominiosMenu
+                : null
+          "
           class="notification flex items-center pointer"
           matRipple>
           <mat-icon
@@ -85,6 +91,14 @@
     <button (click)="exportarACorreo()" mat-menu-item>
       <mat-icon svgIcon="mat:email"></mat-icon>
       <span>Enviar al correo</span>
+    </button>
+  </mat-menu>
+
+  <!-- Submenú Dominios (catálogos) -->
+  <mat-menu #dominiosMenu="matMenu" xPosition="after" yPosition="below">
+    <button (click)="openTipoEgresoGestion()" mat-menu-item>
+      <mat-icon svgIcon="mat:receipt"></mat-icon>
+      <span>Tipos de egreso</span>
     </button>
   </mat-menu>
 

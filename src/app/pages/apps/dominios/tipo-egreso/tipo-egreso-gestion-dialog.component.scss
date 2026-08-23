@@ -1,0 +1,137 @@
+.tipo-egreso-dialog {
+  min-width: min(960px, 96vw);
+  max-width: 1100px;
+}
+
+.text-secondary {
+  color: var(--vex-foreground-secondary, rgba(0, 0, 0, 0.54));
+}
+
+.table-wrap {
+  max-height: min(55vh, 460px);
+  overflow: auto;
+  padding-bottom: 0.5rem;
+}
+
+.desc-cell {
+  max-width: 360px;
+}
+
+.desc-text {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  cursor: default;
+}
+
+.acciones {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.search-field {
+  max-width: 360px;
+}
+
+.dialog-footer {
+  margin: 0;
+  min-height: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+:host-context(.dark) .dialog-footer {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+table.mat-mdc-table {
+  background: transparent;
+}
+
+// Compacta + header como egresos / listas financieras
+:host ::ng-deep {
+  table.tipo-egreso-table-compact.mat-mdc-table {
+    font-size: 13px !important;
+    --mat-table-row-item-container-height: 28px;
+    --mat-table-header-container-height: 28px;
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell],
+    td.mat-mdc-cell,
+    td[mat-cell] {
+      font-size: 13px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      line-height: 1.2 !important;
+      min-height: unset !important;
+      height: 28px !important;
+      vertical-align: middle !important;
+    }
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell] {
+      font-weight: 600 !important;
+      color: var(--vex-foreground, rgba(0, 0, 0, 0.87));
+    }
+
+    tr.mat-mdc-header-row {
+      height: 28px !important;
+      min-height: unset !important;
+      background-color: rgba(0, 0, 0, 0.008) !important;
+    }
+
+    tr.mat-mdc-row {
+      height: 28px !important;
+      min-height: unset !important;
+
+      &:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.005) !important;
+      }
+
+      &:nth-child(even) td.mat-mdc-cell,
+      &:nth-child(even) td[mat-cell] {
+        background-color: rgba(0, 0, 0, 0.005) !important;
+      }
+
+      &:hover {
+        background-color: var(--pos-mat-table-row-hover, rgba(0, 0, 0, 0.04)) !important;
+      }
+
+      &:hover td.mat-mdc-cell,
+      &:hover td[mat-cell] {
+        background-color: var(--pos-mat-table-row-hover, rgba(0, 0, 0, 0.04)) !important;
+      }
+    }
+
+    .mat-mdc-icon-button {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+
+      .mat-icon {
+        width: 18px;
+        height: 18px;
+        font-size: 18px;
+      }
+    }
+  }
+}
+
+:host-context(.dark) ::ng-deep {
+  table.tipo-egreso-table-compact {
+    tr.mat-mdc-header-row {
+      background-color: rgba(255, 255, 255, 0.04) !important;
+    }
+
+    tr.mat-mdc-row:nth-child(even),
+    tr.mat-mdc-row:nth-child(even) td.mat-mdc-cell,
+    tr.mat-mdc-row:nth-child(even) td[mat-cell] {
+      background-color: rgba(255, 255, 255, 0.03) !important;
+    }
+  }
+}
