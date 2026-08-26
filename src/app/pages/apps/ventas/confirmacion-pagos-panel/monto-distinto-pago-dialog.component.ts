@@ -59,9 +59,9 @@ export interface MontoDistintoDialogResult {
 
       @if (esSobrepago) {
         <p class="regla">
-          El banco recibió de más. Ese sobrepago entra al OF del medio QR y la
-          <strong>devolución en efectivo</strong> debe salir de un origen de fondos
-          (normalmente caja).
+          El banco recibió de más. El exceso queda en el OF del medio QR; la
+          <strong>devolución en efectivo</strong> sale del origen que elijas
+          (normalmente caja). En el listado OF verás un ajuste (+ en QR y − en caja).
         </p>
         <mat-form-field appearance="outline" class="of-field" subscriptSizing="dynamic">
           <mat-label>OF de la devolución</mat-label>

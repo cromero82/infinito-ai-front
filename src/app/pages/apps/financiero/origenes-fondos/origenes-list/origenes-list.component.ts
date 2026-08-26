@@ -1212,7 +1212,15 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
     return map[tipo] ?? 'mat:receipt_long';
   }
 
-  tipoMovimientoLabel(tipo: string): string {
+  tipoMovimientoLabel(tipo: string, origenTipo?: string | null): string {
+    if (origenTipo === 'QR_MONTO_DISTINTO') {
+      if (tipo === 'AJUSTE_SALDO' || tipo === 'ENTRADA_MANUAL') {
+        return 'Ajuste QR';
+      }
+      if (tipo === 'SALIDA_EGRESO') {
+        return 'Devolución QR';
+      }
+    }
     const map: Record<string, string> = {
       ENTRADA_MANUAL: 'Entrada manual',
       ENTRADA_PRESTAMO: 'Préstamo',
