@@ -24,8 +24,6 @@ import {
 } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
-import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import {
@@ -41,6 +39,10 @@ import {
   ProveedorService,
   ProveedorDto
 } from '../../proveedores/service/proveedor.service';
+import {
+  PersonaDto,
+  PersonaService
+} from '../service/persona.service';
 import { EgresoEditComponent } from '../egreso-edit/egreso-edit.component';
 import {
   ConfirmDialogComponent,
@@ -83,8 +85,6 @@ import { firstValueFrom } from 'rxjs';@Component({
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatMenuModule,
-    MatChipsModule,
     MatDatepickerModule,
     MatNativeDateModule,
     ReactiveFormsModule,
@@ -98,7 +98,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     'fecha',
     'valor',
     'origen',
-    'proveedor',
+    'beneficiario',
     'naturaleza',
     'tipoEgreso',
     'descripcion',
@@ -109,21 +109,24 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   dataSource: EgresoDto[] = [];
   metodosPago: MetodoPagoDto[] = [];
   origenesArbol: OrigenFondosArbolItemDto[] = [];
-  activeFilters: Array<{ label: string; value: string }> = [];
   selectedRowId: number | null = null;
   eliminandoEgresoId: number | null = null;
   exporting = false;
   loading = false;
   loadingMore = false;
+  /** Filtros avanzados (observación, tipo, fechas, CSV) — colapsados por defecto. */
+  mostrarMasOpciones = false;
   descripcionCtrl = new UntypedFormControl('');
   tipoEgresoIdCtrl = new FormControl<number | ''>('');
   naturalezaCtrl = new FormControl<string | ''>('');
   proveedorIdCtrl = new FormControl<number | ''>('');
+  personaIdCtrl = new FormControl<number | ''>('');
   filterFechaInicioCtrl = new FormControl<Date | null>(null);
   filterFechaFinCtrl = new FormControl<Date | null>(null);
   tiposEgreso: TipoEgresoDto[] = [];
   naturalezas: Array<{ value: string; label: string }> = [...NATURALEZAS_EGRESO_FALLBACK];
   proveedores: ProveedorDto[] = [];
+  personas: PersonaDto[] = [];
   pageSize = 10;
   pageIndex = 0;
   totalElements = 0;
@@ -136,15 +139,15 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   private justClosedDialog = false;
   private abriendoNuevoDesdeShortcut = false;
 
-  @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('searchInput') searchInput?: ElementRef<HTMLInputElement>;
   @ViewChild('tableScroll') tableScroll!: ElementRef<HTMLElement>;
-  @ViewChild('filtersMenuTrigger') filtersMenuTrigger?: MatMenuTrigger;
 
   constructor(
     private egresosService: EgresosService,
     private tipoEgresoService: TipoEgresoService,
     private naturalezaTipoEgresoService: NaturalezaTipoEgresoService,
     private proveedorService: ProveedorService,
+    private personaService: PersonaService,
     private dialog: MatDialog,
     private tableViewportService: TableViewportService,
     private fechaUtilService: FechaUtilService,
@@ -175,6 +178,9 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.tipoEgresoIdCtrl.valueChanges.subscribe(() => this.searchEgresos());
     this.naturalezaCtrl.valueChanges.subscribe(() => this.searchEgresos());
     this.proveedorIdCtrl.valueChanges.subscribe(() => this.searchEgresos());
+    this.personaIdCtrl.valueChanges.subscribe(() => this.searchEgresos());
+    this.filterFechaInicioCtrl.valueChanges.subscribe(() => this.applyDateFilters());
+    this.filterFechaFinCtrl.valueChanges.subscribe(() => this.applyDateFilters());
 
     // Shortcut Financiero → Crear Egreso: /egresos?nuevo=1
     this.route.queryParamMap.subscribe((params) => {
@@ -241,6 +247,9 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.proveedorService
       .getProveedores()
       .subscribe((p) => (this.proveedores = p));
+    this.personaService.getAll(true).subscribe({
+      next: (list) => (this.personas = list || [])
+    });
     this.naturalezaTipoEgresoService.getAll(true).subscribe({
       next: (nats: NaturalezaTipoEgresoDto[]) => {
         if (nats?.length) {
@@ -255,9 +264,6 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit() {
     setTimeout(() => {
-      if (this.searchInput?.nativeElement) {
-        this.searchInput.nativeElement.focus();
-      }
       this.attachScrollListener();
     }, 100);
   }
@@ -370,6 +376,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.tipoEgresoIdCtrl.setValue('');
     this.naturalezaCtrl.setValue('');
     this.proveedorIdCtrl.setValue('');
+    this.personaIdCtrl.setValue('');
     this.clearActiveFilter(false);
     this.searchEgresos();
   }
@@ -380,6 +387,15 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
       egreso.proveedor?.tipoEgreso?.nombre ||
       '—'
     );
+  }
+
+  beneficiarioLabel(egreso: EgresoDto): string {
+    if (egreso.persona?.nombre) {
+      return egreso.persona.documento
+        ? `${egreso.persona.nombre} (${egreso.persona.documento})`
+        : egreso.persona.nombre;
+    }
+    return egreso.proveedor?.nombre || '—';
   }
 
   naturalezaLabel(egreso: EgresoDto): string {
@@ -422,9 +438,11 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
         'id',
         'fecha',
         'valor',
-        'proveedor',
-        'documento_proveedor',
+        'beneficiario',
+        'documento_beneficiario',
+        'tipo_beneficiario',
         'naturaleza',
+        'naturaleza_nombre',
         'tipo',
         'origen_fondos_id',
         'origen',
@@ -437,9 +455,15 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
             e.id,
             e.fecha,
             e.valor,
-            this.csvEscape(e.proveedor?.nombre || ''),
-            this.csvEscape(e.proveedor?.documento || ''),
+            this.csvEscape(
+              e.persona?.nombre || e.proveedor?.nombre || ''
+            ),
+            this.csvEscape(
+              e.persona?.documento || e.proveedor?.documento || ''
+            ),
+            this.csvEscape(e.persona?.id ? 'persona' : 'proveedor'),
             this.csvEscape(String(e.naturaleza || '')),
+            this.csvEscape(this.naturalezaLabel(e)),
             this.csvEscape(this.tipoEgresoLabel(e)),
             e.origenFondosId ?? '',
             this.csvEscape(this.origenLabel(e)),
@@ -568,17 +592,6 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.selectedRowId === egreso.id;
   }
 
-  restoreFiltersState(): void {
-    this.filterFechaInicioCtrl.setValue(
-      this.parseDateParam(this.appliedFechaInicio),
-      { emitEvent: false }
-    );
-    this.filterFechaFinCtrl.setValue(
-      this.parseDateParam(this.appliedFechaFin),
-      { emitEvent: false }
-    );
-  }
-
   applyDateFilters(): void {
     const fechaInicio = this.formatDateParam(this.filterFechaInicioCtrl.value);
     const fechaFin = this.formatDateParam(this.filterFechaFinCtrl.value);
@@ -589,9 +602,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.appliedFechaInicio = fechaInicio;
     this.appliedFechaFin = fechaFin;
-    this.syncActiveFilters();
     this.searchEgresos();
-    setTimeout(() => this.filtersMenuTrigger?.closeMenu(), 100);
   }
 
   clearActiveFilter(triggerSearch = true): void {
@@ -599,25 +610,22 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.appliedFechaFin = null;
     this.filterFechaInicioCtrl.setValue(null, { emitEvent: false });
     this.filterFechaFinCtrl.setValue(null, { emitEvent: false });
-    this.syncActiveFilters();
     if (triggerSearch) {
       this.searchEgresos();
     }
   }
 
-  hasActiveDateFilter(): boolean {
-    return !!this.appliedFechaInicio || !!this.appliedFechaFin;
-  }
-
   private focusSearchInput() {
-    if (this.searchInput?.nativeElement) {
-      setTimeout(() => {
-        this.searchInput.nativeElement.focus();
-        if (this.descripcionCtrl.value) {
-          this.searchInput.nativeElement.select();
-        }
-      }, 100);
+    if (!this.mostrarMasOpciones || !this.searchInput?.nativeElement) {
+      return;
     }
+    const input = this.searchInput.nativeElement;
+    setTimeout(() => {
+      input.focus();
+      if (this.descripcionCtrl.value) {
+        input.select();
+      }
+    }, 100);
   }
 
   irEntradaInventario(egreso: EgresoDto, event?: Event): void {
@@ -716,32 +724,15 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.proveedorIdCtrl.value !== ''
           ? Number(this.proveedorIdCtrl.value)
           : undefined,
+      personaId:
+        this.personaIdCtrl.value !== ''
+          ? Number(this.personaIdCtrl.value)
+          : undefined,
       fechaInicio: this.appliedFechaInicio ?? undefined,
       fechaFin: this.appliedFechaFin ?? undefined,
       page,
       size: this.pageSize
     };
-  }
-
-  private syncActiveFilters(): void {
-    const label = this.buildDateFilterLabel();
-    this.activeFilters = label ? [label] : [];
-  }
-
-  private buildDateFilterLabel(): { label: string; value: string } | null {
-    const fechaInicio = this.formatDateDisplay(this.appliedFechaInicio);
-    const fechaFin = this.formatDateDisplay(this.appliedFechaFin);
-
-    if (this.appliedFechaInicio && this.appliedFechaFin) {
-      return { label: 'Fechas:', value: `${fechaInicio} a ${fechaFin}` };
-    }
-    if (this.appliedFechaInicio) {
-      return { label: 'Desde:', value: fechaInicio ?? '' };
-    }
-    if (this.appliedFechaFin) {
-      return { label: 'Hasta:', value: fechaFin ?? '' };
-    }
-    return null;
   }
 
   private formatDateParam(value: Date | null): string | null {
@@ -750,21 +741,6 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     const month = String(value.getMonth() + 1).padStart(2, '0');
     const day = String(value.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
-  }
-
-  private parseDateParam(value: string | null): Date | null {
-    if (!value) return null;
-    const parsed = this.fechaUtilService.parseDateAsLocal(value);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-  }
-
-  private formatDateDisplay(value: string | null): string | null {
-    const parsed = this.parseDateParam(value);
-    if (!parsed) return null;
-    const day = String(parsed.getDate()).padStart(2, '0');
-    const month = String(parsed.getMonth() + 1).padStart(2, '0');
-    const year = parsed.getFullYear();
-    return `${day}/${month}/${year}`;
   }
 
   private actualizarFooter(): void {

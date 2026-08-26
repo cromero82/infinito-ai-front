@@ -1,0 +1,168 @@
+<div class="persona-dialog flex flex-col">
+  <div class="flex items-center justify-between gap-3 px-5 pt-4 pb-2">
+    <div class="min-w-0">
+      <h2 class="m-0 text-xl font-semibold tracking-tight">
+        @if (mode === 'list') {
+          Personas
+        } @else if (editingId != null) {
+          Editar persona
+        } @else {
+          Nueva persona
+        }
+      </h2>
+      <p class="m-0 mt-1 text-sm text-secondary">
+        Personal del establecimiento (empleados, dueños u otros) para egresos PERSONAL /
+        DIVIDENDOS — no es liquidación de nómina
+      </p>
+    </div>
+  </div>
+
+  @if (mode === 'list') {
+    <div class="flex items-center gap-2 px-5 pb-3 flex-wrap">
+      <mat-form-field
+        appearance="outline"
+        class="search-field flex-1 min-w-[180px]"
+        subscriptSizing="dynamic">
+        <mat-label>Buscar</mat-label>
+        <input matInput [formControl]="searchCtrl" placeholder="Nombre, documento…" />
+        @if (searchCtrl.value) {
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Limpiar"
+            (click)="searchCtrl.setValue('')">
+            <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+          </button>
+        }
+      </mat-form-field>
+      <button mat-flat-button color="primary" type="button" (click)="startCreate()">
+        <mat-icon svgIcon="mat:add" class="ltr:mr-1 rtl:ml-1"></mat-icon>
+        Nuevo
+      </button>
+    </div>
+
+    <div class="table-wrap px-5">
+      @if (loading) {
+        <div class="flex justify-center py-10">
+          <mat-spinner diameter="36"></mat-spinner>
+        </div>
+      } @else if (filtered.length === 0) {
+        <div class="empty text-secondary text-sm py-8 text-center">
+          No hay personas
+          @if (searchCtrl.value) {
+            para «{{ searchCtrl.value }}»
+          }
+          .
+        </div>
+      } @else {
+        <table mat-table [dataSource]="filtered" class="w-full persona-table-compact">
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef>Id</th>
+            <td mat-cell *matCellDef="let row">{{ row.id }}</td>
+          </ng-container>
+          <ng-container matColumnDef="documento">
+            <th mat-header-cell *matHeaderCellDef>Documento</th>
+            <td mat-cell *matCellDef="let row">{{ row.documento }}</td>
+          </ng-container>
+          <ng-container matColumnDef="nombre">
+            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+            <td mat-cell *matCellDef="let row" class="font-medium">{{ row.nombre }}</td>
+          </ng-container>
+          <ng-container matColumnDef="telefono">
+            <th mat-header-cell *matHeaderCellDef>Teléfono</th>
+            <td mat-cell *matCellDef="let row" class="text-secondary">
+              {{ row.telefono || '—' }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="dueño">
+            <th mat-header-cell *matHeaderCellDef>Dueño</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.esDuenoPropietario ? 'Sí' : 'No' }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="activo">
+            <th mat-header-cell *matHeaderCellDef>Activo</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.activo !== false ? 'Sí' : 'No' }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef class="col-acciones"></th>
+            <td mat-cell *matCellDef="let row" class="acciones">
+              <button
+                mat-icon-button
+                type="button"
+                matTooltip="Editar"
+                (click)="startEdit(row)">
+                <mat-icon svgIcon="mat:edit"></mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                type="button"
+                color="warn"
+                matTooltip="Eliminar"
+                (click)="confirmDelete(row)">
+                <mat-icon svgIcon="mat:delete"></mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      }
+    </div>
+  } @else {
+    <form class="form-body px-5 flex flex-col gap-1" [formGroup]="form" (ngSubmit)="save()">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Documento</mat-label>
+        <input matInput formControlName="documento" maxlength="50" autocomplete="off" />
+        @if (form.get('documento')?.hasError('required')) {
+          <mat-error>Requerido</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Nombre</mat-label>
+        <input matInput formControlName="nombre" maxlength="150" autocomplete="off" />
+        @if (form.get('nombre')?.hasError('required')) {
+          <mat-error>Requerido</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Teléfono</mat-label>
+        <input matInput formControlName="telefono" maxlength="30" autocomplete="off" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Correo</mat-label>
+        <input matInput formControlName="correo" maxlength="100" autocomplete="off" />
+      </mat-form-field>
+      <div class="flex items-center gap-2 py-1">
+        <mat-slide-toggle formControlName="activo" color="primary">Activo</mat-slide-toggle>
+      </div>
+      <div class="flex flex-col gap-1 py-1">
+        <mat-slide-toggle formControlName="esDuenoPropietario" color="primary">
+          Es dueño / propietario
+        </mat-slide-toggle>
+        <p class="m-0 text-xs text-secondary">
+          Permite egresos PERSONAL/DIVIDENDOS desde OF Cuenta del dueño
+        </p>
+      </div>
+      <div class="flex justify-end gap-2 mt-2 mb-1">
+        <button mat-button type="button" (click)="cancelForm()" [disabled]="saving">
+          Cancelar
+        </button>
+        <button
+          mat-flat-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid || saving">
+          {{ editingId != null ? 'Guardar' : 'Crear' }}
+        </button>
+      </div>
+    </form>
+  }
+
+  <mat-dialog-actions align="end" class="dialog-footer px-5 pb-4">
+    <button mat-stroked-button type="button" (click)="close()">Cerrar</button>
+  </mat-dialog-actions>
+</div>

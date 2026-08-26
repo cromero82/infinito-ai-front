@@ -40,3 +40,11 @@ export function naturalezaCodigoFromTipo(tipo: {
   const codigo = tipo?.naturaleza?.codigo?.trim();
   return codigo ? codigo.toUpperCase() : null;
 }
+
+/** PERSONAL / DIVIDENDOS usan catálogo Persona (no proveedor). */
+export function esNaturalezaPersona(
+  naturaleza: string | null | undefined
+): boolean {
+  const n = (naturaleza || '').trim().toUpperCase();
+  return n === 'PERSONAL' || n === 'DIVIDENDOS';
+}

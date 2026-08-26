@@ -24,27 +24,64 @@
   height: 100%;
 }
 
+.egresos-toolbar {
+  overflow: visible;
+}
+
+.egresos-toolbar-title {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.egresos-toolbar-main {
+  width: 100%;
+  overflow: visible;
+  align-items: center;
+}
+
+.egresos-toolbar-spacer {
+  flex: 1 1 auto;
+  min-width: 8px;
+}
+
+.egresos-toolbar-extra {
+  padding-top: 4px;
+  overflow: visible;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+:host-context(.dark) .egresos-toolbar-extra {
+  border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+.btn-mas-opciones {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  min-height: 28px !important;
+  line-height: 28px !important;
+  font-size: 13px !important;
+  padding: 0 8px !important;
+}
+
 .search-input {
   @apply w-48;
 }
 
 .filter-select {
-  min-width: 120px;
+  min-width: 130px;
+  flex: 0 1 auto;
 }
 
-.egresos-active-filters {
-  max-width: 100%;
-  flex: 0 0 auto;
+.filter-select--naturaleza {
+  min-width: 180px;
+  width: 200px;
+  max-width: 220px;
+  flex: 0 1 200px;
 }
 
-.filter-chip-label {
-  margin-right: 0.25rem;
-  font-size: 0.8125rem;
-}
-
-.filter-chip-value {
-  font-weight: 700;
-  font-size: 0.8125rem;
+.filter-date {
+  width: 148px;
+  min-width: 148px;
 }
 
 .egresos-filters-menu-content {
@@ -71,7 +108,8 @@
   }
 
   .search-input.mat-mdc-form-field,
-  .filter-select.mat-mdc-form-field {
+  .filter-select.mat-mdc-form-field,
+  .filter-date.mat-mdc-form-field {
     font-size: 13px !important;
 
     .mat-mdc-form-field-flex {
@@ -97,8 +135,17 @@
     }
 
     .mat-mdc-form-field-subscript-wrapper {
+      display: none !important;
+      height: 0 !important;
       min-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
     }
+  }
+
+  .egresos-toolbar .mat-mdc-form-field-subscript-wrapper {
+    display: none !important;
   }
 
   .filters-field-dense {
@@ -117,8 +164,10 @@
     }
   }
 
-  // mat-input (Observación): misma corrección que mat-select - eliminar espacio superior cuando no enfocado
-  .search-input.mat-mdc-form-field {
+  // mat-input / mat-select / date: compactos sin mezclar label y valor
+  .search-input.mat-mdc-form-field,
+  .filter-select.mat-mdc-form-field,
+  .filter-date.mat-mdc-form-field {
     .mat-mdc-form-field-infix {
       padding-top: 0 !important;
       padding-bottom: 0 !important;
@@ -135,68 +184,37 @@
       padding-bottom: 0 !important;
     }
 
+    .mat-mdc-select-value,
     .mat-mdc-input-element {
       line-height: 24px !important;
     }
 
-    // Notch con espacio para el label flotante (enfocado o con valor)
     &.mat-form-field-should-float .mdc-notched-outline__notch,
     &:focus-within .mdc-notched-outline__notch {
       padding-top: 12px !important;
     }
 
-    &:not(.mat-form-field-should-float):not(:focus-within) .mat-mdc-floating-label {
+    // Solo centrar label cuando NO flota (no pisar --float-above de MDC)
+    &:not(.mat-form-field-should-float):not(:focus-within)
+      .mat-mdc-floating-label:not(.mdc-floating-label--float-above) {
       top: 50% !important;
       transform: translateY(-50%) !important;
     }
 
-    // Enfocado O con valor: label flotante dentro del notch (translateY sube el label)
     &.mat-form-field-should-float .mat-mdc-floating-label,
-    &:focus-within .mat-mdc-floating-label {
+    &:focus-within .mat-mdc-floating-label,
+    .mat-mdc-floating-label.mdc-floating-label--float-above {
       top: 50% !important;
       transform: translateY(calc(-50% - 14px)) scale(0.75) !important;
     }
   }
 
-  // mat-select: eliminar espacio superior extra cuando no está enfocado
-  .filter-select.mat-mdc-form-field {
-    .mat-mdc-form-field-infix {
-      padding-top: 0 !important;
-      padding-bottom: 0 !important;
-    }
-
-    .mat-mdc-text-field-wrapper,
-    .mat-mdc-form-field-flex {
-      padding-top: 0 !important;
-      padding-bottom: 0 !important;
-    }
-
-    // Reducir espacio del notch para compactar
-    .mdc-notched-outline__notch {
-      padding-top: 0 !important;
-      padding-bottom: 0 !important;
-    }
-
-    .mat-mdc-select-value {
-      line-height: 24px !important;
-    }
-
-    // Notch con espacio para el label flotante cuando tiene valor
-    &.mat-form-field-should-float .mdc-notched-outline__notch {
-      padding-top: 12px !important;
-    }
-
-    // Ajustar posición del label cuando NO flota - centrar verticalmente para evitar que quede cortado por el borde
-    &:not(.mat-form-field-should-float) .mat-mdc-floating-label {
-      top: 50% !important;
-      transform: translateY(-50%) !important;
-    }
-
-    // Cuando tiene valor o está enfocado: label flotante dentro del notch, arriba del contenido
-    &.mat-form-field-should-float .mat-mdc-floating-label {
-      top: -10px !important;
-      transform: translateY(0) scale(0.75) !important;
-    }
+  .filter-select--naturaleza .mat-mdc-select-value-text {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
   }
 
   .filter-select .mat-mdc-select {
@@ -210,6 +228,13 @@
     padding-right: 4px !important;
     line-height: 26px !important;
     font-size: 13px !important;
+  }
+
+  .btn-mas-opciones .mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    margin-right: 2px;
   }
 }
 
@@ -252,6 +277,7 @@
     th.mat-mdc-header-cell,
     th[mat-header-cell] {
       font-weight: 600 !important;
+      color: var(--vex-foreground, rgba(0, 0, 0, 0.87)) !important;
     }
 
     tr.mat-mdc-row {
@@ -280,7 +306,7 @@
     tr.mat-mdc-header-row {
       height: 28px !important;
       min-height: unset !important;
-      background-color: rgba(0, 0, 0, 0.008) !important;
+      background-color: rgba(0, 0, 0, 0.04) !important;
     }
   }
 
@@ -296,8 +322,35 @@
   table.egresos-table-compact tr.mat-mdc-row:hover td.col-valor {
     background-color: rgba(76, 175, 80, 0.16) !important;
   }
+}
 
-  .egresos-active-filters .mdc-evolution-chip-set__chips {
-    flex-wrap: nowrap;
+:host-context(.dark) ::ng-deep {
+  table.egresos-table-compact.mat-mdc-table {
+    tr.mat-mdc-header-row {
+      background-color: rgba(0, 0, 0, 0.35) !important;
+    }
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell] {
+      color: rgba(255, 255, 255, 0.92) !important;
+      background-color: rgba(0, 0, 0, 0.35) !important;
+    }
+
+    tr.mat-mdc-row:nth-child(even) {
+      background-color: rgba(255, 255, 255, 0.03) !important;
+    }
+  }
+
+  th.col-valor {
+    background-color: rgba(46, 125, 50, 0.45) !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+  }
+
+  td.col-valor {
+    background-color: rgba(76, 175, 80, 0.12) !important;
+  }
+
+  table.egresos-table-compact tr.mat-mdc-row:hover td.col-valor {
+    background-color: rgba(76, 175, 80, 0.2) !important;
   }
 }

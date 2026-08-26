@@ -18,7 +18,7 @@ export interface EgresoDto {
     descripcion?: string;
     naturaleza?: { id?: number; codigo?: string; nombre?: string } | null;
   } | null;
-  proveedor: {
+  proveedor?: {
     id: number;
     nombre?: string;
     documento?: string;
@@ -30,7 +30,16 @@ export interface EgresoDto {
       descripcion?: string;
       naturaleza?: { id?: number; codigo?: string; nombre?: string } | null;
     };
-  };
+  } | null;
+  persona?: {
+    id: number;
+    documento?: string;
+    nombre?: string;
+    telefono?: string | null;
+    correo?: string | null;
+    activo?: boolean;
+    esDuenoPropietario?: boolean;
+  } | null;
 }
 
 export interface CreateEgresoRequest {
@@ -40,7 +49,8 @@ export interface CreateEgresoRequest {
   /** Opcional: derivado del O.F.; ausente en cuentas sin medio (Caja Menor/General). */
   metodoPagoId?: number | null;
   origenFondosId: number;
-  proveedor: { id: number };
+  proveedor?: { id: number } | null;
+  persona?: { id: number } | null;
   tipoEgreso?: { id: number };
   naturaleza?: NaturalezaEgreso | string;
   /**
@@ -67,6 +77,7 @@ export interface EgresoSearchParams {
   tipoEgresoId?: number;
   naturaleza?: string;
   proveedorId?: number;
+  personaId?: number;
   fechaInicio?: string;
   fechaFin?: string;
   page?: number;
@@ -110,6 +121,9 @@ export class EgresosService {
     }
     if (params.proveedorId != null) {
       httpParams = httpParams.set('proveedorId', params.proveedorId.toString());
+    }
+    if (params.personaId != null) {
+      httpParams = httpParams.set('personaId', params.personaId.toString());
     }
     if (params.fechaInicio) {
       httpParams = httpParams.set('fechaInicio', params.fechaInicio);

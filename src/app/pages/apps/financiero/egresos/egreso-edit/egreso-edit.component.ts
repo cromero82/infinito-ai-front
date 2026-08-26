@@ -65,12 +65,17 @@ import {
 import {
   naturalezaCodigoFromTipo,
   NATURALEZAS_EGRESO_FALLBACK,
-  NaturalezaEgreso
+  NaturalezaEgreso,
+  esNaturalezaPersona
 } from '../util/naturaleza-egreso.util';
 import {
   NaturalezaTipoEgresoDto,
   NaturalezaTipoEgresoService
 } from '../service/naturaleza-tipo-egreso.service';
+import {
+  PersonaDto,
+  PersonaService
+} from '../service/persona.service';
 import { ProveedorEditComponent } from '../../proveedores/proveedor-edit/proveedor-edit.component';
 import { FechaUtilService } from '../../../ventas/service/fecha-util.service';
 import { OrigenFondosService } from '../../origenes-fondos/service/origen-fondos.service';
@@ -120,6 +125,7 @@ import {
 export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
   form: FormGroup;
   proveedores: ProveedorDto[] = [];
+  personas: PersonaDto[] = [];
   tiposEgreso: TipoEgresoDto[] = [];
   naturalezasOptions: Array<{ value: string; label: string }> = [...NATURALEZAS_EGRESO_FALLBACK];
   get naturalezas() {
@@ -128,14 +134,21 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
   origenesArbol: OrigenFondosArbolItemDto[] = [];
   /** Árbol completo (incluye hijos) para cruzar plantillas destino ↔ padre. */
   private arbolCompleto: OrigenFondosArbolItemDto[] = [];
+  /** Solo OF con visibleEnEgreso (sin Cuenta del dueño). */
+  private origenesArbolBase: OrigenFondosArbolItemDto[] = [];
   private plantillas: PlantillaNotificacionPagoDto[] = [];
   modoEstricto = false;
   private ventasSinCortePorMetodo = new Map<number, number>();
   filteredProveedores$!: Observable<ProveedorDto[]>;
+  filteredPersonas$!: Observable<PersonaDto[]>;
   mostrarBotonCrearProveedor$!: Observable<boolean>;
   valorEditando = false;
   /** Evita pisar naturaleza/tipo elegidos a mano al cambiar proveedor. */
   private aplicandoDefaultTipo = false;
+
+  get esBeneficiarioPersona(): boolean {
+    return esNaturalezaPersona(this.form?.get('naturaleza')?.value);
+  }
 
   /**
    * Pago QR / plantilla: el OF elegido tiene bolsa hija destino → no egresar del padre
@@ -172,6 +185,7 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     @Inject(MAT_DIALOG_DATA) public data: EgresoEditDialogData,
     private egresosService: EgresosService,
     private proveedorService: ProveedorService,
+    private personaService: PersonaService,
     private tipoEgresoService: TipoEgresoService,
     private naturalezaTipoEgresoService: NaturalezaTipoEgresoService,
     private origenFondosService: OrigenFondosService,
@@ -187,7 +201,8 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
       fecha: [new Date() as Date | null, Validators.required],
       valor: ['', [Validators.required, this.validarValorMonto.bind(this)]],
       descripcion: [''],
-      proveedor: [null as ProveedorDto | null, Validators.required],
+      proveedor: [null as ProveedorDto | string | null],
+      persona: [null as PersonaDto | string | null],
       origenCuentaId: [null as number | null, Validators.required],
       tipoEgresoId: [null as number | null, Validators.required],
       naturaleza: [null as string | null, Validators.required]
@@ -273,12 +288,19 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     });
     this.loadProveedores();
+    this.loadPersonas();
     this.loadTiposEgreso();
     this.loadOrigenesArbol();
+    this.syncBeneficiarioValidators();
 
     this.filteredProveedores$ = this.form.get('proveedor')!.valueChanges.pipe(
       startWith(this.form.get('proveedor')!.value),
       map((value) => this.filterProveedores(value))
+    );
+
+    this.filteredPersonas$ = this.form.get('persona')!.valueChanges.pipe(
+      startWith(this.form.get('persona')!.value),
+      map((value) => this.filterPersonas(value))
     );
 
     this.form
@@ -300,15 +322,31 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
         const tipo = this.tiposEgreso.find((t) => t.id === Number(tipoId));
         const codigo = naturalezaCodigoFromTipo(tipo);
         if (codigo) {
-          this.form.patchValue({ naturaleza: codigo }, { emitEvent: false });
+          this.form.patchValue({ naturaleza: codigo }, { emitEvent: true });
         }
       });
+
+    this.form
+      .get('naturaleza')!
+      .valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.syncBeneficiarioValidators();
+        this.refreshOrigenesDisponibles();
+      });
+
+    this.form
+      .get('persona')!
+      .valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.refreshOrigenesDisponibles());
 
     this.mostrarBotonCrearProveedor$ = this.filteredProveedores$.pipe(
       combineLatestWith(
         this.form.get('proveedor')!.valueChanges.pipe(startWith(this.form.get('proveedor')!.value))
       ),
       map(([filtered, value]) => {
+        if (this.esBeneficiarioPersona) {
+          return false;
+        }
         if (typeof value === 'object' && value !== null) {
           return false;
         }
@@ -331,6 +369,7 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
       this.patchProveedorAfterLoad();
     } else if (egreso) {
       const prov = egreso.proveedor;
+      const per = egreso.persona;
       this.form.patchValue({
         fecha: egreso.fecha
           ? this.fechaUtilService.parseDateAsLocal(egreso.fecha)
@@ -340,6 +379,15 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
         proveedor: prov
           ? { id: prov.id, nombre: prov.nombre, tipoEgreso: prov.tipoEgreso }
           : null,
+        persona: per
+          ? {
+              id: per.id,
+              documento: per.documento || '',
+              nombre: per.nombre || '',
+              esDuenoPropietario: !!(per as { esDuenoPropietario?: boolean })
+                .esDuenoPropietario
+            }
+          : null,
         origenCuentaId: egreso.origenFondosId ?? null,
         tipoEgresoId:
           egreso.tipoEgreso?.id ?? egreso.proveedor?.tipoEgreso?.id ?? null,
@@ -348,6 +396,7 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
           naturalezaCodigoFromTipo(egreso.tipoEgreso) ??
           naturalezaCodigoFromTipo(egreso.proveedor?.tipoEgreso)
       });
+      this.syncBeneficiarioValidators();
       this.patchProveedorAfterLoad();
     } else {
       this.form.patchValue({ valor: this.formatValorDisplay(0) });
@@ -568,19 +617,80 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
         .pipe(catchError(() => of([] as PlantillaNotificacionPagoDto[])))
     }).subscribe({
       next: ({ arbolEgreso, arbol, rango, plantillas }) => {
-        this.origenesArbol = arbolEgreso ?? [];
+        this.origenesArbolBase = arbolEgreso ?? [];
         this.arbolCompleto = (arbol?.length ? arbol : arbolEgreso) ?? [];
         this.plantillas = plantillas ?? [];
         this.ventasSinCortePorMetodo = mapVentasSinCortePorMetodo(rango?.ventasTipo);
+        this.refreshOrigenesDisponibles();
         this.aplicarOrigenPredeterminado();
         this.reintentarMatch$.next();
       },
       error: () => {
         this.origenesArbol = [];
+        this.origenesArbolBase = [];
         this.arbolCompleto = [];
         this.ventasSinCortePorMetodo = new Map();
       }
     });
+  }
+
+  /**
+   * Une Cuenta del dueño al select solo si PERSONAL/DIVIDENDOS + persona dueño/propietario.
+   */
+  private refreshOrigenesDisponibles(): void {
+    const base = [...(this.origenesArbolBase || [])];
+    const ids = new Set(base.map((o) => o.id));
+    if (this.puedeUsarCuentaDelDueno()) {
+      for (const c of this.findCuentasDelDuenoEnArbol()) {
+        if (!ids.has(c.id)) {
+          base.push(c);
+          ids.add(c.id);
+        }
+      }
+    }
+    this.origenesArbol = base;
+    const origenId = this.form.get('origenCuentaId')?.value as number | null;
+    if (origenId != null && !ids.has(origenId)) {
+      this.form.patchValue({ origenCuentaId: null }, { emitEvent: false });
+    }
+  }
+
+  private puedeUsarCuentaDelDueno(): boolean {
+    if (!esNaturalezaPersona(this.form.get('naturaleza')?.value)) {
+      return false;
+    }
+    const per = this.form.get('persona')?.value;
+    return (
+      typeof per === 'object' &&
+      per != null &&
+      !!(per as PersonaDto).id &&
+      !!(per as PersonaDto).esDuenoPropietario
+    );
+  }
+
+  private findCuentasDelDuenoEnArbol(): OrigenFondosArbolItemDto[] {
+    return (this.arbolCompleto || []).filter((c) => this.esCuentaDelDuenoOf(c));
+  }
+
+  private esCuentaDelDuenoOf(c: OrigenFondosArbolItemDto): boolean {
+    if (!c?.parentOrigenFondosId) {
+      return false;
+    }
+    const codigo = (c.tipoOrigenFondosCodigo || '').trim().toUpperCase();
+    if (codigo === 'DUENOS') {
+      return true;
+    }
+    const padre = this.arbolCompleto.find((p) => p.id === c.parentOrigenFondosId);
+    if ((padre?.tipoOrigenFondosCodigo || '').trim().toUpperCase() === 'DUENOS') {
+      return true;
+    }
+    const nombre = (c.nombre || '').trim().toLowerCase();
+    return (
+      nombre === 'cuenta del dueño' ||
+      nombre === 'cuenta del dueno' ||
+      nombre === 'personal administrador' ||
+      nombre.includes('cuenta del due')
+    );
   }
 
   private aplicarOrigenPredeterminado(): void {
@@ -633,6 +743,35 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
         this.patchProveedorAfterLoad();
       }
     });
+  }
+
+  private loadPersonas() {
+    this.personaService.getAll(true).subscribe({
+      next: (list) => {
+        this.personas = list || [];
+      }
+    });
+  }
+
+  /** PERSONAL/DIVIDENDOS → persona requerida; resto → proveedor. */
+  private syncBeneficiarioValidators(): void {
+    const proveedorCtrl = this.form.get('proveedor');
+    const personaCtrl = this.form.get('persona');
+    if (!proveedorCtrl || !personaCtrl) {
+      return;
+    }
+    if (esNaturalezaPersona(this.form.get('naturaleza')?.value)) {
+      proveedorCtrl.clearValidators();
+      proveedorCtrl.setValue(null, { emitEvent: false });
+      personaCtrl.setValidators([Validators.required]);
+    } else {
+      personaCtrl.clearValidators();
+      personaCtrl.setValue(null, { emitEvent: false });
+      proveedorCtrl.setValidators([Validators.required]);
+    }
+    proveedorCtrl.updateValueAndValidity({ emitEvent: false });
+    personaCtrl.updateValueAndValidity({ emitEvent: false });
+    this.refreshOrigenesDisponibles();
   }
 
   private loadTiposEgreso() {
@@ -710,8 +849,26 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.proveedores.filter((p) => p.nombre.toLowerCase().includes(filterValue));
   }
 
+  private filterPersonas(value: PersonaDto | string | null): PersonaDto[] {
+    if (typeof value === 'object' && value !== null) return [...this.personas];
+    const filterValue = typeof value === 'string' ? value.toLowerCase().trim() : '';
+    if (!filterValue) return [...this.personas];
+    return this.personas.filter(
+      (p) =>
+        (p.nombre || '').toLowerCase().includes(filterValue) ||
+        (p.documento || '').toLowerCase().includes(filterValue)
+    );
+  }
+
   displayProveedor(prov: ProveedorDto | null): string {
     return prov ? prov.nombre : '';
+  }
+
+  displayPersona(per: PersonaDto | null): string {
+    if (!per) {
+      return '';
+    }
+    return per.documento ? `${per.nombre} (${per.documento})` : per.nombre;
   }
 
   onProveedorKeydown(event: Event): void {
@@ -860,10 +1017,30 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.form.invalid) return;
 
     const form = this.form.getRawValue();
-    const prov = form.proveedor as ProveedorDto;
-    if (!prov || typeof prov !== 'object' || !prov.id) {
-      this.snackBar.open('Seleccione o cree un proveedor', 'Cerrar', { duration: 4000 });
-      return;
+    const naturaleza = form.naturaleza as NaturalezaEgreso;
+    const usaPersona = esNaturalezaPersona(naturaleza);
+
+    let proveedorPayload: { id: number } | null = null;
+    let personaPayload: { id: number } | null = null;
+
+    if (usaPersona) {
+      const per = form.persona as PersonaDto;
+      if (!per || typeof per !== 'object' || !per.id) {
+        this.snackBar.open('Seleccione una persona beneficiaria', 'Cerrar', {
+          duration: 4000
+        });
+        return;
+      }
+      personaPayload = { id: per.id };
+    } else {
+      const prov = form.proveedor as ProveedorDto;
+      if (!prov || typeof prov !== 'object' || !prov.id) {
+        this.snackBar.open('Seleccione o cree un proveedor', 'Cerrar', {
+          duration: 4000
+        });
+        return;
+      }
+      proveedorPayload = { id: prov.id };
     }
 
     const formalizar = this.formalizarData;
@@ -897,9 +1074,10 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
       descripcion: form.descripcion || '',
       metodoPagoId: origen?.metodoPagoId ?? null,
       origenFondosId: origenId,
-      proveedor: { id: prov.id },
+      proveedor: proveedorPayload,
+      persona: personaPayload,
       tipoEgreso: { id: Number(form.tipoEgresoId) },
-      naturaleza: form.naturaleza as NaturalezaEgreso,
+      naturaleza,
       ...(fromMovId != null ? { fromMovimientoOrigenFondosId: fromMovId } : {})
     };
 

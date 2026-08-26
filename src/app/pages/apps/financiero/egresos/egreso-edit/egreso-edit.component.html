@@ -77,40 +77,6 @@
       }
     </mat-form-field>
     <mat-form-field class="flex-1" appearance="outline">
-      <mat-label>Proveedor</mat-label>
-      <input
-        matInput
-        formControlName="proveedor"
-        [matAutocomplete]="autoProveedor"
-        placeholder="Escriba para buscar o presione Enter para crear nuevo proveedor"
-        (keydown.enter)="onProveedorKeydown($any($event))" />
-      <mat-icon matIconPrefix svgIcon="mat:local_shipping"></mat-icon>
-      @if (mostrarBotonCrearProveedor$ | async) {
-        <button
-          mat-button
-          matSuffix
-          type="button"
-          (click)="crearProveedorDesdeBoton()"
-          class="btn-crear-cliente"
-          aria-label="Crear nuevo proveedor">
-          <mat-icon class="icon-sm" svgIcon="mat:add"></mat-icon>
-          <span class="btn-crear-text">Enter o click aquí para crear</span>
-        </button>
-      }
-      <mat-autocomplete
-        #autoProveedor="matAutocomplete"
-        [displayWith]="displayProveedor">
-        @for (prov of filteredProveedores$ | async; track prov) {
-          <mat-option [value]="prov">
-            {{ prov.nombre }}
-          </mat-option>
-        }
-      </mat-autocomplete>
-      @if (form.get("proveedor")?.hasError("required")) {
-        <mat-error>Seleccione un proveedor</mat-error>
-      }
-    </mat-form-field>
-    <mat-form-field class="flex-1" appearance="outline">
       <mat-label>Tipo de egreso</mat-label>
       <mat-select formControlName="tipoEgresoId">
         @for (t of tiposEgreso; track t.id) {
@@ -132,6 +98,65 @@
         <mat-error>Seleccione la naturaleza</mat-error>
       }
     </mat-form-field>
+    @if (esBeneficiarioPersona) {
+      <mat-form-field class="flex-1" appearance="outline">
+        <mat-label>Persona beneficiaria</mat-label>
+        <input
+          matInput
+          formControlName="persona"
+          [matAutocomplete]="autoPersona"
+          placeholder="Buscar por nombre o documento" />
+        <mat-icon matIconPrefix svgIcon="mat:person"></mat-icon>
+        <mat-autocomplete
+          #autoPersona="matAutocomplete"
+          [displayWith]="displayPersona">
+          @for (per of filteredPersonas$ | async; track per.id) {
+            <mat-option [value]="per">
+              {{ per.nombre }} ({{ per.documento }})
+            </mat-option>
+          }
+        </mat-autocomplete>
+        @if (form.get("persona")?.hasError("required")) {
+          <mat-error>Seleccione una persona</mat-error>
+        }
+        <mat-hint>Catálogo Dominios → Personas</mat-hint>
+      </mat-form-field>
+    } @else {
+      <mat-form-field class="flex-1" appearance="outline">
+        <mat-label>Proveedor</mat-label>
+        <input
+          matInput
+          formControlName="proveedor"
+          [matAutocomplete]="autoProveedor"
+          placeholder="Escriba para buscar o presione Enter para crear nuevo proveedor"
+          (keydown.enter)="onProveedorKeydown($any($event))" />
+        <mat-icon matIconPrefix svgIcon="mat:local_shipping"></mat-icon>
+        @if (mostrarBotonCrearProveedor$ | async) {
+          <button
+            mat-button
+            matSuffix
+            type="button"
+            (click)="crearProveedorDesdeBoton()"
+            class="btn-crear-cliente"
+            aria-label="Crear nuevo proveedor">
+            <mat-icon class="icon-sm" svgIcon="mat:add"></mat-icon>
+            <span class="btn-crear-text">Enter o click aquí para crear</span>
+          </button>
+        }
+        <mat-autocomplete
+          #autoProveedor="matAutocomplete"
+          [displayWith]="displayProveedor">
+          @for (prov of filteredProveedores$ | async; track prov) {
+            <mat-option [value]="prov">
+              {{ prov.nombre }}
+            </mat-option>
+          }
+        </mat-autocomplete>
+        @if (form.get("proveedor")?.hasError("required")) {
+          <mat-error>Seleccione un proveedor</mat-error>
+        }
+      </mat-form-field>
+    }
     <mat-form-field class="flex-1" appearance="outline">
       <mat-label>Origen del egreso</mat-label>
       <mat-select formControlName="origenCuentaId">
