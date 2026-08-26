@@ -1,7 +1,7 @@
 <div class="card flex flex-col sm:flex-row historial-ventas-container">
   <!-- Left side -->
   <div class="left-side">
-    <h2 class="title mt-0 mb-4">Historial de Ventas</h2>
+        <h2 class="title mt-0 mb-4">Historial Tickets</h2>
 
     <div class="filter-section">
       <mat-button-toggle-group
@@ -27,6 +27,22 @@
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
       </mat-form-field>
+    </div>
+
+    <div class="medio-filters">
+      <mat-form-field appearance="outline" class="medio-field" subscriptSizing="dynamic">
+        <mat-label>Método de pago</mat-label>
+        <mat-select [formControl]="metodoPagoFilterCtrl">
+          <mat-option value="">Todos</mat-option>
+          @for (m of metodosPago; track m.id) {
+            <mat-option [value]="m.id">{{ m.descripcion }}</mat-option>
+          }
+          <mat-option value="MIXTO">Mixto</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-checkbox [formControl]="sinCorteCtrl" color="primary" class="sin-corte-check">
+        Tickets sin corte
+      </mat-checkbox>
     </div>
 
     @if (sesionIdFromUrl) {
@@ -78,11 +94,37 @@
                 <span class="recibo-fecha">{{
                   formatDate(recibo.fechaCreacion)
                 }}</span>
-                @if (getClienteNombre(recibo.clienteId)) {
-                  <span class="recibo-cliente">{{
-                    getClienteNombre(recibo.clienteId)
-                  }}</span>
+                <span
+                  class="recibo-medio"
+                  [style.color]="medioListaColor(recibo) || null">
+                  {{ medioListaLabel(recibo) }}
+                </span>
+              </div>
+              @if (getClienteNombre(recibo.clienteId)) {
+                <div class="recibo-cliente">{{
+                  getClienteNombre(recibo.clienteId)
+                }}</div>
+              }
+              <div class="recibo-extra-row">
+                @if (labelNotif(recibo); as notif) {
+                  <span
+                    class="notif-chip"
+                    [class.notif-chip--ok]="notifOk(recibo)"
+                    [class.notif-chip--pendiente]="!notifOk(recibo)">
+                    {{ notif }}
+                  </span>
+                } @else {
+                  <span></span>
                 }
+                <button
+                  type="button"
+                  class="btn-productos-mini"
+                  mat-icon-button
+                  matTooltip="Ver productos"
+                  aria-label="Ver productos"
+                  (click)="verProductos(recibo, $event)">
+                  <mat-icon svgIcon="mat:inventory_2"></mat-icon>
+                </button>
               </div>
             </div>
           }

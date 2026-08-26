@@ -1,0 +1,83 @@
+.dialog-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin: 0;
+}
+
+.atendio {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.dialog-body {
+  min-width: min(400px, 92vw);
+  max-width: 520px;
+  max-height: 65vh;
+}
+
+.state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 0.875rem;
+  text-align: center;
+
+  &.error {
+    color: #c62828;
+  }
+}
+
+.tabla-head,
+.fila,
+.tabla-foot {
+  display: grid;
+  grid-template-columns: 1fr 56px 96px;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.tabla-head {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: rgba(0, 0, 0, 0.5);
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.tabla-body {
+  max-height: 45vh;
+  overflow: auto;
+}
+
+.fila {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  font-size: 0.875rem;
+}
+
+.nombre {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla-foot {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.15);
+  font-weight: 700;
+  font-size: 0.9rem;
+}

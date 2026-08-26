@@ -11,12 +11,15 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   HistorialReciboService,
   HistorialReciboDto,
@@ -49,6 +52,14 @@ import {
   RestaurarTicketDialogComponent,
   RestaurarTicketDialogResult
 } from './restaurar-ticket-dialog.component';
+import {
+  TicketProductosDialogComponent,
+  TicketProductosDialogData
+} from '../ticket-productos-dialog/ticket-productos-dialog.component';
+import {
+  esNotificacionConfirmada,
+  labelNotificacionElectronica
+} from '../util/notificacion-electronica-ticket.util';
 
 @Component({
   selector: 'vex-historial-ventas',
@@ -58,12 +69,15 @@ import {
     MatButtonToggleModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
+    MatCheckboxModule,
     MatDatepickerModule,
     MatNativeDateModule,
     MatSnackBarModule,
     MatIconModule,
     MatDialogModule,
-    MatExpansionModule
+    MatExpansionModule,
+    MatTooltipModule
   ],
   templateUrl: './historial-ventas.component.html',
   styleUrls: ['./historial-ventas.component.scss']
@@ -71,6 +85,11 @@ import {
 export class HistorialVentasComponent implements OnInit, OnDestroy {
   selectedFilter = 'pagado'; // Por defecto "pagado"
   fechaCtrl = new FormControl<Date | null>(null);
+  /** '' = todos, 'MIXTO' = multipago, número = metodoPagoId */
+  metodoPagoFilterCtrl = new FormControl<string | number>('', {
+    nonNullable: true
+  });
+  sinCorteCtrl = new FormControl<boolean>(false, { nonNullable: true });
   historialRecibos: HistorialReciboDto[] = [];
   loading = false;
   loadingMore = false;
@@ -171,6 +190,19 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     this.loadClientes();
     this.loadMetodosPago();
     this.loadEstadosRecibos();
+
+    this.metodoPagoFilterCtrl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.reloadFromFilters());
+    this.sinCorteCtrl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.reloadFromFilters());
+  }
+
+  private reloadFromFilters(): void {
+    this.page = 1;
+    this.historialRecibos = [];
+    this.loadHistorialRecibos();
   }
 
   loadClientes(): void {
@@ -193,7 +225,7 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   loadMetodosPago(): void {
     this.metodosPagoLoading = true;
     this.metodoPagoService
-      .obtenerMetodosPago()
+      .obtenerMetodosPagoParaTickets()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (metodosPago) => {
@@ -261,6 +293,71 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     this.loadHistorialRecibos();
   }
 
+  private buildSearchOpts(): {
+    metodoPagoId?: number | null;
+    mixto?: boolean;
+    sinCorte?: boolean;
+  } {
+    const raw = this.metodoPagoFilterCtrl.value;
+    const opts: {
+      metodoPagoId?: number | null;
+      mixto?: boolean;
+      sinCorte?: boolean;
+    } = {};
+    if (raw === 'MIXTO') {
+      opts.mixto = true;
+    } else if (raw !== '' && raw != null) {
+      const id = Number(raw);
+      if (!Number.isNaN(id) && id > 0) {
+        opts.metodoPagoId = id;
+      }
+    }
+    if (this.sinCorteCtrl.value) {
+      opts.sinCorte = true;
+    }
+    return opts;
+  }
+
+  /** Etiqueta corta del medio en la lista (Mixto o nombre del dominio). */
+  medioListaLabel(recibo: HistorialReciboDto): string {
+    if (recibo.multipago) {
+      return 'MIXTO';
+    }
+    return (this.getMetodoPagoNombre(recibo.metodoPagoId) ?? '—').toUpperCase();
+  }
+
+  medioListaColor(recibo: HistorialReciboDto): string | null {
+    if (recibo.multipago) {
+      return '#546e7a';
+    }
+    return this.getMetodoPago(recibo.metodoPagoId)?.color?.trim() || null;
+  }
+
+  labelNotif(recibo: HistorialReciboDto): string | null {
+    return labelNotificacionElectronica(recibo.estadoNotificacionElectronica);
+  }
+
+  notifOk(recibo: HistorialReciboDto): boolean {
+    return esNotificacionConfirmada(recibo.estadoNotificacionElectronica);
+  }
+
+  verProductos(recibo: HistorialReciboDto, event: Event): void {
+    event.stopPropagation();
+    const data: TicketProductosDialogData = {
+      historialReciboId: recibo.id,
+      titulo: recibo.documentoVentaConsecutivo
+        ? `Productos · ${recibo.documentoVentaConsecutivo}`
+        : `Productos · ticket #${recibo.id}`,
+      totalTicket: recibo.total,
+      sesionId: recibo.sesionId
+    };
+    this.dialog.open(TicketProductosDialogComponent, {
+      width: '480px',
+      maxWidth: '95vw',
+      data
+    });
+  }
+
   loadHistorialRecibos(): void {
     if (this.page === 1) {
       this.loading = true;
@@ -292,7 +389,8 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
         fechaParam,
         estadoId,
         this.sesionIdFromUrl,
-        soloRestaurados
+        soloRestaurados,
+        this.buildSearchOpts()
       )
       .pipe(takeUntil(this.destroy$))
       .subscribe({

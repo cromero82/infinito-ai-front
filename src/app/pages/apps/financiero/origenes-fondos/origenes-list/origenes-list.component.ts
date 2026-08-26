@@ -33,6 +33,10 @@ import { OrigenAjusteDialogComponent } from '../origen-ajuste-dialog/origen-ajus
 import { MovimientoReferenciaDialogComponent } from '../movimiento-referencia-dialog/movimiento-referencia-dialog.component';
 import { OrigenHijoDialogComponent } from '../origen-hijo-dialog/origen-hijo-dialog.component';
 import {
+  TicketsSinCorteDialogComponent,
+  TicketsSinCorteDialogData
+} from '../tickets-sin-corte-dialog/tickets-sin-corte-dialog.component';
+import {
   EgresoEditComponent
 } from '../../egresos/egreso-edit/egreso-edit.component';
 import {
@@ -223,6 +227,42 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
    */
   saldoVista(cuenta: OrigenFondosArbolItemDto): SaldoOfVista {
     return saldoOrigenConVentasSinCorte(cuenta, this.ventasSinCortePorMetodo);
+  }
+
+  /** Raíz con medio de Tickets y desglose de tickets sin corte. */
+  puedeAbrirTicketsSinCorte(cuenta: OrigenFondosArbolItemDto): boolean {
+    const mpId = cuenta.metodoPagoId;
+    if (mpId == null || !this.metodosPagoPorId.has(mpId)) {
+      return false;
+    }
+    return this.saldoVista(cuenta).mostrarDesglose;
+  }
+
+  abrirTicketsSinCorte(
+    cuenta: OrigenFondosArbolItemDto,
+    event: Event
+  ): void {
+    event.stopPropagation();
+    event.preventDefault();
+    const mpId = cuenta.metodoPagoId;
+    if (mpId == null) {
+      return;
+    }
+    const sv = this.saldoVista(cuenta);
+    const mp = this.metodosPagoPorId.get(mpId);
+    const nombre =
+      mp?.descripcion?.trim() || cuenta.nombre || `Medio ${mpId}`;
+    const data: TicketsSinCorteDialogData = {
+      metodoPagoId: mpId,
+      metodoPagoNombre: nombre,
+      metodoPagoColor: mp?.color?.trim() || cuenta.color?.trim() || null,
+      totalTicketsSinCorte: sv.ventasSinCorte
+    };
+    this.dialog.open(TicketsSinCorteDialogComponent, {
+      width: '680px',
+      maxWidth: '95vw',
+      data
+    });
   }
 
   private aplicarVentasSinCorte(

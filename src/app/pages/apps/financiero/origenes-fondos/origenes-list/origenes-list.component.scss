@@ -206,7 +206,8 @@
   padding-bottom: 6px;
 }
 
-.origen-card.con-menu {
+.origen-card.con-menu,
+.origen-card.con-tickets-btn {
   padding-right: 32px;
 }
 
@@ -253,6 +254,31 @@
   &:hover {
     color: #3949ab;
     background: rgba(63, 81, 181, 0.1);
+  }
+}
+
+/** Misma columna derecha que menú / expand; centrado en vertical. */
+.tickets-sin-corte-btn {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  transform: translateY(-50%);
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  line-height: 28px !important;
+  color: #1565c0;
+  z-index: 2;
+
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
+
+  &:hover {
+    color: #0d47a1;
+    background: rgba(21, 101, 192, 0.12);
   }
 }
 

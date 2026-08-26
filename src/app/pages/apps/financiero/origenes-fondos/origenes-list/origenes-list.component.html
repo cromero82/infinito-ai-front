@@ -123,6 +123,18 @@
                         </button>
                       </mat-menu>
                     }
+                    @if (puedeAbrirTicketsSinCorte(grupo.raiz)) {
+                      <button
+                        type="button"
+                        class="tickets-sin-corte-btn"
+                        mat-icon-button
+                        aria-label="Ver tickets sin corte"
+                        (mouseenter)="mostrarTipFooter('Ver tickets sin corte de este medio', 'Tickets sin corte')"
+                        (mouseleave)="ocultarTipFooter()"
+                        (click)="abrirTicketsSinCorte(grupo.raiz, $event)">
+                        <mat-icon svgIcon="mat:receipt_long"></mat-icon>
+                      </button>
+                    }
                     <button
                       type="button"
                       class="origen-card raiz"
@@ -132,6 +144,7 @@
                       [class.con-desglose]="svRaiz.mostrarDesglose"
                       [class.con-hijos]="grupo.hijos.length > 0"
                       [class.con-menu]="muestraMenuGestion(grupo.raiz)"
+                      [class.con-tickets-btn]="puedeAbrirTicketsSinCorte(grupo.raiz)"
                       [style.border-top-color]="cardAccent(grupo.raiz)"
                       [draggable]="esAdmin"
                       (click)="seleccionarCuenta(grupo.raiz)"

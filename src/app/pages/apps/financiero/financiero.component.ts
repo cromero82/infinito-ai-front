@@ -26,7 +26,7 @@ export class FinancieroComponent {
     {
       label: 'Egresos',
       route: './egresos',
-      badge: 'Salidas de caja'
+      badge: 'Gastos y pagos'
     },
     {
       label: 'Orígenes de fondos',

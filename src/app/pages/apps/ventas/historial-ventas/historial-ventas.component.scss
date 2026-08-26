@@ -182,15 +182,27 @@
 }
 
 .fecha-section {
-  margin-bottom: 16px;
-}
-
-.fecha-section:has(+ .filter-labels) {
-  margin-bottom: 0;
+  margin-bottom: 12px;
 }
 
 .fecha-field {
   width: 100%;
+}
+
+.medio-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.medio-field {
+  width: 100%;
+}
+
+.sin-corte-check {
+  margin-left: 2px;
+  font-size: 0.875rem;
 }
 
 .filter-labels {
@@ -296,10 +308,72 @@
   color: #666666;
 }
 
+.recibo-medio {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #1565c0;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  white-space: nowrap;
+}
+
 .recibo-cliente {
   font-size: 12px;
   color: #333333;
   font-weight: 500;
+  margin-top: 2px;
+}
+
+.recibo-extra-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.notif-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+  letter-spacing: 0.01em;
+  justify-self: start;
+}
+
+.notif-chip--ok {
+  color: #1b5e20;
+  background: rgba(46, 125, 50, 0.14);
+}
+
+.notif-chip--pendiente {
+  color: #e65100;
+  background: rgba(245, 124, 0, 0.16);
+}
+
+.btn-productos-mini {
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  line-height: 28px !important;
+  justify-self: end;
+  color: rgba(0, 0, 0, 0.55);
+
+  mat-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+  }
+
+  &:hover {
+    color: #1565c0;
+    background: rgba(21, 101, 192, 0.1);
+  }
 }
 
 .loading,

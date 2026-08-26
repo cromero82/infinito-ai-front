@@ -22,6 +22,13 @@ export interface HistorialReciboDto {
   montoRecibido?: number;
   documentoVentaConsecutivo?: string | null;
   restaurado?: boolean | null;
+  /** Ticket multipago (más de un medio en líneas de cobro). */
+  multipago?: boolean | null;
+  /**
+   * Estado HRE si el ticket espera/confirmó notificación bancaria.
+   * Null = sin flujo electrónico. CONFIRMADA = con notificación; CREADA/otros = pendiente.
+   */
+  estadoNotificacionElectronica?: string | null;
 }
 
 export interface HistorialReciboPagoDto {
@@ -127,25 +134,27 @@ export class HistorialReciboService {
     fecha?: string,
     estadoId?: number,
     sesionId?: number | null,
-    restaurados?: boolean
+    restaurados?: boolean,
+    opts?: {
+      metodoPagoId?: number | null;
+      mixto?: boolean;
+      sinCorte?: boolean;
+    }
   ): Observable<HistorialReciboPage> {
-    const headers = new HttpHeaders({ 'Accept': 'application/json' });
+    const headers = new HttpHeaders({ Accept: 'application/json' });
     let params = new HttpParams()
       .set('page', String(page - 1)) // Spring uses 0-based page numbers
       .set('size', String(size))
       .set('sort', sort);
-    
-    // Add fecha parameter if provided
+
     if (fecha) {
       params = params.set('fecha', fecha);
     }
-    
-    // Add estadoId parameter if provided
+
     if (estadoId !== undefined && estadoId !== null) {
       params = params.set('estadoId', String(estadoId));
     }
-    
-    // Add sesionId parameter if provided
+
     if (sesionId !== undefined && sesionId !== null) {
       params = params.set('sesionId', String(sesionId));
     }
@@ -153,8 +162,21 @@ export class HistorialReciboService {
     if (restaurados) {
       params = params.set('restaurados', 'true');
     }
-    
-    return this.http.get<HistorialReciboPage>(`${this.apiUrl}/search`, { headers, params });
+
+    if (opts?.mixto) {
+      params = params.set('mixto', 'true');
+    } else if (opts?.metodoPagoId != null) {
+      params = params.set('metodoPagoId', String(opts.metodoPagoId));
+    }
+
+    if (opts?.sinCorte) {
+      params = params.set('sinCorte', 'true');
+    }
+
+    return this.http.get<HistorialReciboPage>(`${this.apiUrl}/search`, {
+      headers,
+      params
+    });
   }
 
   updateHistorialRecibo(

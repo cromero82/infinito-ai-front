@@ -1,0 +1,48 @@
+<h2 mat-dialog-title class="dialog-title">
+  <span>{{ data.titulo?.trim() || 'Productos del ticket' }}</span>
+  @if (atendidoNombre) {
+    <span class="atendio">Atendió: {{ atendidoNombre }}</span>
+  }
+</h2>
+
+<mat-dialog-content class="dialog-body">
+  @if (loading) {
+    <div class="state">
+      <mat-spinner diameter="36"></mat-spinner>
+    </div>
+  } @else if (error) {
+    <div class="state error">{{ error }}</div>
+  } @else if (detalles.length === 0) {
+    <div class="state empty">Sin líneas de producto.</div>
+  } @else {
+    <div class="tabla-head">
+      <span>Producto</span>
+      <span class="num">Cant.</span>
+      <span class="num">Subtotal</span>
+    </div>
+    <div class="tabla-body">
+      @for (d of detalles; track d.id) {
+        <div class="fila">
+          <span class="nombre">{{ nombreProducto(d) }}</span>
+          <span class="num">{{ d.cantidad }}</span>
+          <span class="num">{{
+            d.subtotal | currency: 'COP' : 'symbol-narrow' : '1.0-0'
+          }}</span>
+        </div>
+      }
+    </div>
+    <div class="tabla-foot">
+      <span></span>
+      <span></span>
+      <span class="num">{{
+        totalMostrar | currency: 'COP' : 'symbol-narrow' : '1.0-0'
+      }}</span>
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-flat-button color="primary" type="button" (click)="close()">
+    Cerrar
+  </button>
+</mat-dialog-actions>
