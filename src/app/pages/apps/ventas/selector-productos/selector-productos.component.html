@@ -91,6 +91,7 @@
                     <button
                       type="button"
                       class="precio-dual-line"
+                      [disabled]="!isProductActive(product)"
                       [class.precio-dual-line--picked]="
                         modoPrecioExplicitoPorProducto[product.id!] &&
                         getModoPrecioParaSeleccion(product) === 'precio'
@@ -111,6 +112,7 @@
                     <button
                       type="button"
                       class="precio-dual-line"
+                      [disabled]="!isProductActive(product)"
                       [class.precio-dual-line--picked]="
                         modoPrecioExplicitoPorProducto[product.id!] &&
                         getModoPrecioParaSeleccion(product) === 'precioUnidad'
@@ -157,6 +159,9 @@
                   mat-flat-button
                   color="primary"
                   class="btn-select-compact"
+                  [disabled]="!isProductActive(product)"
+                  matTooltip="Producto deshabilitado"
+                  [matTooltipDisabled]="isProductActive(product)"
                   (click)="selectProduct(product)">
                   Seleccionar
                 </button>
@@ -170,6 +175,7 @@
             [class.selector-product-row-selected]="
               selectedProductIndex === i
             "
+            [class.inactive-row]="!isProductActive(row)"
             [attr.data-selector-row]="i"
             (click)="onProductRowClick(i, $event)"
             (dblclick)="onProductRowDblClick(row, $event)"></tr>

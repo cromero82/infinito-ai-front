@@ -93,6 +93,11 @@
                                     : "Producto " + det.productoId
                                 }}
                               </span>
+                              @if (esLineaPorUnidad(det)) {
+                                <strong class="producto-presentacion-label"
+                                  >&nbsp;(Por unidad)</strong
+                                >
+                              }
                             </div>
                             @if (
                               hasHistoricoAcciones(det) &&
@@ -149,7 +154,7 @@
                           }
                           @if (editingUnitarioIndex !== i) {
                             <span class="unitario-display">
-                              @if (tienePrecioUnidad(det)) {
+                              @if (mostrarTogglePrecioUnidad(det)) {
                                 <button
                                   type="button"
                                   class="unitario-toggle-btn"

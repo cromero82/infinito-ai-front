@@ -157,8 +157,16 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
   }
 
   selectProduct(product: Producto): void {
+    if (!this.isProductActive(product)) {
+      return;
+    }
     const modo = this.getModoPrecioParaSeleccion(product);
     this.dialogRef.close({ product, modoPrecio: modo });
+  }
+
+  /** Misma regla que lista-productos: activo si activate === 1 o no viene el campo. */
+  isProductActive(product: Producto): boolean {
+    return product.activate === 1 || product.activate === undefined;
   }
 
   tienePrecioDual(product: Producto): boolean {
@@ -169,6 +177,9 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
   seleccionarModoPrecio(product: Producto, modo: ModoPrecioLista, event: Event): void {
     event.stopPropagation();
     event.preventDefault();
+    if (!this.isProductActive(product)) {
+      return;
+    }
     const id = product.id;
     if (id == null) {
       return;
@@ -239,7 +250,11 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
       if (idx >= 0 && idx < len) {
         event.preventDefault();
         event.stopPropagation();
-        this.selectProduct(this.products[idx]);
+        const product = this.products[idx];
+        if (!this.isProductActive(product)) {
+          return;
+        }
+        this.selectProduct(product);
       }
     }
   }
@@ -256,6 +271,9 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
   /** Doble clic en la fila = mismo efecto que el botón Seleccionar. */
   onProductRowDblClick(product: Producto, event: MouseEvent): void {
     if ((event.target as HTMLElement).closest('button')) {
+      return;
+    }
+    if (!this.isProductActive(product)) {
       return;
     }
     event.preventDefault();

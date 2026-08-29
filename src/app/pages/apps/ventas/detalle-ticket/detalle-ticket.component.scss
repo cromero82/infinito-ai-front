@@ -326,6 +326,12 @@
         white-space: nowrap;
       }
 
+      .producto-presentacion-label {
+        flex: 0 0 auto;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
       .historico-acciones {
         display: flex;
         flex-direction: column;

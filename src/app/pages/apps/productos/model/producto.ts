@@ -27,6 +27,16 @@ export interface Producto {
   existencia?: number;
   /** Grupo espejo (mismo producto en distintas presentaciones); null si no aplica */
   grupoEspejo?: GrupoEspejoEnProducto | null;
+  /** UoM vendibles (PAQUETE / UNIDAD / …) cuando el API las envía. */
+  presentaciones?: Array<{
+    id: number;
+    codigo: string;
+    nombreMostrar: string;
+    factorABase: number;
+    precioVenta: number;
+    esDefaultVenta?: boolean;
+    codigoBarrasAlt?: string | null;
+  }>;
 }
 
 export interface ProductPage {

@@ -102,9 +102,14 @@ const MESES_CORTO = [
                 @for (a of abonos; track a.id) {
                   <li>
                     <span class="f">{{ formatFecha(a.fechaAbono) }}</span>
-                    <span class="m">{{
-                      a.metodoPagoDescripcion || '—'
-                    }}</span>
+                    <span class="m">
+                      {{ a.metodoPagoDescripcion || '—' }}
+                      @if (a.clientePagadorNombre) {
+                        <span class="pagador"
+                          >· {{ a.clientePagadorNombre }}</span
+                        >
+                      }
+                    </span>
                     <span class="v">{{ formatMoney(a.monto) }}</span>
                   </li>
                 }
@@ -192,52 +197,69 @@ const MESES_CORTO = [
         background: #e53935;
       }
       .cxc-rail-body {
-        width: 280px;
-        padding: 10px 12px 12px 4px;
+        width: 320px;
+        padding: 12px 14px 14px 6px;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
         min-height: 0;
         overflow: auto;
       }
       .cxc-rail-header .title {
-        font-size: 0.7rem;
+        font-size: 0.78rem;
         text-transform: uppercase;
         letter-spacing: 0.04em;
         color: rgba(0, 0, 0, 0.5);
       }
       .cxc-rail-header .cliente {
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 1rem;
       }
       .cxc-rail-header .meta {
-        font-size: 0.72rem;
+        font-size: 0.8rem;
         color: rgba(0, 0, 0, 0.5);
       }
       .cxc-rail-saldos {
-        font-size: 0.8125rem;
+        font-size: 0.9rem;
         background: var(--vex-background-card, #fff);
-        border-radius: 6px;
-        padding: 8px 10px;
+        border-radius: 8px;
+        padding: 10px 12px;
         border: 1px solid rgba(0, 0, 0, 0.06);
       }
       .cxc-rail-saldos .row {
         display: flex;
         justify-content: space-between;
         gap: 8px;
-        line-height: 1.45;
+        line-height: 1.5;
       }
       .cxc-rail-saldos .saldo {
-        margin-top: 4px;
-        padding-top: 4px;
-        border-top: 1px solid rgba(0, 0, 0, 0.06);
+        margin-top: 8px;
+        margin-left: -6px;
+        margin-right: -6px;
+        padding: 8px 10px;
+        border-top: none;
+        border-radius: 6px;
+        background: rgba(46, 125, 50, 0.08);
+        border: 1px solid rgba(46, 125, 50, 0.18);
+        font-size: 1rem;
+        align-items: center;
+      }
+      .cxc-rail-saldos .saldo span {
+        font-weight: 600;
+        color: rgba(27, 94, 32, 0.9);
+      }
+      .cxc-rail-saldos .saldo strong {
+        font-size: 1.12rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: rgba(27, 94, 32, 0.95);
       }
       .cxc-rail-abonos {
         flex: 1 1 auto;
         min-height: 0;
       }
       .abonos-title {
-        font-size: 0.75rem;
+        font-size: 0.82rem;
         font-weight: 600;
         margin-bottom: 4px;
       }
@@ -245,17 +267,26 @@ const MESES_CORTO = [
         list-style: none;
         margin: 0;
         padding: 0;
-        font-size: 0.75rem;
+        font-size: 0.82rem;
       }
       .abonos-list li {
         display: grid;
-        grid-template-columns: 52px 1fr auto;
+        grid-template-columns: 56px 1fr auto;
         gap: 4px;
-        padding: 4px 0;
+        padding: 5px 0;
         border-bottom: 1px solid rgba(0, 0, 0, 0.04);
       }
       .abonos-list .f {
         color: rgba(0, 0, 0, 0.5);
+      }
+      .abonos-list .m {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .abonos-list .pagador {
+        font-weight: 600;
       }
       .abonos-list .v {
         font-variant-numeric: tabular-nums;
@@ -263,7 +294,7 @@ const MESES_CORTO = [
       }
       .empty,
       .loading {
-        font-size: 0.75rem;
+        font-size: 0.82rem;
         color: rgba(0, 0, 0, 0.45);
         padding: 8px 0;
       }
@@ -272,7 +303,7 @@ const MESES_CORTO = [
         flex-direction: column;
         gap: 8px;
         width: 100%;
-        max-width: 220px;
+        max-width: 260px;
         padding-right: 4px;
         margin-bottom: 8px;
       }
@@ -303,7 +334,12 @@ const MESES_CORTO = [
         border-color: rgba(255, 255, 255, 0.1);
       }
       :host-context(.dark) .cxc-rail-saldos .saldo {
-        border-top-color: rgba(255, 255, 255, 0.1);
+        background: rgba(129, 199, 132, 0.12);
+        border-color: rgba(129, 199, 132, 0.28);
+      }
+      :host-context(.dark) .cxc-rail-saldos .saldo span,
+      :host-context(.dark) .cxc-rail-saldos .saldo strong {
+        color: rgba(200, 230, 201, 0.95);
       }
       :host-context(.dark) .abonos-list li {
         border-bottom-color: rgba(255, 255, 255, 0.08);

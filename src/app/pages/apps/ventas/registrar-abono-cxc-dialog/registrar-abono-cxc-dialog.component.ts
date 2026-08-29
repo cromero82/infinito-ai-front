@@ -11,6 +11,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ClienteDto } from '../service/cliente.service';
+import { ClienteSelectorComponent } from '../cliente-selector/cliente-selector.component';
 import {
   AbonoCxcDto,
   CuentaPorCobrarDto,
@@ -43,7 +45,8 @@ export interface RegistrarAbonoCxcDialogResult {
     MatInputModule,
     MatSelectModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    ClienteSelectorComponent
   ],
   template: `
     <h2 mat-dialog-title>Registrar abono</h2>
@@ -52,6 +55,19 @@ export interface RegistrarAbonoCxcDialogResult {
         {{ data.cuenta.clienteNombre || 'Cliente' }} · Saldo
         {{ formatMoney(saldoPendiente) }}
       </p>
+
+      <div class="pagador-block">
+        <cliente-selector
+          label="Quién abona"
+          [initialClienteId]="pagadorClienteId"
+          [autoFocus]="false"
+          [disabled]="saving"
+          (clienteSelected)="onPagadorSelected($event)">
+        </cliente-selector>
+        <p class="pagador-hint m-0">
+          Busque un cliente registrado o cree uno con + / Enter.
+        </p>
+      </div>
 
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>Monto del abono</mat-label>
@@ -109,6 +125,15 @@ export interface RegistrarAbonoCxcDialogResult {
         font-size: 0.8125rem;
         color: rgba(0, 0, 0, 0.6);
       }
+      .pagador-block {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .pagador-hint {
+        font-size: 0.75rem;
+        color: rgba(0, 0, 0, 0.5);
+      }
       .error-msg {
         margin: 0;
         color: #c62828;
@@ -129,6 +154,10 @@ export class RegistrarAbonoCxcDialogComponent implements OnInit {
   saving = false;
   error: string | null = null;
 
+  /** Preselecciona el deudor de la CxC; se puede cambiar a otra persona. */
+  pagadorClienteId: number | null = null;
+  pagadorNombre: string | null = null;
+
   private readonly moneyFmt = new Intl.NumberFormat('es-CO', {
     style: 'currency',
     currency: 'COP',
@@ -147,6 +176,9 @@ export class RegistrarAbonoCxcDialogComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.pagadorClienteId = this.data.cuenta.clienteId ?? null;
+    this.pagadorNombre = this.data.cuenta.clienteNombre ?? null;
+
     this.metodoPagoService.obtenerMetodosPagoParaTickets().subscribe({
       next: (list) => {
         this.metodos = list ?? [];
@@ -167,9 +199,15 @@ export class RegistrarAbonoCxcDialogComponent implements OnInit {
   get canSubmit(): boolean {
     return (
       this.metodoPagoId != null &&
+      this.pagadorClienteId != null &&
       this.montoValue > 0 &&
       this.montoValue <= this.saldoPendiente
     );
+  }
+
+  onPagadorSelected(cliente: ClienteDto | null): void {
+    this.pagadorClienteId = cliente?.id ?? null;
+    this.pagadorNombre = cliente?.nombre ?? null;
   }
 
   formatMoney(n: number): string {
@@ -213,7 +251,7 @@ export class RegistrarAbonoCxcDialogComponent implements OnInit {
   }
 
   confirmar(): void {
-    if (!this.canSubmit || this.metodoPagoId == null) {
+    if (!this.canSubmit || this.metodoPagoId == null || this.pagadorClienteId == null) {
       return;
     }
     this.saving = true;
@@ -222,7 +260,9 @@ export class RegistrarAbonoCxcDialogComponent implements OnInit {
       monto: this.montoValue,
       metodoPagoId: this.metodoPagoId,
       observacion: (this.observacion ?? '').trim() || null,
-      sesionId: this.data.sesionId ?? null
+      sesionId: this.data.sesionId ?? null,
+      clientePagadorId: this.pagadorClienteId,
+      clientePagadorNombre: (this.pagadorNombre ?? '').trim() || null
     };
     this.cxcService.registrarAbono(this.data.cuenta.id, body).subscribe({
       next: (abono) => {

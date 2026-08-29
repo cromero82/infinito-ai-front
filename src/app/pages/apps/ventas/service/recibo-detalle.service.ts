@@ -15,12 +15,23 @@ export interface ReciboDetalleDto {
   id: number;
   reciboId: number;
   productoId: number;
+  presentacionId?: number | null;
   cantidad: number;
+  cantidadBase?: number | null;
+  precioUnitarioSnapshot?: number | null;
+  factorSnapshot?: number | null;
   subtotal: number;
   fechaCreacion?: string;
   usuarioCreacion?: string;
   nombreUsuarioAtendio?: string | null;
   historicoAcciones?: ReciboDetalleHistoricoAccionDto[] | null;
+  presentacion?: {
+    id: number;
+    codigo: string;
+    nombreMostrar: string;
+    factorABase: number;
+    precioVenta: number;
+  } | null;
   producto?: {
     id: number;
     barcode: string;
@@ -30,21 +41,33 @@ export interface ReciboDetalleDto {
     precioCompra: number;
     foto: string | null;
     activate: number;
+    presentaciones?: Array<{
+      id: number;
+      codigo: string;
+      nombreMostrar: string;
+      factorABase: number;
+      precioVenta: number;
+      esDefaultVenta?: boolean;
+    }>;
   };
 }
 
 export interface CreateReciboDetalleRequest {
   reciboId: number;
   productoId: number;
+  presentacionId?: number | null;
   cantidad: number;
   subtotal: number;
+  precioUnitarioSnapshot?: number | null;
 }
 
 export interface UpdateReciboDetalleRequest {
   reciboId: number;
   productoId: number;
+  presentacionId?: number | null;
   cantidad: number;
   subtotal: number;
+  precioUnitarioSnapshot?: number | null;
 }
 
 @Injectable({

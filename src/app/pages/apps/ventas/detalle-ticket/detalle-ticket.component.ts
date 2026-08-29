@@ -50,6 +50,10 @@ import {
   UpdateReciboDetalleRequest
 } from '../service/recibo-detalle.service';
 import {
+  ProductoPresentacionService,
+  ProductoPresentacionDto
+} from '../service/producto-presentacion.service';
+import {
   MetodoPagoService,
   MetodoPagoDto
 } from '../service/metodo-pago.service';
@@ -247,6 +251,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   constructor(
     private reciboService: ReciboService,
     private reciboDetalleService: ReciboDetalleService,
+    private productoPresentacionService: ProductoPresentacionService,
     private relationalProductService: RelationalProductService,
     private dialog: MatDialog,
     private metodoPagoService: MetodoPagoService,
@@ -436,6 +441,29 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       }
     }
     return Number(product.precio ?? 0);
+  }
+
+  private codigoPresentacionFromModo(modo: ModoPrecioLista): string {
+    return modo === 'precioUnidad' ? 'UNIDAD' : 'PAQUETE';
+  }
+
+  private ensurePresentaciones(
+    product: Producto
+  ): Promise<ProductoPresentacionDto[]> {
+    if (product.presentaciones && product.presentaciones.length > 0) {
+      return Promise.resolve(
+        product.presentaciones as ProductoPresentacionDto[]
+      );
+    }
+    if (!product.id) {
+      return Promise.resolve([]);
+    }
+    return firstValueFrom(this.productoPresentacionService.ensure(product.id))
+      .then((rows) => {
+        product.presentaciones = rows;
+        return rows;
+      })
+      .catch(() => []);
   }
 
   /**
@@ -747,150 +775,180 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       return;
     }
 
-    // Check if product already exists in detalles
-    const existingDetalleIndex = this.detalles.findIndex(
-      (det) => det.productoId === product.id
-    );
-
-    if (existingDetalleIndex >= 0) {
-      // Product exists, increment quantity
-      const existingDetalle = this.detalles[existingDetalleIndex];
-      const currentCantidad = Number(existingDetalle.cantidad ?? 0);
+    void this.ensurePresentaciones(product).then((presentaciones) => {
+      const codigo = this.codigoPresentacionFromModo(modoPrecio);
+      const presentacion =
+        presentaciones.find((p) => (p.codigo || '').toUpperCase() === codigo) ??
+        presentaciones.find((p) => p.esDefaultVenta) ??
+        presentaciones[0];
+      const presentacionId = presentacion?.id ?? null;
       const unitPrice =
-        currentCantidad > 0
-          ? Number(existingDetalle.subtotal ?? 0) / currentCantidad
-          : Number(product.precio ?? 0);
+        presentacion != null
+          ? Number(presentacion.precioVenta)
+          : this.unitPriceFromModo(product, modoPrecio);
 
-      if (
-        !existingDetalle.id ||
-        unitPrice <= 0 ||
-        !existingDetalle.reciboId ||
-        !existingDetalle.productoId
-      ) {
-        this.productSearchError =
-          'No se pudo actualizar el producto existente.';
-        this.searchingProduct = false;
-        this.showCreateProductFromSearchButton = false;
-        this.updateSearchDisabled();
-        this.focusSearchInputRequest.emit();
-        return;
-      }
+      // Identidad de línea = presentación (paquete vs unidad no se fusionan)
+      const existingDetalleIndex = this.detalles.findIndex((det) => {
+        if (presentacionId != null && det.presentacionId != null) {
+          return det.presentacionId === presentacionId;
+        }
+        if (presentacionId != null) {
+          return false;
+        }
+        return det.productoId === product.id;
+      });
 
-      const newCantidad = currentCantidad + 1;
-      const newSubtotal = unitPrice * newCantidad;
-      const previousDetalle = { ...existingDetalle };
+      if (existingDetalleIndex >= 0) {
+        const existingDetalle = this.detalles[existingDetalleIndex];
+        const currentCantidad = Number(existingDetalle.cantidad ?? 0);
+        const lineUnit =
+          currentCantidad > 0
+            ? Number(existingDetalle.subtotal ?? 0) / currentCantidad
+            : unitPrice;
 
-      const payload: UpdateReciboDetalleRequest = {
-        reciboId: existingDetalle.reciboId,
-        productoId: existingDetalle.productoId,
-        cantidad: newCantidad,
-        subtotal: newSubtotal
-      };
+        if (
+          !existingDetalle.id ||
+          lineUnit <= 0 ||
+          !existingDetalle.reciboId ||
+          !existingDetalle.productoId
+        ) {
+          this.productSearchError =
+            'No se pudo actualizar el producto existente.';
+          this.searchingProduct = false;
+          this.showCreateProductFromSearchButton = false;
+          this.updateSearchDisabled();
+          this.focusSearchInputRequest.emit();
+          return;
+        }
 
-      const optimisticDetalle: ReciboDetalleDto = {
-        ...existingDetalle,
-        cantidad: newCantidad,
-        subtotal: newSubtotal
-      };
+        const newCantidad = currentCantidad + 1;
+        const newSubtotal = lineUnit * newCantidad;
+        const previousDetalle = { ...existingDetalle };
 
-      const updatedList = [...this.detalles];
-      updatedList[existingDetalleIndex] = optimisticDetalle;
-      this.detalles = updatedList;
-      this.recalculateTotal();
-      this.setSelectedDetalles(
-        [existingDetalleIndex],
-        existingDetalleIndex,
-        false
-      );
-      this.productSearchCtrl.setValue('');
-      this.searchingProduct = false;
-      this.showCreateProductFromSearchButton = false;
-      this.updateSearchDisabled();
-      this.productSearchError = null;
-      this.focusSearchInputRequest.emit();
-      this.scrollDetalleListToBottom();
+        const payload: UpdateReciboDetalleRequest = {
+          reciboId: existingDetalle.reciboId,
+          productoId: existingDetalle.productoId,
+          presentacionId: existingDetalle.presentacionId ?? presentacionId,
+          cantidad: newCantidad,
+          subtotal: newSubtotal,
+          precioUnitarioSnapshot: lineUnit
+        };
 
-      this.reciboDetalleService
-        .updateDetalle(existingDetalle.id, payload)
-        .subscribe({
-          next: async (updatedDetalle) => {
-            const detalleBackend =
-              await this.prepararDetalleActualizado(updatedDetalle);
-            const updatedListFinal = [...this.detalles];
-            const detalleActualizado = {
-              ...optimisticDetalle,
-              ...detalleBackend,
-              cantidad: newCantidad,
-              subtotal: newSubtotal,
-              producto: detalleBackend.producto ?? existingDetalle.producto
-            };
-            updatedListFinal[existingDetalleIndex] = detalleActualizado;
-            this.detalles = updatedListFinal;
-            this.depurarHistoricosExpandidos();
-            this.recalculateTotal();
-          },
-          error: (err: unknown) => {
-            const revertedList = [...this.detalles];
-            revertedList[existingDetalleIndex] = previousDetalle;
-            this.detalles = revertedList;
-            this.recalculateTotal();
-            console.error('Error actualizando cantidad del producto', err);
-            this.productSearchError = 'No se pudo actualizar la cantidad.';
-          }
-        });
-      return;
-    }
+        const optimisticDetalle: ReciboDetalleDto = {
+          ...existingDetalle,
+          presentacionId: payload.presentacionId,
+          cantidad: newCantidad,
+          subtotal: newSubtotal
+        };
 
-    // Product doesn't exist, create new detail
-    const cantidad = 1;
-    const subtotal = this.unitPriceFromModo(product, modoPrecio) * cantidad;
-    const payload: CreateReciboDetalleRequest = {
-      reciboId: this.reciboId,
-      productoId: product.id,
-      cantidad,
-      subtotal
-    };
-
-    this.reciboDetalleService.createDetalle(payload).subscribe({
-      next: (detalle) => {
+        const updatedList = [...this.detalles];
+        updatedList[existingDetalleIndex] = optimisticDetalle;
+        this.detalles = updatedList;
+        this.recalculateTotal();
+        this.setSelectedDetalles(
+          [existingDetalleIndex],
+          existingDetalleIndex,
+          false
+        );
         this.productSearchCtrl.setValue('');
         this.searchingProduct = false;
         this.showCreateProductFromSearchButton = false;
         this.updateSearchDisabled();
         this.productSearchError = null;
-        const detalleConProducto: ReciboDetalleDto = detalle.producto
-          ? detalle
-          : {
-              ...detalle,
-              producto: detalle.producto ?? {
-                id: product.id!,
-                barcode: product.barcode,
-                nombre: product.nombre,
-                precio: product.precio,
-                precioUnidad: product.precioUnidad ?? null,
-                precioCompra: product.precioCompra ?? 0,
-                foto: product.foto ?? null,
-                activate: (product as any).activate ?? 1
-              }
-            };
-        this.detalles = [...this.detalles, detalleConProducto];
-        this.recalculateTotal();
-        this.setSelectedDetalles(
-          [this.detalles.length - 1],
-          this.detalles.length - 1,
-          false
-        );
         this.focusSearchInputRequest.emit();
         this.scrollDetalleListToBottom();
-      },
-      error: (err: unknown) => {
-        console.error('Error agregando producto al recibo', err);
-        this.productSearchError = 'No se pudo agregar el producto.';
-        this.searchingProduct = false;
-        this.showCreateProductFromSearchButton = false;
-        this.updateSearchDisabled();
-        this.focusSearchInputRequest.emit();
+
+        this.reciboDetalleService
+          .updateDetalle(existingDetalle.id, payload)
+          .subscribe({
+            next: async (updatedDetalle) => {
+              const detalleBackend =
+                await this.prepararDetalleActualizado(updatedDetalle);
+              const updatedListFinal = [...this.detalles];
+              updatedListFinal[existingDetalleIndex] = {
+                ...optimisticDetalle,
+                ...detalleBackend,
+                cantidad: newCantidad,
+                subtotal: newSubtotal,
+                producto: detalleBackend.producto ?? existingDetalle.producto
+              };
+              this.detalles = updatedListFinal;
+              this.depurarHistoricosExpandidos();
+              this.recalculateTotal();
+            },
+            error: (err: unknown) => {
+              const revertedList = [...this.detalles];
+              revertedList[existingDetalleIndex] = previousDetalle;
+              this.detalles = revertedList;
+              this.recalculateTotal();
+              console.error('Error actualizando cantidad del producto', err);
+              this.productSearchError = 'No se pudo actualizar la cantidad.';
+            }
+          });
+        return;
       }
+
+      const cantidad = 1;
+      const subtotal = unitPrice * cantidad;
+      const payload: CreateReciboDetalleRequest = {
+        reciboId: this.reciboId!,
+        productoId: product.id!,
+        presentacionId,
+        cantidad,
+        subtotal,
+        precioUnitarioSnapshot: unitPrice
+      };
+
+      this.reciboDetalleService.createDetalle(payload).subscribe({
+        next: (detalle) => {
+          this.productSearchCtrl.setValue('');
+          this.searchingProduct = false;
+          this.showCreateProductFromSearchButton = false;
+          this.updateSearchDisabled();
+          this.productSearchError = null;
+          const detalleConProducto: ReciboDetalleDto = detalle.producto
+            ? detalle
+            : {
+                ...detalle,
+                presentacionId: detalle.presentacionId ?? presentacionId,
+                producto: {
+                  id: product.id!,
+                  barcode: product.barcode,
+                  nombre: product.nombre,
+                  precio: product.precio,
+                  precioUnidad: product.precioUnidad ?? null,
+                  precioCompra: product.precioCompra ?? 0,
+                  foto: product.foto ?? null,
+                  activate: (product as any).activate ?? 1,
+                  presentaciones: product.presentaciones
+                }
+              };
+          this.detalles = this.insertarDetalleJuntoAProducto(
+            this.detalles,
+            detalleConProducto
+          );
+          this.recalculateTotal();
+          const nuevoIndex = this.detalles.findIndex(
+            (d) =>
+              d.id != null &&
+              detalleConProducto.id != null &&
+              d.id === detalleConProducto.id
+          );
+          const selectedIndex =
+            nuevoIndex >= 0 ? nuevoIndex : this.detalles.length - 1;
+          this.setSelectedDetalles([selectedIndex], selectedIndex, false);
+          this.focusSearchInputRequest.emit();
+          this.scrollDetalleListToBottom();
+        },
+        error: (err: unknown) => {
+          console.error('Error agregando producto al recibo', err);
+          this.productSearchError = 'No se pudo agregar el producto.';
+          this.searchingProduct = false;
+          this.showCreateProductFromSearchButton = false;
+          this.updateSearchDisabled();
+          this.focusSearchInputRequest.emit();
+        }
+      });
     });
   }
 
@@ -946,7 +1004,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   private async procesarDetallesCargados(
     detalles: ReciboDetalleDto[]
   ): Promise<void> {
-    this.detalles = detalles;
+    this.detalles = this.agruparDetallesPorProducto(detalles);
     this.depurarHistoricosExpandidos();
     this.detallesLoading = false;
     this.recalculateTotal();
@@ -1307,12 +1365,26 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
   private getPrecioUnidadDetalle(detalle: ReciboDetalleDto): number | null {
     const precioUnidad = detalle.producto?.precioUnidad;
-    if (precioUnidad === null || precioUnidad === undefined) {
-      return null;
+    if (precioUnidad !== null && precioUnidad !== undefined) {
+      const numericValue = Number(precioUnidad);
+      if (Number.isFinite(numericValue)) {
+        return numericValue;
+      }
     }
 
-    const numericValue = Number(precioUnidad);
-    return Number.isFinite(numericValue) ? numericValue : null;
+    const fromPresentacion =
+      detalle.producto?.presentaciones?.find(
+        (p) => (p.codigo || '').toUpperCase() === 'UNIDAD'
+      )?.precioVenta ??
+      (detalle.presentacion?.codigo?.toUpperCase() === 'UNIDAD'
+        ? detalle.presentacion.precioVenta
+        : null);
+
+    if (fromPresentacion === null || fromPresentacion === undefined) {
+      return null;
+    }
+    const numericFromPres = Number(fromPresentacion);
+    return Number.isFinite(numericFromPres) ? numericFromPres : null;
   }
 
   getDetalleUnitario(detalle: ReciboDetalleDto): number {
@@ -1326,11 +1398,138 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     return Number(detalle.producto?.precio ?? 0);
   }
 
+  /**
+   * Agrupa líneas del mismo producto base para que paquete y unidad queden juntas.
+   * Conserva el orden de primera aparición de cada producto.
+   */
+  private agruparDetallesPorProducto(
+    detalles: ReciboDetalleDto[]
+  ): ReciboDetalleDto[] {
+    if (!detalles.length) {
+      return detalles;
+    }
+
+    const result: ReciboDetalleDto[] = [];
+    const seenProductoIds = new Set<number | string>();
+
+    for (const detalle of detalles) {
+      const key =
+        detalle.productoId != null ? detalle.productoId : `row-${result.length}`;
+      if (seenProductoIds.has(key)) {
+        continue;
+      }
+      seenProductoIds.add(key);
+
+      const grupo = detalles.filter((d) =>
+        detalle.productoId != null
+          ? d.productoId === detalle.productoId
+          : d === detalle
+      );
+
+      grupo.sort((a, b) => {
+        const aUnidad = this.esLineaPorUnidad(a) ? 1 : 0;
+        const bUnidad = this.esLineaPorUnidad(b) ? 1 : 0;
+        return aUnidad - bUnidad;
+      });
+
+      result.push(...grupo);
+    }
+
+    return result;
+  }
+
+  /** Inserta la nueva línea justo después de la última del mismo producto base. */
+  private insertarDetalleJuntoAProducto(
+    detalles: ReciboDetalleDto[],
+    nuevo: ReciboDetalleDto
+  ): ReciboDetalleDto[] {
+    if (nuevo.productoId == null) {
+      return [...detalles, nuevo];
+    }
+
+    let lastSiblingIndex = -1;
+    for (let i = 0; i < detalles.length; i++) {
+      if (detalles[i].productoId === nuevo.productoId) {
+        lastSiblingIndex = i;
+      }
+    }
+
+    if (lastSiblingIndex < 0) {
+      return [...detalles, nuevo];
+    }
+
+    const updated = [...detalles];
+    updated.splice(lastSiblingIndex + 1, 0, nuevo);
+    return this.agruparDetallesPorProducto(updated);
+  }
+
   tienePrecioUnidad(detalle: ReciboDetalleDto): boolean {
     return this.getPrecioUnidadDetalle(detalle) !== null;
   }
 
+  /**
+   * True si la línea se vendió como UNIDAD (menudeo), no como paquete/empaque.
+   */
+  esLineaPorUnidad(detalle: ReciboDetalleDto): boolean {
+    const codigo = (
+      detalle.presentacion?.codigo ||
+      detalle.producto?.presentaciones?.find(
+        (p) => p.id === detalle.presentacionId
+      )?.codigo ||
+      ''
+    )
+      .trim()
+      .toUpperCase();
+    if (codigo === 'UNIDAD') {
+      return true;
+    }
+    if (codigo === 'PAQUETE') {
+      return false;
+    }
+    return this.estaUsandoPrecioUnidad(detalle);
+  }
+
+  /**
+   * Mismo producto base ya tiene en el ticket al menos una línea unidad y una paquete.
+   */
+  tieneAmbasPresentacionesEnTicket(productoId: number | null | undefined): boolean {
+    if (productoId == null) {
+      return false;
+    }
+    const lineas = this.detalles.filter((d) => d.productoId === productoId);
+    if (lineas.length < 2) {
+      return false;
+    }
+    const hayUnidad = lineas.some((d) => this.esLineaPorUnidad(d));
+    const hayPaquete = lineas.some((d) => !this.esLineaPorUnidad(d));
+    return hayUnidad && hayPaquete;
+  }
+
+  /** Toggle solo si hay menudeo y aún no coexisten ambas presentaciones en el ticket. */
+  mostrarTogglePrecioUnidad(detalle: ReciboDetalleDto): boolean {
+    return (
+      this.tienePrecioUnidad(detalle) &&
+      !this.tieneAmbasPresentacionesEnTicket(detalle.productoId)
+    );
+  }
+
   estaUsandoPrecioUnidad(detalle: ReciboDetalleDto): boolean {
+    const codigo = (
+      detalle.presentacion?.codigo ||
+      detalle.producto?.presentaciones?.find(
+        (p) => p.id === detalle.presentacionId
+      )?.codigo ||
+      ''
+    )
+      .trim()
+      .toUpperCase();
+    if (codigo === 'UNIDAD') {
+      return true;
+    }
+    if (codigo === 'PAQUETE') {
+      return false;
+    }
+
     const precioUnidad = this.getPrecioUnidadDetalle(detalle);
     if (precioUnidad === null) {
       return false;
@@ -1356,83 +1555,165 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     event.preventDefault();
     event.stopPropagation();
 
-    const precioUnidad = this.getPrecioUnidadDetalle(detalle);
     if (
-      precioUnidad === null ||
       !detalle.id ||
       !detalle.reciboId ||
       !detalle.productoId ||
-      !detalle.cantidad
+      !detalle.cantidad ||
+      !detalle.producto
     ) {
       return;
     }
 
-    const precioBase = Number(
-      detalle.producto?.precio ?? this.getDetalleUnitario(detalle)
-    );
-    const unitPrice = this.estaUsandoPrecioUnidad(detalle)
-      ? precioBase
-      : precioUnidad;
-    const newSubtotal = unitPrice * detalle.cantidad;
-
-    if (
-      this.sonPreciosEquivalentes(newSubtotal, Number(detalle.subtotal ?? 0))
-    ) {
-      return;
-    }
-
-    const previousDetalle = { ...detalle };
-    const payload: UpdateReciboDetalleRequest = {
-      reciboId: detalle.reciboId,
-      productoId: detalle.productoId,
-      cantidad: detalle.cantidad,
-      subtotal: newSubtotal
-    };
-
-    const optimisticDetalle: ReciboDetalleDto = {
-      ...detalle,
-      subtotal: newSubtotal
-    };
-
-    const updatedList = [...this.detalles];
-    updatedList[index] = optimisticDetalle;
-    this.detalles = updatedList;
-    this.recalculateTotal();
-
-    this.reciboDetalleService.updateDetalle(detalle.id, payload).subscribe({
-      next: async (updatedDetalle) => {
-        const detalleBackend =
-          await this.prepararDetalleActualizado(updatedDetalle);
-        const updatedListFinal = [...this.detalles];
-        updatedListFinal[index] = {
-          ...optimisticDetalle,
-          ...detalleBackend,
-          subtotal: newSubtotal,
-          producto: detalleBackend.producto ?? detalle.producto
-        };
-        this.detalles = updatedListFinal;
-        this.depurarHistoricosExpandidos();
-        const finalTotal = this.recalculateTotal();
-
-        if (this.recibo) {
-          try {
-            this.recibo = await this.updateReciboTotal(this.recibo, finalTotal);
-            this.metodoPagoActualizado.emit();
-          } catch (err) {
-            console.error(
-              'Error updating recibo total after unit price toggle',
-              err
-            );
-          }
-        }
-      },
-      error: (err: unknown) => {
-        const revertedList = [...this.detalles];
-        revertedList[index] = previousDetalle;
-        this.detalles = revertedList;
-        this.recalculateTotal();
-        console.error('Error toggling detalle unit price', err);
+    const product = detalle.producto as Producto;
+    void this.ensurePresentaciones(product).then((presentaciones) => {
+      if (!presentaciones.length) {
+        console.warn(
+          'No hay presentaciones para alternar precio unidad/empaque'
+        );
+        return;
       }
+
+      // Releer la línea por si el índice cambió tras agrupar
+      const currentIndex = this.detalles.findIndex((d) => d.id === detalle.id);
+      const lineIndex = currentIndex >= 0 ? currentIndex : index;
+      const line = this.detalles[lineIndex] ?? detalle;
+
+      const usingUnidad = this.estaUsandoPrecioUnidad(line);
+      const targetCodigo = usingUnidad ? 'PAQUETE' : 'UNIDAD';
+      const targetPresentacion =
+        presentaciones.find(
+          (p) => (p.codigo || '').toUpperCase() === targetCodigo
+        ) ?? null;
+
+      if (!targetPresentacion?.id) {
+        console.warn(
+          `No se encontró presentación ${targetCodigo} para el producto`,
+          line.productoId
+        );
+        return;
+      }
+
+      const precioUnidadFallback = this.getPrecioUnidadDetalle(line);
+      const precioPaqueteFallback = Number(
+        line.producto?.precio ?? this.getDetalleUnitario(line)
+      );
+      const unitPrice =
+        targetPresentacion.precioVenta != null &&
+        Number.isFinite(Number(targetPresentacion.precioVenta))
+          ? Number(targetPresentacion.precioVenta)
+          : targetCodigo === 'UNIDAD'
+            ? (precioUnidadFallback ?? precioPaqueteFallback)
+            : precioPaqueteFallback;
+
+      if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+        return;
+      }
+
+      const newSubtotal = unitPrice * Number(line.cantidad);
+      const samePrice = this.sonPreciosEquivalentes(
+        newSubtotal,
+        Number(line.subtotal ?? 0)
+      );
+      const samePresentacion = line.presentacionId === targetPresentacion.id;
+      if (samePrice && samePresentacion) {
+        return;
+      }
+
+      const previousDetalle = { ...line };
+      const payload: UpdateReciboDetalleRequest = {
+        reciboId: line.reciboId,
+        productoId: line.productoId,
+        presentacionId: targetPresentacion.id,
+        cantidad: line.cantidad,
+        subtotal: newSubtotal,
+        precioUnitarioSnapshot: unitPrice
+      };
+
+      const presentacionSnapshot = {
+        id: targetPresentacion.id,
+        codigo: targetPresentacion.codigo,
+        nombreMostrar: targetPresentacion.nombreMostrar,
+        factorABase: targetPresentacion.factorABase,
+        precioVenta: Number(targetPresentacion.precioVenta)
+      };
+
+      const optimisticDetalle: ReciboDetalleDto = {
+        ...line,
+        presentacionId: targetPresentacion.id,
+        presentacion: presentacionSnapshot,
+        precioUnitarioSnapshot: unitPrice,
+        subtotal: newSubtotal,
+        producto: {
+          ...line.producto!,
+          presentaciones:
+            line.producto?.presentaciones ?? presentaciones
+        }
+      };
+
+      const updatedList = [...this.detalles];
+      updatedList[lineIndex] = optimisticDetalle;
+      this.detalles = updatedList;
+      this.recalculateTotal();
+      this.cdr.markForCheck();
+
+      this.reciboDetalleService.updateDetalle(line.id, payload).subscribe({
+        next: async (updatedDetalle) => {
+          const detalleBackend =
+            await this.prepararDetalleActualizado(updatedDetalle);
+          const idx = this.detalles.findIndex((d) => d.id === line.id);
+          if (idx < 0) {
+            return;
+          }
+          const updatedListFinal = [...this.detalles];
+          updatedListFinal[idx] = {
+            ...optimisticDetalle,
+            ...detalleBackend,
+            presentacionId:
+              detalleBackend.presentacionId ?? targetPresentacion.id,
+            presentacion:
+              detalleBackend.presentacion ?? presentacionSnapshot,
+            subtotal: newSubtotal,
+            precioUnitarioSnapshot:
+              detalleBackend.precioUnitarioSnapshot ?? unitPrice,
+            producto: {
+              ...(detalleBackend.producto ?? line.producto!),
+              presentaciones:
+                (detalleBackend.producto as Producto | undefined)
+                  ?.presentaciones ??
+                line.producto?.presentaciones ??
+                presentaciones
+            }
+          };
+          this.detalles = updatedListFinal;
+          this.depurarHistoricosExpandidos();
+          const finalTotal = this.recalculateTotal();
+          this.cdr.markForCheck();
+
+          if (this.recibo) {
+            try {
+              this.recibo = await this.updateReciboTotal(this.recibo, finalTotal);
+              this.metodoPagoActualizado.emit();
+            } catch (err) {
+              console.error(
+                'Error updating recibo total after unit price toggle',
+                err
+              );
+            }
+          }
+        },
+        error: (err: unknown) => {
+          const revertedList = [...this.detalles];
+          const idx = this.detalles.findIndex((d) => d.id === line.id);
+          if (idx >= 0) {
+            revertedList[idx] = previousDetalle;
+            this.detalles = revertedList;
+            this.recalculateTotal();
+            this.cdr.markForCheck();
+          }
+          console.error('Error toggling detalle unit price', err);
+        }
+      });
     });
   }
 
@@ -1718,7 +1999,18 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         const subtotalRemain = unitPrice * qtyRemain;
 
         const existingTargetIndex = targetDetalles.findIndex(
-          (targetDetalle) => targetDetalle.productoId === detalle.productoId
+          (targetDetalle) => {
+            if (
+              detalle.presentacionId != null &&
+              targetDetalle.presentacionId != null
+            ) {
+              return targetDetalle.presentacionId === detalle.presentacionId;
+            }
+            if (detalle.presentacionId != null) {
+              return false;
+            }
+            return targetDetalle.productoId === detalle.productoId;
+          }
         );
 
         let rollback: TargetDetalleRollback;
@@ -1728,10 +2020,11 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
           const payload: UpdateReciboDetalleRequest = {
             reciboId: detalleDestino.reciboId,
             productoId: detalleDestino.productoId,
-            cantidad:
-              Number(detalleDestino.cantidad ?? 0) + qtyToMove,
-            subtotal:
-              Number(detalleDestino.subtotal ?? 0) + subtotalMove
+            presentacionId:
+              detalleDestino.presentacionId ?? detalle.presentacionId,
+            cantidad: Number(detalleDestino.cantidad ?? 0) + qtyToMove,
+            subtotal: Number(detalleDestino.subtotal ?? 0) + subtotalMove,
+            precioUnitarioSnapshot: unitPrice
           };
 
           const detalleActualizado = await firstValueFrom(
@@ -1766,8 +2059,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             this.reciboDetalleService.createDetalle({
               reciboId: targetRelation.reciboId,
               productoId: detalle.productoId,
+              presentacionId: detalle.presentacionId,
               cantidad: qtyToMove,
-              subtotal: subtotalMove
+              subtotal: subtotalMove,
+              precioUnitarioSnapshot: unitPrice
             })
           );
 
@@ -1795,8 +2090,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
             const sourcePayload: UpdateReciboDetalleRequest = {
               reciboId: detalle.reciboId,
               productoId: detalle.productoId,
+              presentacionId: detalle.presentacionId,
               cantidad: qtyRemain,
-              subtotal: subtotalRemain
+              subtotal: subtotalRemain,
+              precioUnitarioSnapshot: unitPrice
             };
             const sourceUpdated = await firstValueFrom(
               this.reciboDetalleService.updateDetalle(detalle.id, sourcePayload)

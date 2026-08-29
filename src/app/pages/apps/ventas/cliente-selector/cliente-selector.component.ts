@@ -40,6 +40,9 @@ export class ClienteSelectorComponent implements OnInit, AfterViewInit, OnDestro
   /** Si true, enfoca automáticamente el input al iniciar. Por defecto true. */
   @Input() autoFocus = true;
 
+  /** Texto del label del campo (p.ej. «Cliente» o «Quién abona»). */
+  @Input() label = 'Cliente';
+
   /** Emite cuando el usuario selecciona o crea un cliente. Null si se limpia. */
   @Output() clienteSelected = new EventEmitter<ClienteDto | null>();
 

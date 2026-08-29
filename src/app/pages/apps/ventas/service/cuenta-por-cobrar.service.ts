@@ -69,6 +69,9 @@ export interface RegistrarAbonoCxcRequest {
   observacion?: string | null;
   /** Sesión de caja activa (panel confirmación QR). */
   sesionId?: number | null;
+  /** Cliente que entrega el abono (puede diferir del deudor). */
+  clientePagadorId?: number | null;
+  clientePagadorNombre?: string | null;
 }
 
 export interface AbonoCxcDto {
@@ -81,6 +84,8 @@ export interface AbonoCxcDto {
   origenFondosId?: number | null;
   movimientoOrigenFondosId?: number | null;
   observacion?: string | null;
+  clientePagadorId?: number | null;
+  clientePagadorNombre?: string | null;
   /** True si el abono fue QR y quedó pendiente de confirmación email. */
   requiereConfirmacionElectronica?: boolean | null;
 }
