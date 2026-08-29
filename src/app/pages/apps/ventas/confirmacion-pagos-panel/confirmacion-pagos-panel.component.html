@@ -1,6 +1,6 @@
 @if (visible) {
   <aside
-    class="confirmacion-pagos-panel"
+    class="confirmacion-pagos-panel confirmacion-pagos-panel--azul-atras"
     [class.confirmacion-pagos-panel--dragging]="dragging"
     [ngStyle]="panelStyle"
     aria-live="polite">
@@ -20,90 +20,106 @@
           [class.panel-item--ok]="item.estado === 'CONFIRMADA'"
           [class.panel-item--ambigua]="item.estado === 'AMBIGUA'">
           <div class="panel-item-row">
-            <span class="panel-metodo-icon-wrap">
-              <img
-                class="panel-metodo-icon"
-                src="/assets/img/icons/payments/qr-bancolombia.png"
-                alt="QR Bancolombia"
-                width="28"
-                height="28" />
-            </span>
+            <div class="panel-item-main">
+              <span class="panel-metodo-icon-wrap">
+                <img
+                  class="panel-metodo-icon"
+                  src="/assets/img/icons/payments/qr-bancolombia.png"
+                  alt="QR Bancolombia"
+                  width="34"
+                  height="34" />
+              </span>
 
-            <div class="panel-item-text">
-              <div class="panel-monto-line">
-                <span class="panel-monto">{{
-                  item.montoEsperado | currency: 'COP' : 'symbol-narrow' : '1.0-0'
-                }}</span>
-                @if (item.abonoCxcId) {
-                  <span class="panel-origen">Abono CxC</span>
-                }
-                @if (item.estado !== 'CREADA') {
-                  <span class="panel-estado">
-                    @if (item.estado === 'CONFIRMADA') {
-                      Confirmado
-                    } @else if (item.estado === 'AMBIGUA') {
-                      Ambigüedad
-                    } @else {
-                      {{ item.estado }}
-                    }
-                  </span>
-                }
-              </div>
-              <div class="panel-sublinea">
-                @if (item.estado === 'CREADA' && tiempoEspera(item)) {
-                  {{ tiempoEspera(item) }}
-                } @else if (item.estado === 'CONFIRMADA') {
-                  Cierra en {{ countdownOf(item.id) ?? 0 }}s
-                } @else if (clienteIdentificado(item)) {
-                  {{ item.nombreCliente }}
-                } @else if (item.nombrePagador) {
-                  Pagador: {{ item.nombrePagador }}
-                } @else {
-                  Esperando confirmación
-                }
+              <div class="panel-item-copy">
+                <div class="panel-monto-line">
+                  <span class="panel-monto">{{
+                    item.montoEsperado
+                      | currency: "COP" : "symbol-narrow" : "1.0-0"
+                  }}</span>
+                  @if (item.abonoCxcId) {
+                    <span class="panel-origen">Abono CxC</span>
+                  }
+                  @if (item.estado !== "CREADA") {
+                    <span class="panel-estado">
+                      @if (item.estado === "CONFIRMADA") {
+                        Confirmado
+                      } @else if (item.estado === "AMBIGUA") {
+                        Ambigüedad
+                      } @else {
+                        {{ item.estado }}
+                      }
+                    </span>
+                  }
+                </div>
               </div>
             </div>
 
             <div class="panel-item-actions">
-              @if (item.estado === 'CREADA' || item.estado === 'AMBIGUA') {
+              @if (item.estado === "CREADA" || item.estado === "AMBIGUA") {
+                <div class="panel-item-actions-row">
+                  <button
+                    type="button"
+                    class="panel-asociar"
+                    matTooltip="Asociar email bancario (también si el monto difiere)"
+                    (click)="asociarPago(item, $event)">
+                    Asociar
+                  </button>
+                  <button
+                    type="button"
+                    class="panel-skip"
+                    matTooltip="Marcar como sin confirmación electrónica"
+                    (click)="yaNoEsperar(item, $event)">
+                    Ya no esperar
+                  </button>
+                </div>
                 <button
                   type="button"
-                  class="panel-asociar"
-                  matTooltip="Asociar email bancario (también si el monto difiere)"
-                  (click)="asociarPago(item, $event)">
-                  Asociar
+                  class="panel-detalle"
+                  matTooltip="Ver productos"
+                  (click)="verProductos(item, $event)">
+                  <mat-icon svgIcon="mat:receipt"></mat-icon>
                 </button>
+              } @else {
                 <button
                   type="button"
-                  class="panel-skip"
-                  matTooltip="Marcar como sin confirmación electrónica"
-                  (click)="yaNoEsperar(item, $event)">
-                  Ya no esperar
+                  class="panel-detalle"
+                  matTooltip="Ver productos"
+                  (click)="verProductos(item, $event)">
+                  <mat-icon svgIcon="mat:receipt"></mat-icon>
                 </button>
               }
-              <button
-                type="button"
-                class="panel-detalle"
-                matTooltip="Ver productos"
-                (click)="verProductos(item, $event)">
-                <mat-icon svgIcon="mat:receipt"></mat-icon>
-              </button>
             </div>
+          </div>
+
+          <div class="panel-sublinea">
+            @if (item.estado === "CREADA" && tiempoEspera(item)) {
+              {{ tiempoEspera(item) }}
+            } @else if (item.estado === "CONFIRMADA") {
+              Cierra en {{ countdownOf(item.id) ?? 0 }}s
+            } @else if (clienteIdentificado(item)) {
+              {{ item.nombreCliente }}
+            } @else if (item.nombrePagador) {
+              Pagador: {{ item.nombrePagador }}
+            } @else {
+              Esperando confirmación
+            }
           </div>
 
           @if (
             item.nombrePagador &&
-            !(item.estado === 'CREADA' && tiempoEspera(item)) &&
-            item.estado !== 'CONFIRMADA'
+            !(item.estado === "CREADA" && tiempoEspera(item)) &&
+            item.estado !== "CONFIRMADA"
           ) {
             <div class="panel-pagador">Pagador: {{ item.nombrePagador }}</div>
           }
           @if (
             clienteIdentificado(item) &&
-            item.estado === 'CREADA' &&
+            item.estado === "CREADA" &&
             tiempoEspera(item)
           ) {
-            <div class="panel-cliente-nombre panel-cliente-nombre--extra" [title]="item.nombreCliente">
+            <div
+              class="panel-cliente-nombre panel-cliente-nombre--extra"
+              [title]="item.nombreCliente">
               {{ item.nombreCliente }}
             </div>
           }

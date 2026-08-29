@@ -1,30 +1,28 @@
+/* Layout compartido + tema activo: azul-atras */
+
 .confirmacion-pagos-panel {
   position: fixed;
   /* A la izquierda del FAB bug-reporter (right:24px, ~40px) + settings */
   right: 88px;
   bottom: 80px;
   z-index: 1100;
-  width: min(320px, calc(100vw - 112px));
-  background: #1a2332;
-  color: #f2f5f8;
+  width: min(420px, calc(100vw - 112px));
   border-radius: 10px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
   overflow: hidden;
-  font-size: 13px;
+  font-size: 15px;
   user-select: none;
 }
 
 .confirmacion-pagos-panel--dragging {
-  opacity: 0.92;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+  opacity: 0.94;
 }
 
 .panel-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: #121922;
+  gap: 10px;
+  padding: 12px 14px;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.02em;
   cursor: grab;
@@ -36,61 +34,51 @@
 }
 
 .panel-icon {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
 }
 
 .panel-list {
   list-style: none;
   margin: 0;
-  padding: 6px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-height: 40vh;
+  gap: 8px;
+  max-height: 48vh;
   overflow: auto;
 }
 
 .panel-item {
   border-radius: 8px;
-  padding: 8px;
-  background: #243044;
+  padding: 12px 10px;
+  min-height: 64px;
 }
 
-.panel-item--espera {
-  border-left: 3px solid #e6b422;
-}
-
-.panel-item--ok {
-  border-left: 3px solid #2ecc71;
-  background: #1e3a2c;
-}
-
-.panel-item--ambigua {
-  border-left: 3px solid #e67e22;
-}
-
-/* Icono | monto + tiempo | acciones (arriba; el tiempo pasa debajo de los botones) */
+/* Fila: [icono + monto/tiempo] | acciones */
 .panel-item-row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-rows: auto auto;
-  column-gap: 8px;
-  row-gap: 1px;
-  align-items: start;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
   min-width: 0;
 }
 
+.panel-item-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
 .panel-metodo-icon-wrap {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
-  border-radius: 4px;
+  border-radius: 5px;
   overflow: hidden;
   background: #fff;
-  grid-column: 1;
-  grid-row: 1 / span 2;
-  align-self: center;
 }
 
 .panel-metodo-icon {
@@ -102,88 +90,86 @@
   transform: scale(1.1);
 }
 
-.panel-item-text {
-  display: contents;
+.panel-item-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .panel-monto-line {
-  grid-column: 2;
-  grid-row: 1;
   display: flex;
-  align-items: baseline;
-  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  min-height: 34px;
   min-width: 0;
 }
 
 .panel-monto {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 17px;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .panel-estado {
-  font-size: 10px;
+  font-size: 12px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  opacity: 0.75;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .panel-origen {
-  font-size: 10px;
+  font-size: 12px;
+  font-weight: 500;
   letter-spacing: 0.02em;
-  opacity: 0.7;
   white-space: nowrap;
-  color: rgba(180, 210, 255, 0.9);
 }
 
 .panel-sublinea {
-  grid-column: 2 / 4;
-  grid-row: 2;
-  font-size: 11px;
-  line-height: 1.3;
-  color: rgba(242, 245, 248, 0.62);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
+  margin-top: 6px;
+  padding-left: 44px; /* alinea con el monto (icono 34 + gap 10) */
+  font-size: 15px;
+  line-height: 1.4;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  word-break: break-word;
 }
 
 .panel-item-actions {
-  grid-column: 3;
-  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.panel-item-actions-row {
   display: flex;
   align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-  align-self: start;
-  margin-top: -1px;
-  flex-wrap: wrap;
   justify-content: flex-end;
-  max-width: 140px;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
-.panel-asociar {
+.panel-asociar,
+.panel-skip {
   flex-shrink: 0;
   margin: 0;
-  padding: 2px 6px;
-  font-size: 10px;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1.3;
-  color: #b4d2ff;
-  background: transparent;
-  border: 1px solid rgba(180, 210, 255, 0.35);
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
   white-space: nowrap;
-}
-
-.panel-asociar:hover {
-  color: #fff;
-  border-color: rgba(180, 210, 255, 0.7);
-  background: rgba(180, 210, 255, 0.1);
 }
 
 .panel-detalle {
@@ -191,53 +177,141 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
   padding: 0;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  color: #c5d0dc;
+  border-radius: 5px;
   cursor: pointer;
+  /* Misma posición inferior-derecha que en la captura */
+  align-self: flex-end;
 }
 
 .panel-detalle mat-icon {
-  width: 18px;
-  height: 18px;
-}
-
-.panel-detalle:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.panel-skip {
-  flex-shrink: 0;
-  margin: 0;
-  padding: 2px 6px;
-  font-size: 10px;
-  line-height: 1.3;
-  color: #c5d0dc;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 4px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.panel-skip:hover {
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.06);
+  width: 22px;
+  height: 22px;
 }
 
 .panel-pagador,
 .panel-cliente-nombre--extra {
-  margin-top: 4px;
-  padding-left: 36px;
-  font-size: 11px;
-  opacity: 0.85;
+  margin-top: 6px;
+  padding-left: 44px;
+  font-size: 13px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* —— Tema: azul-atras —— */
+.confirmacion-pagos-panel--azul-atras {
+  background: #4a6388;
+  color: #f2f5f8;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+
+  &.confirmacion-pagos-panel--dragging {
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.32);
+  }
+
+  .panel-header {
+    background: #3d5474;
+    color: #f2f5f8;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .panel-icon {
+    color: #9ec0ff;
+  }
+
+  /* Ítem adelante: tarjeta clara sobre el azul de atrás */
+  .panel-item {
+    background: #eef3f9;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+    color: #1a2332;
+  }
+
+  .panel-item--espera {
+    border-left: 4px solid #d4a017;
+    background: #fff8e8;
+  }
+
+  .panel-item--ok {
+    border-left: 4px solid #2e7d32;
+    background: #eaf6ee;
+  }
+
+  .panel-item--ambigua {
+    border-left: 4px solid #e65100;
+    background: #fff1e8;
+  }
+
+  .panel-monto {
+    color: #122033;
+  }
+
+  .panel-estado {
+    opacity: 1;
+    color: #4a5a70;
+  }
+
+  .panel-item--ok .panel-estado {
+    color: #2e7d32;
+  }
+
+  .panel-item--ambigua .panel-estado {
+    color: #e65100;
+  }
+
+  .panel-item--espera .panel-estado {
+    color: #9a7209;
+  }
+
+  .panel-origen {
+    color: #2f6fed;
+  }
+
+  .panel-sublinea {
+    color: #5a6a7e;
+  }
+
+  .panel-asociar {
+    color: #1e4fbf;
+    background: rgba(47, 111, 237, 0.1);
+    border: 1px solid rgba(47, 111, 237, 0.35);
+
+    &:hover {
+      color: #123a99;
+      border-color: rgba(47, 111, 237, 0.55);
+      background: rgba(47, 111, 237, 0.16);
+    }
+  }
+
+  .panel-detalle {
+    border: 1px solid rgba(26, 35, 50, 0.14);
+    background: #fff;
+    color: #4a5a70;
+
+    &:hover {
+      color: #1a2332;
+      background: #e8eef6;
+      border-color: rgba(26, 35, 50, 0.22);
+    }
+  }
+
+  .panel-skip {
+    color: #4a5a70;
+    background: #fff;
+    border: 1px solid rgba(26, 35, 50, 0.18);
+
+    &:hover {
+      color: #1a2332;
+      border-color: rgba(26, 35, 50, 0.3);
+      background: #e8eef6;
+    }
+  }
+
+  .panel-pagador,
+  .panel-cliente-nombre--extra {
+    color: #4a5a70;
+  }
 }

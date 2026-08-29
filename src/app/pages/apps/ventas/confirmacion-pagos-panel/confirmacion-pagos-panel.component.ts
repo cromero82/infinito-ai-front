@@ -32,7 +32,7 @@ import { FechaUtilService } from '../service/fecha-util.service';
 const POLL_MS = 2500;
 const COUNTDOWN_FROM = 6;
 const POS_STORAGE_KEY = 'confirmacion-pagos-panel-pos';
-const PANEL_W = 320;
+const PANEL_W = 420;
 const PANEL_H_MIN = 120;
 
 @Component({
