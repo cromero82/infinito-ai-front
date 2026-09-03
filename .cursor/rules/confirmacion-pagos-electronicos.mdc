@@ -12,7 +12,8 @@ Fuente contractual (OpenSpec):
 Narrativo completo:  
 `prompts-general-pos/contextos-ia/confirmacion-pagos-electronicos.md`
 
-Dual docs: `prompts-general-pos/DUAL-DOCS-CURSOR-OPENSPEC.md`
+Dual/triple docs: `prompts-general-pos/DUAL-DOCS-CURSOR-OPENSPEC.md`  
+Capacidad relacionada: `metodos-pago-notificacion` (flag, plantillas, corregir medio).
 
 ## Reglas al tocar este flujo
 
@@ -26,8 +27,15 @@ Dual docs: `prompts-general-pos/DUAL-DOCS-CURSOR-OPENSPEC.md`
 
 | Tema | Archivo |
 |------|---------|
-| Panel poll pendientes | `confirmacion-pagos-panel.component.ts` |
+| Panel poll pendientes | `confirmacion-pagos-panel.component.ts` (+ `.scss` tema `azul-atras`) |
 | Asociar live | `asociar-notificacion-dialog.component.ts` |
 | API FE | `service/confirmacion-pago.service.ts` |
 | Faltante → CxC UI | `tickets.component.ts` → `onCreditoDesdeFaltanteQr` |
 | Abrir CxC bloqueado | `abrir-cuenta-por-cobrar-dialog.component.ts` |
+
+UX panel: tipografía grande; Asociar · Ya no esperar arriba; Ver productos abajo der.; leyenda tiempo sin ellipsis.
+Icono del panel = `metodo_pago.file` vía `metodoPagoId` (no hardcode QR).
+Pendiente electrónica se crea solo si `metodo_pago.permite_notificacion=true` (Dominios → Métodos de pago).
+Plantillas de extracción: requieren `metodoPagoId` de un medio con notificaciones; icono desde el método.
+Asociar: si hay emails de otro medio → iconos + botón «Corregir / cambiar medio» (chevron) →
+`PUT /historial-recibos-electronicos/{id}/corregir-metodo-pago` (HRE + historial_recibo_pago / abono+traslado OF).

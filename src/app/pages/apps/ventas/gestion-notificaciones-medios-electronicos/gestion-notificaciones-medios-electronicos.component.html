@@ -80,12 +80,23 @@
               </ng-container>
               <ng-container matColumnDef="cuerpoTexto">
                 <th mat-header-cell *matHeaderCellDef>cuerpo_texto</th>
-                <td
-                  mat-cell
-                  *matCellDef="let row"
-                  class="col-cuerpo"
-                  [matTooltip]="previewCuerpo(row.cuerpoTexto, 400)">
-                  {{ previewCuerpo(row.cuerpoTexto) }}
+                <td mat-cell *matCellDef="let row" class="col-cuerpo">
+                  <div class="cuerpo-cell">
+                    <span
+                      class="cuerpo-preview"
+                      [matTooltip]="previewCuerpo(row.cuerpoTexto, 400)"
+                      >{{ previewCuerpo(row.cuerpoTexto) }}</span
+                    >
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      class="btn-mensaje-completo"
+                      [disabled]="!tieneMensajeCompleto(row)"
+                      matTooltip="Ver correo tal como llegó (con vínculos)"
+                      (click)="verMensajeCompleto(row, $event)">
+                      Ver mensaje completo
+                    </button>
+                  </div>
                 </td>
               </ng-container>
               <ng-container matColumnDef="monto">
@@ -250,7 +261,9 @@
           La plantilla es un <strong>fragmento</strong>: basta con que ese tramo
           aparezca en el correo (se ignoran mayúsculas, tildes y espacios de más).
           No hace falta copiar el «Bancolombia:» ni el resto del mensaje.
-          Fechas/horas en la plantilla se tratan como variables. Icono máx. 48×48.
+          Fechas/horas en la plantilla se tratan como variables.
+          <strong>Ingreso</strong>: método de pago (icono del medio).
+          <strong>Egreso</strong>: orígenes de fondos.
           El movimiento asociado usa origen_tipo «MOVIMIENTO BANCO POR IDENTIFICAR».
         </p>
         @if (cargandoPlantillas) {
@@ -259,15 +272,27 @@
           @for (p of plantillas; track p.id || $index) {
             <div class="plantilla-card">
               <div class="plantilla-head">
-                <img
-                  class="plantilla-icon-preview"
-                  [src]="iconoUrl(p.icono)"
-                  [alt]="p.nombre"
-                  width="40"
-                  height="40" />
+                @if (esPlantillaIngreso(p) && iconoPlantilla(p); as icoSrc) {
+                  <img
+                    class="plantilla-icon-preview"
+                    [src]="icoSrc"
+                    [alt]="p.nombre"
+                    width="40"
+                    height="40" />
+                }
                 <mat-form-field appearance="outline" class="nombre-field">
                   <mat-label>Nombre</mat-label>
                   <input matInput [(ngModel)]="p.nombre" placeholder="QR, BREVE, OTRO" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="naturaleza-field">
+                  <mat-label>Naturaleza</mat-label>
+                  <mat-select
+                    [(ngModel)]="p.naturaleza"
+                    (ngModelChange)="onNaturalezaPlantillaChange(p)">
+                    @for (n of naturalezasPlantilla; track n.value) {
+                      <mat-option [value]="n.value">{{ n.label }}</mat-option>
+                    }
+                  </mat-select>
                 </mat-form-field>
                 <button
                   mat-flat-button
@@ -281,31 +306,49 @@
                   <mat-icon svgIcon="mat:delete"></mat-icon>
                 </button>
               </div>
-              <div class="icon-picker">
-                <span class="icon-picker-label">Icono</span>
-                @for (ico of iconosDisponibles; track ico) {
-                  <button
-                    type="button"
-                    class="icon-option"
-                    [class.selected]="p.icono === ico"
-                    [matTooltip]="ico"
-                    (click)="p.icono = ico">
-                    <img [src]="iconoUrl(ico)" [alt]="ico" width="40" height="40" />
-                  </button>
-                }
-              </div>
               <div class="plantilla-mov-fields">
-                <mat-form-field appearance="outline">
-                  <mat-label>Naturaleza</mat-label>
-                  <mat-select [(ngModel)]="p.naturaleza">
-                    @for (n of naturalezasPlantilla; track n.value) {
-                      <mat-option [value]="n.value">{{ n.label }}</mat-option>
+                <mat-form-field appearance="outline" class="metodo-field">
+                  <mat-label>Método de pago</mat-label>
+                  <mat-select
+                    [(ngModel)]="p.metodoPagoId"
+                    [disabled]="!esPlantillaIngreso(p)">
+                    <mat-option [value]="null">—</mat-option>
+                    @if (metodosNotificacion.length === 0) {
+                      <mat-option [value]="null" disabled>
+                        Ninguno con notificaciones (activa en Dominios)
+                      </mat-option>
+                    }
+                    @for (m of metodosNotificacion; track m.id) {
+                      <mat-option [value]="m.id">
+                        <span class="of-option">
+                          @if (m.file) {
+                            <img
+                              class="mp-opt-icon"
+                              [src]="iconoUrl(m.file)"
+                              [alt]="m.descripcion"
+                              width="22"
+                              height="22" />
+                          }
+                          {{ m.descripcion }}
+                        </span>
+                      </mat-option>
                     }
                   </mat-select>
                 </mat-form-field>
+                <button
+                  mat-stroked-button
+                  type="button"
+                  class="metodos-pago-btn"
+                  matTooltip="Abrir catálogo Dominios → Métodos de pago"
+                  (click)="abrirMetodosPagoDominios()">
+                  <mat-icon svgIcon="mat:payments" class="ltr:mr-1 rtl:ml-1"></mat-icon>
+                  Métodos de pago
+                </button>
                 <mat-form-field appearance="outline">
                   <mat-label>Origen de fondos origen</mat-label>
-                  <mat-select [(ngModel)]="p.origenFondosOrigenId">
+                  <mat-select
+                    [(ngModel)]="p.origenFondosOrigenId"
+                    [disabled]="!esPlantillaEgreso(p)">
                     <mat-option [value]="null">—</mat-option>
                     @for (c of origenesArbol; track c.id) {
                       <mat-option [value]="c.id">
@@ -327,7 +370,9 @@
                 </mat-form-field>
                 <mat-form-field appearance="outline">
                   <mat-label>Origen de fondos destino</mat-label>
-                  <mat-select [(ngModel)]="p.origenFondosDestinoId">
+                  <mat-select
+                    [(ngModel)]="p.origenFondosDestinoId"
+                    [disabled]="!esPlantillaEgreso(p)">
                     <mat-option [value]="null">—</mat-option>
                     @for (c of origenesArbol; track c.id) {
                       <mat-option [value]="c.id">

@@ -24,8 +24,8 @@
               <span class="panel-metodo-icon-wrap">
                 <img
                   class="panel-metodo-icon"
-                  src="/assets/img/icons/payments/qr-bancolombia.png"
-                  alt="QR Bancolombia"
+                  [src]="iconoMetodo(item)"
+                  [alt]="item.metodoPagoId ? 'Método de pago' : 'Pago electrónico'"
                   width="34"
                   height="34" />
               </span>

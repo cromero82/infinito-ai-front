@@ -28,6 +28,7 @@ import { CopiasSeguridadService } from '../../../../../pages/apps/copias-segurid
 import { TipoEgresoGestionDialogComponent } from '../../../../../pages/apps/dominios/tipo-egreso/tipo-egreso-gestion-dialog.component';
 import { NaturalezaTipoEgresoGestionDialogComponent } from '../../../../../pages/apps/dominios/naturaleza-tipo-egreso/naturaleza-tipo-egreso-gestion-dialog.component';
 import { PersonaGestionDialogComponent } from '../../../../../pages/apps/dominios/persona/persona-gestion-dialog.component';
+import { MetodoPagoGestionDialogComponent } from '../../../../../pages/apps/dominios/metodo-pago/metodo-pago-gestion-dialog.component';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData
@@ -217,6 +218,14 @@ export class ToolbarUserDropdownComponent implements OnInit {
             description: 'Beneficiarios PERSONAL / DIVIDENDOS',
             colorClass: 'text-slate-700',
             action: () => this.openPersonaGestion()
+          },
+          {
+            id: '10-4',
+            icon: 'mat:payments',
+            label: 'Métodos de pago',
+            description: 'Medios, iconos y notificaciones',
+            colorClass: 'text-slate-700',
+            action: () => this.openMetodoPagoGestion()
           }
         ]
       });
@@ -256,6 +265,15 @@ export class ToolbarUserDropdownComponent implements OnInit {
     this.close();
     this.dialog.open(PersonaGestionDialogComponent, {
       width: '920px',
+      maxWidth: '96vw',
+      autoFocus: false
+    });
+  }
+
+  openMetodoPagoGestion(): void {
+    this.close();
+    this.dialog.open(MetodoPagoGestionDialogComponent, {
+      width: '1000px',
       maxWidth: '96vw',
       autoFocus: false
     });

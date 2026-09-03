@@ -23,8 +23,9 @@ import {
   MontoDistintoConfirmacionDto,
   PendienteConfirmacionDto
 } from '../service/confirmacion-pago.service';
+import { MetodoPagoDto, MetodoPagoService } from '../service/metodo-pago.service';
 import { AmbiguidadPagoDialogComponent } from './ambiguidad-pago-dialog.component';
-import { AsociarNotificacionDialogComponent } from './asociar-notificacion-dialog.component';
+import { AsociarNotificacionDialogComponent, AsociarNotificacionDialogResult } from './asociar-notificacion-dialog.component';
 import { MontoDistintoPagoDialogComponent, MontoDistintoDialogResult } from './monto-distinto-pago-dialog.component';
 import { TicketSinNotifProductosDialogComponent } from '../gestion-notificaciones-medios-electronicos/ticket-sin-notif-productos-dialog.component';
 import { FechaUtilService } from '../service/fecha-util.service';
@@ -50,6 +51,7 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
 
   items: PendienteConfirmacionDto[] = [];
   countdowns = new Map<number, number>();
+  private metodosPorId = new Map<number, MetodoPagoDto>();
 
   panelLeft: number | null = null;
   panelTop: number | null = null;
@@ -64,6 +66,7 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
 
   constructor(
     private confirmacionPago: ConfirmacionPagoService,
+    private metodoPagoService: MetodoPagoService,
     private dialog: MatDialog,
     private fechaUtil: FechaUtilService,
     private cdr: ChangeDetectorRef
@@ -72,7 +75,21 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
   }
 
   ngOnInit(): void {
+    this.metodoPagoService.obtenerMetodosPago().subscribe({
+      next: (list) => {
+        this.metodosPorId = new Map((list || []).map((m) => [m.id, m]));
+        this.cdr.markForCheck();
+      }
+    });
     this.revisarPendientes();
+  }
+
+  iconoMetodo(item: PendienteConfirmacionDto): string {
+    const file = item.metodoPagoId != null
+      ? this.metodosPorId.get(item.metodoPagoId)?.file
+      : null;
+    const src = this.metodoPagoService.iconoUrl(file || 'qr-bancolombia.png');
+    return src.startsWith('/') ? src : `/${src}`;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -368,15 +385,30 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
     }
     // Abrir de inmediato: el dialog hace polling de emails sin asignar.
     const ref = this.dialog.open(AsociarNotificacionDialogComponent, {
-      width: '420px',
+      width: '440px',
       data: {
         montoEsperado: item.montoEsperado,
+        historialElectronicoId: item.id,
         abonoCxcId: item.abonoCxcId,
         historialReciboId: item.historialReciboId,
+        metodoPagoId: item.metodoPagoId ?? null,
         notificaciones: []
       }
     });
-    ref.afterClosed().subscribe((notifId: number | null) => {
+    ref.afterClosed().subscribe((result: AsociarNotificacionDialogResult | number | null) => {
+      const notifId =
+        typeof result === 'number'
+          ? result
+          : result && typeof result === 'object'
+            ? result.notificacionId ?? null
+            : null;
+      const corregido =
+        result && typeof result === 'object' ? result.metodoPagoCorregido ?? null : null;
+      if (corregido != null) {
+        item.metodoPagoId = corregido;
+        this.cdr.markForCheck();
+        this.revisarPendientes();
+      }
       if (notifId) {
         this.asignarConConfirmacionSiDistinto(item.id, notifId);
       }

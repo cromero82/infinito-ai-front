@@ -66,18 +66,44 @@
 }
 
 .nombre-field {
+  width: 160px;
+}
+
+.naturaleza-field {
   width: 140px;
+}
+
+.metodo-field {
+  min-width: 200px;
+}
+
+.metodos-pago-btn {
+  align-self: center;
+  margin-bottom: 1.25em;
+  white-space: nowrap;
+}
+
+.mp-opt-icon {
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: 6px;
 }
 
 .plantilla-mov-fields {
   display: grid;
-  grid-template-columns: minmax(140px, 0.8fr) minmax(180px, 1.1fr) minmax(180px, 1.1fr);
+  grid-template-columns: minmax(180px, 1.1fr) auto minmax(160px, 1fr) minmax(160px, 1fr);
   gap: 8px;
+  align-items: start;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 900px) {
   .plantilla-mov-fields {
     grid-template-columns: 1fr;
+  }
+
+  .metodos-pago-btn {
+    margin-bottom: 0;
+    justify-self: start;
   }
 }
 
@@ -293,12 +319,34 @@ td.col-asunto.asunto-no-permitido {
 }
 
 .col-cuerpo {
-  max-width: 360px;
+  max-width: 420px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.cuerpo-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cuerpo-preview {
+  flex: 1 1 auto;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.7);
+}
+
+.btn-mensaje-completo {
+  flex: 0 0 auto;
+  min-height: 28px;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 11px;
+  line-height: 28px;
+  white-space: nowrap;
 }
 
 .empty {

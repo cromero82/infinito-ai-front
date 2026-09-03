@@ -114,7 +114,16 @@ export interface NotificacionEmailDetalleData extends NotificacionEmailPagoDto {
         </div>
       }
 
-      <pre class="cuerpo">{{ data.cuerpoTexto || data.cuerpoRaw || '(sin cuerpo)' }}</pre>
+      <h3 class="cuerpo-title">Mensaje completo (original)</h3>
+      <pre class="cuerpo">{{
+        data.cuerpoRaw || data.cuerpoTexto || "(sin cuerpo)"
+      }}</pre>
+      @if (data.cuerpoRaw && data.cuerpoTexto && data.cuerpoRaw !== data.cuerpoTexto) {
+        <details class="cuerpo-extraido">
+          <summary>Vista extraída (sin vínculos / filtrada)</summary>
+          <pre class="cuerpo cuerpo--secundario">{{ data.cuerpoTexto }}</pre>
+        </details>
+      }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button mat-dialog-close type="button">Cerrar</button>
@@ -180,6 +189,19 @@ export interface NotificacionEmailDetalleData extends NotificacionEmailPagoDto {
         font-size: 13px;
         max-height: 40vh;
         overflow: auto;
+        user-select: text;
+      }
+      .cuerpo-title {
+        margin: 12px 0 6px;
+        font-size: 0.85rem;
+      }
+      .cuerpo-extraido {
+        margin-top: 10px;
+        font-size: 0.8rem;
+      }
+      .cuerpo--secundario {
+        max-height: 20vh;
+        opacity: 0.85;
       }
     `
   ]
@@ -223,6 +245,13 @@ export class NotificacionEmailDetalleDialogComponent implements OnInit {
   }
 
   iconoUrl(filename?: string | null): string {
+    if (!filename) {
+      return '';
+    }
+    // Iconos de método de pago viven en assets del FE (mismo file que tickets)
+    if (filename.endsWith('.png') || filename.endsWith('.svg') || filename.endsWith('.webp')) {
+      return `assets/img/icons/payments/${filename}`;
+    }
     return this.api.iconoUrl(filename);
   }
 

@@ -14,7 +14,23 @@ export interface MetodoPagoDto {
   color: string;
   visiblePagosEgresos?: boolean;
   visiblePagoTickets?: boolean;
+  permiteNotificacion?: boolean;
   monto?: number | null;
+  codigoDianPaymentMeans?: string | null;
+}
+
+export interface MetodoPagoWriteDto {
+  descripcion: string;
+  descripcionEgreso?: string | null;
+  estado?: string;
+  file?: string | null;
+  sigla?: string | null;
+  color?: string | null;
+  visiblePagosEgresos?: boolean;
+  visiblePagoTickets?: boolean;
+  permiteNotificacion?: boolean;
+  monto?: number | null;
+  codigoDianPaymentMeans?: string | null;
 }
 
 @Injectable({
@@ -22,8 +38,8 @@ export interface MetodoPagoDto {
 })
 export class MetodoPagoService {
   private readonly apiUrl = `${environment.apiUrlRelationalDb}/metodos-pago`;
-  /** v2: incluye descripcion_egreso y visible_pago_tickets */
-  private readonly storageKey = 'metodos_pago_v2';
+  /** v3: incluye permiteNotificacion */
+  private readonly storageKey = 'metodos_pago_v3';
 
   constructor(private http: HttpClient) {}
 
@@ -44,6 +60,51 @@ export class MetodoPagoService {
     const headers = new HttpHeaders({ Accept: 'application/json' });
     return this.http.get<MetodoPagoDto[]>(`${this.apiUrl}?paraEgresos=true`, {
       headers
+    });
+  }
+
+  /** Medios que permiten notificaciones electrónicas (plantillas). */
+  obtenerMetodosPagoParaNotificacion(): Observable<MetodoPagoDto[]> {
+    const headers = new HttpHeaders({ Accept: 'application/json' });
+    return this.http.get<MetodoPagoDto[]>(`${this.apiUrl}?paraNotificacion=true`, {
+      headers
+    });
+  }
+
+  create(dto: MetodoPagoWriteDto): Observable<MetodoPagoDto> {
+    return this.http
+      .post<MetodoPagoDto>(this.apiUrl, dto, { headers: this.jsonHeaders() })
+      .pipe(tap(() => this.clearCache()));
+  }
+
+  update(id: number, dto: MetodoPagoWriteDto): Observable<MetodoPagoDto> {
+    return this.http
+      .put<MetodoPagoDto>(`${this.apiUrl}/${id}`, dto, { headers: this.jsonHeaders() })
+      .pipe(tap(() => this.clearCache()));
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(tap(() => this.clearCache()));
+  }
+
+  clearCache(): void {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith('metodos_pago'))
+      .forEach((k) => localStorage.removeItem(k));
+  }
+
+  iconoUrl(file?: string | null): string {
+    const f = (file || '').trim();
+    if (!f) {
+      return '';
+    }
+    return `assets/img/icons/payments/${f}`;
+  }
+
+  private jsonHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
     });
   }
 

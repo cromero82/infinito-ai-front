@@ -26,6 +26,7 @@ import {
 } from '../service/gestion-notificaciones-medios.service';
 import { ConfigurationService } from '../../../../auth/service/configuration.service';
 import { NotificacionEmailDetalleDialogComponent } from './notificacion-email-detalle-dialog.component';
+import { NotificacionMensajeCompletoDialogComponent } from './notificacion-mensaje-completo-dialog.component';
 import { TicketSinNotifProductosDialogComponent } from './ticket-sin-notif-productos-dialog.component';
 import { OrigenFondosService } from '../../financiero/origenes-fondos/service/origen-fondos.service';
 import { OrigenFondosArbolItemDto } from '../../financiero/origenes-fondos/util/origen-fondos-arbol.util';
@@ -33,6 +34,7 @@ import {
   MetodoPagoDto,
   MetodoPagoService
 } from '../service/metodo-pago.service';
+import { MetodoPagoGestionDialogComponent } from '../../dominios/metodo-pago/metodo-pago-gestion-dialog.component';
 
 const KEY_ASUNTOS_PERMITIDOS = 'notificaciones.qr.asuntos-permitidos';
 const ORIGEN_TIPO_MOVIMIENTO_BANCO = 'MOVIMIENTO BANCO POR IDENTIFICAR';
@@ -65,7 +67,7 @@ const ORIGEN_TIPO_MOVIMIENTO_BANCO = 'MOVIMIENTO BANCO POR IDENTIFICAR';
 export class GestionNotificacionesMediosElectronicosComponent implements OnInit {
   plantillas: PlantillaNotificacionPagoDto[] = [];
   plantillasOriginal = new Map<number, string>();
-  iconosDisponibles: string[] = ['qr-bancolombia.png', 'breve-logo.png', 'otro-metodo.png'];
+  metodosNotificacion: MetodoPagoDto[] = [];
   cargandoPlantillas = true;
   guardandoPlantillaId: number | null = null;
 
@@ -130,9 +132,11 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
     this.metodoPagoService.obtenerMetodosPago().subscribe({
       next: (list) => {
         this.metodosPagoPorId = new Map((list || []).map((m) => [m.id, m]));
+        this.metodosNotificacion = (list || []).filter((m) => !!m.permiteNotificacion);
       },
       error: () => {
         this.metodosPagoPorId = new Map();
+        this.metodosNotificacion = [];
       }
     });
   }
@@ -180,7 +184,7 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
     this.cargandoPlantillas = true;
     this.api.listarPlantillas().subscribe({
       next: (list) => {
-        this.plantillas = list || [];
+        this.plantillas = (list || []).map((p) => this.normalizarPlantillaCargada(p));
         this.plantillasOriginal.clear();
         this.plantillas.forEach((p) => this.plantillasOriginal.set(p.id, this.snapshotPlantilla(p)));
         this.cargandoPlantillas = false;
@@ -192,17 +196,67 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
         });
       }
     });
-    this.api.iconosDisponibles().subscribe({
-      next: (icons) => {
-        if (icons?.length) {
-          this.iconosDisponibles = icons;
-        }
-      }
-    });
   }
 
   iconoUrl(filename?: string | null): string {
+    if (!filename) {
+      return '';
+    }
+    // Preferir assets de tickets (mismo file que metodo_pago)
+    if (this.metodoPagoService.iconoUrl(filename)) {
+      return this.metodoPagoService.iconoUrl(filename);
+    }
     return this.api.iconoUrl(filename);
+  }
+
+  iconoPlantilla(p: PlantillaNotificacionPagoDto): string {
+    const mp = p.metodoPagoId != null ? this.metodosPagoPorId.get(p.metodoPagoId) : null;
+    if (mp?.file) {
+      return this.metodoPagoService.iconoUrl(mp.file);
+    }
+    return this.iconoUrl(p.icono);
+  }
+
+  labelMetodoPago(id?: number | null): string {
+    if (id == null) {
+      return '—';
+    }
+    return this.metodosPagoPorId.get(id)?.descripcion || `#${id}`;
+  }
+
+  esPlantillaIngreso(p: PlantillaNotificacionPagoDto): boolean {
+    return (p.naturaleza || '').toUpperCase() === 'INGRESO';
+  }
+
+  esPlantillaEgreso(p: PlantillaNotificacionPagoDto): boolean {
+    return (p.naturaleza || '').toUpperCase() === 'EGRESO';
+  }
+
+  onNaturalezaPlantillaChange(p: PlantillaNotificacionPagoDto): void {
+    if (this.esPlantillaIngreso(p)) {
+      p.origenFondosOrigenId = null;
+      p.origenFondosDestinoId = null;
+      if (p.metodoPagoId == null && this.metodosNotificacion.length) {
+        p.metodoPagoId = this.metodosNotificacion[0].id;
+      }
+    } else if (this.esPlantillaEgreso(p)) {
+      p.metodoPagoId = null;
+    } else {
+      p.metodoPagoId = null;
+      p.origenFondosOrigenId = null;
+      p.origenFondosDestinoId = null;
+    }
+  }
+
+  abrirMetodosPagoDominios(): void {
+    const ref = this.dialog.open(MetodoPagoGestionDialogComponent, {
+      width: '1000px',
+      maxWidth: '96vw',
+      autoFocus: false
+    });
+    ref.afterClosed().subscribe(() => {
+      this.cargarOrigenesFondos();
+    });
   }
 
   plantillaDirty(p: PlantillaNotificacionPagoDto): boolean {
@@ -217,16 +271,37 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
       this.snackBar.open('Nombre y cuerpo son obligatorios', 'Cerrar', { duration: 3000 });
       return;
     }
+    if (!p.naturaleza) {
+      this.snackBar.open('Selecciona la naturaleza (Ingreso o Egreso)', 'Cerrar', {
+        duration: 3500
+      });
+      return;
+    }
+    const esIngreso = this.esPlantillaIngreso(p);
+    const esEgreso = this.esPlantillaEgreso(p);
+    if (esIngreso && p.metodoPagoId == null) {
+      this.snackBar.open('Selecciona un método de pago con notificaciones', 'Cerrar', {
+        duration: 3500
+      });
+      return;
+    }
+    if (esEgreso && (p.origenFondosOrigenId == null || p.origenFondosDestinoId == null)) {
+      this.snackBar.open('Selecciona origen y destino de fondos', 'Cerrar', {
+        duration: 3500
+      });
+      return;
+    }
     this.guardandoPlantillaId = p.id ?? 0;
     const body = {
       nombre: p.nombre.trim(),
       cuerpo: p.cuerpo.trim(),
-      icono: p.icono,
+      icono: p.icono || null,
+      metodoPagoId: esIngreso ? p.metodoPagoId : null,
       activo: p.activo !== false,
       orden: p.orden,
       naturaleza: p.naturaleza || null,
-      origenFondosOrigenId: p.origenFondosOrigenId ?? null,
-      origenFondosDestinoId: p.origenFondosDestinoId ?? null,
+      origenFondosOrigenId: esEgreso ? (p.origenFondosOrigenId ?? null) : null,
+      origenFondosDestinoId: esEgreso ? (p.origenFondosDestinoId ?? null) : null,
       origenTipo: ORIGEN_TIPO_MOVIMIENTO_BANCO
     };
     const req$ = p.id
@@ -261,7 +336,8 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
         id: 0,
         nombre: '',
         cuerpo: 'recibiste una transferencia de {{nombrePagador}} por {{monto}} en tu cuenta *{{referenciaCuenta}}',
-        icono: 'otro-metodo.png',
+        icono: null,
+        metodoPagoId: this.metodosNotificacion[0]?.id ?? null,
         activo: true,
         orden: this.plantillas.length + 1,
         naturaleza: 'INGRESO',
@@ -305,7 +381,8 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
     return JSON.stringify({
       nombre: p.nombre,
       cuerpo: p.cuerpo,
-      icono: p.icono,
+      icono: p.icono || null,
+      metodoPagoId: p.metodoPagoId ?? null,
       activo: p.activo !== false,
       orden: p.orden,
       naturaleza: p.naturaleza || null,
@@ -313,6 +390,16 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
       origenFondosDestinoId: p.origenFondosDestinoId ?? null,
       origenTipo: p.origenTipo || ORIGEN_TIPO_MOVIMIENTO_BANCO
     });
+  }
+
+  /** Legado: plantilla con método y sin naturaleza → tratar como Ingreso en UI. */
+  private normalizarPlantillaCargada(
+    p: PlantillaNotificacionPagoDto
+  ): PlantillaNotificacionPagoDto {
+    if (!p.naturaleza && p.metodoPagoId != null) {
+      return { ...p, naturaleza: 'INGRESO' };
+    }
+    return p;
   }
 
   cargarLista(): void {
@@ -486,6 +573,20 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
         this.cargarLista();
         this.cargarOrigenesFondos();
       }
+    });
+  }
+
+  tieneMensajeCompleto(row: NotificacionEmailPagoDto): boolean {
+    return !!(row.cuerpoRaw?.trim() || row.cuerpoTexto?.trim());
+  }
+
+  verMensajeCompleto(row: NotificacionEmailPagoDto, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.dialog.open(NotificacionMensajeCompletoDialogComponent, {
+      width: '780px',
+      maxWidth: '94vw',
+      data: { notificacion: row }
     });
   }
 

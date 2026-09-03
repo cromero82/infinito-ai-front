@@ -39,7 +39,8 @@ export interface PlantillaNotificacionPagoDto {
   id: number;
   nombre: string;
   cuerpo: string;
-  icono: string;
+  icono?: string | null;
+  metodoPagoId?: number | null;
   activo?: boolean;
   orden?: number;
   naturaleza?: string | null;

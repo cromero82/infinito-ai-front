@@ -117,4 +117,18 @@ export class ConfirmacionPagoService {
       {}
     );
   }
+
+  /**
+   * Corrige el medio del pendiente HRE (venta o abono) en relational.
+   * Cascada: historial_recibo_pago / abono_cxc (+ traslado OF si aplica).
+   */
+  corregirMetodoPago(
+    historialElectronicoId: number,
+    metodoPagoId: number
+  ): Observable<{ id: number; metodoPagoId: number | null; estado?: string }> {
+    const url = `${environment.apiUrlRelationalDb}/historial-recibos-electronicos/${historialElectronicoId}/corregir-metodo-pago`;
+    return this.http.put<{ id: number; metodoPagoId: number | null; estado?: string }>(url, {
+      metodoPagoId
+    });
+  }
 }
