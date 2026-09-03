@@ -18,7 +18,8 @@
           class="panel-item"
           [class.panel-item--espera]="item.estado === 'CREADA'"
           [class.panel-item--ok]="item.estado === 'CONFIRMADA'"
-          [class.panel-item--ambigua]="item.estado === 'AMBIGUA'">
+          [class.panel-item--ambigua]="item.estado === 'AMBIGUA'"
+          [style.border-left-color]="colorFranjaEspera(item)">
           <div class="panel-item-row">
             <div class="panel-item-main">
               <span class="panel-metodo-icon-wrap">

@@ -29,9 +29,10 @@ import { AsociarNotificacionDialogComponent, AsociarNotificacionDialogResult } f
 import { MontoDistintoPagoDialogComponent, MontoDistintoDialogResult } from './monto-distinto-pago-dialog.component';
 import { TicketSinNotifProductosDialogComponent } from '../gestion-notificaciones-medios-electronicos/ticket-sin-notif-productos-dialog.component';
 import { FechaUtilService } from '../service/fecha-util.service';
+import { ConfigurationService } from '../../../../auth/service/configuration.service';
 
 const POLL_MS = 2500;
-const COUNTDOWN_FROM = 6;
+const COUNTDOWN_FROM = 3;
 const POS_STORAGE_KEY = 'confirmacion-pagos-panel-pos';
 const PANEL_W = 420;
 const PANEL_H_MIN = 120;
@@ -67,6 +68,7 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
   constructor(
     private confirmacionPago: ConfirmacionPagoService,
     private metodoPagoService: MetodoPagoService,
+    private configurationService: ConfigurationService,
     private dialog: MatDialog,
     private fechaUtil: FechaUtilService,
     private cdr: ChangeDetectorRef
@@ -75,6 +77,11 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
   }
 
   ngOnInit(): void {
+    if (!this.configurationService.isNotificacionesActivas()) {
+      this.stopPolling();
+      this.items = [];
+      return;
+    }
     this.metodoPagoService.obtenerMetodosPago().subscribe({
       next: (list) => {
         this.metodosPorId = new Map((list || []).map((m) => [m.id, m]));
@@ -90,6 +97,17 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
       : null;
     const src = this.metodoPagoService.iconoUrl(file || 'qr-bancolombia.png');
     return src.startsWith('/') ? src : `/${src}`;
+  }
+
+  /** Franja izquierda en espera = color del medio (como OF). Otros estados usan CSS de estado. */
+  colorFranjaEspera(item: PendienteConfirmacionDto): string | null {
+    if (item.estado !== 'CREADA') {
+      return null;
+    }
+    if (item.metodoPagoId == null) {
+      return null;
+    }
+    return this.metodosPorId.get(item.metodoPagoId)?.color?.trim() || null;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -109,7 +127,7 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
   }
 
   get visible(): boolean {
-    return this.items.length > 0;
+    return this.configurationService.isNotificacionesActivas() && this.items.length > 0;
   }
 
   get panelStyle(): Record<string, string> | null {
@@ -248,6 +266,12 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
 
   /** Una consulta; si hay pendientes arranca el poll, si no, no vuelve a preguntar. */
   revisarPendientes(): void {
+    if (!this.configurationService.isNotificacionesActivas()) {
+      this.stopPolling();
+      this.items = [];
+      this.cdr.markForCheck();
+      return;
+    }
     if (this.sesionId == null) {
       this.stopPolling();
       return;

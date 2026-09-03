@@ -44,6 +44,7 @@ export interface NotificacionSinAsignarDto {
   asunto?: string | null;
   recibidoEn?: string | null;
   metodoPagoId?: number | null;
+  provienePlantillaExtraccion?: boolean;
 }
 
 export interface MontoDistintoConfirmacionDto {

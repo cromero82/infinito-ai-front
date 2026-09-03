@@ -389,6 +389,19 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
     });
   }
 
+  /** El API entrega por nombre; en la tabla de Tickets se priorizan los más vendidos. */
+  private sortByTotalVentas(items: Producto[]): Producto[] {
+    return [...items].sort((a, b) => {
+      const ventasDiff = (b.totalVentas ?? 0) - (a.totalVentas ?? 0);
+      if (ventasDiff !== 0) {
+        return ventasDiff;
+      }
+      return (a.nombre ?? '').localeCompare(b.nombre ?? '', 'es', {
+        sensitivity: 'base'
+      });
+    });
+  }
+
   private fetchProducts(term: string, reset: boolean): void {
     const resolved = this.resolveSearchTerm(term);
     if (resolved === null) {
@@ -427,18 +440,16 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
         this.totalPages = resp?.totalPages ?? 0;
         this.page = pageToLoad;
 
+        const merged = reset ? content : this.products.concat(content);
+        this.products = this.sortByTotalVentas(merged);
         if (reset) {
-          this.products = content;
           this.selectedProductIndex =
             this.products.length > 0 ? 0 : -1;
-        } else {
-          this.products = this.products.concat(content);
-          if (this.selectedProductIndex >= this.products.length) {
-            this.selectedProductIndex = Math.max(
-              0,
-              this.products.length - 1
-            );
-          }
+        } else if (this.selectedProductIndex >= this.products.length) {
+          this.selectedProductIndex = Math.max(
+            0,
+            this.products.length - 1
+          );
         }
 
         if (this.products.length === 0) {

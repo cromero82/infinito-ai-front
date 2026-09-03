@@ -25,6 +25,7 @@ export interface Producto {
   porcentaje_ganancia?: number | null;
   porcentajeGanancia?: number | null;
   existencia?: number;
+  totalVentas?: number;
   /** Grupo espejo (mismo producto en distintas presentaciones); null si no aplica */
   grupoEspejo?: GrupoEspejoEnProducto | null;
   /** UoM vendibles (PAQUETE / UNIDAD / …) cuando el API las envía. */

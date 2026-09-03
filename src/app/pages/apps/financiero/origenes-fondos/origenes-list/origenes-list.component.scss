@@ -26,6 +26,18 @@
   flex: 0 0 auto;
 }
 
+.header-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-ayuda-en-linea {
+  flex-shrink: 0;
+}
+
 .legend-row {
   display: flex;
   flex-wrap: nowrap;

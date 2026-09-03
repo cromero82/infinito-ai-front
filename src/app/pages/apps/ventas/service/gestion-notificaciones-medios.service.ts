@@ -19,6 +19,8 @@ export interface NotificacionEmailPagoDto {
   plantillaNotificacionId?: number | null;
   plantillaNombre?: string | null;
   plantillaIcono?: string | null;
+  /** True si matcheó plantilla de extracción (no spam Cloudflare). */
+  provienePlantillaExtraccion?: boolean;
   clasificacion?: string | null;
   clasificacionObservacion?: string | null;
   clasificadoEn?: string | null;
@@ -62,13 +64,20 @@ export class GestionNotificacionesMediosService {
     return `${this.base}/api/plantillas-notificacion-pago/iconos/${filename}`;
   }
 
-  listar(estadoVista?: string, q?: string): Observable<NotificacionEmailPagoDto[]> {
+  listar(
+    estadoVista?: string,
+    q?: string,
+    provienePlantillaExtraccion?: boolean | null
+  ): Observable<NotificacionEmailPagoDto[]> {
     let params = new HttpParams();
     if (estadoVista) {
       params = params.set('estadoVista', estadoVista);
     }
     if (q) {
       params = params.set('q', q);
+    }
+    if (provienePlantillaExtraccion === true || provienePlantillaExtraccion === false) {
+      params = params.set('provienePlantillaExtraccion', String(provienePlantillaExtraccion));
     }
     return this.http.get<NotificacionEmailPagoDto[]>(`${this.base}/api/notificaciones-email`, {
       params

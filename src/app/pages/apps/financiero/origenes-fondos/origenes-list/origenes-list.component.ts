@@ -7,9 +7,14 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../../../auth/service/auth.service';
+import {
+  AyudaEnLineaPanelComponent,
+  AyudaEnLineaContenido
+} from '../../../../../core/components/ayuda-en-linea';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData
@@ -79,7 +84,9 @@ const NAV_FLASH_MS = 1800;
     MatSnackBarModule,
     MatTableModule,
     MatDialogModule,
-    MatMenuModule
+    MatMenuModule,
+    MatTooltipModule,
+    AyudaEnLineaPanelComponent
   ],
   templateUrl: './origenes-list.component.html',
   styleUrl: './origenes-list.component.scss'
@@ -100,6 +107,50 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
   errorCuentas: string | null = null;
   modoEstricto = false;
   esAdmin = false;
+  ayudaAbierta = false;
+  readonly ayudaContenido: AyudaEnLineaContenido = {
+    titulo: 'Orígenes de fondos',
+    resumen:
+      'Medios de pago y orígenes hijos — mueva saldo entre cuentas y revise movimientos.',
+    tips: [
+      'Clic en una tarjeta o fila para ver movimientos.',
+      'Admin: arrastra y suelta entre cajas o filas para trasladar.',
+      'Doble clic copia JSON (ficha + movimientos) al portapapeles.'
+    ],
+    acciones: [
+      {
+        titulo: 'Consultar tickets sin corte',
+        detalle:
+          'Desde el medio (p. ej. QR/Nequi) abre las ventas del turno aún no incluidas en un cierre.'
+      },
+      {
+        titulo: 'Ver movimientos del método / bolsillo',
+        detalle:
+          'Selecciona un origen para listar entradas, salidas, traslados y ajustes del ledger.'
+      },
+      {
+        titulo: 'Consultar saldo de orígenes',
+        detalle:
+          'Incluye caja menor, sin clasificar y otros bolsillos hijos; el saldo se ve en cada tarjeta.'
+      },
+      {
+        titulo: 'Trasladar / entrada / préstamo / ajuste',
+        detalle:
+          'Botones de admin para mover saldo o registrar movimientos sin pasar por una venta.'
+      },
+      {
+        titulo: 'Navegar Atrás / Adelante en traslados',
+        detalle:
+          'En un movimiento de traslado puedes saltar a la pata origen o destino del mismo flujo.'
+      },
+      {
+        titulo: 'Formalizar egreso desde un movimiento',
+        detalle:
+          'Cuando aplique, convierte un movimiento de bolsillo en documento de egreso.'
+      }
+    ]
+  };
+  private readonly resumenPantalla = this.ayudaContenido.resumen;
   /** Ventas sin corte por metodoPagoId (mismo origen que Cierre de ventas). */
   private ventasSinCortePorMetodo = new Map<number, number>();
   /** Cache localStorage metodos_pago_v2_tickets (vía MetodoPagoService). */
@@ -149,6 +200,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
     this.limpiarFooterWarningTimer();
     this.limpiarFooterHoverTimer();
     this.limpiarNavFlashTimer();
+    this.ayudaAbierta = false;
     this.footerService.clearFooterItems();
   }
 
@@ -706,8 +758,8 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Tips de ayuda en el footer (icono sugerencia).
-   * Aparece al entrar a Orígenes; cambia durante drag & drop; se limpia al salir.
+   * Texto base en la barra de estado (footer). Sin etiqueta «Sugerencia».
+   * Durante drag muestra pista; hover de controles usa mostrarTipFooter.
    */
   private actualizarFooterSugerencia(mensajeDrag?: string): void {
     this.limpiarFooterWarningTimer();
@@ -721,14 +773,32 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
         }
       : {
           tipo: 'sugerencia',
-          textoClave: 'Sugerencia',
-          valorClave: this.esAdmin
-            ? 'Clic · Arrastra y soltar caja o fila'
-            : 'Clic para ver movimientos · Doble clic copia JSON (ficha+movs)',
+          textoClave: '',
+          valorClave: this.resumenPantalla,
           estiloCssClave: '',
-          icono: 'mat:tips_and_updates'
+          icono: 'mat:info'
         };
     this.footerService.setFooterItems([tip]);
+  }
+
+  abrirAyudaEnLinea(): void {
+    this.ayudaAbierta = true;
+    this.footerService.setFooterItems([
+      {
+        tipo: 'sugerencia',
+        textoClave: '',
+        valorClave: this.resumenPantalla,
+        estiloCssClave: '',
+        icono: 'mat:info'
+      }
+    ]);
+  }
+
+  cerrarAyudaEnLinea(): void {
+    this.ayudaAbierta = false;
+    if (!this.footerHoverActivo && !this.origenArrastrado && !this.movimientoArrastrado) {
+      this.actualizarFooterSugerencia();
+    }
   }
 
   private mostrarFooterWarning(mensaje: string): void {

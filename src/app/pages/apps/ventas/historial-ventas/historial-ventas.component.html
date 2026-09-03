@@ -1,6 +1,7 @@
-<div class="card flex flex-col sm:flex-row historial-ventas-container">
-  <!-- Left side -->
-  <div class="left-side">
+<div class="card historial-ventas-container">
+  <div class="split-pane-container">
+    <!-- Left side -->
+    <div class="split-pane-left left-side" [style.width.px]="leftPanelWidth">
         <h2 class="title mt-0 mb-4">Historial Tickets</h2>
 
     <div class="filter-section">
@@ -17,7 +18,7 @@
     </div>
 
     <div class="fecha-section">
-      <mat-form-field appearance="outline" class="fecha-field">
+      <mat-form-field appearance="outline" class="fecha-field" subscriptSizing="dynamic">
         <mat-label>Fecha</mat-label>
         <input
           matInput
@@ -45,6 +46,62 @@
       </mat-checkbox>
     </div>
 
+    <div class="extra-filters">
+      <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
+        <mat-label>Cliente</mat-label>
+        <input
+          matInput
+          [formControl]="clienteSearchCtrl"
+          [matAutocomplete]="autoCliente"
+          placeholder="Buscar cliente..." />
+        @if (clienteIdSeleccionado) {
+          <button
+            matSuffix
+            mat-icon-button
+            type="button"
+            (click)="clearClienteFilter()"
+            aria-label="Limpiar filtro cliente">
+            <mat-icon svgIcon="mat:close"></mat-icon>
+          </button>
+        }
+        <mat-autocomplete
+          #autoCliente="matAutocomplete"
+          (optionSelected)="onClienteSelected($event)"
+          [displayWith]="displayCliente">
+          @for (c of clientesFiltrados; track c.id) {
+            <mat-option [value]="c">{{ c.nombre }}</mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
+        <mat-label>Producto</mat-label>
+        <input
+          matInput
+          [formControl]="productoFilterCtrl"
+          [matAutocomplete]="autoProducto"
+          placeholder="Buscar producto..." />
+        @if (productoIdSeleccionado) {
+          <button
+            matSuffix
+            mat-icon-button
+            type="button"
+            (click)="clearProductoFilter()"
+            aria-label="Limpiar filtro producto">
+            <mat-icon svgIcon="mat:close"></mat-icon>
+          </button>
+        }
+        <mat-autocomplete
+          #autoProducto="matAutocomplete"
+          (optionSelected)="onProductoSelected($event)"
+          [displayWith]="displayProducto">
+          @for (p of productosFiltrados; track p.id) {
+            <mat-option [value]="p">{{ p.nombre }}</mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+    </div>
+
     @if (sesionIdFromUrl) {
       <div class="filter-labels">
         @if (userInfoLoading) {
@@ -52,7 +109,6 @@
         }
         @if (!userInfoLoading && userInfo) {
           <div class="flex flex-wrap gap-2 items-center">
-            <span class="filter-label filter-label--normal">sesion de:</span>
             <span class="filter-label filter-label--success">{{
               userInfo.nombre
             }}</span>
@@ -79,52 +135,70 @@
               class="recibo-item"
               [class.selected]="selectedReciboId === recibo.id"
               (click)="selectRecibo(recibo)">
-              <span
-                class="recibo-total"
-                [innerHTML]="formatCurrencyWithBold(recibo.total)"></span>
-              @if (recibo.documentoVentaConsecutivo) {
-                <span class="recibo-consecutivo">{{
-                  recibo.documentoVentaConsecutivo
-                }}</span>
-              }
-              @if (recibo.restaurado || selectedFilter === 'restaurados') {
-                <span class="recibo-chip restaurado">Restaurado</span>
-              }
-              <div class="recibo-fecha-cliente-row">
-                <span class="recibo-fecha">{{
-                  formatDate(recibo.fechaCreacion)
-                }}</span>
-                <span
-                  class="recibo-medio"
-                  [style.color]="medioListaColor(recibo) || null">
-                  {{ medioListaLabel(recibo) }}
-                </span>
-              </div>
-              @if (getClienteNombre(recibo.clienteId)) {
-                <div class="recibo-cliente">{{
-                  getClienteNombre(recibo.clienteId)
-                }}</div>
-              }
-              <div class="recibo-extra-row">
-                @if (labelNotif(recibo); as notif) {
-                  <span
-                    class="notif-chip"
-                    [class.notif-chip--ok]="notifOk(recibo)"
-                    [class.notif-chip--pendiente]="!notifOk(recibo)">
-                    {{ notif }}
-                  </span>
-                } @else {
-                  <span></span>
-                }
-                <button
-                  type="button"
-                  class="btn-productos-mini"
-                  mat-icon-button
-                  matTooltip="Ver productos"
-                  aria-label="Ver productos"
-                  (click)="verProductos(recibo, $event)">
-                  <mat-icon svgIcon="mat:inventory_2"></mat-icon>
-                </button>
+              <div class="recibo-item-main">
+                <div class="recibo-item-body">
+                  <div class="recibo-item-row recibo-item-row--primary">
+                    <span
+                      class="recibo-total"
+                      [innerHTML]="formatCurrencyWithBold(recibo.total)"></span>
+                    <span class="recibo-id-cell">
+                      <span class="recibo-consecutivo">{{
+                        recibo.documentoVentaConsecutivo || '#' + recibo.id
+                      }}</span>
+                      @if (recibo.restaurado || selectedFilter === 'restaurados') {
+                        <span class="recibo-chip restaurado">Restaurado</span>
+                      }
+                    </span>
+                    <span class="recibo-fecha">{{
+                      formatDate(recibo.fechaCreacion)
+                    }}</span>
+                  </div>
+                  <div class="recibo-item-meta">
+                    @if (getClienteNombre(recibo.clienteId); as nombreCliente) {
+                      <span
+                        class="recibo-cliente"
+                        [matTooltip]="nombreCliente">
+                        <mat-icon
+                          class="recibo-cliente-icon"
+                          svgIcon="mat:person"></mat-icon>
+                        {{ nombreCliente }}
+                      </span>
+                    }
+                    <span class="recibo-meta-spacer"></span>
+                    @if (getCajeroAtendio(recibo.sesionId); as cajero) {
+                      <span
+                        class="recibo-cajero"
+                        [matTooltip]="'Atendió: ' + cajero">
+                        atendió: {{ abreviarNombreCajero(cajero) }}
+                      </span>
+                    }
+                  </div>
+                </div>
+                <div class="recibo-item-end">
+                  <div
+                    class="recibo-medio-stack"
+                    [matTooltip]="tooltipMedioLista(recibo)">
+                    <span class="notif-visto-slot">
+                      @if (
+                        tieneFlujoNotifElectronica(recibo) && notifOk(recibo)
+                      ) {
+                        <mat-icon
+                          class="notif-visto-icon"
+                          svgIcon="mat:done_all"
+                          aria-hidden="true"></mat-icon>
+                      }
+                    </span>
+                    <img
+                      class="recibo-medio-icon"
+                      [class.recibo-medio-icon--muted]="
+                        medioIconGrayscale(recibo)
+                      "
+                      [src]="iconoMetodoLista(recibo)"
+                      [alt]="medioListaLabel(recibo)"
+                      width="26"
+                      height="26" />
+                  </div>
+                </div>
               </div>
             </div>
           }
@@ -137,11 +211,18 @@
         </div>
       }
     </div>
-  </div>
+    </div>
 
-  <!-- Right side -->
-  <div class="right-side border-l flex-1">
-    <div class="p-6">
+    <div
+      class="split-pane-divider"
+      (mousedown)="startResize($event)"
+      [class.resizing]="isResizing">
+      <div class="divider-handle"></div>
+    </div>
+
+    <!-- Right side -->
+    <div class="split-pane-right right-side">
+    <div class="right-side-inner">
       <div class="right-header">
         <h2 class="title mt-0 mb-4">Detalles</h2>
         @if (selectedReciboId) {
@@ -211,25 +292,41 @@
         @if (documentosLoading) {
           <div class="loading documentos-loading">Cargando documentos...</div>
         }
-        @if (!documentosLoading && documentos) {
+        @if (!documentosLoading) {
           <mat-expansion-panel class="documentos-panel" expanded>
             <mat-expansion-panel-header>
               <mat-panel-title>Documentos y operaciones</mat-panel-title>
             </mat-expansion-panel-header>
             <div class="documentos-content">
-              @if (documentos.documentoVenta?.consecutivo) {
-                <div class="doc-row">
-                  <span class="doc-label">Comprobante venta</span>
-                  <span class="doc-badge">{{
-                    documentos.documentoVenta!.consecutivo
-                  }}</span>
+              <div class="doc-summary">
+                <div class="doc-summary-col">
+                  @if (documentos?.documentoVenta?.consecutivo) {
+                    <div class="doc-row">
+                      <span class="doc-label">Comprobante venta</span>
+                      <span class="doc-badge">{{
+                        documentos!.documentoVenta!.consecutivo
+                      }}</span>
+                    </div>
+                    <div class="doc-row">
+                      <span class="doc-label">Estado documento</span>
+                      <span>{{ documentos!.documentoVenta!.estado ?? '—' }}</span>
+                    </div>
+                  }
                 </div>
-                <div class="doc-row">
-                  <span class="doc-label">Estado documento</span>
-                  <span>{{ documentos.documentoVenta!.estado ?? '—' }}</span>
-                </div>
-              }
-              @for (nota of documentos.notasAjuste ?? []; track nota.id) {
+                @if (getSelectedRecibo(); as sel) {
+                  <div class="doc-summary-col">
+                    <div class="doc-row">
+                      <span class="doc-label">Fecha de venta</span>
+                      <span>{{ formatDate(sel.fechaCreacion) }}</span>
+                    </div>
+                    <div class="doc-row">
+                      <span class="doc-label">Cajero que atendió</span>
+                      <span>{{ getCajeroAtendio(sel.sesionId) ?? '—' }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+              @for (nota of documentos?.notasAjuste ?? []; track nota.id) {
                 <div class="doc-row nota-row">
                   <span class="doc-label">{{
                     nota.tipo === 'DEBITO' ? 'Nota débito' : 'Nota crédito'
@@ -253,11 +350,11 @@
                   </div>
                 }
               }
-              @if (documentos.documentoVentaNuevo?.consecutivo) {
+              @if (documentos?.documentoVentaNuevo?.consecutivo) {
                 <div class="doc-row">
                   <span class="doc-label">VTA nueva</span>
                   <span class="doc-badge">{{
-                    documentos.documentoVentaNuevo!.consecutivo
+                    documentos!.documentoVentaNuevo!.consecutivo
                   }}</span>
                 </div>
               }
@@ -361,16 +458,19 @@
                     </div>
                   }
                 </div>
-                <span class="detalle-col cantidad">TOTAL</span>
-                <span
-                  class="detalle-col subtotal total-value total-value--highlight">
-                  {{ formatCurrency(getTotalDetalles()) }}
-                </span>
+                <div class="detalle-footer-total">
+                  <span class="detalle-col cantidad">TOTAL</span>
+                  <span
+                    class="detalle-col subtotal total-value total-value--highlight">
+                    {{ formatCurrency(getTotalDetalles()) }}
+                  </span>
+                </div>
               </div>
             }
           </div>
         </div>
       }
     </div>
+  </div>
   </div>
 </div>

@@ -29,6 +29,8 @@ export interface HistorialReciboDto {
    * Null = sin flujo electrónico. CONFIRMADA = con notificación; CREADA/otros = pendiente.
    */
   estadoNotificacionElectronica?: string | null;
+  /** UUID del usuario de la sesión (user_id en sesion). */
+  sesionUserId?: string | null;
 }
 
 export interface HistorialReciboPagoDto {
@@ -139,6 +141,8 @@ export class HistorialReciboService {
       metodoPagoId?: number | null;
       mixto?: boolean;
       sinCorte?: boolean;
+      clienteId?: number | null;
+      productoId?: number | null;
     }
   ): Observable<HistorialReciboPage> {
     const headers = new HttpHeaders({ Accept: 'application/json' });
@@ -171,6 +175,14 @@ export class HistorialReciboService {
 
     if (opts?.sinCorte) {
       params = params.set('sinCorte', 'true');
+    }
+
+    if (opts?.clienteId != null) {
+      params = params.set('clienteId', String(opts.clienteId));
+    }
+
+    if (opts?.productoId != null) {
+      params = params.set('productoId', String(opts.productoId));
     }
 
     return this.http.get<HistorialReciboPage>(`${this.apiUrl}/search`, {

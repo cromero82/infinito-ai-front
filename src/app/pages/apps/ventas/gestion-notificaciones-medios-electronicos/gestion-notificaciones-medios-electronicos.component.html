@@ -1,15 +1,45 @@
-<div class="p-6 gestion-notif-page">
-  <h2 class="title mt-0 mb-1">Gestión notificaciones medios electrónicos</h2>
-  <p class="text-secondary mb-6">
-    Correos que llegaron por Cloudflare a
-    <code>pagos@mayaksoluciones.com</code>.
-    Egresos (p.ej. Lulo) caen en OF «Sin Clasificar»; legalizar los mueve al bolsillo
-    (Personal, Nómina, gasto). Varias plantillas (QR, BREVE, OTRO): se prueba en ese orden.
-  </p>
+<div class="gestion-notif-page mt-1 flex flex-col flex-1 min-h-0 min-w-0 w-full">
+  <div class="card gestion-notif-card flex flex-col flex-1 min-h-0 overflow-hidden">
+    <div class="px-4 sm:px-6 py-3 border-b gestion-notif-toolbar">
+      <div class="header-title-row">
+        <h2 class="title m-0">Gestión notificaciones medios electrónicos</h2>
+        <button
+          type="button"
+          mat-stroked-button
+          class="btn-ayuda-en-linea"
+          matTooltip="Abrir ayuda en línea"
+          (click)="abrirAyudaEnLinea()"
+          (mouseenter)="mostrarTipFooter('Catálogo de tareas de esta pantalla', 'Ayuda en línea')"
+          (mouseleave)="ocultarTipFooter()">
+          <mat-icon svgIcon="mat:info"></mat-icon>
+          Ayuda en línea
+        </button>
+      </div>
 
-  <mat-tab-group animationDuration="0ms" class="gestion-notif-tabs">
+      <div
+        class="panel-activa-row mt-3"
+        (mouseenter)="
+          mostrarTipFooter(
+            'Solo oculta el panel en Tickets; el match email↔ticket sigue en background',
+            'Panel Pagos electrónicos'
+          )
+        "
+        (mouseleave)="ocultarTipFooter()">
+        <mat-checkbox
+          [checked]="panelNotificacionesActivo"
+          [disabled]="guardandoPanelActivo"
+          (change)="onPanelNotificacionesChange($event.checked)"
+          color="primary">
+          Mostrar panel «Pagos electrónicos» en Tickets
+        </mat-checkbox>
+      </div>
+    </div>
+
+    <mat-tab-group
+      animationDuration="0ms"
+      class="gestion-notif-tabs flex flex-col flex-1 min-h-0">
     <mat-tab label="Notificaciones recibidas">
-      <section class="card-section tab-panel">
+      <section class="card-section tab-panel flex flex-col flex-1 min-h-0">
         <div class="filters">
           <mat-form-field appearance="outline">
             <mat-label>Estado</mat-label>
@@ -19,6 +49,16 @@
               <mat-option value="PENDIENTE">Pendiente</mat-option>
               <mat-option value="MOSTRADA">Mostrada</mat-option>
               <mat-option value="ARCHIVADA">Archivada</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Plantilla extracción</mat-label>
+            <mat-select
+              [(ngModel)]="filtroPlantillaExtraccion"
+              (selectionChange)="cargarLista()">
+              <mat-option value="">Todas</mat-option>
+              <mat-option value="true">Con plantilla</mat-option>
+              <mat-option value="false">Sin plantilla (spam / otros)</mat-option>
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline" class="search">
@@ -38,21 +78,25 @@
         @if (cargandoLista) {
           <mat-spinner diameter="32"></mat-spinner>
         } @else {
-          <div class="table-wrap">
+          <div class="table-wrap table-scroll-container flex-1 min-h-0">
             <table mat-table [dataSource]="items" class="notif-table">
               <ng-container matColumnDef="plantilla">
                 <th mat-header-cell *matHeaderCellDef></th>
                 <td mat-cell *matCellDef="let row" class="col-plantilla">
-                  @if (row.plantillaIcono) {
+                  @if (provienePlantilla(row) && row.plantillaIcono) {
                     <img
                       class="row-plantilla-icon"
                       [src]="iconoUrl(row.plantillaIcono)"
                       [alt]="row.plantillaNombre || ''"
-                      [matTooltip]="row.plantillaNombre || ''"
+                      [matTooltip]="row.plantillaNombre || 'Con plantilla'"
                       width="24"
                       height="24" />
+                  } @else if (provienePlantilla(row)) {
+                    <span
+                      class="text-secondary"
+                      [matTooltip]="row.plantillaNombre || 'Con plantilla'">✓</span>
                   } @else {
-                    <span class="text-secondary">—</span>
+                    <span class="text-secondary" matTooltip="Sin plantilla de extracción">—</span>
                   }
                 </td>
               </ng-container>
@@ -411,4 +455,10 @@
       </section>
     </mat-tab>
   </mat-tab-group>
+  </div>
+
+  <app-ayuda-en-linea-panel
+    [abierto]="ayudaAbierta"
+    [contenido]="ayudaContenido"
+    (cerrar)="cerrarAyudaEnLinea()" />
 </div>

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -14,6 +14,11 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import {
+  AyudaEnLineaPanelComponent,
+  AyudaEnLineaContenido
+} from '../../../../core/components/ayuda-en-linea';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData
@@ -24,7 +29,12 @@ import {
   PlantillaNotificacionPagoDto,
   TicketSinNotificacionDto
 } from '../service/gestion-notificaciones-medios.service';
-import { ConfigurationService } from '../../../../auth/service/configuration.service';
+import {
+  ConfigurationService,
+  KEY_NOTIFICACIONES_ACTIVA
+} from '../../../../auth/service/configuration.service';
+import { FooterService } from '../../../../layouts/services/footer.service';
+import { FooterItemDto } from '../../../../layouts/components/footer/footer.component';
 import { NotificacionEmailDetalleDialogComponent } from './notificacion-email-detalle-dialog.component';
 import { NotificacionMensajeCompletoDialogComponent } from './notificacion-mensaje-completo-dialog.component';
 import { TicketSinNotifProductosDialogComponent } from './ticket-sin-notif-productos-dialog.component';
@@ -59,12 +69,14 @@ const ORIGEN_TIPO_MOVIMIENTO_BANCO = 'MOVIMIENTO BANCO POR IDENTIFICAR';
     MatProgressSpinnerModule,
     MatTabsModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    MatCheckboxModule,
+    AyudaEnLineaPanelComponent
   ],
   templateUrl: './gestion-notificaciones-medios-electronicos.component.html',
   styleUrls: ['./gestion-notificaciones-medios-electronicos.component.scss']
 })
-export class GestionNotificacionesMediosElectronicosComponent implements OnInit {
+export class GestionNotificacionesMediosElectronicosComponent implements OnInit, OnDestroy {
   plantillas: PlantillaNotificacionPagoDto[] = [];
   plantillasOriginal = new Map<number, string>();
   metodosNotificacion: MetodoPagoDto[] = [];
@@ -72,6 +84,8 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
   guardandoPlantillaId: number | null = null;
 
   estadoVista = 'POR_IDENTIFICAR';
+  /** '' = todas; 'true' | 'false' → provienePlantillaExtraccion */
+  filtroPlantillaExtraccion: '' | 'true' | 'false' = '';
   busqueda = '';
   items: NotificacionEmailPagoDto[] = [];
   cargandoLista = false;
@@ -87,6 +101,43 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
     'acciones'
   ];
   asuntosPermitidos: string[] = [];
+  /** Panel flotante Pagos electrónicos (configuracion_app notificaciones.activa). */
+  panelNotificacionesActivo = true;
+  guardandoPanelActivo = false;
+  ayudaAbierta = false;
+  readonly ayudaContenido: AyudaEnLineaContenido = {
+    titulo: 'Gestión notificaciones medios electrónicos',
+    resumen:
+      'Bandeja de correos de Cloudflare (pagos@…) y plantillas de extracción para confirmar pagos o mover OF.',
+    tips: [
+      'Las plantillas se prueban en orden hasta el primer match.',
+      'Ingreso confirma ticket/abono; Egreso solo mueve orígenes de fondos.',
+      'El panel de Tickets se puede ocultar con notificaciones.activa sin detener el match.'
+    ],
+    acciones: [
+      {
+        titulo: 'Revisar notificaciones recibidas',
+        detalle: 'Filtrar por estado, plantilla o texto; ver mensaje completo; archivar o eliminar.'
+      },
+      {
+        titulo: 'Gestionar plantillas de extracción',
+        detalle: 'Alta/edición Ingreso (método) o Egreso (OF origen/destino) y fragmento {{monto}}.'
+      },
+      {
+        titulo: 'Métodos de pago / Dominios',
+        detalle: 'Abrir CRUD de medios con flag Notificación e icono desde la pestaña Plantillas.'
+      },
+      {
+        titulo: 'Tickets sin notificación',
+        detalle: 'Ver ventas donde la caja marcó «Ya no esperar» la confirmación electrónica.'
+      },
+      {
+        titulo: 'Mostrar u ocultar panel en Tickets',
+        detalle: 'Checkbox notificaciones.activa: solo UI; el inbound y el match siguen en background.'
+      }
+    ]
+  };
+  private readonly resumenPantalla = this.ayudaContenido.resumen;
 
   ticketsSinNotifAll: TicketSinNotificacionDto[] = [];
   ticketsSinNotif: TicketSinNotificacionDto[] = [];
@@ -108,16 +159,65 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
     private origenFondosService: OrigenFondosService,
     private metodoPagoService: MetodoPagoService,
     private configurationService: ConfigurationService,
+    private footerService: FooterService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
+    this.actualizarFooterAyuda();
     this.cargarPlantillas();
     this.cargarLista();
     this.cargarAsuntosPermitidos();
+    this.cargarPanelNotificacionesActivo();
     this.cargarTicketsSinNotificacion();
     this.cargarOrigenesFondos();
+  }
+
+  ngOnDestroy(): void {
+    this.footerService.clearFooterItems();
+  }
+
+  private actualizarFooterAyuda(): void {
+    const tip: FooterItemDto = {
+      tipo: 'sugerencia',
+      textoClave: '',
+      valorClave: this.resumenPantalla,
+      estiloCssClave: '',
+      icono: 'mat:info'
+    };
+    this.footerService.setFooterItems([tip]);
+  }
+
+  abrirAyudaEnLinea(): void {
+    this.ayudaAbierta = true;
+    this.actualizarFooterAyuda();
+  }
+
+  cerrarAyudaEnLinea(): void {
+    this.ayudaAbierta = false;
+    this.actualizarFooterAyuda();
+  }
+
+  mostrarTipFooter(texto: string, titulo?: string): void {
+    const t = (texto ?? '').replace(/\s+/g, ' ').trim();
+    if (!t) {
+      return;
+    }
+    const label = (titulo ?? '').trim();
+    this.footerService.setFooterItems([
+      {
+        tipo: 'sugerencia',
+        textoClave: label ? `${label}:` : '',
+        valorClave: t,
+        estiloCssClave: '',
+        icono: 'mat:info'
+      }
+    ]);
+  }
+
+  ocultarTipFooter(): void {
+    this.actualizarFooterAyuda();
   }
 
   private cargarOrigenesFondos(): void {
@@ -173,11 +273,50 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
       next: (configs) => {
         const item = configs.find((c) => c.key === KEY_ASUNTOS_PERMITIDOS);
         this.asuntosPermitidos = item?.value ? this.parseAsuntosPermitidos(item.value) : [];
+        this.panelNotificacionesActivo = this.configurationService.isNotificacionesActivas();
       },
       error: () => {
         this.asuntosPermitidos = [];
+        this.panelNotificacionesActivo = this.configurationService.isNotificacionesActivas();
       }
     });
+  }
+
+  cargarPanelNotificacionesActivo(): void {
+    this.panelNotificacionesActivo = this.configurationService.isNotificacionesActivas();
+  }
+
+  onPanelNotificacionesChange(checked: boolean): void {
+    if (this.guardandoPanelActivo) {
+      return;
+    }
+    const anterior = this.panelNotificacionesActivo;
+    this.panelNotificacionesActivo = checked;
+    this.guardandoPanelActivo = true;
+    this.configurationService
+      .actualizarPorKey(KEY_NOTIFICACIONES_ACTIVA, checked ? 'true' : 'false')
+      .subscribe({
+        next: () => {
+          this.configurationService.setNotificacionesActivasLocal(checked);
+          this.guardandoPanelActivo = false;
+          this.snackBar.open(
+            checked
+              ? 'Panel de pagos electrónicos activado'
+              : 'Panel de pagos electrónicos desactivado',
+            'Cerrar',
+            { duration: 2800 }
+          );
+        },
+        error: () => {
+          this.panelNotificacionesActivo = anterior;
+          this.guardandoPanelActivo = false;
+          this.snackBar.open(
+            'No se pudo guardar notificaciones.activa (¿existe la key en configuracion_app?)',
+            'Cerrar',
+            { duration: 5000, panelClass: ['error-snackbar'] }
+          );
+        }
+      });
   }
 
   cargarPlantillas(): void {
@@ -405,7 +544,13 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
   cargarLista(): void {
     this.cargandoLista = true;
     const estado = this.estadoVista === 'TODAS' ? undefined : this.estadoVista;
-    this.api.listar(estado, this.busqueda.trim() || undefined).subscribe({
+    const plantilla =
+      this.filtroPlantillaExtraccion === 'true'
+        ? true
+        : this.filtroPlantillaExtraccion === 'false'
+          ? false
+          : null;
+    this.api.listar(estado, this.busqueda.trim() || undefined, plantilla).subscribe({
       next: (list) => {
         this.items = list || [];
         this.cargandoLista = false;
@@ -417,6 +562,14 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit 
         });
       }
     });
+  }
+
+  /** Match de plantilla de extracción (API o fallback por plantillaNotificacionId). */
+  provienePlantilla(row: NotificacionEmailPagoDto): boolean {
+    if (row.provienePlantillaExtraccion === true || row.provienePlantillaExtraccion === false) {
+      return row.provienePlantillaExtraccion;
+    }
+    return row.plantillaNotificacionId != null;
   }
 
   asuntoNoPermitido(row: NotificacionEmailPagoDto): boolean {

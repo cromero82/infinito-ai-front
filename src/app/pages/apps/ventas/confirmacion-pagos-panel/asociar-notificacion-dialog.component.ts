@@ -60,63 +60,80 @@ const POLL_SIN_ASIGNAR_MS = 2500;
     <h2 mat-dialog-title>Asociar pago bancario</h2>
     <mat-dialog-content>
       <div class="esperado-block">
-        <p class="esperado-row">
-          @if (mostrarIconosMetodo && iconoEsperado; as ico) {
-            <img
-              class="mp-icon"
-              [src]="ico"
-              alt=""
-              width="20"
-              height="20"
-              [matTooltip]="labelMetodo(data.metodoPagoId)" />
-          }
-          Esperado:
-          <strong>{{ data.montoEsperado | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
-          @if (data.abonoCxcId) {
-            · Abono CxC
-          }
-        </p>
-        @if (mostrarCorregirMedio) {
-          <div class="corregir-mp" [class.corregir-mp--busy]="corrigiendo">
-            <button
-              type="button"
-              class="corregir-mp__label"
-              mat-stroked-button
-              [matMenuTriggerFor]="mpMenu"
-              [disabled]="corrigiendo || metodosCorreccion.length === 0"
-              matTooltip="El cajero pudo elegir el medio electrónico incorrecto">
-              Corregir / cambiar medio
-            </button>
-            <button
-              type="button"
-              class="corregir-mp__chevron"
-              mat-stroked-button
-              [matMenuTriggerFor]="mpMenu"
-              [disabled]="corrigiendo || metodosCorreccion.length === 0"
-              aria-label="Elegir otro método de pago">
-              <mat-icon svgIcon="mat:arrow_drop_down"></mat-icon>
-            </button>
-            <mat-menu #mpMenu="matMenu" xPosition="before" yPosition="below">
-              @for (m of metodosCorreccion; track m.id) {
+        <div class="esperado-row">
+          <p class="esperado-text">
+            @if (mostrarIconosMetodo && iconoEsperado; as ico) {
+              <img
+                class="mp-icon"
+                [src]="ico"
+                alt=""
+                width="20"
+                height="20"
+                [matTooltip]="labelMetodo(data.metodoPagoId)" />
+            }
+            Esperado:
+            <strong>{{ data.montoEsperado | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+            @if (data.abonoCxcId) {
+              · Abono CxC
+            }
+          </p>
+          @if (mostrarCorregirMedio) {
+            <div class="corregir-mp-wrap">
+              @if (!menuCorregirVisible) {
                 <button
                   type="button"
-                  mat-menu-item
-                  [disabled]="m.id === data.metodoPagoId || corrigiendo"
-                  (click)="corregirMedio(m)">
-                  @if (m.file) {
-                    <img
-                      class="mp-icon mp-icon--menu"
-                      [src]="iconoUrl(m.file)"
-                      alt=""
-                      width="22"
-                      height="22" />
-                  }
-                  <span>{{ m.descripcion }}</span>
+                  mat-icon-button
+                  class="corregir-mp-trigger"
+                  matTooltip="Corregir / cambiar medio"
+                  aria-label="Corregir / cambiar medio"
+                  [disabled]="corrigiendo || metodosCorreccion.length === 0"
+                  (click)="abrirMenuCorregir()">
+                  <mat-icon svgIcon="mat:build"></mat-icon>
                 </button>
+              } @else {
+                <div class="corregir-mp" [class.corregir-mp--busy]="corrigiendo">
+                  <button
+                    type="button"
+                    class="corregir-mp__label"
+                    mat-stroked-button
+                    [matMenuTriggerFor]="mpMenu"
+                    [disabled]="corrigiendo || metodosCorreccion.length === 0"
+                    matTooltip="El cajero pudo elegir el medio electrónico incorrecto">
+                    Corregir / cambiar medio
+                  </button>
+                  <button
+                    type="button"
+                    class="corregir-mp__chevron"
+                    mat-stroked-button
+                    [matMenuTriggerFor]="mpMenu"
+                    [disabled]="corrigiendo || metodosCorreccion.length === 0"
+                    aria-label="Elegir otro método de pago">
+                    <mat-icon svgIcon="mat:arrow_drop_down"></mat-icon>
+                  </button>
+                  <mat-menu #mpMenu="matMenu" xPosition="before" yPosition="below">
+                    @for (m of metodosCorreccion; track m.id) {
+                      <button
+                        type="button"
+                        mat-menu-item
+                        [disabled]="m.id === data.metodoPagoId || corrigiendo"
+                        (click)="corregirMedio(m)">
+                        @if (m.file) {
+                          <img
+                            class="mp-icon mp-icon--menu"
+                            [src]="iconoUrl(m.file)"
+                            alt=""
+                            width="22"
+                            height="22" />
+                        }
+                        <span>{{ m.descripcion }}</span>
+                      </button>
+                    }
+                  </mat-menu>
+                </div>
               }
-            </mat-menu>
-          </div>
-        }
+            </div>
+          }
+        </div>
       </div>
       @if (!notificaciones.length) {
         <div class="empty">
@@ -169,16 +186,39 @@ const POLL_SIN_ASIGNAR_MS = 2500;
       .esperado-row {
         display: flex;
         align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin: 0 0 8px;
+        min-height: 40px;
+      }
+      .esperado-text {
+        display: flex;
+        align-items: center;
         flex-wrap: wrap;
         gap: 6px;
-        margin: 0 0 8px;
+        margin: 0;
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+      .corregir-mp-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex-shrink: 0;
+        margin: 0;
+        min-height: 0;
+      }
+      .corregir-mp-trigger {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        color: #5a6a7e;
       }
       .corregir-mp {
         display: inline-flex;
         align-items: stretch;
         border-radius: 4px;
         overflow: hidden;
-        margin-bottom: 4px;
       }
       .corregir-mp__label {
         border-top-right-radius: 0 !important;
@@ -276,6 +316,8 @@ export class AsociarNotificacionDialogComponent implements OnInit, OnDestroy {
   notificaciones: NotificacionSinAsignarDto[] = [];
   metodosCorreccion: MetodoPagoDto[] = [];
   corrigiendo = false;
+  /** Tras clic en icono build: muestra el control «Corregir / cambiar medio». */
+  menuCorregirVisible = false;
   private metodoCorregido: number | null = null;
   private metodosPorId = new Map<number, MetodoPagoDto>();
   private pollSub?: Subscription;
@@ -352,6 +394,14 @@ export class AsociarNotificacionDialogComponent implements OnInit, OnDestroy {
       return false;
     }
     return this.notificaciones.some((n) => !this.aplicaAlPendiente(n));
+  }
+
+  abrirMenuCorregir(): void {
+    if (this.corrigiendo || this.metodosCorreccion.length === 0) {
+      return;
+    }
+    this.menuCorregirVisible = true;
+    this.cdr.markForCheck();
   }
 
   get iconoEsperado(): string {

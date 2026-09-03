@@ -1,11 +1,19 @@
 <div class="origenes-page px-2 py-3 sm:px-3 sm:py-4 flex flex-col h-full min-h-0">
   <div class="header-row">
-    <h2 class="title mt-0 mb-0">Orígenes de fondos</h2>
+    <div class="header-title-row">
+      <h2 class="title mt-0 mb-0">Orígenes de fondos</h2>
+      <button
+        type="button"
+        mat-stroked-button
+        class="btn-ayuda-en-linea"
+        matTooltip="Abrir ayuda en línea"
+        (click)="abrirAyudaEnLinea()">
+        <mat-icon svgIcon="mat:info"></mat-icon>
+        Ayuda en línea
+      </button>
+    </div>
     <div class="legend-row">
       <p class="text-secondary subtitle">
-        <span class="subtitle-text">
-          Medios de pago y orígenes hijos — mueva saldo entre cuentas y revise movimientos.
-        </span>
         @if (modoEstricto) {
           <span class="modo-badge estricto">Modo estricto</span>
         } @else {
@@ -46,6 +54,11 @@
       }
     </div>
   </div>
+
+  <app-ayuda-en-linea-panel
+    [abierto]="ayudaAbierta"
+    [contenido]="ayudaContenido"
+    (cerrar)="cerrarAyudaEnLinea()" />
 
   @if (loadingCuentas) {
     <div class="loading-center">

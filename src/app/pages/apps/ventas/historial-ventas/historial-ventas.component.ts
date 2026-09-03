@@ -41,8 +41,15 @@ import {
   MetodoPagoService,
   MetodoPagoDto
 } from '../service/metodo-pago.service';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject, of, Observable, EMPTY } from 'rxjs';
+import { takeUntil, debounceTime, switchMap, catchError, skip } from 'rxjs/operators';
+import { AuthService } from '../../../../auth/service/auth.service';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { AsyncPipe } from '@angular/common';
+import {
+  RelationalProductService
+} from '../../productos/service/relational-product.service';
+import { Producto } from '../../productos/model/producto';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FooterService } from '../../../../layouts/services/footer.service';
 import { FechaUtilService } from '../service/fecha-util.service';
@@ -77,12 +84,20 @@ import {
     MatIconModule,
     MatDialogModule,
     MatExpansionModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatAutocompleteModule,
+    AsyncPipe
   ],
   templateUrl: './historial-ventas.component.html',
   styleUrls: ['./historial-ventas.component.scss']
 })
 export class HistorialVentasComponent implements OnInit, OnDestroy {
+  /** Ancho inicial del panel izquierdo (filtros + lista). */
+  leftPanelWidth = 450;
+  isResizing = false;
+  private resizeStartX = 0;
+  private resizeStartWidth = 0;
+
   selectedFilter = 'pagado'; // Por defecto "pagado"
   fechaCtrl = new FormControl<Date | null>(null);
   /** '' = todos, 'MIXTO' = multipago, número = metodoPagoId */
@@ -90,6 +105,12 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     nonNullable: true
   });
   sinCorteCtrl = new FormControl<boolean>(false, { nonNullable: true });
+  clienteSearchCtrl = new FormControl<string>('', { nonNullable: true });
+  clientesFiltrados: ClienteDto[] = [];
+  clienteIdSeleccionado: number | null = null;
+  productoFilterCtrl = new FormControl<string>('', { nonNullable: true });
+  productosFiltrados: Producto[] = [];
+  productoIdSeleccionado: number | null = null;
   historialRecibos: HistorialReciboDto[] = [];
   loading = false;
   loadingMore = false;
@@ -127,6 +148,10 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   // Clientes state
   clientes: ClienteDto[] = [];
   clientesLoading = false;
+  private clientesPorId = new Map<number, ClienteDto>();
+  /** Cache sesionId → nombre del cajero que atendió. */
+  private usuariosPorSesion = new Map<number, string>();
+  private readonly searchReload$ = new Subject<void>();
 
   // Métodos de pago state
   metodosPago: MetodoPagoDto[] = [];
@@ -146,7 +171,9 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     private fechaUtilService: FechaUtilService,
     private reciboPrintService: ReciboPrintService,
     private establecimientoService: EstablecimientoService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private relationalProductService: RelationalProductService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -189,14 +216,64 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
 
     this.loadClientes();
     this.loadMetodosPago();
+
+    this.searchReload$
+      .pipe(
+        switchMap(() =>
+          this.fetchHistorialRecibos$().pipe(
+            catchError((err) => {
+              console.error('Error loading historial recibos', err);
+              this.error = 'Error al cargar el historial de ventas.';
+              this.loading = false;
+              this.loadingMore = false;
+              return EMPTY;
+            })
+          )
+        ),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((page: HistorialReciboPage) => this.applyHistorialPage(page));
+
     this.loadEstadosRecibos();
 
     this.metodoPagoFilterCtrl.valueChanges
-      .pipe(takeUntil(this.destroy$))
+      .pipe(skip(1), takeUntil(this.destroy$))
       .subscribe(() => this.reloadFromFilters());
     this.sinCorteCtrl.valueChanges
-      .pipe(takeUntil(this.destroy$))
+      .pipe(skip(1), takeUntil(this.destroy$))
       .subscribe(() => this.reloadFromFilters());
+
+    this.clienteSearchCtrl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((val) => {
+        const q = (typeof val === 'string' ? val : '').trim().toLowerCase();
+        if (!q) {
+          this.clientesFiltrados = this.clientes.filter((c) => c.nombre !== 'ANONIMO');
+        } else {
+          this.clientesFiltrados = this.clientes.filter(
+            (c) => c.nombre !== 'ANONIMO' && c.nombre.toLowerCase().includes(q)
+          );
+        }
+      });
+
+    this.productoFilterCtrl.valueChanges
+      .pipe(
+        takeUntil(this.destroy$),
+        debounceTime(300),
+        switchMap((query) => {
+          const q = (typeof query === 'string' ? query : '').trim();
+          if (q.length < 2) {
+            return of([]);
+          }
+          return this.relationalProductService.getProducts(q, 0, 15, true).pipe(
+            catchError(() => of({ content: [] }))
+          );
+        })
+      )
+      .subscribe((result) => {
+        const content = Array.isArray(result) ? result : (result as any)?.content ?? [];
+        this.productosFiltrados = content;
+      });
   }
 
   private reloadFromFilters(): void {
@@ -213,6 +290,8 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (clientes) => {
           this.clientes = clientes;
+          this.clientesPorId = new Map(clientes.map((c) => [c.id, c]));
+          this.clientesFiltrados = clientes.filter((c) => c.nombre !== 'ANONIMO');
           this.clientesLoading = false;
         },
         error: (err) => {
@@ -261,6 +340,11 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     this.footerService.clearFooterItems();
     this.destroy$.next();
     this.destroy$.complete();
+    if (this.isResizing) {
+      this.stopResize();
+    }
+    document.removeEventListener('mousemove', this.onResize);
+    document.removeEventListener('mouseup', this.stopResize);
   }
 
   selectFilter(filter: string): void {
@@ -315,7 +399,50 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     if (this.sinCorteCtrl.value) {
       opts.sinCorte = true;
     }
+    if (this.clienteIdSeleccionado) {
+      (opts as any).clienteId = this.clienteIdSeleccionado;
+    }
+    if (this.productoIdSeleccionado) {
+      (opts as any).productoId = this.productoIdSeleccionado;
+    }
     return opts;
+  }
+
+  onClienteSelected(event: any): void {
+    const cliente: ClienteDto = event.option.value;
+    this.clienteIdSeleccionado = cliente.id;
+    this.clienteSearchCtrl.setValue(cliente.nombre, { emitEvent: false });
+    this.reloadFromFilters();
+  }
+
+  displayCliente(value: any): string {
+    if (!value) return '';
+    return typeof value === 'string' ? value : value.nombre ?? '';
+  }
+
+  clearClienteFilter(): void {
+    this.clienteIdSeleccionado = null;
+    this.clienteSearchCtrl.setValue('', { emitEvent: false });
+    this.clientesFiltrados = this.clientes.filter((c) => c.nombre !== 'ANONIMO');
+    this.reloadFromFilters();
+  }
+
+  onProductoSelected(event: any): void {
+    const producto: Producto = event.option.value;
+    this.productoIdSeleccionado = producto.id ?? null;
+    this.productoFilterCtrl.setValue(producto.nombre, { emitEvent: false });
+    this.reloadFromFilters();
+  }
+
+  displayProducto(value: any): string {
+    if (!value) return '';
+    return typeof value === 'string' ? value : value.nombre ?? '';
+  }
+
+  clearProductoFilter(): void {
+    this.productoIdSeleccionado = null;
+    this.productoFilterCtrl.setValue('', { emitEvent: false });
+    this.reloadFromFilters();
   }
 
   /** Etiqueta corta del medio en la lista (Mixto o nombre del dominio). */
@@ -331,6 +458,34 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
       return '#546e7a';
     }
     return this.getMetodoPago(recibo.metodoPagoId)?.color?.trim() || null;
+  }
+
+  tieneFlujoNotifElectronica(recibo: HistorialReciboDto): boolean {
+    return !!(recibo.estadoNotificacionElectronica ?? '').trim();
+  }
+
+  medioIconGrayscale(recibo: HistorialReciboDto): boolean {
+    return (
+      this.tieneFlujoNotifElectronica(recibo) && !this.notifOk(recibo)
+    );
+  }
+
+  iconoMetodoLista(recibo: HistorialReciboDto): string {
+    if (recibo.multipago) {
+      return this.metodoPagoService.iconoUrl('money.png');
+    }
+    const file = this.getMetodoPago(recibo.metodoPagoId)?.file;
+    return this.metodoPagoService.iconoUrl(file || 'money.png');
+  }
+
+  tooltipMedioLista(recibo: HistorialReciboDto): string {
+    const medio = this.medioListaLabel(recibo);
+    if (!this.tieneFlujoNotifElectronica(recibo)) {
+      return medio;
+    }
+    return this.notifOk(recibo)
+      ? `${medio} · Con notificación`
+      : `${medio} · Pendiente de notificación`;
   }
 
   labelNotif(recibo: HistorialReciboDto): string | null {
@@ -349,6 +504,7 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
         ? `Productos · ${recibo.documentoVentaConsecutivo}`
         : `Productos · ticket #${recibo.id}`,
       totalTicket: recibo.total,
+      atendidoNombre: this.getCajeroAtendio(recibo.sesionId),
       sesionId: recibo.sesionId
     };
     this.dialog.open(TicketProductosDialogComponent, {
@@ -361,13 +517,15 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   loadHistorialRecibos(): void {
     if (this.page === 1) {
       this.loading = true;
-      this.historialRecibos = []; // Clear list when loading first page
+      this.historialRecibos = [];
     } else {
       this.loadingMore = true;
     }
     this.error = null;
+    this.searchReload$.next();
+  }
 
-    // Format date as YYYY-MM-DD if a date is selected
+  private fetchHistorialRecibos$(): Observable<HistorialReciboPage> {
     let fechaParam: string | undefined;
     if (this.fechaCtrl.value) {
       const date = this.fechaCtrl.value;
@@ -377,59 +535,49 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
       fechaParam = `${year}-${month}-${day}`;
     }
 
-    // Get estadoId based on selected filter (default to pagado if not todos)
     const estadoId = this.getEstadoIdByFilter(this.selectedFilter);
     const soloRestaurados = this.selectedFilter === 'restaurados';
 
-    this.historialReciboService
-      .searchHistorialRecibos(
-        this.page,
-        this.size,
-        'fechaCreacion,desc',
-        fechaParam,
-        estadoId,
-        this.sesionIdFromUrl,
-        soloRestaurados,
-        this.buildSearchOpts()
-      )
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (page: HistorialReciboPage) => {
-          const newContent = page.content ?? [];
+    return this.historialReciboService.searchHistorialRecibos(
+      this.page,
+      this.size,
+      'fechaCreacion,desc',
+      fechaParam,
+      estadoId,
+      this.sesionIdFromUrl,
+      soloRestaurados,
+      this.buildSearchOpts()
+    );
+  }
 
-          if (this.page === 1) {
-            // First page: replace the list
-            this.historialRecibos = newContent;
-          } else {
-            // Subsequent pages: concatenate with existing results
-            this.historialRecibos = this.historialRecibos.concat(newContent);
-          }
+  private applyHistorialPage(page: HistorialReciboPage): void {
+    const newContent = page.content ?? [];
 
-          this.totalElements = page.totalElements ?? 0;
-          this.totalPages = page.totalPages ?? 0;
-          this.loading = false;
-          this.loadingMore = false;
+    if (this.page === 1) {
+      this.historialRecibos = newContent;
+    } else {
+      this.historialRecibos = this.historialRecibos.concat(newContent);
+    }
 
-          const totalSum = this.historialRecibos.reduce(
-            (sum, r) => sum + (r.total ?? 0),
-            0
-          );
-          const totalFormatted = this.formatCurrency(totalSum);
-          this.footerService.setFooterItems([
-            {
-              textoClave: 'Total',
-              valorClave: totalFormatted,
-              estiloCssClave: 'footer-item-total-highlight'
-            }
-          ]);
-        },
-        error: (err) => {
-          console.error('Error loading historial recibos', err);
-          this.error = 'Error al cargar el historial de ventas.';
-          this.loading = false;
-          this.loadingMore = false;
-        }
-      });
+    this.hydrateCajerosFromCache(newContent);
+
+    this.totalElements = page.totalElements ?? 0;
+    this.totalPages = page.totalPages ?? 0;
+    this.loading = false;
+    this.loadingMore = false;
+
+    const totalSum = this.historialRecibos.reduce(
+      (sum, r) => sum + (r.total ?? 0),
+      0
+    );
+    const totalFormatted = this.formatCurrency(totalSum);
+    this.footerService.setFooterItems([
+      {
+        textoClave: 'Total',
+        valorClave: totalFormatted,
+        estiloCssClave: 'footer-item-total-highlight'
+      }
+    ]);
   }
 
   onRecibosListScroll(): void {
@@ -445,8 +593,8 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     // Calculate remaining scrollable distance
     const remainingScroll = scrollHeight - (scrollTop + clientHeight);
 
-    // Estimate item height (approximately 30-35px per item based on padding and content)
-    const estimatedItemHeight = 35;
+    // Estimate item height (2-line layout)
+    const estimatedItemHeight = 52;
     // Calculate how many items are visible
     const visibleItems = Math.ceil(clientHeight / estimatedItemHeight);
     // Calculate how many items are remaining below the viewport
@@ -826,7 +974,10 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   }
 
   getClienteNombre(clienteId: number): string | null {
-    const cliente = this.clientes.find((c) => c.id === clienteId);
+    if (!clienteId) {
+      return null;
+    }
+    const cliente = this.clientesPorId.get(clienteId);
     if (!cliente) {
       return null;
     }
@@ -835,6 +986,41 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
       return null;
     }
     return cliente.nombre;
+  }
+
+  getCajeroAtendio(sesionId: number | null | undefined): string | null {
+    if (sesionId == null || sesionId <= 0) {
+      return null;
+    }
+    const nombre = this.usuariosPorSesion.get(sesionId)?.trim();
+    return nombre || null;
+  }
+
+  /** "Carlos Romero" → "Carlos r." */
+  abreviarNombreCajero(nombre: string): string {
+    const palabras = nombre.trim().split(/\s+/).filter(Boolean);
+    if (palabras.length <= 1) {
+      return nombre.trim();
+    }
+    return `${palabras[0]} ${palabras[1].charAt(0).toLowerCase()}.`;
+  }
+
+  private hydrateCajerosFromCache(recibos: HistorialReciboDto[]): void {
+    const usuarios = this.authService.obtenerTodosUsuariosCache();
+    const nombrePorUserId = new Map(
+      usuarios.map((u) => [u.id.toLowerCase(), u.nombre])
+    );
+    for (const recibo of recibos) {
+      const sesionId = recibo.sesionId;
+      if (!sesionId || this.usuariosPorSesion.has(sesionId)) {
+        continue;
+      }
+      const userId = (recibo.sesionUserId ?? '').trim().toLowerCase();
+      const nombre = userId ? nombrePorUserId.get(userId)?.trim() : null;
+      if (nombre) {
+        this.usuariosPorSesion.set(sesionId, nombre);
+      }
+    }
   }
 
   getMetodoPagoNombre(metodoPagoId: number): string | null {
@@ -946,4 +1132,31 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
       this.imprimiendoRecibo = false;
     }
   }
+
+  startResize(event: MouseEvent): void {
+    this.isResizing = true;
+    this.resizeStartX = event.clientX;
+    this.resizeStartWidth = this.leftPanelWidth;
+
+    document.addEventListener('mousemove', this.onResize);
+    document.addEventListener('mouseup', this.stopResize);
+    event.preventDefault();
+  }
+
+  onResize = (event: MouseEvent): void => {
+    if (!this.isResizing) return;
+
+    const deltaX = event.clientX - this.resizeStartX;
+    const newWidth = this.resizeStartWidth + deltaX;
+    const minWidth = 280;
+    const maxWidth = window.innerWidth - 320;
+
+    this.leftPanelWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+  };
+
+  stopResize = (): void => {
+    this.isResizing = false;
+    document.removeEventListener('mousemove', this.onResize);
+    document.removeEventListener('mouseup', this.stopResize);
+  };
 }

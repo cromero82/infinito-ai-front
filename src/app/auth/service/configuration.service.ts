@@ -11,6 +11,9 @@ export interface ConfigurationItem {
   value: string;
 }
 
+/** Key en configuracion_app + localStorage: panel Pagos electrónicos. */
+export const KEY_NOTIFICACIONES_ACTIVA = 'notificaciones.activa';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -23,6 +26,7 @@ export class ConfigurationService {
     return this.http.get<ConfigurationItem[]>(`${this.apiUrl}/obtenerTodos`).pipe(
       map(configuraciones => {
         let monitorBugSeen = false;
+        let notificacionesActivaSeen = false;
         for (const config of configuraciones) {
           if (config.key === 'longitud-vertical-panel-productos' && config.value) {
             localStorage.setItem('longitud-vertical-panel-productos', config.value);
@@ -32,6 +36,13 @@ export class ConfigurationService {
             localStorage.setItem(
               'monitor-bug',
               parseMonitorBugEnabled(config.value) ? 'true' : 'false'
+            );
+          }
+          if (config.key === KEY_NOTIFICACIONES_ACTIVA) {
+            notificacionesActivaSeen = true;
+            localStorage.setItem(
+              KEY_NOTIFICACIONES_ACTIVA,
+              parseBoolConfig(config.value, true) ? 'true' : 'false'
             );
           }
           if (config.key === 'alerta-precios' && config.value) {
@@ -50,6 +61,9 @@ export class ConfigurationService {
         }
         if (!monitorBugSeen) {
           localStorage.setItem('monitor-bug', 'false');
+        }
+        if (!notificacionesActivaSeen) {
+          localStorage.setItem(KEY_NOTIFICACIONES_ACTIVA, 'true');
         }
         return configuraciones;
       }),
@@ -83,6 +97,23 @@ export class ConfigurationService {
     return localStorage.getItem('monitor-bug') === 'true';
   }
 
+  /**
+   * Visibilidad del panel flotante Pagos electrónicos.
+   * Default true. No afecta match/inbound en puente-tienda (solo UI).
+   * Fuente: configuracion_app.key = notificaciones.activa (cargada al login).
+   */
+  isNotificacionesActivas(): boolean {
+    const raw = localStorage.getItem(KEY_NOTIFICACIONES_ACTIVA);
+    if (raw == null) {
+      return true;
+    }
+    return parseBoolConfig(raw, true);
+  }
+
+  setNotificacionesActivasLocal(activa: boolean): void {
+    localStorage.setItem(KEY_NOTIFICACIONES_ACTIVA, activa ? 'true' : 'false');
+  }
+
   actualizarPorKey(key: string, value: string): Observable<ConfigurationItem> {
     return this.http.put<ConfigurationItem>(`${this.apiUrl}/key/${key}`, { value }).pipe(
       catchError(error => {
@@ -95,12 +126,16 @@ export class ConfigurationService {
 
 /** Acepta `true` / `"true"` o JSON `{"mostrar":true}` (formato en BD). */
 function parseMonitorBugEnabled(raw: string | null | undefined): boolean {
+  return parseBoolConfig(raw, false);
+}
+
+function parseBoolConfig(raw: string | null | undefined, defaultValue: boolean): boolean {
   if (raw == null) {
-    return false;
+    return defaultValue;
   }
   const trimmed = String(raw).trim();
   if (!trimmed) {
-    return false;
+    return defaultValue;
   }
   const lower = trimmed.toLowerCase();
   if (lower === 'true' || lower === '1' || lower === 'yes' || lower === 'si') {
@@ -110,9 +145,18 @@ function parseMonitorBugEnabled(raw: string | null | undefined): boolean {
     return false;
   }
   try {
-    const parsed = JSON.parse(trimmed) as { mostrar?: unknown };
-    return parsed?.mostrar === true || parsed?.mostrar === 'true';
+    const parsed = JSON.parse(trimmed) as { mostrar?: unknown; activa?: unknown };
+    if (parsed?.mostrar === true || parsed?.mostrar === 'true') {
+      return true;
+    }
+    if (parsed?.activa === true || parsed?.activa === 'true') {
+      return true;
+    }
+    if (parsed?.mostrar === false || parsed?.activa === false) {
+      return false;
+    }
   } catch {
-    return false;
+    /* ignore */
   }
+  return defaultValue;
 }

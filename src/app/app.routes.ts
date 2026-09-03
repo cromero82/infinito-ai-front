@@ -216,7 +216,8 @@ export const appRoutes: VexRoutes = [
             loadComponent: () =>
               import(
                 './pages/apps/ventas/gestion-notificaciones-medios-electronicos/gestion-notificaciones-medios-electronicos.component'
-              ).then((m) => m.GestionNotificacionesMediosElectronicosComponent)
+              ).then((m) => m.GestionNotificacionesMediosElectronicosComponent),
+            data: { scrollDisabled: true }
           },
           {
             path: 'logs-errores',

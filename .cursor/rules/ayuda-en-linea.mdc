@@ -1,0 +1,36 @@
+---
+description: Ayuda en línea — barra de estado (footer) + panel flotante de tareas por pantalla
+globs:
+  - src/app/core/components/ayuda-en-linea/**
+  - src/app/layouts/components/footer/**
+  - src/app/layouts/services/footer.service.ts
+  - src/app/pages/apps/financiero/origenes-fondos/origenes-list/**
+  - src/app/pages/apps/ventas/gestion-notificaciones-medios-electronicos/**
+alwaysApply: false
+---
+
+# Ayuda en línea (barra de estado + panel)
+
+**Nombre:** **Ayuda en línea**  
+No confundir con **Guía en línea** (`guia-en-linea/`): overlay origen→destino (CxC).
+
+## Piezas
+
+| Pieza | Rol |
+|-------|-----|
+| Footer / barra de estado | `FooterService.setFooterItems` — resumen al entrar; tip al hover |
+| Panel flotante | `core/components/ayuda-en-linea/` — arrastrable, derecha, catálogo de tareas |
+| Botón UI | «Ayuda en línea» + icono `mat:info` en el header de la pantalla |
+
+## Patrón al cablear una pantalla
+
+1. Al `ngOnInit`: poner en footer el **resumen** de la pantalla (sin etiqueta «Sugerencia»).
+2. Botón header abre el panel con `AyudaEnLineaContenido` (resumen + tips + acciones).
+3. Hover de controles relevantes → tip en footer; leave → restaurar resumen.
+4. `ngOnDestroy`: `clearFooterItems()`.
+5. Layout: `scrollDisabled: true` en ruta + `:host` flex + card que llena altura (ver `table-viewport-adjustment.mdc`).
+
+## Pantallas ya cableadas
+
+- Orígenes de fondos
+- Gestión notificaciones medios electrónicos
