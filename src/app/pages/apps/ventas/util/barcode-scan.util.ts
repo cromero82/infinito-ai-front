@@ -2,6 +2,10 @@
 export const QR_SCAN_REJECTION_MESSAGE =
   'Se leyó un código QR. Use el código de barras numérico e intente nuevamente.';
 
+/** Lectura accidental de barras/QR con el foco en «Paga con: Efectivo». */
+export const PAGO_EFECTIVO_SCAN_ALERT_MESSAGE =
+  'Verifique este pago antes de intentar consultar otro producto.';
+
 export interface ProductSearchTermResolution {
   rejected: boolean;
   term: string;
@@ -79,6 +83,12 @@ export function normalizeProductSearchTerm(raw: string | null | undefined): stri
     return '';
   }
   return raw.replace(/\s{2,}/g, ' ');
+}
+
+/** EAN/UPC típico (8–14 dígitos) pegado en un campo de monto. */
+export function isLikelyProductBarcodeDigits(raw: string): boolean {
+  const digits = String(raw ?? '').replace(/\D/g, '');
+  return /^\d{8,14}$/.test(digits);
 }
 
 export function resolveProductSearchTerm(raw: string): ProductSearchTermResolution {

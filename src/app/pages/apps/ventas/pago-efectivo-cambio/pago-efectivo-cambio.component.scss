@@ -175,6 +175,18 @@
   min-width: 0;
 }
 
+.paga-con-alerta-escaneo {
+  width: 100%;
+  margin: 6px 0 0;
+  padding: 0;
+  box-sizing: border-box;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #b71c1c;
+}
+
 .paga-con-field {
   width: 80%;
   font-size: 18px;
@@ -199,7 +211,7 @@
 .pago-efectivo-efectivo-grupo {
   display: inline-flex;
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 10px;
   max-width: 100%;
@@ -838,6 +850,10 @@
   .pago-efectivo-fila-rl > .label,
   .pago-efectivo-efectivo-grupo > .label {
     color: rgba(255, 255, 255, 0.65);
+  }
+
+  .paga-con-alerta-escaneo {
+    color: #ef9a9a;
   }
 
   .paga-con-label {

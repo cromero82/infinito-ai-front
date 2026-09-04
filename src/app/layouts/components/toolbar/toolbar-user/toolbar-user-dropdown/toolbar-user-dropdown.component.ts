@@ -368,8 +368,8 @@ export class ToolbarUserDropdownComponent implements OnInit {
     const dialogData: ConfirmDialogData = {
       titulo: 'Reset datos transaccionales',
       mensaje:
-        'Se vaciarán <b>ventas, cortes, movimientos OF, egresos, CxC y notificaciones</b>. ' +
-        'Se conservan catálogos (orígenes, medios de pago, productos, plantillas, etc.).<br/><br/>' +
+        'Se vaciarán <b>ventas, cortes, movimientos OF, egresos, CxC y correos recibidos</b>. ' +
+        'Se conservan catálogos y las <b>plantillas de correos electrónicos</b> (orígenes, medios de pago, productos, etc.).<br/><br/>' +
         'Después debe <b>cerrar sesión y volver a entrar como ADMIN</b> para registrar la base inicial.<br/><br/>' +
         '¿Continuar? Esta acción no se puede deshacer.'
     };

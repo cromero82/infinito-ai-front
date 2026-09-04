@@ -34,6 +34,11 @@ import {
   IMPRIMIR_RECIBO_KEY,
   IMPRIMIR_TICKET_LUEGO_DE_PAGAR_LABEL
 } from '../imprimir-recibo-preference.constants';
+import {
+  PAGO_EFECTIVO_SCAN_ALERT_MESSAGE,
+  isLikelyProductBarcodeDigits,
+  isLikelyQrOrUrlScan
+} from '../util/barcode-scan.util';
 
 /** Opciones al invocar la impresión desde el modal de efectivo (no persiste preferencia global). */
 export interface ImprimirReciboTrasPagoOpciones {
@@ -135,6 +140,13 @@ export class PagoEfectivoCambioComponent
 
   estado: EstadoModal = 'entrada';
   errorMsg = '';
+  alertaEscaneo: string | null = null;
+  /** Monto válido antes de una ráfaga de lectora (casi siempre el default = total). */
+  private pagaConRespaldo = '';
+  private pagaConLastKeyAt = 0;
+  private pagaConRafagaCount = 0;
+  private ignorarEscaneoHastaMs = 0;
+  private readonly pagaConRafagaIdleMs = 80;
   totalGuardado = 0;
   pagaConResultado = 0;
   cambioResultado = 0;
@@ -224,6 +236,7 @@ export class PagoEfectivoCambioComponent
     this.conteosPorDenominacion = this.descomponerGreedy(this.total);
     const formattedTotal = this.formatCurrency(this.total);
     this.pagaConCtrl.setValue(formattedTotal);
+    this.pagaConRespaldo = formattedTotal;
   }
 
   ngOnInit(): void {
@@ -417,6 +430,7 @@ export class PagoEfectivoCambioComponent
 
   onPagaConFocus(event: FocusEvent): void {
     const input = event.target as HTMLInputElement;
+    this.guardarRespaldoPagaCon();
     const numeric = this.parseCurrency(this.pagaConCtrl.value);
     this.pagaConCtrl.setValue(this.toPlainAmountString(numeric), {
       emitEvent: false
@@ -425,15 +439,28 @@ export class PagoEfectivoCambioComponent
   }
 
   onPagaConInput(event: Event): void {
+    if (Date.now() < this.ignorarEscaneoHastaMs) {
+      this.aplicarRespaldoPagaCon();
+      return;
+    }
     const value = (event.target as HTMLInputElement).value;
+    if (isLikelyQrOrUrlScan(value) || this.esLecturaCodigoBarrasEnPagaCon(value)) {
+      this.restaurarPagaConTrasEscaneo();
+      return;
+    }
     const digits = value.replace(/[^\d]/g, '');
     this.pagaConCtrl.setValue(digits, { emitEvent: false });
     this.aplicarTotales();
   }
 
   onPagaConBlur(): void {
+    if (this.esLecturaCodigoBarrasEnPagaCon(this.pagaConCtrl.value)) {
+      this.restaurarPagaConTrasEscaneo();
+      return;
+    }
     const numeric = this.parseCurrency(this.pagaConCtrl.value);
     this.pagaConCtrl.setValue(this.formatCurrency(numeric), { emitEvent: false });
+    this.guardarRespaldoPagaCon();
     this.aplicarTotales();
   }
 
@@ -544,7 +571,9 @@ export class PagoEfectivoCambioComponent
   seleccionarBillete(valor: number): void {
     this.modoSumaRestaBilletes = true;
     this.conteosPorDenominacion = { [valor]: 1 };
+    this.alertaEscaneo = null;
     this.pagaConCtrl.setValue(this.formatCurrency(valor));
+    this.guardarRespaldoPagaCon();
     const inputEl = this.pagaConInputRef?.nativeElement;
     if (!inputEl) {
       return;
@@ -567,7 +596,9 @@ export class PagoEfectivoCambioComponent
     event.stopPropagation();
     const actual = this.parseCurrency(this.pagaConCtrl.value);
     this.ajustarConteo(valor, +1);
+    this.alertaEscaneo = null;
     this.pagaConCtrl.setValue(this.formatCurrency(actual + valor));
+    this.guardarRespaldoPagaCon();
     this.enfocarPagaCon();
   }
 
@@ -581,7 +612,9 @@ export class PagoEfectivoCambioComponent
     } else {
       this.conteosPorDenominacion = this.descomponerGreedy(nuevo);
     }
+    this.alertaEscaneo = null;
     this.pagaConCtrl.setValue(this.formatCurrency(nuevo));
+    this.guardarRespaldoPagaCon();
     this.enfocarPagaCon();
   }
 
@@ -644,7 +677,32 @@ export class PagoEfectivoCambioComponent
   }
 
   onPagaConKeydown(event: KeyboardEvent): void {
+    if (Date.now() < this.ignorarEscaneoHastaMs) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      const now = Date.now();
+      if (now - this.pagaConLastKeyAt > this.pagaConRafagaIdleMs) {
+        this.guardarRespaldoPagaCon();
+        this.pagaConRafagaCount = 0;
+      }
+      this.pagaConRafagaCount += 1;
+      this.pagaConLastKeyAt = now;
+      return;
+    }
+
     if (event.key !== 'Enter' && event.key !== 'NumpadEnter') {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (this.esLecturaCodigoBarrasEnPagaCon(this.pagaConCtrl.value)) {
+      this.restaurarPagaConTrasEscaneo();
       return;
     }
 
@@ -652,9 +710,45 @@ export class PagoEfectivoCambioComponent
       return;
     }
 
-    event.preventDefault();
-    event.stopPropagation();
     this.confirmar();
+  }
+
+  private guardarRespaldoPagaCon(): void {
+    const numeric = this.parseCurrency(this.pagaConCtrl.value);
+    if (this.esLecturaCodigoBarrasEnPagaCon(this.pagaConCtrl.value)) {
+      return;
+    }
+    this.pagaConRespaldo = this.formatCurrency(numeric);
+  }
+
+  private aplicarRespaldoPagaCon(): void {
+    const respaldo =
+      this.pagaConRespaldo || this.formatCurrency(this.total);
+    this.pagaConCtrl.setValue(respaldo, { emitEvent: false });
+    this.aplicarTotales();
+  }
+
+  private restaurarPagaConTrasEscaneo(): void {
+    this.ignorarEscaneoHastaMs = Date.now() + 400;
+    this.pagaConRafagaCount = 0;
+    this.aplicarRespaldoPagaCon();
+    this.alertaEscaneo = PAGO_EFECTIVO_SCAN_ALERT_MESSAGE;
+    this.cdr.markForCheck();
+  }
+
+  private esLecturaCodigoBarrasEnPagaCon(raw: string | null | undefined): boolean {
+    const value = raw ?? '';
+    if (isLikelyQrOrUrlScan(value)) {
+      return true;
+    }
+    const digits = value.replace(/\D/g, '');
+    if (digits.length >= 12 && isLikelyProductBarcodeDigits(value)) {
+      return true;
+    }
+    if (this.pagaConRafagaCount >= 6 && isLikelyProductBarcodeDigits(value)) {
+      return true;
+    }
+    return this.pagaConRafagaCount >= 8;
   }
 
   confirmar(): void {

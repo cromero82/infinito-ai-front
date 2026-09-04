@@ -658,3 +658,176 @@
   display: inline-block;
   margin-right: 8px;
 }
+
+// —— Dark mode (template Vex `.dark`) ——
+:host-context(.dark) {
+  .cierre-disclaimer {
+    color: rgba(255, 255, 255, 0.78);
+    background: rgba(33, 150, 243, 0.16);
+    border-left-color: #64b5f6;
+  }
+
+  .fechas-container {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .fecha-label {
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  .hora-input {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.22);
+    color: rgba(255, 255, 255, 0.92);
+    color-scheme: dark;
+
+    &:focus {
+      border-color: rgb(var(--vex-color-primary-400));
+      box-shadow: 0 0 0 2px rgb(var(--vex-color-primary-500) / 0.28);
+    }
+
+    &.disabled,
+    &:disabled {
+      background-color: rgba(255, 255, 255, 0.04);
+      color: rgba(255, 255, 255, 0.38);
+    }
+  }
+
+  .table-container {
+    border-color: rgba(255, 255, 255, 0.14);
+    background: var(--vex-background-card, #1e1e1e);
+  }
+
+  .table-loading-overlay {
+    background-color: rgba(0, 0, 0, 0.45);
+  }
+
+  .table-loading-text {
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .corte-table {
+    background: transparent;
+    --mat-table-background-color: transparent;
+    --mdc-data-table-header-row-fill-color: rgba(255, 255, 255, 0.08);
+    --mdc-data-table-row-fill-color: transparent;
+    --mat-table-row-item-container-color: transparent;
+
+    ::ng-deep {
+      .mat-mdc-header-row {
+        background-color: rgba(255, 255, 255, 0.08);
+      }
+
+      .mat-mdc-header-cell {
+        color: rgba(255, 255, 255, 0.9) !important;
+        border-right-color: rgba(255, 255, 255, 0.12);
+        background-color: rgba(255, 255, 255, 0.08) !important;
+      }
+
+      .mat-mdc-row {
+        background-color: transparent;
+      }
+
+      .mat-mdc-cell {
+        color: rgba(255, 255, 255, 0.82);
+        border-bottom-color: rgba(255, 255, 255, 0.08);
+      }
+    }
+  }
+
+  .header-row {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .header-cell {
+    color: rgba(255, 255, 255, 0.9);
+    border-right-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .data-row {
+    background-color: transparent;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+
+    &:hover {
+      background-color: var(--pos-mat-table-row-hover);
+    }
+
+    &.row-alt {
+      background-color: rgba(255, 255, 255, 0.03);
+
+      &:hover {
+        background-color: var(--pos-mat-table-row-hover);
+      }
+    }
+  }
+
+  .cell {
+    border-right-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .metodo-pago-nombre {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .total-sistema-value {
+    color: rgba(255, 255, 255, 0.78);
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  .currency-prefix {
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .motivo-accion-hint {
+    color: #9fa8da;
+  }
+
+  .desfase-ok {
+    color: #a5d6a7;
+    background-color: rgba(76, 175, 80, 0.22);
+  }
+
+  .desfase-mas {
+    color: #ce93d8;
+    background-color: rgba(166, 128, 184, 0.22);
+  }
+
+  .desfase-menos {
+    color: #ffcc80;
+    background-color: rgba(255, 153, 51, 0.2);
+  }
+
+  .totales-container {
+    background-color: rgba(76, 175, 80, 0.14);
+    border-top-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .total-cell {
+    border-right-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .total-label,
+  .total-value {
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  .desfases-row .total-label {
+    color: rgba(255, 255, 255, 0.88);
+  }
+
+  .mensaje-inicial {
+    color: rgba(255, 255, 255, 0.65);
+
+    .info-icon {
+      color: rgba(255, 255, 255, 0.35);
+    }
+  }
+
+  .hint-registro {
+    color: #ffcc80;
+  }
+}
+

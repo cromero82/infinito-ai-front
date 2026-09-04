@@ -45,6 +45,11 @@
                 </mat-form-field>
               </div>
             </div>
+            @if (alertaEscaneo) {
+              <p class="paga-con-alerta-escaneo" role="alert">
+                {{ alertaEscaneo }}
+              </p>
+            }
           </div>
           <div class="billetes-grid">
             @for (billete of billetes; track billete) {
