@@ -37,6 +37,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { forkJoin, of } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
 import { environment } from '../../../../../../environments/environment';
+import { preserveVexVisualPreferenceAroundClear } from '@vex/config/vex-visual-preference';
 
 export interface OnlineStatus {
   id: 'online' | 'away' | 'dnd' | 'offline';
@@ -554,8 +555,9 @@ export class ToolbarUserDropdownComponent implements OnInit {
   }
 
   private completarLogout() {
-    // Limpiar todo el localStorage
-    localStorage.clear();
+    preserveVexVisualPreferenceAroundClear(localStorage, () =>
+      localStorage.clear()
+    );
 
     // También usar el método del servicio por si acaso
     this.authService.logout();

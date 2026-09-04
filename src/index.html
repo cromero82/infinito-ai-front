@@ -9,6 +9,24 @@
   <link href="favicon.ico" rel="icon" type="image/x-icon" />
 </head>
 <body dir="ltr">
+<script>
+  /* Sincronizado con VEX_VISUAL_PREFERENCE_KEY (`preferencias-tema-visual`). */
+  (function () {
+    try {
+      var raw = localStorage.getItem('preferencias-tema-visual');
+      if (!raw) {
+        return;
+      }
+      var p = JSON.parse(raw);
+      if (p.colorScheme === 'dark' || p.colorScheme === 'light') {
+        document.body.classList.add(p.colorScheme);
+      }
+      if (typeof p.theme === 'string' && p.theme.indexOf('vex-theme-') === 0) {
+        document.body.classList.add(p.theme);
+      }
+    } catch (e) {}
+  })();
+</script>
 <style>
   #vex-splash-screen {
     position: absolute;

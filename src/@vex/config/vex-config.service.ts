@@ -15,6 +15,10 @@ import {
 import { CSSValue } from '../interfaces/css-value.type';
 import { map } from 'rxjs/operators';
 import { VEX_CONFIG, VEX_THEMES } from '@vex/config/config.token';
+import {
+  readVexVisualPreference,
+  writeVexVisualPreference
+} from './vex-visual-preference';
 
 @Injectable({
   providedIn: 'root'
@@ -22,7 +26,7 @@ import { VEX_CONFIG, VEX_THEMES } from '@vex/config/config.token';
 export class VexConfigService {
   readonly configMap: VexConfigs = vexConfigs;
   readonly configs: VexConfig[] = Object.values(this.configMap);
-  private _configSubject = new BehaviorSubject<VexConfig>(this.config);
+  private readonly _configSubject: BehaviorSubject<VexConfig>;
 
   constructor(
     @Inject(VEX_CONFIG) private readonly config: VexConfig,
@@ -30,6 +34,9 @@ export class VexConfigService {
     @Inject(DOCUMENT) private readonly document: Document,
     private readonly layoutService: VexLayoutService
   ) {
+    this._configSubject = new BehaviorSubject<VexConfig>(
+      this._withStoredVisualPreference(this.config)
+    );
     this.config$.subscribe((config) => this._updateConfig(config));
   }
 
@@ -63,7 +70,42 @@ export class VexConfigService {
     this._setDensity();
     this._setDirection(config.direction);
     this._setSidenavState(config.sidenav.state);
+    this._persistVisualPreference(config);
     this._emitResize();
+  }
+
+  private _withStoredVisualPreference(config: VexConfig): VexConfig {
+    const stored = readVexVisualPreference(
+      this._localStorage(),
+      this.themes.map((t) => t.className)
+    );
+    if (!stored) {
+      return config;
+    }
+
+    return {
+      ...config,
+      style: {
+        ...config.style,
+        ...(stored.colorScheme ? { colorScheme: stored.colorScheme } : {}),
+        ...(stored.theme ? { themeClassName: stored.theme } : {})
+      }
+    };
+  }
+
+  private _persistVisualPreference(config: VexConfig): void {
+    writeVexVisualPreference(this._localStorage(), {
+      colorScheme: config.style.colorScheme,
+      theme: config.style.themeClassName
+    });
+  }
+
+  private _localStorage(): Storage | null {
+    try {
+      return this.document.defaultView?.localStorage ?? null;
+    } catch {
+      return null;
+    }
   }
 
   private _setStyle(style: VexConfig['style']): void {

@@ -156,15 +156,34 @@
       line-height: 24px !important;
     }
 
-    &:not(.mat-form-field-should-float):not(:focus-within) .mat-mdc-floating-label {
+    &:not(.mat-form-field-should-float):not(:focus-within)
+      .mat-mdc-floating-label:not(.mdc-floating-label--float-above) {
       top: 50% !important;
       transform: translateY(-50%) !important;
     }
 
+    &.mat-form-field-should-float .mdc-notched-outline__notch,
+    &:focus-within .mdc-notched-outline__notch {
+      padding-top: 12px !important;
+    }
+
     &.mat-form-field-should-float .mat-mdc-floating-label,
-    &:focus-within .mat-mdc-floating-label {
+    &:focus-within .mat-mdc-floating-label,
+    .mat-mdc-floating-label.mdc-floating-label--float-above {
       top: 50% !important;
       transform: translateY(calc(-50% - 14px)) scale(0.75) !important;
+    }
+  }
+
+  // Select con opción “Todos” (value ''): el label debe quedar en el notch.
+  .filter-select.mat-mdc-form-field {
+    .mat-mdc-floating-label {
+      top: 50% !important;
+      transform: translateY(calc(-50% - 14px)) scale(0.75) !important;
+    }
+
+    .mdc-notched-outline__notch {
+      padding-top: 12px !important;
     }
   }
 

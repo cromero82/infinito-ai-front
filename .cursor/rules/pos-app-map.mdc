@@ -77,6 +77,15 @@ La ruta por defecto tras login es **`/apps/tickets`**.
 
 Variables y tokens Vex: inspeccionar `--vex-*` en DevTools o revisar `src/@vex/styles/partials/_css-vars.scss` y temas en `_themes.scss` / `_generated-themes.scss`.
 
+### Formularios compactos (`pos-field-dense`)
+
+Los `mat-form-field` outline de filtros (fecha, select, texto) deben verse como **Financiero > Egresos** (~28px, sin hueco encima del label ni del icono de calendario).
+
+- **CSS de plantilla:** `src/@vex/styles/partials/plugins/@angular/material/_density.scss` — mixin `vex-mat-outlined-field-compact`, clase `.pos-field-dense`, y el mismo criterio en `.vex-mat-dense-md`.
+- **Uso:** poner `class="pos-field-dense"` en el `mat-form-field` o en el contenedor de filtros, con `appearance="outline"` y `subscriptSizing="dynamic"`.
+- **No** copiar padding/altura de infix por componente. Excluir `textarea` (observaciones, notas).
+- Referencia visual: toolbar de Egresos. Ya aplicado en Ingresos (panel izquierdo), Historial Tickets y Cierre de turno (Fecha inicio/fin).
+
 ## Recursos estáticos y Angular (`angular.json`)
 
 - **Assets declarados:** `src/favicon.ico`, `src/assets`, redirects, y copia de **iconos SVG** de Material Design desde `node_modules` hacia `assets/img/icons/material-design-icons/`.

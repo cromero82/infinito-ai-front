@@ -1,5 +1,98 @@
 @use "@angular/material" as mat;
 
+/// Outline compacto POS (referencia: Financiero > Egresos).
+/// Quita el hueco superior del label flotante e iconos (datepicker).
+/// Usar clase `pos-field-dense` en el `mat-form-field` o en un contenedor.
+@mixin vex-mat-outlined-field-compact {
+  font-size: 13px !important;
+
+  .mat-mdc-form-field-flex {
+    height: 28px !important;
+    min-height: 28px !important;
+    align-items: center !important;
+  }
+
+  .mat-mdc-text-field-wrapper {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .mat-mdc-form-field-infix {
+    min-height: 24px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .mdc-notched-outline__notch {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .mat-mdc-text-field-wrapper input,
+  .mat-mdc-select-value,
+  .mat-mdc-floating-label,
+  .mat-mdc-input-element,
+  .mat-mdc-select-value-text {
+    font-size: 13px !important;
+  }
+
+  .mat-mdc-select-value,
+  .mat-mdc-input-element {
+    line-height: 24px !important;
+  }
+
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  &.mat-form-field-should-float .mdc-notched-outline__notch,
+  &:focus-within .mdc-notched-outline__notch {
+    padding-top: 12px !important;
+  }
+
+  &:not(.mat-form-field-should-float):not(:focus-within)
+    .mat-mdc-floating-label:not(.mdc-floating-label--float-above) {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+  }
+
+  &.mat-form-field-should-float .mat-mdc-floating-label,
+  &:focus-within .mat-mdc-floating-label,
+  .mat-mdc-floating-label.mdc-floating-label--float-above {
+    top: 50% !important;
+    transform: translateY(calc(-50% - 14px)) scale(0.75) !important;
+  }
+
+  .mat-mdc-form-field-icon-suffix,
+  .mat-mdc-form-field-icon-prefix {
+    align-self: center;
+    padding: 0 !important;
+
+    .mat-mdc-icon-button {
+      --mdc-icon-button-state-layer-size: 28px;
+      width: 28px !important;
+      height: 28px !important;
+      padding: 0 !important;
+    }
+
+    .mat-icon {
+      width: 18px;
+      height: 18px;
+      font-size: 18px;
+    }
+  }
+}
+
+.pos-field-dense.mat-mdc-form-field,
+.pos-field-dense .mat-mdc-form-field {
+  @include vex-mat-outlined-field-compact;
+}
+
 .vex-mat-dense-default {
   $density: -2;
   @include mat.form-field-density($density);
@@ -10,6 +103,12 @@
 
 .vex-mat-dense-md {
   @include mat.all-component-densities(-1);
+
+  // Formularios: inputs outline compactos (Egresos). Opt-in: clase `pos-field-dense`.
+  .pos-field-dense.mat-mdc-form-field,
+  .pos-field-dense .mat-mdc-form-field {
+    @include vex-mat-outlined-field-compact;
+  }
 }
 
 .vex-mat-dense-sm {

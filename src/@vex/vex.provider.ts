@@ -15,6 +15,7 @@ import { VexDemoService } from '@vex/services/vex-demo.service';
 import { VexPlatformService } from '@vex/services/vex-platform.service';
 import { VexConfig, VexThemeProvider } from '@vex/config/vex-config.interface';
 import { VEX_CONFIG, VEX_THEMES } from '@vex/config/config.token';
+import { VexConfigService } from '@vex/config/vex-config.service';
 import { VexHighlightModule } from '@vex/components/vex-highlight/vex-highlight.module';
 
 export function provideVex(options: {
@@ -36,6 +37,11 @@ export function provideVex(options: {
       useValue: {
         appearance: 'outline'
       } satisfies MatFormFieldDefaultOptions
+    },
+    {
+      provide: ENVIRONMENT_INITIALIZER,
+      useValue: () => inject(VexConfigService),
+      multi: true
     },
     {
       provide: ENVIRONMENT_INITIALIZER,
