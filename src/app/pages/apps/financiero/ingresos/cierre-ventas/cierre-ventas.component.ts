@@ -29,6 +29,16 @@ import {
 } from '../../origenes-fondos/origen-movimiento-dialog/origen-movimiento-dialog.component';
 import { OrigenFondosArbolItemDto } from '../../origenes-fondos/util/origen-fondos-arbol.util';
 import { AuthService } from '../../../../../auth/service/auth.service';
+import {
+  AsistenteCierreCajaDialogComponent,
+  AsistenteCierreCajaResultado,
+  ConteoBilletes
+} from './asistente-cierre-caja-dialog.component';
+import {
+  claseDesfaseCierre,
+  textoDesfaseCierre,
+  tieneDesfaseCierre
+} from './cierre-desfase.util';
 
 export interface CierreVentasData {}
 
@@ -136,8 +146,8 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
   private editingMetodoId: number | null = null;
   private editingRaw = '';
 
-  /** Desfase relevante en pesos enteros (alineado a BigDecimal ≠ 0 en backend). */
-  private readonly desfaseEps = 1;
+  /** Último conteo asociado en el asistente de efectivo (se rehidrata al reabrir). */
+  private conteosAsistenteEfectivo: ConteoBilletes | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -562,7 +572,7 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
   }
 
   tieneDesfase(desfase: number): boolean {
-    return Number.isFinite(desfase) && Math.abs(desfase) >= this.desfaseEps;
+    return tieneDesfaseCierre(desfase);
   }
 
   onMotivoDesfaseChange(row: CorteVentaRow, event: MatSelectChange): void {
@@ -740,6 +750,42 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
     });
   }
 
+  esFilaEfectivo(row: CorteVentaRow): boolean {
+    const sigla = (row.metodoPago.sigla || '').trim().toUpperCase();
+    const nombre = (row.metodoPago.descripcion || '').trim().toLowerCase();
+    return sigla === 'EF' || nombre === 'efectivo';
+  }
+
+  abrirAsistenteCierreCaja(row: CorteVentaRow): void {
+    if (!this.esFilaEfectivo(row)) {
+      return;
+    }
+    const ref = this.dialog.open(AsistenteCierreCajaDialogComponent, {
+      width: '480px',
+      autoFocus: 'first-tabbable',
+      panelClass: 'asistente-cierre-caja-pane',
+      position: {
+        top: '72px',
+        right: '24px'
+      },
+      data: {
+        conteosPrevios: this.conteosAsistenteEfectivo,
+        esperado: row.totalSistema
+      }
+    });
+    ref.afterClosed().subscribe((resultado: AsistenteCierreCajaResultado | null) => {
+      if (!resultado) {
+        return;
+      }
+      this.conteosAsistenteEfectivo = resultado.conteos;
+      this.editingMetodoId = null;
+      this.editingRaw = '';
+      row.totalRealCtrl.setValue(resultado.contado);
+      this.actualizarTotales();
+      this.cdr.markForCheck();
+    });
+  }
+
   private tieneMotivoSeleccionado(row: CorteVentaRow): boolean {
     const v = row.motivoDesfaseCtrl.value as unknown;
     if (v === null || v === undefined || v === '') {
@@ -750,15 +796,11 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
   }
 
   getDesfaseClass(desfase: number): string {
-    if (!this.tieneDesfase(desfase)) return 'desfase-ok';
-    if (desfase > 0) return 'desfase-mas';
-    return 'desfase-menos';
+    return claseDesfaseCierre(desfase);
   }
 
   getDesfaseTexto(desfase: number): string {
-    if (!this.tieneDesfase(desfase)) return 'Sin diferencia';
-    const tipo = desfase > 0 ? 'Más' : 'Menos';
-    return `Diferencia: (${tipo}) ${this.formatCurrency(Math.abs(desfase))}`;
+    return textoDesfaseCierre(desfase, (n) => this.formatCurrency(n));
   }
 
   hintAccionMotivo(row: CorteVentaRow): string | null {
@@ -781,9 +823,7 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
   }
 
   getTotalDesfaseClass(): string {
-    if (!this.tieneDesfase(this.totalDesfases)) return 'desfase-ok';
-    if (this.totalDesfases > 0) return 'desfase-mas';
-    return 'desfase-menos';
+    return claseDesfaseCierre(this.totalDesfases);
   }
 
   formatearFecha(fecha: Date | null): string {

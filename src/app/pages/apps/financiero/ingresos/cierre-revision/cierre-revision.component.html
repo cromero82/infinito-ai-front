@@ -56,6 +56,7 @@
                   <mat-form-field appearance="outline" subscriptSizing="dynamic">
                     <mat-label>Motivo</mat-label>
                     <mat-select
+                      panelClass="cierre-motivo-desfase-panel"
                       [formControl]="row.motivoCtrl"
                       (selectionChange)="onMotivoChange()">
                       @for (motivo of motivos; track motivo.id) {

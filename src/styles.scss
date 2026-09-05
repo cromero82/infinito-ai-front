@@ -162,6 +162,45 @@ mat-checkbox.mat-mdc-checkbox {
 }
 
 /*
+  Cierre de turno — Motivo (columna Diferencia):
+  Vex :root .mat-mdc-option (h-10) recorta nombres largos. Cada opción crece y envuelve.
+*/
+.mat-mdc-select-panel.cierre-motivo-desfase-panel {
+  .mat-mdc-option.mdc-list-item {
+    align-items: flex-start !important;
+    height: auto !important;
+    min-height: 3.5rem !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    line-height: 1.4 !important;
+    white-space: normal !important;
+    margin-top: 6px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .mat-mdc-option.mdc-list-item:first-child {
+    margin-top: 0 !important;
+  }
+
+  .mat-mdc-option.mdc-list-item:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  .mat-mdc-option .mdc-list-item__primary-text {
+    white-space: normal !important;
+    text-overflow: clip !important;
+    line-height: 1.4 !important;
+    word-break: break-word;
+    overflow: visible !important;
+    flex: 1 1 auto;
+    min-width: 0;
+    align-self: stretch;
+  }
+}
+
+/*
   Lista de productos (detalle-ticket): columna flex + lista con scroll acotado (height:0 + min-height:0).
 */
 .detalle-ticket-host .detalle-list-wrapper {

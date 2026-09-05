@@ -1,0 +1,103 @@
+<div
+  class="asistente-draggable-root"
+  cdkDrag
+  cdkDragRootElement=".cdk-overlay-pane">
+  <div class="asistente-drag-header" mat-dialog-title cdkDragHandle>
+    <h2 class="dialog-title m-0">Asistente para cierre de caja</h2>
+  </div>
+
+  <mat-dialog-content class="dialog-content">
+    <p class="intro">
+      Cuente los billetes de la caja. El valor a asociar en
+      <strong>Efectivo → Contado</strong> es el total de billetes menos la base
+      sugerida.
+    </p>
+
+    <div class="billetes-list">
+      @for (fila of filas; track fila.billete.valor) {
+        <div class="billete-row" [class.billete-row--rehidratada]="fila.rehidratada">
+          <div class="billete-visual">
+            <img [src]="fila.billete.imagen" [alt]="fila.billete.label" />
+            <span class="billete-label">{{ fila.billete.label }}</span>
+          </div>
+          <mat-form-field
+            appearance="outline"
+            class="cantidad-field pos-field-dense"
+            [class.cantidad-rehidratada]="fila.rehidratada"
+            subscriptSizing="dynamic">
+            <mat-label>Cantidad</mat-label>
+            <input
+              matInput
+              type="number"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              [formControl]="fila.cantidadCtrl"
+              (input)="onCantidadCambio(fila)" />
+          </mat-form-field>
+          <span class="subtotal">{{ formatCurrency(subtotalDe(fila)) }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="resumen">
+      <span class="resumen-label">Total billetes</span>
+      <strong class="resumen-valor">{{ formatCurrency(totalBilletes) }}</strong>
+
+      <span class="resumen-label">Base caja sugerida</span>
+      <mat-form-field
+        appearance="outline"
+        class="base-field pos-field-dense"
+        subscriptSizing="dynamic">
+        <span matPrefix class="currency-prefix">$</span>
+        <input
+          matInput
+          type="text"
+          inputmode="numeric"
+          [value]="displayBase()"
+          [disabled]="cargandoBase"
+          (focus)="onBaseFocus($event)"
+          (input)="onBaseInput($event)"
+          (blur)="onBaseBlur($event)" />
+      </mat-form-field>
+
+      @if (!cargandoBase && !baseCargada) {
+        <p class="hint-base">
+          No se encontró <code>corte-venta.base-efectivo</code>. Se usa $ 0.
+          Al asociar se intentará guardar el valor editado.
+        </p>
+      }
+
+      <span class="resumen-label resumen-label--contado">Valor a asociar (Contado)</span>
+      <strong class="resumen-valor resumen-valor--contado">{{
+        formatCurrency(contado)
+      }}</strong>
+
+      <span class="resumen-label">Diferencia</span>
+      <span
+        class="desfase-texto"
+        [ngClass]="getDesfaseClass(desfase)">
+        {{ getDesfaseTexto(desfase) }}
+      </span>
+
+      <p class="formula">Contado = total billetes − base caja sugerida</p>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="dialog-actions">
+    <button mat-button type="button" [disabled]="guardando" (click)="cancelar()">
+      Cancelar
+    </button>
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      [disabled]="!hayConteo || guardando"
+      (click)="asociar()">
+      @if (guardando) {
+        <mat-spinner diameter="18" class="button-spinner"></mat-spinner>
+      }
+      Asociar
+    </button>
+  </mat-dialog-actions>
+</div>

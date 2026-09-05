@@ -130,9 +130,21 @@
             Método de Pago
           </th>
           <td mat-cell *matCellDef="let row" class="cell metodo-pago-cell">
-            <span class="metodo-pago-nombre">{{
-              row.metodoPago.descripcion
-            }}</span>
+            <div class="metodo-pago-cell-inner">
+              <span class="metodo-pago-nombre">{{
+                row.metodoPago.descripcion
+              }}</span>
+              @if (esFilaEfectivo(row)) {
+                <button
+                  mat-icon-button
+                  type="button"
+                  class="btn-asistente-caja"
+                  matTooltip="ver asistente para cierre de caja"
+                  (click)="abrirAsistenteCierreCaja(row)">
+                  <mat-icon svgIcon="mat:help"></mat-icon>
+                </button>
+              }
+            </div>
           </td>
         </ng-container>
         <ng-container matColumnDef="base">
@@ -220,6 +232,7 @@
                   subscriptSizing="dynamic">
                   <mat-label>Motivo</mat-label>
                   <mat-select
+                    panelClass="cierre-motivo-desfase-panel"
                     [formControl]="row.motivoDesfaseCtrl"
                     [compareWith]="compareMotivoId"
                     (selectionChange)="onMotivoDesfaseChange(row, $event)">
@@ -340,7 +353,7 @@
               <span
                 class="total-desfases-value"
                 [ngClass]="getTotalDesfaseClass()"
-                >{{ formatCurrency(totalDesfases) }}</span
+                >{{ getDesfaseTexto(totalDesfases) }}</span
               >
             </td>
           </tr>

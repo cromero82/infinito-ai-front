@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface ConfigurationItem {
@@ -13,6 +12,9 @@ export interface ConfigurationItem {
 
 /** Key en configuracion_app + localStorage: panel Pagos electrónicos. */
 export const KEY_NOTIFICACIONES_ACTIVA = 'notificaciones.activa';
+
+/** Base de caja sugerida para el asistente de cierre (efectivo). */
+export const KEY_CORTE_VENTA_BASE_EFECTIVO = 'corte-venta.base-efectivo';
 
 @Injectable({
   providedIn: 'root'
@@ -114,6 +116,27 @@ export class ConfigurationService {
     localStorage.setItem(KEY_NOTIFICACIONES_ACTIVA, activa ? 'true' : 'false');
   }
 
+  /** Valor crudo de una key en configuracion_app (GET obtenerTodos). */
+  obtenerValorPorKey(key: string): Observable<string | null> {
+    return this.obtenerTodasConfiguraciones().pipe(
+      map((items) => items.find((c) => c.key === key)?.value ?? null)
+    );
+  }
+
+  /** Pesos enteros de `corte-venta.base-efectivo`. Si no existe o no parsea, 0. */
+  obtenerBaseEfectivoSugerida(): Observable<{
+    valor: number;
+    encontrada: boolean;
+  }> {
+    return this.obtenerValorPorKey(KEY_CORTE_VENTA_BASE_EFECTIVO).pipe(
+      map((raw) => ({
+        valor: parsePesosConfig(raw),
+        encontrada: raw != null && String(raw).trim() !== ''
+      })),
+      catchError(() => of({ valor: 0, encontrada: false }))
+    );
+  }
+
   actualizarPorKey(key: string, value: string): Observable<ConfigurationItem> {
     return this.http.put<ConfigurationItem>(`${this.apiUrl}/key/${key}`, { value }).pipe(
       catchError(error => {
@@ -127,6 +150,22 @@ export class ConfigurationService {
 /** Acepta `true` / `"true"` o JSON `{"mostrar":true}` (formato en BD). */
 function parseMonitorBugEnabled(raw: string | null | undefined): boolean {
   return parseBoolConfig(raw, false);
+}
+
+function parsePesosConfig(raw: string | null | undefined): number {
+  if (raw == null) {
+    return 0;
+  }
+  const trimmed = String(raw).trim();
+  if (!trimmed) {
+    return 0;
+  }
+  const digits = trimmed.replace(/[^\d-]/g, '');
+  if (!digits || digits === '-') {
+    return 0;
+  }
+  const n = Number(digits);
+  return Number.isFinite(n) ? Math.round(Math.abs(n)) : 0;
 }
 
 function parseBoolConfig(raw: string | null | undefined, defaultValue: boolean): boolean {

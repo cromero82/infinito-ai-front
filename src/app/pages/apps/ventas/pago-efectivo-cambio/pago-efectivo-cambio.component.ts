@@ -39,6 +39,7 @@ import {
   isLikelyProductBarcodeDigits,
   isLikelyQrOrUrlScan
 } from '../util/barcode-scan.util';
+import { BILLETES_COP, BilleteOption } from '../util/billetes-cop.const';
 
 /** Opciones al invocar la impresión desde el modal de efectivo (no persiste preferencia global). */
 export interface ImprimirReciboTrasPagoOpciones {
@@ -96,12 +97,6 @@ const PAGO_EFECTIVO_MIXTO_ANCHO_EXTRA_PX = 20;
 /** Al pasar a modo mixto, el `top` del overlay es la posición inicial menos este valor (px). */
 const PAGO_EFECTIVO_MIXTO_TOP_OFFSET_PX = 70;
 
-interface BilleteOption {
-  label: string;
-  valor: number;
-  imagen: string;
-}
-
 @Component({
   selector: 'vex-pago-efectivo-cambio',
   imports: [
@@ -150,38 +145,7 @@ export class PagoEfectivoCambioComponent
   totalGuardado = 0;
   pagaConResultado = 0;
   cambioResultado = 0;
-  readonly billetes: BilleteOption[] = [
-    {
-      label: '$ 100.000',
-      valor: 100000,
-      imagen: 'assets/img/cash/billete-100mil-medium.png'
-    },
-    {
-      label: '$ 50.000',
-      valor: 50000,
-      imagen: 'assets/img/cash/billete-50mil-medium.png'
-    },
-    {
-      label: '$ 20.000',
-      valor: 20000,
-      imagen: 'assets/img/cash/billete-20-mil-medium.png'
-    },
-    {
-      label: '$ 10.000',
-      valor: 10000,
-      imagen: 'assets/img/cash/billete-10-mil-medium.png'
-    },
-    {
-      label: '$ 5.000',
-      valor: 5000,
-      imagen: 'assets/img/cash/billete-5-mil-medium.png'
-    },
-    {
-      label: '$ 2.000',
-      valor: 2000,
-      imagen: 'assets/img/cash/billete-2-mil-small.png'
-    }
-  ];
+  readonly billetes: readonly BilleteOption[] = BILLETES_COP;
 
   cambio = 0;
   readonly total: number;
