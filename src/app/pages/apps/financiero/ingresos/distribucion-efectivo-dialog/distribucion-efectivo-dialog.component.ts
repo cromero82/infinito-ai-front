@@ -1,8 +1,8 @@
 import {
-  AfterViewInit,
   Component,
   ElementRef,
   Inject,
+  OnDestroy,
   OnInit,
   ViewChild
 } from '@angular/core';
@@ -13,6 +13,7 @@ import {
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 import {
   MAT_DIALOG_DATA,
   MatDialogModule,
@@ -23,7 +24,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { finalize } from 'rxjs/operators';
+import { Observable, of, Subject } from 'rxjs';
+import { finalize, switchMap, takeUntil } from 'rxjs/operators';
+import {
+  ConfigurationService,
+  KEY_CORTE_VENTA_BASE_EFECTIVO
+} from '../../../../../auth/service/configuration.service';
 import {
   CorteVentaService,
   DistribucionEfectivoPendienteDto
@@ -44,6 +50,7 @@ export interface DistribucionEfectivoDialogResult {
     CommonModule,
     CurrencyPipe,
     ReactiveFormsModule,
+    DragDropModule,
     MatDialogModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -54,12 +61,14 @@ export interface DistribucionEfectivoDialogResult {
   templateUrl: './distribucion-efectivo-dialog.component.html',
   styleUrl: './distribucion-efectivo-dialog.component.scss'
 })
-export class DistribucionEfectivoDialogComponent implements OnInit, AfterViewInit {
+export class DistribucionEfectivoDialogComponent implements OnInit, OnDestroy {
   form: FormGroup;
   guardando = false;
   readonly saldo: number;
+  private baseOriginal = 0;
+  private readonly destroy$ = new Subject<void>();
 
-  @ViewChild('cajaMenorInput') cajaMenorInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('baseInput') baseInput?: ElementRef<HTMLInputElement>;
 
   constructor(
     private fb: FormBuilder,
@@ -69,10 +78,10 @@ export class DistribucionEfectivoDialogComponent implements OnInit, AfterViewIni
     >,
     @Inject(MAT_DIALOG_DATA) public data: DistribucionEfectivoDialogData,
     private corteVentaService: CorteVentaService,
+    private configurationService: ConfigurationService,
     private snackBar: MatSnackBar
   ) {
     this.saldo = Number(data.pendiente.saldoCajaEfectivo ?? 0);
-    // Base inicia en 0; General absorbe el residual (saldo − base − menor).
     this.form = this.fb.group({
       base: [0, [Validators.required, Validators.min(0)]],
       aCajaMenor: [0, [Validators.required, Validators.min(0)]],
@@ -82,27 +91,34 @@ export class DistribucionEfectivoDialogComponent implements OnInit, AfterViewIni
   }
 
   ngOnInit(): void {
-    this.form.get('base')!.valueChanges.subscribe(() => this.recalcularGeneral());
-    this.form.get('aCajaMenor')!.valueChanges.subscribe(() => this.recalcularGeneral());
+    this.form
+      .get('base')!
+      .valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.recalcularGeneral());
+    this.form
+      .get('aCajaMenor')!
+      .valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.recalcularGeneral());
+    this.cargarBaseSugerida();
     this.recalcularGeneral();
   }
 
-  ngAfterViewInit(): void {
-    // Tras abrir el overlay de Material, enfocar y seleccionar el 0 de Caja Menor.
-    setTimeout(() => this.focusYSeleccionarCajaMenor(), 0);
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  /** Selecciona todo el valor (p. ej. el 0) para reemplazarlo al escribir. */
+  /** Selecciona todo el valor para reemplazarlo al escribir. */
   seleccionarContenido(input: HTMLInputElement | null | undefined): void {
     if (!input) {
       return;
     }
     input.focus();
-    input.select();
+    setTimeout(() => input.select(), 0);
   }
 
-  focusYSeleccionarCajaMenor(): void {
-    this.seleccionarContenido(this.cajaMenorInput?.nativeElement);
+  focusYSeleccionarBase(): void {
+    this.seleccionarContenido(this.baseInput?.nativeElement);
   }
 
   get aCajaGeneral(): number {
@@ -114,6 +130,23 @@ export class DistribucionEfectivoDialogComponent implements OnInit, AfterViewIni
     const menor = Number(this.form.get('aCajaMenor')!.value ?? 0);
     return Math.round(base + menor + this.aCajaGeneral) === Math.round(this.saldo)
       && this.aCajaGeneral >= 0;
+  }
+
+  private cargarBaseSugerida(): void {
+    this.configurationService
+      .obtenerBaseEfectivoSugerida()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ({ valor }) => {
+          this.baseOriginal = valor;
+          this.form.get('base')!.setValue(valor, { emitEvent: false });
+          this.recalcularGeneral();
+          setTimeout(() => this.focusYSeleccionarBase(), 0);
+        },
+        error: () => {
+          this.baseOriginal = 0;
+        }
+      });
   }
 
   private recalcularGeneral(): void {
@@ -139,14 +172,20 @@ export class DistribucionEfectivoDialogComponent implements OnInit, AfterViewIni
     }
     this.guardando = true;
     const raw = this.form.getRawValue();
-    this.corteVentaService
-      .confirmarDistribucionEfectivo(corteId, {
-        base: Number(raw.base ?? 0),
-        montoCajaMenor: Number(raw.aCajaMenor ?? 0),
-        montoCajaGeneral: Number(raw.aCajaGeneral ?? 0),
-        observacion: (raw.observacion as string)?.trim() || undefined
-      })
-      .pipe(finalize(() => (this.guardando = false)))
+    const base = Number(raw.base ?? 0);
+    this.persistirBaseSiCambio(base)
+      .pipe(
+        switchMap(() =>
+          this.corteVentaService.confirmarDistribucionEfectivo(corteId, {
+            base,
+            montoCajaMenor: Number(raw.aCajaMenor ?? 0),
+            montoCajaGeneral: Number(raw.aCajaGeneral ?? 0),
+            observacion: (raw.observacion as string)?.trim() || undefined
+          })
+        ),
+        takeUntil(this.destroy$),
+        finalize(() => (this.guardando = false))
+      )
       .subscribe({
         next: () => {
           this.snackBar.open('Distribución de efectivo confirmada', undefined, {
@@ -158,7 +197,9 @@ export class DistribucionEfectivoDialogComponent implements OnInit, AfterViewIni
           const msg =
             err?.error?.message ||
             err?.error?.errores?.[0]?.descripcionError ||
-            'No se pudo confirmar la distribución.';
+            (this.baseCambio(base)
+              ? 'No se pudo guardar la base en configuracion_app (corte-venta.base-efectivo).'
+              : 'No se pudo confirmar la distribución.');
           this.snackBar.open(msg, 'Cerrar', { duration: 7000 });
         }
       });
@@ -166,5 +207,19 @@ export class DistribucionEfectivoDialogComponent implements OnInit, AfterViewIni
 
   definirLuego(): void {
     this.dialogRef.close({ confirmada: false, definirLuego: true });
+  }
+
+  private persistirBaseSiCambio(base: number): Observable<unknown> {
+    if (!this.baseCambio(base)) {
+      return of(null);
+    }
+    return this.configurationService.actualizarPorKey(
+      KEY_CORTE_VENTA_BASE_EFECTIVO,
+      String(base)
+    );
+  }
+
+  private baseCambio(base: number): boolean {
+    return Math.round(base) !== Math.round(this.baseOriginal);
   }
 }

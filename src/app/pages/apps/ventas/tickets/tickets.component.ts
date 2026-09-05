@@ -912,6 +912,10 @@ export class TicketsComponent
     await this.processDetalleMove(targetTicket, false, undefined, qtyMap);
   }
 
+  onReciboReasignado(reciboId: number): void {
+    this.currentReciboId = reciboId;
+  }
+
   recargarRecibo(): void {
     // Recargar tickets cuando se actualiza el recibo
     if (this.sessionId !== null) {
@@ -2251,6 +2255,11 @@ export class TicketsComponent
       console.log('❌ fetchReciboForTicket: sessionId es nulo, retornando');
       this.currentReciboId = null;
       return;
+    }
+    // Evita agregar productos al recibo del ticket anterior mientras llega el enlace nuevo
+    // (p. ej. ticket recién creado o pestaña cambiada).
+    if (this.lastFetchedTicketId !== ticketId) {
+      this.currentReciboId = null;
     }
     this.ticketReciboService.getByTicketId(ticketId, this.sessionId).subscribe({
       next: (relation) => {

@@ -282,6 +282,7 @@ export class LoginComponent {
           .open(DistribucionEfectivoDialogComponent, {
             width: '520px',
             disableClose: true,
+            autoFocus: false,
             data: { pendiente }
           })
           .afterClosed()

@@ -14,6 +14,7 @@ import {
   inject
 } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -181,6 +182,8 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
   @Output() ticketTotalChanged = new EventEmitter<number>();
   /** Cajero intentó pagar con medios deshabilitados por CxC → mostrar ayuda. */
   @Output() guiaCreditoSolicitada = new EventEmitter<void>();
+  /** El enlace ticket→recibo se recreó (recibo huérfano). El padre debe actualizar currentReciboId. */
+  @Output() reciboReasignado = new EventEmitter<number>();
 
   recibo: ReciboDto | null = null;
   detalles: ReciboDetalleDto[] = [];
@@ -301,7 +304,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     // hace que se pierdan pulsaciones si el usuario sigue escribiendo mientras
     // se abre el selector (término desactualizado / foco al modal).
     const disabled =
-      !this.reciboId || this.loading || this.movingDetalles;
+      !this.reciboId ||
+      this.loading ||
+      this.movingDetalles ||
+      (!this.recibo && !!this.error);
     if (disabled !== this.lastSearchDisabled) {
       this.lastSearchDisabled = disabled;
       if (disabled) {
@@ -757,9 +763,11 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
 
   private addProductToRecibo(
     product: Producto,
-    modoPrecio: ModoPrecioLista = 'precio'
+    modoPrecio: ModoPrecioLista = 'precio',
+    opciones: { reintentoRecibo?: boolean; reciboId?: number } = {}
   ): void {
-    if (!this.reciboId) {
+    const reciboId = opciones.reciboId ?? this.reciboId;
+    if (!reciboId) {
       this.productSearchError = 'No hay un recibo seleccionado.';
       this.searchingProduct = false;
       this.showCreateProductFromSearchButton = false;
@@ -891,7 +899,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       const cantidad = 1;
       const subtotal = unitPrice * cantidad;
       const payload: CreateReciboDetalleRequest = {
-        reciboId: this.reciboId!,
+        reciboId,
         productoId: product.id!,
         presentacionId,
         cantidad,
@@ -942,6 +950,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         },
         error: (err: unknown) => {
           console.error('Error agregando producto al recibo', err);
+          if (!opciones.reintentoRecibo && this.esReciboHuerfano(err)) {
+            void this.reenlazarReciboYReintentarAlta(product, modoPrecio);
+            return;
+          }
           this.productSearchError = 'No se pudo agregar el producto.';
           this.searchingProduct = false;
           this.showCreateProductFromSearchButton = false;
@@ -970,6 +982,10 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
       },
       error: (err: unknown) => {
         console.error('Error loading recibo', err);
+        if (this.esHttpNotFound(err)) {
+          void this.reenlazarReciboSiHuerfano(id);
+          return;
+        }
         this.recibo = null;
         this.estaEnEdicion = false;
         this.error = 'No se pudo cargar el recibo.';
@@ -981,6 +997,85 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
         this.setSelectedDetalles([], null, false);
       }
     });
+  }
+
+  private async reenlazarReciboYReintentarAlta(
+    product: Producto,
+    modoPrecio: ModoPrecioLista
+  ): Promise<void> {
+    const nuevoId = await this.obtenerReciboVigenteDelTicket();
+    if (nuevoId == null) {
+      this.productSearchError = 'No se pudo agregar el producto.';
+      this.searchingProduct = false;
+      this.showCreateProductFromSearchButton = false;
+      this.updateSearchDisabled();
+      this.focusSearchInputRequest.emit();
+      return;
+    }
+    this.addProductToRecibo(product, modoPrecio, {
+      reintentoRecibo: true,
+      reciboId: nuevoId
+    });
+  }
+
+  private async reenlazarReciboSiHuerfano(reciboIdFallido: number): Promise<void> {
+    const nuevoId = await this.obtenerReciboVigenteDelTicket();
+    if (nuevoId == null || nuevoId === reciboIdFallido) {
+      this.recibo = null;
+      this.estaEnEdicion = false;
+      this.error = 'No se pudo cargar el recibo.';
+      this.loading = false;
+      this.scheduleUpdateSearchDisabled();
+      this.detalles = [];
+      this.detallesError = null;
+      this.detallesLoading = false;
+      this.setSelectedDetalles([], null, false);
+      return;
+    }
+    this.loading = false;
+    this.scheduleUpdateSearchDisabled();
+  }
+
+  private async obtenerReciboVigenteDelTicket(): Promise<number | null> {
+    const ticketId = this.ticket?.id;
+    if (ticketId == null || this.sessionId == null) {
+      return null;
+    }
+    try {
+      const relation = await firstValueFrom(
+        this.ticketReciboService.getByTicketId(ticketId, this.sessionId)
+      );
+      const nuevoId = relation?.reciboId ?? null;
+      if (nuevoId != null && nuevoId !== this.reciboId) {
+        this.reciboReasignado.emit(nuevoId);
+      }
+      return nuevoId;
+    } catch {
+      return null;
+    }
+  }
+
+  private esReciboHuerfano(err: unknown): boolean {
+    if (!(err instanceof HttpErrorResponse)) {
+      return false;
+    }
+    if (err.status === 404) {
+      return true;
+    }
+    if (err.status !== 409) {
+      return false;
+    }
+    const descripcion = String(
+      err.error?.errores?.[0]?.descripcionError ?? err.error?.message ?? ''
+    );
+    return (
+      descripcion.includes('fk_recibo_detalle_recibo') ||
+      descripcion.includes('recibo_id')
+    );
+  }
+
+  private esHttpNotFound(err: unknown): boolean {
+    return err instanceof HttpErrorResponse && err.status === 404;
   }
 
   private fetchDetalles(reciboId: number): void {

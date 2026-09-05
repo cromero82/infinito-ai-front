@@ -456,6 +456,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
           .open(DistribucionEfectivoDialogComponent, {
             width: '520px',
             disableClose: true,
+            autoFocus: false,
             data: { pendiente }
           })
           .afterClosed()
