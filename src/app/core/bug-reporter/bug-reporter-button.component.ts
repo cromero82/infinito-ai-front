@@ -56,8 +56,7 @@ export class BugReporterButtonComponent implements OnInit {
   }
 
   copiarAlPortapapeles(): void {
-    const report = this.service.exportJson(this.router.url);
-    navigator.clipboard.writeText(JSON.stringify(report, null, 2));
+    navigator.clipboard.writeText(this.service.exportJsonText(this.router.url));
   }
 
   limpiar(): void {

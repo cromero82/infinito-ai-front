@@ -202,9 +202,7 @@ export class BugReporterDetailDialogComponent implements OnInit {
     }
 
     this.jsonExpanded = false;
-    const report = this.service.exportJson(this.router.url);
-    // Compacto: sin indentación ni saltos de línea
-    const text = JSON.stringify(report);
+    const text = this.service.exportJsonText(this.router.url);
     navigator.clipboard.writeText(text).then(
       () => this.dialogRef.close(true),
       () => {

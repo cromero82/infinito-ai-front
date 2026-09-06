@@ -139,6 +139,12 @@ export class BugReporterService {
       requests: this.getAll().map((r) => sanitizeCapturedRequest(r))
     };
   }
+
+  /** JSON del reporte listo para pegar. Compacto = una línea (sin indentar). */
+  exportJsonText(route: string, compact = true): string {
+    const report = this.exportJson(route);
+    return compact ? JSON.stringify(report) : JSON.stringify(report, null, 2);
+  }
 }
 
 /** Umbral (ms) para conservar durationMs en el reporte. */
