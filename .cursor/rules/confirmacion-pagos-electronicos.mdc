@@ -33,6 +33,7 @@ Capacidad relacionada: `metodos-pago-notificacion` (flag, plantillas, corregir m
 | Faltante → CxC UI | `tickets.component.ts` → `onCreditoDesdeFaltanteQr` |
 | Abrir CxC bloqueado | `abrir-cuenta-por-cobrar-dialog.component.ts` |
 
+Minimizar (header) ≠ ocultar: minimizar → dock footer + polling; `notificaciones.activa=false` (SQL `55_`) oculta el panel. Recuerda `localStorage` `confirmacion-pagos-panel-minimized`.
 UX panel: tipografía grande; Asociar · Ya no esperar arriba; Ver productos abajo der.; leyenda tiempo sin ellipsis.
 Icono del panel = `metodo_pago.file` vía `metodoPagoId` (no hardcode QR).
 Pendiente electrónica se crea solo si `metodo_pago.permite_notificacion=true` (Dominios → Métodos de pago).
