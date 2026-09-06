@@ -13,6 +13,22 @@
     justify-content: center;
     transition: background 0.2s ease, transform 0.2s ease;
     position: relative;
+    overflow: hidden;
+
+    // El state-layer de mat-icon-button es circular; alinearlo al botón.
+    ::ng-deep .mat-mdc-button-persistent-ripple,
+    ::ng-deep .mat-mdc-button-ripple,
+    ::ng-deep .mdc-icon-button__ripple {
+      border-radius: inherit;
+      inset: 0;
+      width: auto;
+      height: auto;
+    }
+
+    ::ng-deep .mat-mdc-button-persistent-ripple::before,
+    ::ng-deep .mdc-icon-button__ripple::before {
+      border-radius: inherit;
+    }
 
     &:hover:not(.metodo-pago-disabled) {
       background: rgba(0, 0, 0, 0.12);

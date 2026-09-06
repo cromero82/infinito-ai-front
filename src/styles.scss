@@ -351,3 +351,11 @@ mat-checkbox.mat-mdc-checkbox {
   line-height: 1.35;
 }
 
+.cxc-observacion-tooltip {
+  max-width: min(360px, 90vw);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 13px;
+  line-height: 1.35;
+}
+

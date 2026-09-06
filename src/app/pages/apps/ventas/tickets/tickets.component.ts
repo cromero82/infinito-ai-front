@@ -60,6 +60,10 @@ import {
   AbrirCuentaPorCobrarDialogData
 } from '../abrir-cuenta-por-cobrar-dialog/abrir-cuenta-por-cobrar-dialog.component';
 import {
+  TicketObservacionDialogComponent,
+  TicketObservacionDialogData
+} from '../ticket-observacion-dialog/ticket-observacion-dialog.component';
+import {
   CuentaPorCobrarDto,
   CuentaPorCobrarService
 } from '../service/cuenta-por-cobrar.service';
@@ -143,7 +147,9 @@ export class TicketsComponent
   set selectedIndex(value: number) {
     if (this._selectedIndex !== value) {
       this._selectedIndex = value;
-      this.cxcRailExpanded = this.ticketTieneCredito(this.tickets[value]);
+      this.cxcRailExpanded = this.ticketMuestraPanelLateral(
+        this.tickets[value]
+      );
       const suppressedUntil = this._suppressAutoScrollUntil;
       // Diferir: MatTabNav._scrollToLabel usa offsetLeft del <a> (roto por .tab-item)
       // y pisa nuestro scroll si corremos solo en el mismo tick.
@@ -638,6 +644,23 @@ export class TicketsComponent
         row.scrollLeft += deltaRight + 8;
       }
     });
+  }
+
+  get etiquetaTicketActivo(): string {
+    const ticket = this.tickets[this.selectedIndex];
+    return ticket ? this.getBaseTicketLabel(ticket) : 'ticket';
+  }
+
+  get etiquetaGenerarCreditoTicketActivo(): string {
+    return `Generar crédito a: ${this.etiquetaTicketActivo}`;
+  }
+
+  get etiquetaComentarioTicketActivo(): string {
+    const ticket = this.tickets[this.selectedIndex];
+    const accion = this.ticketTieneObservacion(ticket)
+      ? 'Editar comentario'
+      : 'Registrar comentario';
+    return `${accion} a: ${this.etiquetaTicketActivo}`;
   }
 
   getTicketLabel(ticket: TicketDto): string {
@@ -1168,6 +1191,16 @@ export class TicketsComponent
     return this.getCxcForTicket(ticket) != null;
   }
 
+  ticketTieneObservacion(ticket: TicketDto | null | undefined): boolean {
+    return (ticket?.observaciones ?? '').trim().length > 0;
+  }
+
+  ticketMuestraPanelLateral(ticket: TicketDto | null | undefined): boolean {
+    return (
+      this.getCxcForTicket(ticket) != null || this.ticketTieneObservacion(ticket)
+    );
+  }
+
   /**
    * Clic derecho en tab: menú «Generar crédito» (sin menú nativo del navegador).
    */
@@ -1228,10 +1261,61 @@ export class TicketsComponent
   }
 
   toggleCxcRail(): void {
-    if (!this.activeTicketCxc) {
+    this.cxcRailExpanded = !this.cxcRailExpanded;
+  }
+
+  abrirObservacionTicket(): void {
+    const ticket = this.tickets[this.selectedIndex];
+    if (!ticket?.id) {
+      this.snackBar.open('Seleccione un ticket', 'Cerrar', { duration: 3000 });
       return;
     }
-    this.cxcRailExpanded = !this.cxcRailExpanded;
+    const data: TicketObservacionDialogData = {
+      nombreTicket: ticket.nombre,
+      observaciones: ticket.observaciones ?? ''
+    };
+    this.posFocus.hold('dialog:ticket-observacion');
+    this.posFocus.suppressFor(400);
+    this.dialog
+      .open(TicketObservacionDialogComponent, {
+        width: '420px',
+        autoFocus: false,
+        restoreFocus: false,
+        data
+      })
+      .afterClosed()
+      .subscribe((texto: string | null | undefined) => {
+        this.posFocus.release('dialog:ticket-observacion');
+        if (texto === undefined) {
+          return;
+        }
+        const observaciones = (texto ?? '').trim() || null;
+        this.ticketsService
+          .actualizarObservaciones(ticket.id, observaciones)
+          .subscribe({
+            next: (updated) => {
+              const idx = this.tickets.findIndex((t) => t.id === ticket.id);
+              if (idx >= 0) {
+                this.tickets[idx] = {
+                  ...this.tickets[idx],
+                  observaciones: updated?.observaciones ?? observaciones
+                };
+                this.tickets = [...this.tickets];
+              }
+              this.cxcRailExpanded = this.ticketMuestraPanelLateral(
+                this.tickets[idx] ?? ticket
+              );
+              this.cdr.detectChanges();
+            },
+            error: () => {
+              this.snackBar.open(
+                'No se pudo guardar el comentario',
+                'Cerrar',
+                { duration: 4000 }
+              );
+            }
+          });
+      });
   }
 
   /**
@@ -1491,6 +1575,11 @@ export class TicketsComponent
       if (result.cuenta.estado === 'PAGADA' || result.cuenta.estado === 'ANULADA') {
         if (result.cuenta.ticketId != null) {
           this.cxcPorTicketId.delete(result.cuenta.ticketId);
+          this.tickets = this.tickets.map((t) =>
+            t.id === result.cuenta.ticketId
+              ? { ...t, observaciones: null }
+              : t
+          );
         }
         this.cxcRailExpanded = false;
         this.snackBar.open(
@@ -1538,7 +1627,7 @@ export class TicketsComponent
         }
         this.cxcPorTicketId = map;
         const active = this.tickets[this.selectedIndex];
-        if (active && map.has(active.id)) {
+        if (this.ticketMuestraPanelLateral(active)) {
           this.cxcRailExpanded = true;
         }
         this.cdr.markForCheck();
@@ -2214,6 +2303,9 @@ export class TicketsComponent
         }
 
         this.selectedIndex = targetIndex;
+        this.cxcRailExpanded = this.ticketMuestraPanelLateral(
+          this.tickets[this.selectedIndex]
+        );
         this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
         this.loading = false;
         this.ticketTabsBusy = false;
@@ -2223,6 +2315,9 @@ export class TicketsComponent
       error: (err) => {
         console.error('❌ Error cargando info de sesión:', err);
         this.selectedIndex = 0;
+        this.cxcRailExpanded = this.ticketMuestraPanelLateral(
+          this.tickets[this.selectedIndex]
+        );
         this.fetchReciboForTicket(this.tickets[this.selectedIndex].id);
         this.loading = false;
         this.ticketTabsBusy = false;

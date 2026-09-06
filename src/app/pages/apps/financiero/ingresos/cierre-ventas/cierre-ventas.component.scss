@@ -79,7 +79,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
-  padding: 10px 12px;
+  padding: 5px 12px 10px;
   background-color: #f9f9f9;
   border-radius: 8px;
   align-items: flex-start;
@@ -98,6 +98,8 @@
   font-size: 13px;
   font-weight: 500;
   color: rgba(0, 0, 0, 0.87);
+  /* gap grupo 4px → 2px solo entre label y checkbox */
+  margin-bottom: -2px;
 }
 
 .fecha-checkbox {
@@ -369,11 +371,13 @@
   padding: 0;
   flex-shrink: 0;
   line-height: 28px;
+  color: #1b8a3a;
 
   .mat-icon {
     width: 18px;
     height: 18px;
     font-size: 18px;
+    color: inherit;
   }
 }
 
@@ -733,6 +737,10 @@
 
   .metodo-pago-nombre {
     color: rgba(255, 255, 255, 0.9);
+  }
+
+  .btn-asistente-caja {
+    color: #69f0ae;
   }
 
   .total-sistema-value {

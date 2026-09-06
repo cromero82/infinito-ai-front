@@ -1,7 +1,10 @@
 @if (visible) {
   <aside
+    #panelEl
     class="confirmacion-pagos-panel confirmacion-pagos-panel--azul-atras"
     [class.confirmacion-pagos-panel--dragging]="dragging"
+    [class.confirmacion-pagos-panel--animating]="animando"
+    [class.confirmacion-pagos-panel--hidden]="minimizado && !animando"
     [ngStyle]="panelStyle"
     aria-live="polite">
     <header
@@ -10,7 +13,15 @@
       (dblclick)="resetPosition()"
       title="Arrastrar · doble clic para resetear posición">
       <mat-icon svgIcon="mat:account_balance_wallet" class="panel-icon"></mat-icon>
-      <span>Pagos electrónicos</span>
+      <span class="panel-title">Pagos electrónicos</span>
+      <button
+        type="button"
+        class="panel-minimize"
+        matTooltip="Minimizar"
+        (pointerdown)="$event.stopPropagation()"
+        (click)="minimizar($event)">
+        <mat-icon svgIcon="mat:minimize"></mat-icon>
+      </button>
     </header>
     <ul class="panel-list">
       @for (item of items; track trackById($index, item)) {
@@ -128,4 +139,18 @@
       }
     </ul>
   </aside>
+}
+
+@if (muestraDock) {
+  <button
+    #dockEl
+    type="button"
+    class="confirmacion-pagos-dock"
+    (click)="restaurar()">
+    <mat-icon svgIcon="mat:account_balance_wallet"></mat-icon>
+    <span class="dock-title">Pagos electrónicos</span>
+    <span class="dock-count">{{ pendientesCierre }}</span>
+    <span class="dock-pendientes">{{ pendientesCierreLabel }}</span>
+    <span class="dock-restore">Restaurar</span>
+  </button>
 }

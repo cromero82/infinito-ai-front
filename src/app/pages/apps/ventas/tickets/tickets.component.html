@@ -384,20 +384,30 @@
                       <span class="cxc-footer-dot"></span>
                       Ticket con crédito · {{ formatCxcSaldo(cxc) }}
                     </button>
+                  } @else if (ticketTieneObservacion(activeTicket)) {
+                    <button
+                      type="button"
+                      class="cxc-footer-chip"
+                      data-riesgo="normal"
+                      (click)="toggleCxcRail()"
+                      matTooltip="Ticket con observación">
+                      <span class="cxc-footer-dot"></span>
+                      Ticket con observación
+                    </button>
                   }
                 </div>
-                @if (activeTicketCxc) {
-                  <vex-cxc-ticket-rail
-                    #cxcRail
-                    [cuenta]="activeTicketCxc"
-                    [expanded]="cxcRailExpanded"
-                    (toggle)="toggleCxcRail()"
-                    (abonar)="abrirAbonoCxc()"
-                    (imprimir)="imprimirTicketConCredito()"
-                    (otrasAcciones)="
-                      irACuentasPorCobrarDesdeTicket()
-                    "></vex-cxc-ticket-rail>
-                }
+                <vex-cxc-ticket-rail
+                  #cxcRail
+                  [cuenta]="activeTicketCxc"
+                  [observaciones]="activeTicket.observaciones ?? null"
+                  [expanded]="cxcRailExpanded"
+                  (toggle)="toggleCxcRail()"
+                  (abonar)="abrirAbonoCxc()"
+                  (comentar)="abrirObservacionTicket()"
+                  (imprimir)="imprimirTicketConCredito()"
+                  (otrasAcciones)="
+                    irACuentasPorCobrarDesdeTicket()
+                  "></vex-cxc-ticket-rail>
               </div>
             } @else {
               <div class="ticket-panel-empty"></div>
@@ -446,7 +456,14 @@
             "
             (click)="abrirCuentaPorCobrar()">
             <mat-icon svgIcon="mat:handshake"></mat-icon>
-            <span>Generar crédito (cuenta por cobrar)</span>
+            <span>{{ etiquetaGenerarCreditoTicketActivo }}</span>
+          </button>
+          <button
+            mat-menu-item
+            type="button"
+            (click)="abrirObservacionTicket()">
+            <mat-icon svgIcon="mat:comment"></mat-icon>
+            <span>{{ etiquetaComentarioTicketActivo }}</span>
           </button>
         </mat-menu>
         <div
@@ -466,7 +483,14 @@
             [disabled]="activeTicketYaTieneCredito"
             (click)="abrirCuentaPorCobrar()">
             <mat-icon svgIcon="mat:handshake"></mat-icon>
-            <span>Generar crédito (Cuenta de cobro)</span>
+            <span>{{ etiquetaGenerarCreditoTicketActivo }}</span>
+          </button>
+          <button
+            mat-menu-item
+            type="button"
+            (click)="abrirObservacionTicket()">
+            <mat-icon svgIcon="mat:comment"></mat-icon>
+            <span>{{ etiquetaComentarioTicketActivo }}</span>
           </button>
         </mat-menu>
         <mat-menu

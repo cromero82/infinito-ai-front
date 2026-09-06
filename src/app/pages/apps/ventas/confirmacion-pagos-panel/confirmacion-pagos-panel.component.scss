@@ -17,16 +17,129 @@
   opacity: 0.94;
 }
 
+.confirmacion-pagos-panel--hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.confirmacion-pagos-panel--animating {
+  pointer-events: none;
+  will-change: transform, opacity;
+  transition:
+    transform 220ms cubic-bezier(0.32, 0.02, 0.72, 0.28),
+    opacity 180ms linear;
+}
+
+.confirmacion-pagos-panel--animating.confirmacion-pagos-panel--azul-atras {
+  opacity: 0.72;
+}
+
 .panel-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
+  padding: 12px 10px 12px 14px;
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.02em;
   cursor: grab;
   touch-action: none;
+}
+
+.panel-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.panel-minimize {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  mat-icon {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.confirmacion-pagos-dock {
+  position: fixed;
+  left: 3rem;
+  bottom: 4px;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  height: 32px;
+  padding: 0 8px 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: #3d5474;
+  color: #f2f5f8;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.24);
+  cursor: pointer;
+  font-size: 14px;
+
+  mat-icon {
+    width: 20px;
+    height: 20px;
+    color: #9ec0ff;
+    flex: 0 0 auto;
+  }
+}
+
+.dock-title {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dock-count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 11px;
+  background: #e8a317;
+  color: #1a2332;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 22px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.dock-pendientes {
+  font-size: 13px;
+  opacity: 0.88;
+  white-space: nowrap;
+}
+
+.dock-restore {
+  margin-left: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.14);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.confirmacion-pagos-dock:hover .dock-restore {
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .confirmacion-pagos-panel--dragging .panel-header {

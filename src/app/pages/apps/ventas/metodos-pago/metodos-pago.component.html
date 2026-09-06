@@ -6,6 +6,7 @@
           type="button"
           class="metodo-pago-btn"
           mat-icon-button
+          disableRipple
           [matTooltip]="metodo.descripcion"
           (click)="seleccionarMetodoPago(metodo)"
           [attr.aria-disabled]="disabled || null"

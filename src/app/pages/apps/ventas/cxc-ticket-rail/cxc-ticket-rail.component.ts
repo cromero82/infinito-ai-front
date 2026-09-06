@@ -1,10 +1,12 @@
 import {
   Component,
+  ElementRef,
   EventEmitter,
   Input,
   OnChanges,
   Output,
-  SimpleChanges
+  SimpleChanges,
+  ViewChild
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -50,83 +52,94 @@ const MESES_CORTO = [
       <button
         type="button"
         class="cxc-rail-toggle"
-        [matTooltip]="expanded ? 'Ocultar crédito' : 'Ver crédito'"
+        [matTooltip]="expanded ? 'Ocultar panel' : 'Ver panel'"
         (click)="toggle.emit()">
         <span class="cxc-rail-dot" [attr.data-riesgo]="riesgo"></span>
         <mat-icon
           [svgIcon]="expanded ? 'mat:chevron_right' : 'mat:chevron_left'"></mat-icon>
       </button>
 
-      @if (expanded && cuenta) {
-        <div class="cxc-rail-body">
+      @if (expanded) {
+        <div
+          class="cxc-rail-body"
+          [class.cxc-rail-body--con-observacion]="tieneObservacion">
           <header class="cxc-rail-header">
-            <div class="title">Crédito</div>
-            <div class="cliente">{{ cuenta.clienteNombre || 'Cliente' }}</div>
-            <div class="meta">
-              Inicio: {{ formatFecha(cuenta.fechaOrigen) }}
-              {{ riesgoLabel }}
-            </div>
+            <div class="title">{{ tituloPanel }}</div>
+            @if (cuenta) {
+              <div class="cliente">{{ cuenta.clienteNombre || 'Cliente' }}</div>
+              <div class="meta">
+                Inicio: {{ formatFecha(cuenta.fechaOrigen) }}
+                {{ riesgoLabel }}
+              </div>
+            }
           </header>
 
-          <div class="cxc-rail-saldos">
-            <div class="row">
-              <span>Total ticket</span>
-              <span>{{
-                formatMoney(cuenta.totalTicket ?? cuenta.montoOriginal)
-              }}</span>
-            </div>
-            <div class="row">
-              <span>Original crédito</span>
-              <span>{{ formatMoney(cuenta.montoOriginal) }}</span>
-            </div>
-            <div class="row">
-              <span>Abonado</span>
-              <span>{{ formatMoney(abonado) }}</span>
-            </div>
-            <div class="row saldo">
-              <span>Saldo</span>
-              <strong>{{ formatMoney(cuenta.saldoPendiente) }}</strong>
-            </div>
-          </div>
-
-          <div class="cxc-rail-abonos">
-            <div class="abonos-title">Abonos</div>
-            @if (loadingAbonos) {
-              <div class="loading">
-                <mat-spinner diameter="20"></mat-spinner>
+          @if (cuenta) {
+            <div class="cxc-rail-saldos">
+              <div class="row">
+                <span>Total ticket</span>
+                <span>{{
+                  formatMoney(cuenta.totalTicket ?? cuenta.montoOriginal)
+                }}</span>
               </div>
-            } @else if (abonos.length === 0) {
-              <div class="empty">Sin abonos aún</div>
-            } @else {
-              <ul class="abonos-list">
-                @for (a of abonos; track a.id) {
-                  <li>
-                    <span class="f">{{ formatFecha(a.fechaAbono) }}</span>
-                    <span class="m">
-                      {{ a.metodoPagoDescripcion || '—' }}
-                      @if (a.clientePagadorNombre) {
-                        <span class="pagador"
-                          >· {{ a.clientePagadorNombre }}</span
-                        >
-                      }
-                    </span>
-                    <span class="v">{{ formatMoney(a.monto) }}</span>
-                  </li>
-                }
-              </ul>
-            }
-          </div>
+              <div class="row">
+                <span>Original crédito</span>
+                <span>{{ formatMoney(cuenta.montoOriginal) }}</span>
+              </div>
+              <div class="row">
+                <span>Abonado</span>
+                <span>{{ formatMoney(abonado) }}</span>
+              </div>
+              <div class="row saldo">
+                <span>Saldo</span>
+                <strong>{{ formatMoney(cuenta.saldoPendiente) }}</strong>
+              </div>
+            </div>
+
+            <div class="cxc-rail-abonos">
+              <div class="abonos-title">Abonos</div>
+              @if (loadingAbonos) {
+                <div class="loading">
+                  <mat-spinner diameter="20"></mat-spinner>
+                </div>
+              } @else if (abonos.length === 0) {
+                <div class="empty">Sin abonos aún</div>
+              } @else {
+                <ul class="abonos-list">
+                  @for (a of abonos; track a.id) {
+                    <li>
+                      <span class="f">{{ formatFecha(a.fechaAbono) }}</span>
+                      <span class="m">
+                        {{ a.metodoPagoDescripcion || '—' }}
+                        @if (a.clientePagadorNombre) {
+                          <span class="pagador"
+                            >· {{ a.clientePagadorNombre }}</span
+                          >
+                        }
+                      </span>
+                      <span class="v">{{ formatMoney(a.monto) }}</span>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+
+          @if (tieneObservacion) {
+            <blockquote
+              class="cxc-rail-observacion"
+              [matTooltip]="observaciones ?? ''"
+              [matTooltipDisabled]="!observacionDesborda"
+              matTooltipClass="cxc-observacion-tooltip"
+              (mouseenter)="medirDesbordeObservacion()">
+              <p #observacionTexto class="observacion-texto">
+                {{ observaciones }}
+              </p>
+            </blockquote>
+          }
 
           <div class="cxc-rail-actions">
-            <button
-              mat-stroked-button
-              type="button"
-              class="cxc-rail-cta"
-              (click)="imprimir.emit()">
-              <mat-icon svgIcon="mat:print"></mat-icon>
-              Imprimir
-            </button>
-            @if (cuenta.estado === 'ABIERTA' || cuenta.estado === 'PARCIAL') {
+            @if (cuenta && (cuenta.estado === 'ABIERTA' || cuenta.estado === 'PARCIAL')) {
               <button
                 mat-flat-button
                 color="primary"
@@ -135,6 +148,26 @@ const MESES_CORTO = [
                 (click)="abonar.emit()">
                 Registrar abono
               </button>
+            }
+            <button
+              mat-stroked-button
+              type="button"
+              class="cxc-rail-cta"
+              (click)="comentar.emit()">
+              <mat-icon svgIcon="mat:comment"></mat-icon>
+              {{ tieneObservacion ? 'Editar comentario' : 'Agregar comentario' }}
+            </button>
+            @if (cuenta) {
+              <button
+                mat-stroked-button
+                type="button"
+                class="cxc-rail-cta"
+                (click)="imprimir.emit()">
+                <mat-icon svgIcon="mat:print"></mat-icon>
+                Imprimir
+              </button>
+            }
+            @if (cuenta && (cuenta.estado === 'ABIERTA' || cuenta.estado === 'PARCIAL')) {
               <button
                 mat-stroked-button
                 type="button"
@@ -203,7 +236,16 @@ const MESES_CORTO = [
         flex-direction: column;
         gap: 12px;
         min-height: 0;
+        height: 100%;
         overflow: auto;
+      }
+      .cxc-rail-body--con-observacion {
+        overflow: hidden;
+      }
+      .cxc-rail-header,
+      .cxc-rail-saldos,
+      .cxc-rail-actions {
+        flex: 0 0 auto;
       }
       .cxc-rail-header .title {
         font-size: 0.78rem;
@@ -257,8 +299,21 @@ const MESES_CORTO = [
       .cxc-rail-abonos {
         flex: 1 1 auto;
         min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .cxc-rail-body--con-observacion .cxc-rail-abonos {
+        min-height: 72px;
+      }
+      .cxc-rail-body--con-observacion .abonos-list {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        padding-right: 2px;
+        scrollbar-width: thin;
       }
       .abonos-title {
+        flex: 0 0 auto;
         font-size: 0.82rem;
         font-weight: 600;
         margin-bottom: 4px;
@@ -298,17 +353,58 @@ const MESES_CORTO = [
         color: rgba(0, 0, 0, 0.45);
         padding: 8px 0;
       }
+      .cxc-rail-observacion {
+        position: relative;
+        flex: 0 1 auto;
+        max-height: calc(1.35em * 4);
+        min-height: 0;
+        margin: 0;
+        padding: 0 4px 0 26px;
+        border: 0;
+        background: transparent;
+      }
+      .cxc-rail-observacion::before {
+        content: '“';
+        position: absolute;
+        left: 0;
+        top: 0.12em;
+        font-size: 2.6rem;
+        line-height: 1;
+        font-family: Georgia, 'Times New Roman', serif;
+        font-weight: 700;
+        color: rgba(0, 0, 0, 0.22);
+        pointer-events: none;
+      }
+      .observacion-texto {
+        margin: -0.35em 0 0;
+        font-size: 0.86rem;
+        font-style: italic;
+        line-height: 1.35;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-y: auto;
+        max-height: calc(1.35em * 4);
+        min-height: 0;
+        scrollbar-width: thin;
+      }
       .cxc-rail-actions {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 8px;
         width: 100%;
-        max-width: 260px;
         padding-right: 4px;
         margin-bottom: 8px;
       }
+      .cxc-rail-actions:has(.cxc-rail-cta:only-child) {
+        grid-template-columns: 1fr;
+      }
       .cxc-rail-cta {
         width: 100%;
+        min-width: 0;
+        padding-left: 8px;
+        padding-right: 8px;
+        line-height: 1.2;
+        white-space: normal;
       }
       .cxc-rail-cta mat-icon {
         width: 18px;
@@ -341,6 +437,9 @@ const MESES_CORTO = [
       :host-context(.dark) .cxc-rail-saldos .saldo strong {
         color: rgba(200, 230, 201, 0.95);
       }
+      :host-context(.dark) .cxc-rail-observacion::before {
+        color: rgba(255, 255, 255, 0.28);
+      }
       :host-context(.dark) .abonos-list li {
         border-bottom-color: rgba(255, 255, 255, 0.08);
       }
@@ -354,9 +453,13 @@ const MESES_CORTO = [
 })
 export class CxcTicketRailComponent implements OnChanges {
   @Input() cuenta: CuentaPorCobrarDto | null = null;
+  @Input() observaciones: string | null = null;
   @Input() expanded = false;
+  @ViewChild('observacionTexto') observacionTextoEl?: ElementRef<HTMLParagraphElement>;
+  observacionDesborda = false;
   @Output() toggle = new EventEmitter<void>();
   @Output() abonar = new EventEmitter<void>();
+  @Output() comentar = new EventEmitter<void>();
   @Output() imprimir = new EventEmitter<void>();
   @Output() otrasAcciones = new EventEmitter<void>();
 
@@ -385,6 +488,37 @@ export class CxcTicketRailComponent implements OnChanges {
     if (changes['cuenta'] && !this.cuenta) {
       this.abonos = [];
     }
+    if (changes['observaciones'] || changes['expanded']) {
+      this.observacionDesborda = false;
+      if (this.expanded && this.tieneObservacion) {
+        setTimeout(() => this.medirDesbordeObservacion(), 0);
+      }
+    }
+  }
+
+  medirDesbordeObservacion(): void {
+    const el = this.observacionTextoEl?.nativeElement;
+    if (!el) {
+      this.observacionDesborda = false;
+      return;
+    }
+    this.observacionDesborda = el.scrollHeight > el.clientHeight + 1;
+  }
+
+  get tieneObservacion(): boolean {
+    return (this.observaciones ?? '').trim().length > 0;
+  }
+
+  get tituloPanel(): string {
+    const credito = this.cuenta != null;
+    const observacion = this.tieneObservacion;
+    if (credito && observacion) {
+      return 'Crédito y observación';
+    }
+    if (observacion) {
+      return 'Observación';
+    }
+    return 'Crédito';
   }
 
   get abonado(): number {

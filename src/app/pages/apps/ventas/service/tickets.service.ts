@@ -25,6 +25,7 @@ export interface TicketDto {
   atendidoPor: TicketAtendidoPorDto | null;
   perteneceUsuarioActual: boolean;
   reciboId?: number | null;
+  observaciones?: string | null;
 }
 
 export interface TicketOrdenDto {
@@ -67,6 +68,21 @@ export class TicketsService {
       'Accept': 'application/json'
     });
     return this.http.put<TicketDto[]>(this.apiUrl, tickets, { headers });
+  }
+
+  actualizarObservaciones(
+    ticketId: number,
+    observaciones: string | null
+  ): Observable<TicketDto> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    });
+    return this.http.put<TicketDto>(
+      `${this.apiUrl}/${ticketId}/observaciones`,
+      { observaciones },
+      { headers }
+    );
   }
 
   actualizaCliente(ticketId: number, clienteId: number): Observable<any> {

@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  ElementRef,
   EventEmitter,
   HostListener,
   Input,
@@ -9,7 +10,8 @@ import {
   OnDestroy,
   OnInit,
   Output,
-  SimpleChanges
+  SimpleChanges,
+  ViewChild
 } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -34,8 +36,12 @@ import { ConfigurationService } from '../../../../auth/service/configuration.ser
 const POLL_MS = 2500;
 const COUNTDOWN_FROM = 3;
 const POS_STORAGE_KEY = 'confirmacion-pagos-panel-pos';
+const MINIMIZED_STORAGE_KEY = 'confirmacion-pagos-panel-minimized';
 const PANEL_W = 420;
 const PANEL_H_MIN = 120;
+const ANIM_MS = 220;
+const DOCK_W = 300;
+const DOCK_H = 32;
 
 @Component({
   selector: 'app-confirmacion-pagos-panel',
@@ -54,9 +60,16 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
   countdowns = new Map<number, number>();
   private metodosPorId = new Map<number, MetodoPagoDto>();
 
+  @ViewChild('panelEl') panelEl?: ElementRef<HTMLElement>;
+  @ViewChild('dockEl') dockEl?: ElementRef<HTMLElement>;
+
   panelLeft: number | null = null;
   panelTop: number | null = null;
   dragging = false;
+  minimizado = false;
+  animando: 'min' | 'restore' | null = null;
+  animTransform: string | null = null;
+  private animTimer: ReturnType<typeof setTimeout> | null = null;
 
   private pollSub?: Subscription;
   private tickSub?: Subscription;
@@ -74,6 +87,7 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
     private cdr: ChangeDetectorRef
   ) {
     this.restorePosition();
+    this.restoreMinimized();
   }
 
   ngOnInit(): void {
@@ -123,6 +137,7 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
   }
 
   ngOnDestroy(): void {
+    this.clearAnimTimer();
     this.stopPolling();
   }
 
@@ -130,24 +145,77 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
     return this.configurationService.isNotificacionesActivas() && this.items.length > 0;
   }
 
+  get muestraDock(): boolean {
+    return this.visible && (this.minimizado || this.animando != null);
+  }
+
+  get pendientesCierre(): number {
+    return this.items.length;
+  }
+
+  get pendientesCierreLabel(): string {
+    const n = this.pendientesCierre;
+    return n === 1 ? 'pendiente' : 'pendientes';
+  }
+
   get panelStyle(): Record<string, string> | null {
-    if (this.panelLeft == null || this.panelTop == null) {
-      return null;
+    const style: Record<string, string> = {};
+    if (this.panelLeft != null && this.panelTop != null) {
+      style['left'] = `${this.panelLeft}px`;
+      style['top'] = `${this.panelTop}px`;
+      style['right'] = 'auto';
+      style['bottom'] = 'auto';
     }
-    return {
-      left: `${this.panelLeft}px`,
-      top: `${this.panelTop}px`,
-      right: 'auto',
-      bottom: 'auto'
-    };
+    if (this.animTransform) {
+      style['transform'] = this.animTransform;
+      style['transform-origin'] = 'top left';
+    }
+    return Object.keys(style).length ? style : null;
   }
 
   trackById(_: number, item: PendienteConfirmacionDto): number {
     return item.id;
   }
 
+  minimizar(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (this.animando || this.minimizado) {
+      return;
+    }
+    const from = this.panelEl?.nativeElement.getBoundingClientRect();
+    this.animando = 'min';
+    this.cdr.detectChanges();
+    const to = this.dockTargetRect();
+    if (!from) {
+      this.minimizado = true;
+      this.persistMinimized();
+      this.finishAnim();
+      return;
+    }
+    this.playWindowAnim(from, to, 'min');
+  }
+
+  restaurar(): void {
+    if (this.animando || !this.minimizado) {
+      return;
+    }
+    const panelRect = this.panelEl?.nativeElement.getBoundingClientRect();
+    const dockRect = this.dockTargetRect();
+    this.animando = 'restore';
+    this.minimizado = false;
+    if (!panelRect) {
+      this.persistMinimized();
+      this.finishAnim();
+      return;
+    }
+    this.animTransform = this.shrinkTransform(panelRect, dockRect);
+    this.cdr.detectChanges();
+    this.playWindowAnim(panelRect, dockRect, 'restore');
+  }
+
   onDragStart(event: PointerEvent): void {
-    if (event.button !== 0) {
+    if (event.button !== 0 || this.animando || this.minimizado) {
       return;
     }
     const target = event.currentTarget as HTMLElement | null;
@@ -261,6 +329,83 @@ export class ConfirmacionPagosPanelComponent implements OnInit, OnChanges, OnDes
       );
     } catch {
       /* ignore */
+    }
+  }
+
+  private restoreMinimized(): void {
+    try {
+      this.minimizado = localStorage.getItem(MINIMIZED_STORAGE_KEY) === '1';
+    } catch {
+      this.minimizado = false;
+    }
+  }
+
+  private persistMinimized(): void {
+    try {
+      localStorage.setItem(MINIMIZED_STORAGE_KEY, this.minimizado ? '1' : '0');
+    } catch {
+      /* ignore */
+    }
+  }
+
+  private dockTargetRect(): DOMRect {
+    const el = this.dockEl?.nativeElement;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        return rect;
+      }
+    }
+    return new DOMRect(
+      48,
+      Math.max(0, window.innerHeight - 4 - DOCK_H),
+      DOCK_W,
+      DOCK_H
+    );
+  }
+
+  private shrinkTransform(panel: DOMRect, dock: DOMRect): string {
+    const sx = Math.max(0.06, dock.width / Math.max(1, panel.width));
+    const sy = Math.max(0.06, dock.height / Math.max(1, panel.height));
+    return `translate(${dock.left - panel.left}px, ${dock.top - panel.top}px) scale(${sx}, ${sy})`;
+  }
+
+  private playWindowAnim(
+    panel: DOMRect,
+    dock: DOMRect,
+    kind: 'min' | 'restore'
+  ): void {
+    const shrink = this.shrinkTransform(panel, dock);
+    const full = 'translate(0px, 0px) scale(1, 1)';
+    this.animTransform = kind === 'min' ? full : shrink;
+    this.cdr.detectChanges();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        this.animTransform = kind === 'min' ? shrink : full;
+        this.cdr.markForCheck();
+      });
+    });
+    this.clearAnimTimer();
+    this.animTimer = setTimeout(() => this.finishAnim(), ANIM_MS);
+  }
+
+  private finishAnim(): void {
+    this.clearAnimTimer();
+    if (this.animando === 'min') {
+      this.minimizado = true;
+    } else if (this.animando === 'restore') {
+      this.minimizado = false;
+    }
+    this.persistMinimized();
+    this.animando = null;
+    this.animTransform = null;
+    this.cdr.markForCheck();
+  }
+
+  private clearAnimTimer(): void {
+    if (this.animTimer != null) {
+      clearTimeout(this.animTimer);
+      this.animTimer = null;
     }
   }
 
