@@ -26,6 +26,7 @@ import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ModoPrecioLista } from '../service/producto-desde-lista-ventas.service';
 import {
   QR_SCAN_REJECTION_MESSAGE,
+  isLikelyProductBarcodeDigits,
   resolveProductSearchTerm
 } from '../util/barcode-scan.util';
 
@@ -389,9 +390,21 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
     });
   }
 
-  /** El API entrega por nombre; en la tabla de Tickets se priorizan los más vendidos. */
-  private sortByTotalVentas(items: Producto[]): Producto[] {
+  /**
+   * Por nombre: primero los que empiezan por el término, luego totalVentas desc.
+   * Por código de barras no se reordena por prefijo de nombre.
+   */
+  private ordenarResultadosSelector(items: Producto[], term: string): Producto[] {
+    const q = term.trim().toLowerCase();
+    const porNombre = q.length > 0 && !isLikelyProductBarcodeDigits(term);
     return [...items].sort((a, b) => {
+      if (porNombre) {
+        const aPrefijo = (a.nombre ?? '').toLowerCase().startsWith(q);
+        const bPrefijo = (b.nombre ?? '').toLowerCase().startsWith(q);
+        if (aPrefijo !== bPrefijo) {
+          return aPrefijo ? -1 : 1;
+        }
+      }
       const ventasDiff = (b.totalVentas ?? 0) - (a.totalVentas ?? 0);
       if (ventasDiff !== 0) {
         return ventasDiff;
@@ -425,23 +438,35 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
 
     this.error = null;
     const pageToLoad = reset ? 0 : this.page + 1;
+    const porCodigoBarras = isLikelyProductBarcodeDigits(term);
+    const consulta$ =
+      !porCodigoBarras && !this.coincidirTodaPalabraIndividual
+        ? this.relationalProductService.busquedaPorFiltros(
+            {
+              filtros: [],
+              page: pageToLoad,
+              size: this.size,
+              campoOrdenamiento: 'totalVentas',
+              orden: 'desc'
+            },
+            term
+          )
+        : this.relationalProductService.getProducts(
+            term,
+            pageToLoad,
+            this.size,
+            false,
+            this.coincidirTodaPalabraIndividual
+          );
 
-    this.relationalProductService
-      .getProducts(
-        term,
-        pageToLoad,
-        this.size,
-        false,
-        this.coincidirTodaPalabraIndividual
-      )
-      .subscribe({
+    consulta$.subscribe({
       next: (resp: ProductPage) => {
         const content = resp?.content ?? [];
         this.totalPages = resp?.totalPages ?? 0;
         this.page = pageToLoad;
 
         const merged = reset ? content : this.products.concat(content);
-        this.products = this.sortByTotalVentas(merged);
+        this.products = this.ordenarResultadosSelector(merged, term);
         if (reset) {
           this.selectedProductIndex =
             this.products.length > 0 ? 0 : -1;
