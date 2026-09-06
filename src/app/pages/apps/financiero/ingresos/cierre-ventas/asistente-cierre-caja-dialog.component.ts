@@ -148,7 +148,13 @@ export class AsistenteCierreCajaDialogComponent implements OnInit, OnDestroy {
     return this.filas.reduce((acc, fila) => acc + this.subtotalDe(fila), 0);
   }
 
+  /** Total físico de caja: lo que Cierre de turno llama Contado. */
   get contado(): number {
+    return this.totalBilletes;
+  }
+
+  /** Equivalente a Ventas − Egresos + Movimientos (total billetes − base). */
+  get ventasMenosMovimientos(): number {
     return Math.max(0, this.totalBilletes - this.baseSugerida);
   }
 
@@ -156,7 +162,7 @@ export class AsistenteCierreCajaDialogComponent implements OnInit, OnDestroy {
     return this.filas.some((fila) => this.cantidadDe(fila) > 0);
   }
 
-  /** Misma fórmula que Cierre de turno: Contado − Esperado. */
+  /** Igual que la tabla de medios: Contado (total billetes) − Esperado. */
   get desfase(): number {
     return Math.round(this.contado) - this.esperado;
   }

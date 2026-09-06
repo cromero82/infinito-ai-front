@@ -8,9 +8,10 @@
 
   <mat-dialog-content class="dialog-content">
     <p class="intro">
-      Cuente los billetes de la caja. El valor a asociar en
-      <strong>Efectivo → Contado</strong> es el total de billetes menos la base
-      sugerida.
+      Cuente los billetes de la caja. El
+      <strong>total de billetes</strong> se asocia en
+      <strong>Efectivo → Contado</strong>.
+      <strong>Ventas (menos movimientos)</strong> es ese total menos la base.
     </p>
 
     <div class="billetes-list">
@@ -68,10 +69,13 @@
         </p>
       }
 
-      <span class="resumen-label resumen-label--contado">Valor a asociar (Contado)</span>
+      <span class="resumen-label resumen-label--contado">Ventas (menos movimientos)</span>
       <strong class="resumen-valor resumen-valor--contado">{{
-        formatCurrency(contado)
+        formatCurrency(ventasMenosMovimientos)
       }}</strong>
+
+      <span class="resumen-label">Esperado</span>
+      <strong class="resumen-valor">{{ formatCurrency(esperado) }}</strong>
 
       <span class="resumen-label">Diferencia</span>
       <span
@@ -80,7 +84,9 @@
         {{ getDesfaseTexto(desfase) }}
       </span>
 
-      <p class="formula">Contado = total billetes − base caja sugerida</p>
+      <p class="formula">
+        Diferencia = Contado (total billetes) − Esperado
+      </p>
     </div>
   </mat-dialog-content>
 
