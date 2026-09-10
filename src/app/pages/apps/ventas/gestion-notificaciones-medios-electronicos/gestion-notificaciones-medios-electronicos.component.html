@@ -354,8 +354,7 @@
                 <mat-form-field appearance="outline" class="metodo-field">
                   <mat-label>Método de pago</mat-label>
                   <mat-select
-                    [(ngModel)]="p.metodoPagoId"
-                    [disabled]="!esPlantillaIngreso(p)">
+                    [(ngModel)]="p.metodoPagoId">
                     <mat-option [value]="null">—</mat-option>
                     @if (metodosNotificacion.length === 0) {
                       <mat-option [value]="null" disabled>

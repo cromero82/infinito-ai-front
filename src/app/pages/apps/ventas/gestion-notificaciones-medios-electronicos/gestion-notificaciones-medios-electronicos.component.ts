@@ -379,7 +379,9 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit,
         p.metodoPagoId = this.metodosNotificacion[0].id;
       }
     } else if (this.esPlantillaEgreso(p)) {
-      p.metodoPagoId = null;
+      if (p.metodoPagoId == null && this.metodosNotificacion.length) {
+        p.metodoPagoId = this.metodosNotificacion[0].id;
+      }
     } else {
       p.metodoPagoId = null;
       p.origenFondosOrigenId = null;
@@ -416,9 +418,8 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit,
       });
       return;
     }
-    const esIngreso = this.esPlantillaIngreso(p);
     const esEgreso = this.esPlantillaEgreso(p);
-    if (esIngreso && p.metodoPagoId == null) {
+    if (p.metodoPagoId == null) {
       this.snackBar.open('Selecciona un método de pago con notificaciones', 'Cerrar', {
         duration: 3500
       });
@@ -431,11 +432,12 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit,
       return;
     }
     this.guardandoPlantillaId = p.id ?? 0;
+    const mp = this.metodosPagoPorId.get(p.metodoPagoId);
     const body = {
       nombre: p.nombre.trim(),
       cuerpo: p.cuerpo.trim(),
-      icono: p.icono || null,
-      metodoPagoId: esIngreso ? p.metodoPagoId : null,
+      icono: mp?.file || p.icono || null,
+      metodoPagoId: p.metodoPagoId,
       activo: p.activo !== false,
       orden: p.orden,
       naturaleza: p.naturaleza || null,

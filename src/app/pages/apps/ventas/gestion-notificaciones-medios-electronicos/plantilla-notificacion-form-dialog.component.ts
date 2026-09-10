@@ -191,8 +191,9 @@ export class PlantillaNotificacionFormDialogComponent implements OnInit {
     this.metodoPagoService.obtenerMetodosPago().subscribe({
       next: (list) => {
         this.metodosNotificacion = (list || []).filter((m) => !!m.permiteNotificacion);
-        if (this.esIngreso && this.form.value.metodoPagoId == null && this.metodosNotificacion.length) {
-          this.form.patchValue({ metodoPagoId: this.metodosNotificacion[0].id });
+        if (this.form.value.metodoPagoId == null && this.metodosNotificacion.length) {
+          const prefill = this.data?.metodoPagoIdPrefill ?? this.metodosNotificacion[0].id;
+          this.form.patchValue({ metodoPagoId: prefill });
         }
       }
     });
@@ -216,6 +217,13 @@ export class PlantillaNotificacionFormDialogComponent implements OnInit {
     return this.metodoPagoService.iconoUrl(file);
   }
 
+  private iconoDeMetodo(metodoPagoId: number | null): string | null {
+    if (metodoPagoId == null) {
+      return null;
+    }
+    return this.metodosNotificacion.find((m) => m.id === metodoPagoId)?.file || null;
+  }
+
   onNaturalezaChange(clear = true): void {
     if (this.esIngreso) {
       if (clear) {
@@ -224,17 +232,13 @@ export class PlantillaNotificacionFormDialogComponent implements OnInit {
           origenFondosDestinoId: null
         });
       }
-      this.form.get('metodoPagoId')?.enable({ emitEvent: false });
       this.form.get('origenFondosOrigenId')?.disable({ emitEvent: false });
       this.form.get('origenFondosDestinoId')?.disable({ emitEvent: false });
     } else if (this.esEgreso) {
-      if (clear) {
-        this.form.patchValue({ metodoPagoId: null });
-      }
-      this.form.get('metodoPagoId')?.disable({ emitEvent: false });
       this.form.get('origenFondosOrigenId')?.enable({ emitEvent: false });
       this.form.get('origenFondosDestinoId')?.enable({ emitEvent: false });
     }
+    this.form.get('metodoPagoId')?.enable({ emitEvent: false });
   }
 
   save(): void {
@@ -243,9 +247,8 @@ export class PlantillaNotificacionFormDialogComponent implements OnInit {
       return;
     }
     const raw = this.form.getRawValue();
-    const esIngreso = (raw.naturaleza || '').toUpperCase() === 'INGRESO';
     const esEgreso = (raw.naturaleza || '').toUpperCase() === 'EGRESO';
-    if (esIngreso && raw.metodoPagoId == null) {
+    if (raw.metodoPagoId == null) {
       this.toast('Selecciona un método de pago con notificaciones', true);
       return;
     }
@@ -256,8 +259,8 @@ export class PlantillaNotificacionFormDialogComponent implements OnInit {
     const body = {
       nombre: (raw.nombre || '').trim(),
       cuerpo: (raw.cuerpo || '').trim(),
-      icono: raw.icono || null,
-      metodoPagoId: esIngreso ? raw.metodoPagoId : null,
+      icono: this.iconoDeMetodo(raw.metodoPagoId) || raw.icono || null,
+      metodoPagoId: raw.metodoPagoId,
       activo: raw.activo !== false,
       orden: raw.orden,
       naturaleza: raw.naturaleza || null,
