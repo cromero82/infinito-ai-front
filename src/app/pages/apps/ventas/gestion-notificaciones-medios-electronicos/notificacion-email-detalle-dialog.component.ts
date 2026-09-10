@@ -56,7 +56,8 @@ export interface NotificacionEmailDetalleData extends NotificacionEmailPagoDto {
         </p>
       }
       <p><strong>Recibido:</strong> {{ data.recibidoEn | date: 'dd/MM/yyyy HH:mm:ss' }}</p>
-      <p><strong>Estado:</strong> {{ data.estadoVista }}</p>
+      <p><strong>Ciclo de vista:</strong> {{ labelCicloVista(data.estadoVista) }}</p>
+      <p><strong>Vínculo operación:</strong> {{ labelVinculo() }}</p>
       <p>
         <strong>Monto:</strong>
         {{
@@ -76,7 +77,7 @@ export interface NotificacionEmailDetalleData extends NotificacionEmailPagoDto {
         </p>
       }
 
-      @if (!data.clasificacion) {
+      @if (!data.clasificacion && puedeMostrarLegalizar) {
         <div class="legalizar-box">
           <h3>Legalizar movimiento</h3>
           <p class="hint">
@@ -127,7 +128,7 @@ export interface NotificacionEmailDetalleData extends NotificacionEmailPagoDto {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button mat-dialog-close type="button">Cerrar</button>
-      @if (!data.clasificacion) {
+      @if (!data.clasificacion && puedeMostrarLegalizar) {
         <button
           mat-flat-button
           color="primary"
@@ -242,6 +243,43 @@ export class NotificacionEmailDetalleDialogComponent implements OnInit {
       return false;
     }
     return true;
+  }
+
+  get puedeMostrarLegalizar(): boolean {
+    const v = (this.data.vinculoOperacion || '').toUpperCase();
+    return v !== 'NO_APLICA' && v !== 'ASOCIADA';
+  }
+
+  labelCicloVista(valor?: string | null): string {
+    switch ((valor || '').toUpperCase()) {
+      case 'PENDIENTE':
+        return 'Pendiente';
+      case 'MOSTRADA':
+        return 'Mostrada';
+      case 'ARCHIVADA':
+        return 'Archivada';
+      default:
+        return valor || '—';
+    }
+  }
+
+  labelVinculo(): string {
+    switch ((this.data.vinculoOperacion || '').toUpperCase()) {
+      case 'NO_APLICA':
+        return 'No aplica';
+      case 'PENDIENTE':
+        return 'Pendiente';
+      case 'ASOCIADA':
+        if (this.data.egresoId != null) {
+          return `Egreso #${this.data.egresoId}`;
+        }
+        if (this.data.historialReciboElectronicoId != null) {
+          return 'Ticket / abono';
+        }
+        return 'Asociada';
+      default:
+        return this.data.vinculoOperacion || '—';
+    }
   }
 
   iconoUrl(filename?: string | null): string {

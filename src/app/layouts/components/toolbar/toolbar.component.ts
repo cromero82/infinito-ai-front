@@ -15,6 +15,7 @@ import { MegaMenuComponent } from './mega-menu/mega-menu.component';
 import { Observable, of } from 'rxjs';
 import { NavigationComponent } from '../navigation/navigation.component';
 import { ToolbarUserComponent } from './toolbar-user/toolbar-user.component';
+import { ToolbarAlertaEgresoComponent } from './toolbar-alerta-egreso.component';
 import { NavigationItemComponent } from '../navigation/navigation-item/navigation-item.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
@@ -37,6 +38,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     NgClass,
     NavigationItemComponent,
     ToolbarUserComponent,
+    ToolbarAlertaEgresoComponent,
     NavigationComponent,
     AsyncPipe
   ]

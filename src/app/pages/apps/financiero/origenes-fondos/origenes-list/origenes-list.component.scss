@@ -219,7 +219,8 @@
 }
 
 .origen-card.con-menu,
-.origen-card.con-tickets-btn {
+.origen-card.con-tickets-btn,
+.origen-card.con-alerta-egreso {
   padding-right: 32px;
 }
 
@@ -291,6 +292,64 @@
   &:hover {
     color: #0d47a1;
     background: rgba(21, 101, 192, 0.12);
+  }
+}
+
+/** Misma ranura que tickets-sin-corte, en tarjetas hijas (Sin Clasificar). */
+.alerta-egreso-btn {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  transform: translateY(-50%);
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  line-height: 28px !important;
+  color: #e65100;
+  z-index: 3;
+  animation: alerta-egreso-pulse 1.2s ease-in-out infinite;
+
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
+
+  &:hover {
+    color: #bf360c;
+    background: rgba(230, 81, 0, 0.12);
+  }
+}
+
+.alerta-egreso-count {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background: #d32f2f;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+}
+
+@keyframes alerta-egreso-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alerta-egreso-btn {
+    animation: none;
   }
 }
 

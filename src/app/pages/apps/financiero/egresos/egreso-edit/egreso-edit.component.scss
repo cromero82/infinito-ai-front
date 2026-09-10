@@ -129,6 +129,12 @@
 .pago-linea-msg {
   margin: 0;
   flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pago-linea-banner button {
+  flex: 0 0 auto;
+  align-self: center;
 }
 
 :host ::ng-deep .opcion-hijo .mdc-list-item__primary-text {

@@ -39,6 +39,18 @@
         <p class="pago-linea-msg">{{ mensajePagoLinea }}</p>
       </div>
     }
+    @if (puedeAsociarNotificacion) {
+      <div class="pago-linea-banner pago-linea-banner--wait">
+        <mat-icon svgIcon="mat:link"></mat-icon>
+        <p class="pago-linea-msg">
+          Este egreso no tiene notificación asociada. Si el correo llegó tarde, puede ligarlo
+          y fusionar el movimiento «por identificar».
+        </p>
+        <button mat-stroked-button type="button" (click)="abrirAsociarNotificacion()">
+          Asociar notificación
+        </button>
+      </div>
+    }
     <mat-form-field class="mt-6 flex-1" appearance="outline">
       <mat-label>Fecha</mat-label>
       <input

@@ -84,6 +84,7 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit,
   guardandoPlantillaId: number | null = null;
 
   estadoVista = 'POR_IDENTIFICAR';
+  vinculoOperacion = 'TODAS';
   /** '' = todas; 'true' | 'false' → provienePlantillaExtraccion */
   filtroPlantillaExtraccion: '' | 'true' | 'false' = '';
   busqueda = '';
@@ -97,6 +98,7 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit,
     'monto',
     'nombrePagador',
     'clasificacion',
+    'vinculoOperacion',
     'estadoVista',
     'acciones'
   ];
@@ -117,7 +119,7 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit,
     acciones: [
       {
         titulo: 'Revisar notificaciones recibidas',
-        detalle: 'Filtrar por estado, plantilla o texto; ver mensaje completo; archivar o eliminar.'
+        detalle: 'Filtrar por ciclo de vista, vínculo u operación, o texto; ver mensaje; archivar o eliminar.'
       },
       {
         titulo: 'Gestionar plantillas de extracción',
@@ -552,7 +554,7 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit,
         : this.filtroPlantillaExtraccion === 'false'
           ? false
           : null;
-    this.api.listar(estado, this.busqueda.trim() || undefined, plantilla).subscribe({
+    this.api.listar(estado, this.busqueda.trim() || undefined, plantilla, this.vinculoOperacion).subscribe({
       next: (list) => {
         this.items = list || [];
         this.cargandoLista = false;
@@ -572,6 +574,66 @@ export class GestionNotificacionesMediosElectronicosComponent implements OnInit,
       return row.provienePlantillaExtraccion;
     }
     return row.plantillaNotificacionId != null;
+  }
+
+  labelCicloVista(valor?: string | null): string {
+    switch ((valor || '').toUpperCase()) {
+      case 'PENDIENTE':
+        return 'Pendiente';
+      case 'MOSTRADA':
+        return 'Mostrada';
+      case 'ARCHIVADA':
+        return 'Archivada';
+      default:
+        return valor || '—';
+    }
+  }
+
+  labelVinculo(row: NotificacionEmailPagoDto): string {
+    switch ((row.vinculoOperacion || '').toUpperCase()) {
+      case 'NO_APLICA':
+        return 'No aplica';
+      case 'PENDIENTE':
+        return 'Pendiente';
+      case 'ASOCIADA':
+        if (row.egresoId != null) {
+          return `Egreso #${row.egresoId}`;
+        }
+        if (row.historialReciboElectronicoId != null) {
+          return 'Ticket';
+        }
+        return 'Asociada';
+      default:
+        return row.vinculoOperacion || '—';
+    }
+  }
+
+  labelClasificacion(row: NotificacionEmailPagoDto): string {
+    const c = (row.clasificacion || '').trim().toUpperCase();
+    switch (c) {
+      case 'VALE_EMPLEADO':
+        return 'Vale / préstamo empleado';
+      case 'ANTICIPO_SALARIO':
+        return 'Anticipo de salario';
+      case 'CUENTA_PERSONAL':
+        return 'Cuenta personal administrador';
+      case 'GASTO_NEGOCIO':
+        return 'Gasto del negocio';
+      case 'OTRO_LEGALIZADO':
+        return 'Otro (legalizado)';
+      default:
+        break;
+    }
+    if ((row.vinculoOperacion || '').toUpperCase() === 'ASOCIADA') {
+      if (row.egresoId != null) {
+        return `Egreso #${row.egresoId}`;
+      }
+      if (row.historialReciboElectronicoId != null) {
+        return 'Ticket';
+      }
+      return 'Asociada';
+    }
+    return 'Por identificar';
   }
 
   asuntoNoPermitido(row: NotificacionEmailPagoDto): boolean {

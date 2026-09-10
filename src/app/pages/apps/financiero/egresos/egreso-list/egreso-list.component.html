@@ -4,6 +4,16 @@
       <div class="px-6 py-4 border-b flex flex-col gap-2 egresos-toolbar">
         <div class="egresos-toolbar-main flex items-center gap-2 min-w-0">
           <h2 class="title m-0 egresos-toolbar-title">Egresos</h2>
+          @if (filtroEgresoId != null) {
+            <button
+              mat-stroked-button
+              color="primary"
+              type="button"
+              class="btn-borrar-filtro-notif"
+              (click)="limpiarFiltroEgresoId()">
+              Borrar filtro notificación
+            </button>
+          }
           <mat-form-field
             appearance="outline"
             class="filter-select filter-select--naturaleza"
@@ -151,6 +161,18 @@
 
       <div
         class="egresos-table-section px-6 pt-4 pb-2 flex flex-col flex-1 min-h-0 overflow-hidden">
+        @if (filtroEgresoId != null) {
+          <div class="filtro-egreso-id">
+            <span>Mostrando egreso #{{ filtroEgresoId }}</span>
+            <button
+              mat-stroked-button
+              color="primary"
+              type="button"
+              (click)="limpiarFiltroEgresoId()">
+              Borrar filtro notificación
+            </button>
+          </div>
+        }
         @if (loading) {
           <div class="text-center py-8">Cargando egresos...</div>
         }
@@ -221,6 +243,31 @@
                   }
                 </td>
               </ng-container>
+              <ng-container matColumnDef="notificacion">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let egreso">
+                  @if (egreso.notificacionEmailPagoId) {
+                    <button
+                      mat-icon-button
+                      type="button"
+                      class="edit-btn-compact"
+                      [matTooltip]="'Notificación #' + egreso.notificacionEmailPagoId"
+                      (click)="$event.stopPropagation()">
+                      <mat-icon svgIcon="mat:email"></mat-icon>
+                    </button>
+                  } @else if (puedeAsociarNotificacion(egreso)) {
+                    <button
+                      mat-icon-button
+                      type="button"
+                      color="primary"
+                      class="edit-btn-compact"
+                      matTooltip="Asociar notificación (correo tardío)"
+                      (click)="asociarNotificacion(egreso, $event)">
+                      <mat-icon svgIcon="mat:link"></mat-icon>
+                    </button>
+                  }
+                </td>
+              </ng-container>
               <ng-container matColumnDef="edit">
                 <th mat-header-cell *matHeaderCellDef></th>
                 <td mat-cell *matCellDef="let egreso">
@@ -258,7 +305,9 @@
               <tr
                 mat-row
                 *matRowDef="let row; columns: displayedColumns"
+                [attr.data-egreso-id]="row.id"
                 [class.selected-row]="isRowSelected(row)"
+                [class.egreso-row--nav-flash]="egresoResaltadoId === row.id"
                 (click)="selectRow(row)"></tr>
             </table>
             @if (loadingMore) {

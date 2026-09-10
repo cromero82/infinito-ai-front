@@ -42,13 +42,22 @@
       <section class="card-section tab-panel flex flex-col flex-1 min-h-0">
         <div class="filters">
           <mat-form-field appearance="outline">
-            <mat-label>Estado</mat-label>
+            <mat-label>Ciclo de vista</mat-label>
             <mat-select [(ngModel)]="estadoVista" (selectionChange)="cargarLista()">
               <mat-option value="POR_IDENTIFICAR">Por identificar</mat-option>
               <mat-option value="TODAS">Todas</mat-option>
               <mat-option value="PENDIENTE">Pendiente</mat-option>
               <mat-option value="MOSTRADA">Mostrada</mat-option>
               <mat-option value="ARCHIVADA">Archivada</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Vínculo operación</mat-label>
+            <mat-select [(ngModel)]="vinculoOperacion" (selectionChange)="cargarLista()">
+              <mat-option value="TODAS">Todos</mat-option>
+              <mat-option value="PENDIENTE">Pendiente</mat-option>
+              <mat-option value="ASOCIADA">Asociada</mat-option>
+              <mat-option value="NO_APLICA">No aplica</mat-option>
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline">
@@ -156,12 +165,16 @@
               <ng-container matColumnDef="clasificacion">
                 <th mat-header-cell *matHeaderCellDef>Clasificación</th>
                 <td mat-cell *matCellDef="let row">
-                  {{ row.clasificacion || 'Por identificar' }}
+                  {{ labelClasificacion(row) }}
                 </td>
               </ng-container>
+              <ng-container matColumnDef="vinculoOperacion">
+                <th mat-header-cell *matHeaderCellDef>Vínculo</th>
+                <td mat-cell *matCellDef="let row">{{ labelVinculo(row) }}</td>
+              </ng-container>
               <ng-container matColumnDef="estadoVista">
-                <th mat-header-cell *matHeaderCellDef>Estado</th>
-                <td mat-cell *matCellDef="let row">{{ row.estadoVista }}</td>
+                <th mat-header-cell *matHeaderCellDef>Ciclo de vista</th>
+                <td mat-cell *matCellDef="let row">{{ labelCicloVista(row.estadoVista) }}</td>
               </ng-container>
               <ng-container matColumnDef="acciones">
                 <th mat-header-cell *matHeaderCellDef></th>

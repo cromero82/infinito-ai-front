@@ -229,6 +229,28 @@
                             </button>
                           </mat-menu>
                         }
+                        @if (countAlertaEgreso(hijo) > 0) {
+                          <button
+                            type="button"
+                            class="alerta-egreso-btn"
+                            mat-icon-button
+                            [attr.aria-label]="
+                              'Notificación de pago: QR y posible egreso no relacionado (' +
+                              countAlertaEgreso(hijo) +
+                              ')'
+                            "
+                            (mouseenter)="
+                              mostrarTipFooter(
+                                'Notificación de pago: QR y posible egreso no relacionado',
+                                'Posible egreso no relacionado'
+                              )
+                            "
+                            (mouseleave)="ocultarTipFooter()"
+                            (click)="abrirAlertaEgreso(hijo, $event)">
+                            <mat-icon svgIcon="mat:notifications"></mat-icon>
+                            <span class="alerta-egreso-count">{{ countAlertaEgreso(hijo) }}</span>
+                          </button>
+                        }
                         <button
                           type="button"
                           class="origen-card hijo"
@@ -236,6 +258,7 @@
                           [class.selected]="cuentaSeleccionada?.id === hijo.id"
                           [class.origen-card--nav-flash]="cuentaResaltadaId === hijo.id"
                           [class.con-menu]="muestraMenuGestion(hijo)"
+                          [class.con-alerta-egreso]="countAlertaEgreso(hijo) > 0"
                           [style.border-top-color]="cardAccent(hijo)"
                           [draggable]="esAdmin"
                           (click)="seleccionarCuenta(hijo)"

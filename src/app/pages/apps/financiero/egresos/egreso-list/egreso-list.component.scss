@@ -24,6 +24,36 @@
   height: 100%;
 }
 
+.filtro-egreso-id {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border: 1px solid rgba(21, 101, 192, 0.35);
+  border-radius: 6px;
+  background: rgba(21, 101, 192, 0.08);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.btn-borrar-filtro-notif {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+@keyframes egreso-nav-flash {
+  0% {
+    background-color: rgba(255, 152, 0, 0.4) !important;
+  }
+  40% {
+    background-color: rgba(255, 152, 0, 0.22) !important;
+  }
+  100% {
+    background-color: rgba(63, 81, 181, 0.12);
+  }
+}
+
 .egresos-toolbar {
   overflow: visible;
 }
@@ -300,6 +330,10 @@
         td[mat-cell] {
           font-weight: 500;
         }
+      }
+
+      &.egreso-row--nav-flash {
+        animation: egreso-nav-flash 1.8s ease;
       }
     }
 

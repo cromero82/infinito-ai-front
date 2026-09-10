@@ -20,6 +20,8 @@ export interface EgresoDto {
   metodoPagoId?: number;
   origenFondosId?: number;
   origenes?: EgresoOrigenDto[];
+  fromMovimientoOrigenFondosId?: number | null;
+  notificacionEmailPagoId?: number | null;
   naturaleza?: NaturalezaEgreso | string | null;
   tipoEgreso?: {
     id: number;

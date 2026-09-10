@@ -8,7 +8,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { forkJoin, of } from 'rxjs';
+import { forkJoin, of, Subscription } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../../../auth/service/auth.service';
 import {
@@ -69,6 +69,9 @@ import { FooterService } from '../../../../../layouts/services/footer.service';
 import { FooterItemDto } from '../../../../../layouts/components/footer/footer.component';
 import { GestionNotificacionesMediosService } from '../../../ventas/service/gestion-notificaciones-medios.service';
 import type { PlantillaNotificacionPagoDto } from '../../../ventas/service/gestion-notificaciones-medios.service';
+import { AlertaEgresoSinVincularService } from '../../../ventas/service/alerta-egreso-sin-vincular.service';
+import type { AlertaEgresoSinVincularDto } from '../../../ventas/service/gestion-notificaciones-medios.service';
+import { abrirAlertaEgresoSinVincularDialog } from '../../../ventas/gestion-notificaciones-medios-electronicos/alerta-egreso-sin-vincular-dialog.component';
 
 const NAV_FLASH_MS = 1800;
 
@@ -147,6 +150,11 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
         titulo: 'Formalizar egreso desde un movimiento',
         detalle:
           'Cuando aplique, convierte un movimiento de bolsillo en documento de egreso.'
+      },
+      {
+        titulo: 'Posible egreso no relacionado',
+        detalle:
+          'Si Sin Clasificar titila, hay un correo PAGASTE que coincide con un egreso QR sin vincular. Decida si ligarlo o enviarlo a la bolsa.'
       }
     ]
   };
@@ -157,6 +165,9 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
   private metodosPagoPorId = new Map<number, MetodoPagoDto>();
   /** Raíces con hijos expandidos. Por defecto colapsados; se abren si una plantilla apunta a un hijo. */
   private gruposExpandidos = new Set<number>();
+  private destinosAlertaEgreso = new Set<number>();
+  private alertasEgreso: AlertaEgresoSinVincularDto[] = [];
+  private alertasSub?: Subscription;
   periodoSinCorteLabel: string | null = null;
 
   movimientoColumns = [
@@ -178,6 +189,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
     private establecimientoService: EstablecimientoService,
     private metodoPagoService: MetodoPagoService,
     private notificacionesMediosService: GestionNotificacionesMediosService,
+    private alertaEgresoService: AlertaEgresoSinVincularService,
     private authService: AuthService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
@@ -194,12 +206,16 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
     });
     this.cargarIconosMetodosPago();
     this.cargarCuentas();
+    this.alertasSub = this.alertaEgresoService.items$.subscribe((items) => {
+      this.alertasEgreso = items;
+    });
   }
 
   ngOnDestroy(): void {
     this.limpiarFooterWarningTimer();
     this.limpiarFooterHoverTimer();
     this.limpiarNavFlashTimer();
+    this.alertasSub?.unsubscribe();
     this.ayudaAbierta = false;
     this.footerService.clearFooterItems();
   }
@@ -241,6 +257,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
         this.aplicarVentasSinCorte(rango);
         this.grupos = agruparOrigenesArbol(this.arbol);
         this.expandirGruposPorDestinoPlantillas(plantillas);
+        this.registrarDestinosAlertaEgreso(plantillas);
         this.loadingCuentas = false;
         if (this.arbol.length === 0) {
           this.cuentaSeleccionada = null;
@@ -315,6 +332,56 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
       maxWidth: '95vw',
       data
     });
+  }
+
+  esBolsaAlertaEgreso(cuenta: OrigenFondosArbolItemDto): boolean {
+    if (this.destinosAlertaEgreso.has(cuenta.id)) {
+      return true;
+    }
+    const n = (cuenta.nombre || '').toLowerCase();
+    return (
+      n.includes('sin clasificar') ||
+      n.includes('para ordenar') ||
+      n.includes('por identificar')
+    );
+  }
+
+  countAlertaEgreso(cuenta: OrigenFondosArbolItemDto): number {
+    if (!this.esBolsaAlertaEgreso(cuenta)) {
+      return 0;
+    }
+    const n = this.alertasEgreso.filter(
+      (a) =>
+        a.origenFondosDestinoId === cuenta.id ||
+        (a.origenFondosDestinoId == null && this.esBolsaAlertaEgreso(cuenta))
+    ).length;
+    return n;
+  }
+
+  abrirAlertaEgreso(cuenta: OrigenFondosArbolItemDto, event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    const ref = abrirAlertaEgresoSinVincularDialog(this.dialog, cuenta.id);
+    ref?.afterClosed().subscribe((result) => {
+      if (result?.action === 'enviar-bolsa' || result?.action === 'ir-egreso') {
+        this.cargarCuentas(this.cuentaSeleccionada?.id);
+      }
+    });
+  }
+
+  private registrarDestinosAlertaEgreso(
+    plantillas: PlantillaNotificacionPagoDto[] | null | undefined
+  ): void {
+    this.destinosAlertaEgreso = new Set();
+    for (const p of plantillas ?? []) {
+      const nat = (p.naturaleza || '').toUpperCase();
+      if (nat === 'INGRESO') {
+        continue;
+      }
+      if (p.origenFondosDestinoId != null) {
+        this.destinosAlertaEgreso.add(p.origenFondosDestinoId);
+      }
+    }
   }
 
   private aplicarVentasSinCorte(

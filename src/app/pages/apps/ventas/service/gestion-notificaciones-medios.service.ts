@@ -15,7 +15,9 @@ export interface NotificacionEmailPagoDto {
   referenciaCuenta?: string | null;
   metodoPagoId?: number | null;
   estadoVista: string;
+  vinculoOperacion?: string | null;
   historialReciboElectronicoId?: number | null;
+  egresoId?: number | null;
   plantillaNotificacionId?: number | null;
   plantillaNombre?: string | null;
   plantillaIcono?: string | null;
@@ -24,6 +26,28 @@ export interface NotificacionEmailPagoDto {
   clasificacion?: string | null;
   clasificacionObservacion?: string | null;
   clasificadoEn?: string | null;
+}
+
+export interface EgresoCandidatoAlertaDto {
+  id: number;
+  valor: number;
+  fecha?: string | null;
+  descripcion?: string | null;
+  origenFondosId?: number | null;
+  proveedorNombre?: string | null;
+  personaNombre?: string | null;
+}
+
+export interface AlertaEgresoSinVincularDto {
+  notificacion: NotificacionEmailPagoDto;
+  origenFondosOrigenId?: number | null;
+  origenFondosDestinoId?: number | null;
+  candidatos: EgresoCandidatoAlertaDto[];
+}
+
+export interface AlertasEgresoSinVincularResponse {
+  count: number;
+  items: AlertaEgresoSinVincularDto[];
 }
 
 export interface TicketSinNotificacionDto {
@@ -67,7 +91,8 @@ export class GestionNotificacionesMediosService {
   listar(
     estadoVista?: string,
     q?: string,
-    provienePlantillaExtraccion?: boolean | null
+    provienePlantillaExtraccion?: boolean | null,
+    vinculoOperacion?: string | null
   ): Observable<NotificacionEmailPagoDto[]> {
     let params = new HttpParams();
     if (estadoVista) {
@@ -79,9 +104,40 @@ export class GestionNotificacionesMediosService {
     if (provienePlantillaExtraccion === true || provienePlantillaExtraccion === false) {
       params = params.set('provienePlantillaExtraccion', String(provienePlantillaExtraccion));
     }
+    if (vinculoOperacion && vinculoOperacion !== 'TODAS') {
+      params = params.set('vinculoOperacion', vinculoOperacion);
+    }
     return this.http.get<NotificacionEmailPagoDto[]>(`${this.base}/api/notificaciones-email`, {
       params
     });
+  }
+
+  candidatasEgreso(egresoId: number): Observable<NotificacionEmailPagoDto[]> {
+    const params = new HttpParams().set('egresoId', String(egresoId));
+    return this.http.get<NotificacionEmailPagoDto[]>(
+      `${this.base}/api/notificaciones-email/candidatas-egreso`,
+      { params }
+    );
+  }
+
+  asociarEgreso(notificacionId: number, egresoId: number): Observable<NotificacionEmailPagoDto> {
+    return this.http.put<NotificacionEmailPagoDto>(
+      `${this.base}/api/notificaciones-email/${notificacionId}/asociar-egreso`,
+      { egresoId }
+    );
+  }
+
+  alertasEgresoSinVincular(): Observable<AlertasEgresoSinVincularResponse> {
+    return this.http.get<AlertasEgresoSinVincularResponse>(
+      `${this.base}/api/notificaciones-email/alertas-egreso-sin-vincular`
+    );
+  }
+
+  enviarABolsa(notificacionId: number): Observable<NotificacionEmailPagoDto> {
+    return this.http.post<NotificacionEmailPagoDto>(
+      `${this.base}/api/notificaciones-email/${notificacionId}/enviar-a-bolsa`,
+      {}
+    );
   }
 
   archivar(id: number): Observable<NotificacionEmailPagoDto> {

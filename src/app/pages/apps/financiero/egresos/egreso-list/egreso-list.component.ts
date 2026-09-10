@@ -44,6 +44,7 @@ import {
   PersonaService
 } from '../service/persona.service';
 import { EgresoEditComponent } from '../egreso-edit/egreso-edit.component';
+import { AsociarNotificacionEgresoDialogComponent } from '../asociar-notificacion-egreso-dialog.component';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData
@@ -103,6 +104,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     'tipoEgreso',
     'descripcion',
     'entradaInventario',
+    'notificacion',
     'edit',
     'delete'
   ];
@@ -135,6 +137,10 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   appliedFechaInicio: string | null = null;
   appliedFechaFin: string | null = null;
   entradaResumenMap = new Map<number, EntradaInventarioEstadoResumenDto>();
+  /** Filtro puntual al llegar desde la bandeja de notificación (query ?egresoId=). */
+  filtroEgresoId: number | null = null;
+  egresoResaltadoId: number | null = null;
+  private flashTimer: ReturnType<typeof setTimeout> | null = null;
 
   private justClosedDialog = false;
   private abriendoNuevoDesdeShortcut = false;
@@ -187,6 +193,11 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
       if (params.get('nuevo') === '1') {
         this.abrirNuevoEgresoDesdeShortcut();
       }
+      const rawId = params.get('egresoId');
+      const id = rawId ? Number(rawId) : NaN;
+      if (Number.isFinite(id) && id > 0) {
+        this.enfocarEgreso(id);
+      }
     });
   }
 
@@ -209,6 +220,63 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
       .catch(() => {
         this.abriendoNuevoDesdeShortcut = false;
       });
+  }
+
+  private enfocarEgreso(id: number): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { egresoId: null, _r: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+    this.egresosService.getEgresoById(id).subscribe({
+      next: (egreso) => {
+        this.filtroEgresoId = id;
+        this.dataSource = [egreso];
+        this.hasMore = false;
+        this.loading = false;
+        this.totalElements = 1;
+        this.selectedRowId = id;
+        this.cargarResumenEntradas();
+        this.actualizarFooter();
+        this.flashEgreso(id);
+      },
+      error: () => {
+        this.snackBar.open(`No se encontró el egreso #${id}`, 'Cerrar', {
+          duration: 3500
+        });
+      }
+    });
+  }
+
+  private flashEgreso(id: number): void {
+    if (this.flashTimer) {
+      clearTimeout(this.flashTimer);
+    }
+    this.egresoResaltadoId = null;
+    setTimeout(() => {
+      this.egresoResaltadoId = id;
+      this.scrollEgresoIntoView(id);
+      this.flashTimer = setTimeout(() => {
+        this.egresoResaltadoId = null;
+        this.flashTimer = null;
+      }, 1800);
+    }, 30);
+  }
+
+  private scrollEgresoIntoView(id: number): void {
+    const root = this.tableScroll?.nativeElement;
+    if (!root) {
+      return;
+    }
+    const row = root.querySelector(`[data-egreso-id="${id}"]`) as HTMLElement | null;
+    row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  limpiarFiltroEgresoId(): void {
+    this.filtroEgresoId = null;
+    this.egresoResaltadoId = null;
+    this.searchEgresos();
   }
 
   private loadMetodosPago() {
@@ -283,6 +351,9 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy() {
     this.detachScrollListener();
     this.footerService.clearFooterItems();
+    if (this.flashTimer) {
+      clearTimeout(this.flashTimer);
+    }
   }
 
   @HostListener('window:resize')
@@ -356,12 +427,18 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   searchEgresos() {
+    this.filtroEgresoId = null;
+    this.egresoResaltadoId = null;
     this.loading = true;
     this.pageIndex = 0;
     const params = this.buildSearchParams(0);
 
     this.egresosService.searchEgresos(params).subscribe({
       next: (page) => {
+        if (this.filtroEgresoId != null) {
+          this.loading = false;
+          return;
+        }
         this.dataSource = page.content;
         this.pageIndex = page.number;
         this.totalElements = page.totalElements;
@@ -389,6 +466,7 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.naturalezaCtrl.setValue('');
     this.proveedorIdCtrl.setValue('');
     this.personaIdCtrl.setValue('');
+    this.filtroEgresoId = null;
     this.clearActiveFilter(false);
     this.searchEgresos();
   }
@@ -521,6 +599,39 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.searchEgresos();
       }
       this.focusSearchInput();
+    });
+  }
+
+  puedeAsociarNotificacion(egreso: EgresoDto): boolean {
+    return (
+      !!egreso?.id &&
+      egreso.notificacionEmailPagoId == null &&
+      egreso.fromMovimientoOrigenFondosId == null
+    );
+  }
+
+  asociarNotificacion(egreso: EgresoDto, event?: Event): void {
+    event?.stopPropagation();
+    if (!this.puedeAsociarNotificacion(egreso)) {
+      return;
+    }
+    const ref = this.dialog.open(AsociarNotificacionEgresoDialogComponent, {
+      width: '480px',
+      data: {
+        egresoId: egreso.id,
+        valor: egreso.valor,
+        fecha: egreso.fecha
+      }
+    });
+    ref.afterClosed().subscribe((updated) => {
+      if (updated) {
+        this.snackBar.open(
+          `Notificación #${updated.id} asociada al egreso #${egreso.id}`,
+          'Cerrar',
+          { duration: 3000 }
+        );
+        this.searchEgresos();
+      }
     });
   }
 

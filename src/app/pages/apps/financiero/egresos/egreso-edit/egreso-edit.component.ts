@@ -55,6 +55,7 @@ import {
   FormalizarEgresoDialogData,
   EgresoOrigenDto
 } from '../service/egresos.service';
+import { AsociarNotificacionEgresoDialogComponent } from '../asociar-notificacion-egreso-dialog.component';
 import {
   ProveedorService,
   ProveedorDto
@@ -1235,6 +1236,42 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
   get isEditMode(): boolean {
     const egreso = this.egresoData;
     return !!(egreso && egreso.id && egreso.id !== 0);
+  }
+
+  get puedeAsociarNotificacion(): boolean {
+    const e = this.egresoData;
+    return (
+      this.isEditMode &&
+      !!e &&
+      e.notificacionEmailPagoId == null &&
+      e.fromMovimientoOrigenFondosId == null
+    );
+  }
+
+  abrirAsociarNotificacion(): void {
+    const e = this.egresoData;
+    if (!e?.id || !this.puedeAsociarNotificacion) {
+      return;
+    }
+    const ref = this.dialog.open(AsociarNotificacionEgresoDialogComponent, {
+      width: '480px',
+      data: {
+        egresoId: e.id,
+        valor: e.valor,
+        fecha: e.fecha
+      }
+    });
+    ref.afterClosed().subscribe((updated) => {
+      if (!updated) {
+        return;
+      }
+      e.notificacionEmailPagoId = updated.id;
+      this.snackBar.open(
+        `Notificación #${updated.id} asociada a este egreso`,
+        'Cerrar',
+        { duration: 3000 }
+      );
+    });
   }
 
   get dialogTitle(): string {
