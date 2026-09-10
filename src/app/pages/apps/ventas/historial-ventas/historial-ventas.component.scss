@@ -255,11 +255,24 @@
 }
 
 .fecha-section {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px 12px;
   margin-bottom: 6px;
 }
 
 .fecha-field {
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.hoy-check {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: 0.8125rem;
+  white-space: nowrap;
 }
 
 .medio-filters {

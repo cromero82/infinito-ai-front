@@ -756,6 +756,20 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
     return sigla === 'EF' || nombre === 'efectivo';
   }
 
+  /** Contado del input menos la base de efectivo. */
+  efectivoMenosBase(row: CorteVentaRow): number {
+    const contado = this.asMonto(row.totalRealCtrl.value) ?? 0;
+    return Math.round(contado) - Math.round(row.base ?? 0);
+  }
+
+  /** Suma de Contado descontando la base de efectivo. */
+  get totalContadoSinBaseEfectivo(): number {
+    const baseEfectivo = this.corteVentasRows
+      .filter((row) => this.esFilaEfectivo(row))
+      .reduce((acc, row) => acc + Math.round(row.base ?? 0), 0);
+    return Math.round(this.totalReal) - baseEfectivo;
+  }
+
   abrirAsistenteCierreCaja(row: CorteVentaRow): void {
     if (!this.esFilaEfectivo(row)) {
       return;

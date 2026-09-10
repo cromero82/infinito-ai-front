@@ -13,6 +13,14 @@ export interface ConfigurationItem {
 /** Key en configuracion_app + localStorage: panel Pagos electrónicos. */
 export const KEY_NOTIFICACIONES_ACTIVA = 'notificaciones.activa';
 
+/**
+ * Si `true`, un origen con plantilla (p.ej. QR) exige identificar la notificación/movimiento
+ * antes de registrar el egreso. Si `false`, se puede registrar sin notificación
+ * (el dinero sale del origen elegido).
+ */
+export const KEY_ASOCIACIONES_EGRESOS_OBLIGATORIO =
+  'notificaciones.asociaciones-egresos.obligatorio';
+
 /** Base de caja sugerida para el asistente de cierre (efectivo). */
 export const KEY_CORTE_VENTA_BASE_EFECTIVO = 'corte-venta.base-efectivo';
 
@@ -29,6 +37,7 @@ export class ConfigurationService {
       map(configuraciones => {
         let monitorBugSeen = false;
         let notificacionesActivaSeen = false;
+        let asociacionesEgresosObligatorioSeen = false;
         for (const config of configuraciones) {
           if (config.key === 'longitud-vertical-panel-productos' && config.value) {
             localStorage.setItem('longitud-vertical-panel-productos', config.value);
@@ -44,6 +53,13 @@ export class ConfigurationService {
             notificacionesActivaSeen = true;
             localStorage.setItem(
               KEY_NOTIFICACIONES_ACTIVA,
+              parseBoolConfig(config.value, true) ? 'true' : 'false'
+            );
+          }
+          if (config.key === KEY_ASOCIACIONES_EGRESOS_OBLIGATORIO) {
+            asociacionesEgresosObligatorioSeen = true;
+            localStorage.setItem(
+              KEY_ASOCIACIONES_EGRESOS_OBLIGATORIO,
               parseBoolConfig(config.value, true) ? 'true' : 'false'
             );
           }
@@ -66,6 +82,9 @@ export class ConfigurationService {
         }
         if (!notificacionesActivaSeen) {
           localStorage.setItem(KEY_NOTIFICACIONES_ACTIVA, 'true');
+        }
+        if (!asociacionesEgresosObligatorioSeen) {
+          localStorage.setItem(KEY_ASOCIACIONES_EGRESOS_OBLIGATORIO, 'true');
         }
         return configuraciones;
       }),
@@ -114,6 +133,18 @@ export class ConfigurationService {
 
   setNotificacionesActivasLocal(activa: boolean): void {
     localStorage.setItem(KEY_NOTIFICACIONES_ACTIVA, activa ? 'true' : 'false');
+  }
+
+  /**
+   * ¿El egreso con origen de plantilla (QR/banco) exige notificación de pago?
+   * Default `true` (comportamiento histórico) si la key no existe.
+   */
+  isAsociacionesEgresosObligatorio(): boolean {
+    const raw = localStorage.getItem(KEY_ASOCIACIONES_EGRESOS_OBLIGATORIO);
+    if (raw == null) {
+      return true;
+    }
+    return parseBoolConfig(raw, true);
   }
 
   /** Valor crudo de una key en configuracion_app (GET obtenerTodos). */

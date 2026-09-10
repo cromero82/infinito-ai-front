@@ -220,14 +220,26 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   origenLabel(egreso: EgresoDto): string {
-    if (egreso.origenFondosId != null) {
-      const cuenta = this.origenesArbol.find(
-        (c) => c.id === egreso.origenFondosId
-      );
-      if (cuenta) {
-        return cuenta.nombreDisplay.replace(/^[─\s]+/, '').trim() || cuenta.nombre;
-      }
-      return `#${egreso.origenFondosId}`;
+    const ids =
+      egreso.origenes?.length
+        ? [...egreso.origenes]
+            .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+            .map((o) => o.origenFondosId)
+        : egreso.origenFondosId != null
+          ? [egreso.origenFondosId]
+          : [];
+    if (ids.length) {
+      return ids
+        .map((id) => {
+          const cuenta = this.origenesArbol.find((c) => c.id === id);
+          if (cuenta) {
+            return (
+              cuenta.nombreDisplay.replace(/^[─\s]+/, '').trim() || cuenta.nombre
+            );
+          }
+          return `#${id}`;
+        })
+        .join(', ');
     }
     return etiquetaMetodoPagoEgresoPorId(egreso.metodoPagoId, this.metodosPago);
   }
@@ -465,7 +477,9 @@ export class EgresoListComponent implements OnInit, AfterViewInit, OnDestroy {
             this.csvEscape(String(e.naturaleza || '')),
             this.csvEscape(this.naturalezaLabel(e)),
             this.csvEscape(this.tipoEgresoLabel(e)),
-            e.origenFondosId ?? '',
+            e.origenes?.length
+              ? e.origenes.map((o) => o.origenFondosId).join('|')
+              : e.origenFondosId ?? '',
             this.csvEscape(this.origenLabel(e)),
             this.csvEscape(e.descripcion || '')
           ].join(',')

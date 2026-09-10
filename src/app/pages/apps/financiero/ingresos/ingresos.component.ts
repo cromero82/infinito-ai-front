@@ -594,7 +594,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
   private reconstruirCortesPorDia(): void {
     const grupos = new Map<string, CorteVentaSearchItemDto[]>();
     for (const c of this.cortesVentaListado) {
-      const key = CorteVentaService.fechaCalendarioDesdeIso(c.fechaIni);
+      const key = CorteVentaService.fechaCalendarioDeCorte(c);
       if (!key) {
         continue;
       }
@@ -643,7 +643,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
       this.corteVentaService.agruparPorFechaCalendario(cortes || []);
 
     this.ventasPorFecha = agrupados.map((item) => {
-      const fechaKey = CorteVentaService.fechaCalendarioDesdeIso(item.fechaIni);
+      const fechaKey = CorteVentaService.fechaCalendarioDeCorte(item);
       const fechaLabel = this.formatearFechaParaLabel(item.fechaIni);
       const detalles = (item.ventasTipo || [])
         .map((vt) => {
@@ -666,7 +666,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
       const totalDia = detalles.reduce((s, d) => s + d.total, 0);
       const delDia = (cortes || []).filter(
         (c) =>
-          CorteVentaService.fechaCalendarioDesdeIso(c.fechaIni) === fechaKey
+          CorteVentaService.fechaCalendarioDeCorte(c) === fechaKey
       );
       const cantidadCortes = delDia.length;
       const corteIds = delDia

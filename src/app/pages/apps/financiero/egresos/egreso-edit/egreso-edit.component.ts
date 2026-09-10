@@ -52,7 +52,8 @@ import {
   EgresoDto,
   CreateEgresoRequest,
   EgresoEditDialogData,
-  FormalizarEgresoDialogData
+  FormalizarEgresoDialogData,
+  EgresoOrigenDto
 } from '../service/egresos.service';
 import {
   ProveedorService,
@@ -89,6 +90,10 @@ import {
 } from '../../../ventas/service/gestion-notificaciones-medios.service';
 import { EstablecimientoService } from '../../../ventas/service/establecimiento.service';
 import { CorteVentaService } from '../../../ventas/service/corte-venta.service';
+import {
+  ConfigurationService,
+  KEY_ASOCIACIONES_EGRESOS_OBLIGATORIO
+} from '../../../../../auth/service/configuration.service';
 import {
   OrigenFondosArbolItemDto,
   etiquetaOrigenConSaldo,
@@ -158,8 +163,18 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
   buscandoMatchPagoLinea = false;
   movimientoPagoLinea: MovimientoOrigenFondosDto | null = null;
   mensajePagoLinea: string | null = null;
+  /**
+   * configuracion_app `notificaciones.asociaciones-egresos.obligatorio`.
+   * true = no registrar QR/plantilla sin movimiento identificado.
+   */
+  asociacionEgresoObligatoria = true;
   /** Observación autollenada desde el movimiento match (para no pisar edición manual). */
   private descripcionAutoPagoLinea: string | null = null;
+  /** OF del select que disparó el match de pago en línea (el padre QR/banco). */
+  private pagoLineaOrigenPadreId: number | null = null;
+  /** Montos por origen cuando hay 2+ seleccionados. El último es el restante. */
+  private readonly origenMontos = new Map<number, string>();
+  montoOrigenEditandoId: number | null = null;
 
   private readonly destroy$ = new Subject<void>();
   private readonly reintentarMatch$ = new Subject<void>();
@@ -193,6 +208,7 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     private notificacionesMediosService: GestionNotificacionesMediosService,
     private corteVentaService: CorteVentaService,
     private establecimientoService: EstablecimientoService,
+    private configurationService: ConfigurationService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
     private fechaUtilService: FechaUtilService
@@ -203,7 +219,7 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
       descripcion: [''],
       proveedor: [null as ProveedorDto | string | null],
       persona: [null as PersonaDto | string | null],
-      origenCuentaId: [null as number | null, Validators.required],
+      origenCuentaIds: [[] as number[], this.requireOrigenes.bind(this)],
       tipoEgresoId: [null as number | null, Validators.required],
       naturaleza: [null as string | null, Validators.required]
     });
@@ -232,28 +248,100 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.formalizarData != null || this.movimientoPagoLinea != null;
   }
 
+  get origenIdsSeleccionados(): number[] {
+    const raw = this.form.get('origenCuentaIds')?.value;
+    if (!Array.isArray(raw)) {
+      return [];
+    }
+    return raw.map((id) => Number(id)).filter((id) => Number.isFinite(id));
+  }
+
   get origenSeleccionado(): OrigenFondosArbolItemDto | undefined {
-    const id = this.form.get('origenCuentaId')?.value as number | null;
-    return this.origenesArbol.find((o) => o.id === id);
+    const ids = this.origenIdsSeleccionados;
+    if (ids.length !== 1) {
+      return undefined;
+    }
+    return this.origenesArbol.find((o) => o.id === ids[0]);
+  }
+
+  get origenesTriggerLabel(): string {
+    const ids = this.origenIdsSeleccionados;
+    if (!ids.length) {
+      return '';
+    }
+    return ids.map((id) => this.nombreCortoOrigenPorId(id)).join(', ');
+  }
+
+  get mostrarMontosOrigen(): boolean {
+    return this.origenIdsSeleccionados.length > 1 && !this.formalizarData;
+  }
+
+  get valorEgresoNumero(): number {
+    return this.parseCurrency(this.form.get('valor')?.value);
+  }
+
+  get origenesPagoRows(): Array<{
+    id: number;
+    nombre: string;
+    monto: string;
+  }> {
+    const ids = this.origenIdsSeleccionados;
+    return ids.map((id) => ({
+      id,
+      nombre: this.nombreCortoOrigenPorId(id),
+      monto: this.origenMontos.get(id) ?? this.formatValorDisplay(0)
+    }));
+  }
+
+  get origenesMontosValidos(): boolean {
+    const ids = this.origenIdsSeleccionados;
+    if (!ids.length) {
+      return false;
+    }
+    if (ids.length === 1) {
+      return true;
+    }
+    const total = this.valorEgresoNumero;
+    let sum = 0;
+    for (const id of ids) {
+      const v = this.parseCurrency(this.origenMontos.get(id));
+      if (v <= 0) {
+        return false;
+      }
+      sum += v;
+    }
+    return sum === total;
   }
 
   get advertenciaSaldoOrigen(): string | null {
     if (this.modoEstricto || this.isFormalizarMode) {
       return null;
     }
-    const origen = this.origenSeleccionado;
-    const valor = this.parseCurrency(this.form.get('valor')?.value);
-    if (!origen || valor <= 0) {
+    const ids = this.origenIdsSeleccionados;
+    const total = this.valorEgresoNumero;
+    if (!ids.length || total <= 0) {
       return null;
     }
-    const saldo = this.saldoParcial(origen);
-    if (saldo < valor) {
-      return `Saldo parcial insuficiente en «${origen.nombre}» (${this.formatSaldo(saldo)}). Se permitirá en modo flexible.`;
+    const msgs: string[] = [];
+    for (const id of ids) {
+      const origen = this.origenesArbol.find((o) => o.id === id);
+      if (!origen) {
+        continue;
+      }
+      const valor = ids.length === 1 ? total : this.parseCurrency(this.origenMontos.get(id));
+      if (valor <= 0) {
+        continue;
+      }
+      const saldo = this.saldoParcial(origen);
+      if (saldo < valor) {
+        msgs.push(
+          `Saldo parcial insuficiente en «${origen.nombre}» (${this.formatSaldo(saldo)}). Se permitirá en modo flexible.`
+        );
+      } else if (saldo === 0) {
+        msgs.push(`«${origen.nombre}» está en $0 (total parcial). Revise antes de egresar.`);
+      }
     }
-    if (saldo === 0) {
-      return `«${origen.nombre}» está en $0 (total parcial). Revise antes de egresar.`;
-    }
-    return null;
+    return msgs.length ? msgs.join(' ') : null;
   }
 
   get mostrarValorPreviewSuffix(): boolean {
@@ -272,10 +360,17 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.form.invalid) {
       return true;
     }
+    if (!this.origenesMontosValidos) {
+      return true;
+    }
     if (this.formalizarData || this.isEditMode) {
       return false;
     }
-    if (this.requiereMatchPagoLinea && !this.movimientoPagoLinea) {
+    if (
+      this.asociacionEgresoObligatoria &&
+      this.requiereMatchPagoLinea &&
+      !this.movimientoPagoLinea
+    ) {
       return true;
     }
     return false;
@@ -287,6 +382,16 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
         this.modoEstricto = !!est.manejoEstrictoCuentas;
       }
     });
+    this.asociacionEgresoObligatoria =
+      this.configurationService.isAsociacionesEgresosObligatorio();
+    this.configurationService
+      .obtenerValorPorKey(KEY_ASOCIACIONES_EGRESOS_OBLIGATORIO)
+      .subscribe({
+        next: () => {
+          this.asociacionEgresoObligatoria =
+            this.configurationService.isAsociacionesEgresosObligatorio();
+        }
+      });
     this.loadProveedores();
     this.loadPersonas();
     this.loadTiposEgreso();
@@ -327,6 +432,11 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
       });
 
     this.form
+      .get('valor')!
+      .valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.recalcularRestante());
+
+    this.form
       .get('naturaleza')!
       .valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe(() => {
@@ -360,12 +470,12 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     if (formalizar) {
       this.form.patchValue({
         valor: this.formatValorDisplay(formalizar.valor ?? 0),
-        origenCuentaId: formalizar.origenFondosId,
+        origenCuentaIds: [formalizar.origenFondosId],
         descripcion: formalizar.terceroNombre
           ? `Pago ${formalizar.terceroNombre}`
           : ''
       });
-      this.form.get('origenCuentaId')?.disable({ emitEvent: false });
+      this.form.get('origenCuentaIds')?.disable({ emitEvent: false });
       this.patchProveedorAfterLoad();
     } else if (egreso) {
       const prov = egreso.proveedor;
@@ -388,7 +498,7 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
                 .esDuenoPropietario
             }
           : null,
-        origenCuentaId: egreso.origenFondosId ?? null,
+        origenCuentaIds: this.idsOrigenDesdeEgreso(egreso),
         tipoEgresoId:
           egreso.tipoEgreso?.id ?? egreso.proveedor?.tipoEgreso?.id ?? null,
         naturaleza:
@@ -397,6 +507,7 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
           naturalezaCodigoFromTipo(egreso.proveedor?.tipoEgreso)
       });
       this.syncBeneficiarioValidators();
+      this.cargarMontosDesdeEgreso(egreso);
       this.patchProveedorAfterLoad();
     } else {
       this.form.patchValue({ valor: this.formatValorDisplay(0) });
@@ -415,9 +526,9 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
       map((v) => this.parseCurrency(v)),
       distinctUntilChanged()
     );
-    const origen$ = this.form.get('origenCuentaId')!.valueChanges.pipe(
-      startWith(this.form.get('origenCuentaId')!.value),
-      map((id) => (id == null ? null : Number(id))),
+    const origen$ = this.form.get('origenCuentaIds')!.valueChanges.pipe(
+      startWith(this.form.get('origenCuentaIds')!.value),
+      map((ids) => (Array.isArray(ids) ? ids.map((id) => Number(id)).join(',') : '')),
       distinctUntilChanged()
     );
 
@@ -431,26 +542,43 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
         debounceTime(350),
         takeUntil(this.destroy$),
         switchMap(() => {
-          const origenId = this.form.get('origenCuentaId')?.value as number | null;
-          const valor = this.parseCurrency(this.form.get('valor')?.value);
-          const bolsas = origenId != null ? this.bolsasDestinoPlantilla(origenId) : [];
+          const ids = this.origenIdsSeleccionados;
+          const total = this.parseCurrency(this.form.get('valor')?.value);
+          let origenMatchId: number | null = null;
+          let bolsas: number[] = [];
+          let valorMatch = total;
+          for (const origenId of ids) {
+            const dest = this.bolsasDestinoPlantilla(origenId);
+            if (dest.length) {
+              origenMatchId = origenId;
+              bolsas = dest;
+              valorMatch =
+                ids.length === 1
+                  ? total
+                  : this.parseCurrency(this.origenMontos.get(origenId));
+              break;
+            }
+          }
 
-          if (!origenId || !(valor > 0) || bolsas.length === 0) {
+          if (!origenMatchId || !(valorMatch > 0) || bolsas.length === 0) {
             this.requiereMatchPagoLinea = false;
             this.buscandoMatchPagoLinea = false;
+            this.pagoLineaOrigenPadreId = null;
             this.limpiarMatchPagoLinea();
             return of(null);
           }
 
           this.requiereMatchPagoLinea = true;
           this.buscandoMatchPagoLinea = true;
+          this.pagoLineaOrigenPadreId = origenMatchId;
           if (!this.movimientoPagoLinea) {
-            this.mensajePagoLinea =
-              'Buscando / Esperando el movimiento del pago en línea (mismo valor en la bolsa destino de la plantilla)…';
+            this.mensajePagoLinea = this.asociacionEgresoObligatoria
+              ? 'Buscando / Esperando el movimiento del pago en línea (mismo valor en la bolsa destino de la plantilla)…'
+              : 'Buscando notificación de pago (mismo valor). Si no aparece, puede registrar el egreso; saldrá del origen seleccionado.';
           }
 
-          return this.buscarCandidatosPagoLinea(bolsas, valor).pipe(
-            tap((list) => this.aplicarCandidatosPagoLinea(list, origenId))
+          return this.buscarCandidatosPagoLinea(bolsas, valorMatch).pipe(
+            tap((list) => this.aplicarCandidatosPagoLinea(list, origenMatchId!))
           );
         })
       )
@@ -523,8 +651,9 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
         this.sugerirProveedorDesdeMovimiento(match);
       }
     } else {
-      this.mensajePagoLinea =
-        'Buscando / Esperando el movimiento del pago en línea (mismo valor en la bolsa destino de la plantilla). El registro permanece deshabilitado hasta identificarlo.';
+      this.mensajePagoLinea = this.asociacionEgresoObligatoria
+        ? 'Buscando / Esperando el movimiento del pago en línea (mismo valor en la bolsa destino de la plantilla). El registro permanece deshabilitado hasta identificarlo.'
+        : 'No hay notificación de pago para este valor. Puede registrar el egreso; saldrá del origen seleccionado (no de una bolsa por identificar).';
       this.limpiarObservacionAutoPagoLinea();
     }
   }
@@ -649,9 +778,11 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     }
     this.origenesArbol = base;
-    const origenId = this.form.get('origenCuentaId')?.value as number | null;
-    if (origenId != null && !ids.has(origenId)) {
-      this.form.patchValue({ origenCuentaId: null }, { emitEvent: false });
+    const seleccionados = this.origenIdsSeleccionados;
+    const filtered = seleccionados.filter((id) => ids.has(id));
+    if (filtered.length !== seleccionados.length) {
+      this.form.patchValue({ origenCuentaIds: filtered }, { emitEvent: false });
+      this.syncMontosOrigenes(filtered);
     }
   }
 
@@ -697,8 +828,8 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.formalizarData) {
       return;
     }
-    const actual = this.form.get('origenCuentaId')?.value as number | null;
-    if (actual != null) {
+    const actual = this.origenIdsSeleccionados;
+    if (actual.length) {
       return;
     }
     const cajaEfectivo =
@@ -711,7 +842,7 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
       this.origenesArbol.find((o) => o.esRaiz || o.nivel === 0) ??
       this.origenesArbol[0];
     if (cajaEfectivo) {
-      this.form.patchValue({ origenCuentaId: cajaEfectivo.id }, { emitEvent: true });
+      this.form.patchValue({ origenCuentaIds: [cajaEfectivo.id] }, { emitEvent: true });
     }
   }
 
@@ -940,6 +1071,114 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  onOrigenesSelection(ids: number[] | null): void {
+    this.syncMontosOrigenes(Array.isArray(ids) ? ids : []);
+  }
+
+  onMontoOrigenFocus(origenId: number, event: FocusEvent): void {
+    this.montoOrigenEditandoId = origenId;
+    const numeric = this.parseCurrency(this.origenMontos.get(origenId));
+    this.origenMontos.set(origenId, String(numeric));
+    const input = event.target as HTMLInputElement;
+    input.value = String(numeric);
+    requestAnimationFrame(() => input.select());
+  }
+
+  onMontoOrigenInput(origenId: number, event: Event): void {
+    const digits = (event.target as HTMLInputElement).value.replace(/[^\d]/g, '');
+    this.origenMontos.set(origenId, digits);
+    (event.target as HTMLInputElement).value = digits;
+    this.recalcularRestante(origenId);
+  }
+
+  onMontoOrigenBlur(origenId: number): void {
+    this.montoOrigenEditandoId = null;
+    const numeric = this.parseCurrency(this.origenMontos.get(origenId));
+    this.origenMontos.set(origenId, this.formatValorDisplay(numeric));
+    this.recalcularRestante(origenId);
+  }
+
+  private requireOrigenes(control: AbstractControl): ValidationErrors | null {
+    const v = control.value;
+    return Array.isArray(v) && v.length > 0 ? null : { required: true };
+  }
+
+  private idsOrigenDesdeEgreso(egreso: EgresoDto): number[] {
+    if (egreso.origenes?.length) {
+      return [...egreso.origenes]
+        .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+        .map((o) => o.origenFondosId)
+        .filter((id) => id != null);
+    }
+    return egreso.origenFondosId != null ? [egreso.origenFondosId] : [];
+  }
+
+  private cargarMontosDesdeEgreso(egreso: EgresoDto): void {
+    const lineas = egreso.origenes ?? [];
+    this.origenMontos.clear();
+    if (lineas.length > 1) {
+      for (const linea of lineas) {
+        this.origenMontos.set(
+          linea.origenFondosId,
+          this.formatValorDisplay(linea.valor)
+        );
+      }
+    }
+  }
+
+  private syncMontosOrigenes(ids: number[]): void {
+    const keep = new Set(ids);
+    for (const key of [...this.origenMontos.keys()]) {
+      if (!keep.has(key)) {
+        this.origenMontos.delete(key);
+      }
+    }
+    if (ids.length <= 1) {
+      this.origenMontos.clear();
+      return;
+    }
+    for (const id of ids) {
+      if (!this.origenMontos.has(id)) {
+        this.origenMontos.set(id, this.formatValorDisplay(0));
+      }
+    }
+    this.recalcularRestante();
+  }
+
+  /**
+   * El restante del total va a otro origen: si se edita el último, al primero;
+   * en cualquier otro caso (o al cambiar el valor del egreso), al último.
+   */
+  private recalcularRestante(origenEditadoId?: number | null): void {
+    const ids = this.origenIdsSeleccionados;
+    if (ids.length <= 1) {
+      return;
+    }
+    const lastId = ids[ids.length - 1];
+    const sinkId =
+      origenEditadoId != null && origenEditadoId === lastId ? ids[0] : lastId;
+    let assigned = 0;
+    for (const id of ids) {
+      if (id !== sinkId) {
+        assigned += this.parseCurrency(this.origenMontos.get(id));
+      }
+    }
+    const restante = this.valorEgresoNumero - assigned;
+    this.origenMontos.set(sinkId, this.formatValorDisplay(restante));
+  }
+
+  private nombreCortoOrigenPorId(id: number): string {
+    const op =
+      this.origenesArbol.find((o) => o.id === id) ??
+      this.arbolCompleto.find((o) => o.id === id);
+    if (!op) {
+      return `#${id}`;
+    }
+    return (op.nombreDisplay || op.nombre || '')
+      .replace(/^[─\s]+/, '')
+      .trim() || op.nombre || `#${id}`;
+  }
+
   onValorFocus(event: FocusEvent): void {
     this.valorEditando = true;
     const numeric = this.parseCurrency(this.form.get('valor')?.value);
@@ -1045,20 +1284,38 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
 
     const formalizar = this.formalizarData;
     const pagoLinea = this.movimientoPagoLinea;
-    const origenId =
-      formalizar?.origenFondosId ??
-      pagoLinea?.origenFondosId ??
-      (form.origenCuentaId as number | null) ??
-      this.origenSeleccionado?.id ??
-      null;
-    const origen =
-      this.origenesArbol.find((o) => o.id === origenId) ??
-      this.arbolCompleto.find((o) => o.id === origenId) ??
-      this.origenSeleccionado;
-    if (origenId == null) {
+    const ids = this.origenIdsSeleccionados;
+    if (!ids.length) {
       this.snackBar.open('Seleccione el origen del egreso', 'Cerrar', { duration: 4000 });
       return;
     }
+    if (!this.origenesMontosValidos) {
+      this.snackBar.open(
+        'Indique el valor de cada origen; deben sumar el total del egreso',
+        'Cerrar',
+        { duration: 4000 }
+      );
+      return;
+    }
+
+    const total = this.parseCurrency(form.valor);
+    const origenes: EgresoOrigenDto[] = ids.map((id) => {
+      let ofId = id;
+      if (formalizar) {
+        ofId = formalizar.origenFondosId;
+      } else if (
+        pagoLinea?.origenFondosId != null &&
+        this.pagoLineaOrigenPadreId === id
+      ) {
+        ofId = pagoLinea.origenFondosId;
+      }
+      const valor = ids.length === 1 ? total : this.parseCurrency(this.origenMontos.get(id));
+      return { origenFondosId: ofId, valor };
+    });
+    const origenId = origenes[0].origenFondosId;
+    const origen =
+      this.origenesArbol.find((o) => o.id === origenId) ??
+      this.arbolCompleto.find((o) => o.id === origenId);
 
     const fechaValue = form.fecha as Date | null;
     const fechaStr = fechaValue
@@ -1074,6 +1331,7 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
       descripcion: form.descripcion || '',
       metodoPagoId: origen?.metodoPagoId ?? null,
       origenFondosId: origenId,
+      origenes,
       proveedor: proveedorPayload,
       persona: personaPayload,
       tipoEgreso: { id: Number(form.tipoEgresoId) },

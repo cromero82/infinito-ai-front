@@ -159,7 +159,11 @@
     }
     <mat-form-field class="flex-1" appearance="outline">
       <mat-label>Origen del egreso</mat-label>
-      <mat-select formControlName="origenCuentaId">
+      <mat-select
+        formControlName="origenCuentaIds"
+        multiple
+        (selectionChange)="onOrigenesSelection($event.value)">
+        <mat-select-trigger>{{ origenesTriggerLabel }}</mat-select-trigger>
         @for (op of origenesArbol; track op.id) {
           <mat-option [value]="op.id" [class.opcion-hijo]="op.nivel > 0">
             {{ etiquetaOrigen(op) }}
@@ -172,12 +176,43 @@
       } @else if (movimientoPagoLinea) {
         <mat-hint>Al guardar, la salida será desde la bolsa identificada</mat-hint>
       } @else {
-        <mat-hint>Saldo = total parcial (movimientos + tickets sin corte)</mat-hint>
+        <mat-hint>Puede elegir varios orígenes; el valor se reparte entre ellos</mat-hint>
       }
-      @if (form.get("origenCuentaId")?.hasError("required")) {
-        <mat-error>Seleccione el origen</mat-error>
+      @if (form.get("origenCuentaIds")?.hasError("required")) {
+        <mat-error>Seleccione al menos un origen</mat-error>
       }
     </mat-form-field>
+    @if (mostrarMontosOrigen) {
+      <div class="origenes-montos">
+        <p class="origenes-montos-title">¿Cuánto sale de cada origen?</p>
+        @for (row of origenesPagoRows; track row.id) {
+          <div class="origen-monto-row">
+            <span class="origen-monto-nombre">{{ row.nombre }}</span>
+            <mat-form-field
+              appearance="outline"
+              class="origen-monto-field"
+              [class.origen-monto-field--editando]="montoOrigenEditandoId === row.id">
+              <mat-label>Valor</mat-label>
+              <input
+                matInput
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                [value]="row.monto"
+                (focus)="onMontoOrigenFocus(row.id, $event)"
+                (blur)="onMontoOrigenBlur(row.id)"
+                (input)="onMontoOrigenInput(row.id, $event)" />
+            </mat-form-field>
+          </div>
+        }
+        @if (!origenesMontosValidos) {
+          <p class="origen-warning origen-warning--inline">
+            Cada origen debe ser mayor a 0 y sumar el valor del egreso
+            ({{ formatValorPreview(valorEgresoNumero) }}).
+          </p>
+        }
+      </div>
+    }
     @if (advertenciaSaldoOrigen) {
       <p class="origen-warning">{{ advertenciaSaldoOrigen }}</p>
     }

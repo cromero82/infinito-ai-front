@@ -211,6 +211,14 @@
                   (blur)="onTotalRealBlur($event, row)"
                   (keydown)="onTotalRealKeydown($event, row, i)" />
               </mat-form-field>
+              @if (esFilaEfectivo(row)) {
+                <div class="efectivo-base-hint">
+                  <span class="efectivo-base-label">Efectivo - Base</span>
+                  <span class="efectivo-base-valor">{{
+                    formatCurrency(efectivoMenosBase(row))
+                  }}</span>
+                </div>
+              }
             </div>
           </td>
         </ng-container>
@@ -333,7 +341,7 @@
               {{ formatCurrency(totalSistema) }}
             </td>
             <td class="total-cell total-value total-real-final">
-              {{ formatCurrency(totalReal) }}
+              {{ formatCurrency(totalContadoSinBaseEfectivo) }}
             </td>
             <td class="total-cell" aria-hidden="true"></td>
           </tr>

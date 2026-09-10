@@ -100,6 +100,7 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
 
   selectedFilter = 'pagado'; // Por defecto "pagado"
   fechaCtrl = new FormControl<Date | null>(null);
+  hoyCtrl = new FormControl<boolean>(false, { nonNullable: true });
   /** '' = todos, 'MIXTO' = multipago, número = metodoPagoId */
   metodoPagoFilterCtrl = new FormControl<string | number>('', {
     nonNullable: true
@@ -372,9 +373,30 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   }
 
   onFechaChange(): void {
-    this.page = 1;
-    this.historialRecibos = [];
-    this.loadHistorialRecibos();
+    this.hoyCtrl.setValue(this.esHoy(this.fechaCtrl.value), { emitEvent: false });
+    this.reloadFromFilters();
+  }
+
+  onHoyToggle(hoy: boolean): void {
+    this.fechaCtrl.setValue(hoy ? this.inicioDeHoy() : null, { emitEvent: false });
+    this.reloadFromFilters();
+  }
+
+  private inicioDeHoy(): Date {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }
+
+  private esHoy(date: Date | null): boolean {
+    if (!date) {
+      return false;
+    }
+    const hoy = this.inicioDeHoy();
+    return (
+      date.getFullYear() === hoy.getFullYear() &&
+      date.getMonth() === hoy.getMonth() &&
+      date.getDate() === hoy.getDate()
+    );
   }
 
   private buildSearchOpts(): {

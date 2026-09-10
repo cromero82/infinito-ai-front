@@ -121,6 +121,7 @@ export interface CorteVentaDetalleDto {
 export interface CorteVentaSearchItemDto {
   id: number;
   usuarioId: string;
+  fechaCreacion?: string;
   fechaIni: string;
   fechaFin: string;
   ultimoHistorialReciboId?: number;
@@ -210,7 +211,16 @@ export class CorteVentaService {
   }
 
   /**
-   * Agrupa cortes que comparten el mismo día de calendario (según `fechaIni`), **sin** separar por usuario.
+   * Día de calendario para agrupar un corte en Ingresos: fecha de registro del cierre
+   * si existe; si no, inicio del turno.
+   */
+  static fechaCalendarioDeCorte(c: CorteVentaSearchItemDto): string {
+    return CorteVentaService.fechaCalendarioDesdeIso(c.fechaCreacion || c.fechaIni);
+  }
+
+  /**
+   * Agrupa cortes que comparten el mismo día de calendario (según registro del cierre),
+   * **sin** separar por usuario.
    * Suma totales y fusiona `ventasTipo` por `metodoPagoId` (incluye `totalVentasSistema`).
    * Sirve para vistas tipo dashboard: un solo valor por día.
    */
@@ -223,7 +233,7 @@ export class CorteVentaService {
 
     const grupos = new Map<string, CorteVentaSearchItemDto[]>();
     for (const c of cortes) {
-      const dia = CorteVentaService.fechaCalendarioDesdeIso(c.fechaIni);
+      const dia = CorteVentaService.fechaCalendarioDeCorte(c);
       if (!dia) {
         continue;
       }
@@ -257,7 +267,7 @@ export class CorteVentaService {
 
     const grupos = new Map<string, CorteVentaSearchItemDto[]>();
     for (const c of cortes) {
-      const dia = CorteVentaService.fechaCalendarioDesdeIso(c.fechaIni);
+      const dia = CorteVentaService.fechaCalendarioDeCorte(c);
       const uid = String(c.usuarioId ?? '');
       const key = `${dia}\u0000${uid}`;
       const arr = grupos.get(key);
@@ -383,6 +393,7 @@ export class CorteVentaService {
     return {
       id: idMin,
       usuarioId: base.usuarioId,
+      fechaCreacion: base.fechaCreacion,
       fechaIni: fechaIniMin,
       fechaFin: fechaFinMax,
       ultimoHistorialReciboId: base.ultimoHistorialReciboId,

@@ -4,6 +4,14 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { NaturalezaEgreso } from '../util/naturaleza-egreso.util';
 
+export interface EgresoOrigenDto {
+  id?: number;
+  origenFondosId: number;
+  metodoPagoId?: number | null;
+  valor: number;
+  orden?: number;
+}
+
 export interface EgresoDto {
   id: number;
   fecha: string;
@@ -11,6 +19,7 @@ export interface EgresoDto {
   descripcion: string;
   metodoPagoId?: number;
   origenFondosId?: number;
+  origenes?: EgresoOrigenDto[];
   naturaleza?: NaturalezaEgreso | string | null;
   tipoEgreso?: {
     id: number;
@@ -49,6 +58,7 @@ export interface CreateEgresoRequest {
   /** Opcional: derivado del O.F.; ausente en cuentas sin medio (Caja Menor/General). */
   metodoPagoId?: number | null;
   origenFondosId: number;
+  origenes: EgresoOrigenDto[];
   proveedor?: { id: number } | null;
   persona?: { id: number } | null;
   tipoEgreso?: { id: number };

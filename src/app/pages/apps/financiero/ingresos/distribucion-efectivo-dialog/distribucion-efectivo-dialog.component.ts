@@ -44,6 +44,8 @@ export interface DistribucionEfectivoDialogResult {
   definirLuego?: boolean;
 }
 
+type MontoControl = 'base' | 'aCajaMenor' | 'aCajaGeneral';
+
 @Component({
   selector: 'vex-distribucion-efectivo-dialog',
   imports: [
@@ -67,6 +69,12 @@ export class DistribucionEfectivoDialogComponent implements OnInit, OnDestroy {
   readonly saldo: number;
   private baseOriginal = 0;
   private readonly destroy$ = new Subject<void>();
+  private readonly currencyFormatter = new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
 
   @ViewChild('baseInput') baseInput?: ElementRef<HTMLInputElement>;
 
@@ -83,9 +91,9 @@ export class DistribucionEfectivoDialogComponent implements OnInit, OnDestroy {
   ) {
     this.saldo = Number(data.pendiente.saldoCajaEfectivo ?? 0);
     this.form = this.fb.group({
-      base: [0, [Validators.required, Validators.min(0)]],
-      aCajaMenor: [0, [Validators.required, Validators.min(0)]],
-      aCajaGeneral: [{ value: this.saldo, disabled: true }],
+      base: [this.formatCurrency(0), Validators.required],
+      aCajaMenor: [this.formatCurrency(this.saldo), Validators.required],
+      aCajaGeneral: [this.formatCurrency(0), Validators.required],
       observacion: ['']
     });
   }
@@ -94,18 +102,42 @@ export class DistribucionEfectivoDialogComponent implements OnInit, OnDestroy {
     this.form
       .get('base')!
       .valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe(() => this.recalcularGeneral());
+      .subscribe(() => this.recalcularMenor());
+    this.form
+      .get('aCajaGeneral')!
+      .valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.recalcularMenor());
     this.form
       .get('aCajaMenor')!
       .valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe(() => this.recalcularGeneral());
     this.cargarBaseSugerida();
-    this.recalcularGeneral();
+    this.recalcularMenor();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /** Al enfocar: número plano y selección para reemplazar. */
+  onMontoFocus(controlName: MontoControl, event: FocusEvent): void {
+    const numeric = this.parseCurrency(this.form.get(controlName)!.value);
+    this.form.get(controlName)!.setValue(String(numeric), { emitEvent: false });
+    this.seleccionarContenido(event.target as HTMLInputElement);
+  }
+
+  onMontoBlur(controlName: MontoControl): void {
+    const numeric = this.parseCurrency(this.form.get(controlName)!.value);
+    this.form.get(controlName)!.setValue(this.formatCurrency(numeric), {
+      emitEvent: false
+    });
+    this.redistribuirDesde(controlName);
+  }
+
+  onMontoInput(controlName: MontoControl, event: Event): void {
+    const digits = (event.target as HTMLInputElement).value.replace(/[^\d]/g, '');
+    this.form.get(controlName)!.setValue(digits, { emitEvent: true });
   }
 
   /** Selecciona todo el valor para reemplazarlo al escribir. */
@@ -118,18 +150,16 @@ export class DistribucionEfectivoDialogComponent implements OnInit, OnDestroy {
   }
 
   focusYSeleccionarBase(): void {
-    this.seleccionarContenido(this.baseInput?.nativeElement);
-  }
-
-  get aCajaGeneral(): number {
-    return Number(this.form.get('aCajaGeneral')!.value ?? 0);
+    this.baseInput?.nativeElement?.focus();
   }
 
   get sumaValida(): boolean {
-    const base = Number(this.form.get('base')!.value ?? 0);
-    const menor = Number(this.form.get('aCajaMenor')!.value ?? 0);
-    return Math.round(base + menor + this.aCajaGeneral) === Math.round(this.saldo)
-      && this.aCajaGeneral >= 0;
+    const base = this.parseCurrency(this.form.get('base')!.value);
+    const menor = this.parseCurrency(this.form.get('aCajaMenor')!.value);
+    const general = this.parseCurrency(this.form.get('aCajaGeneral')!.value);
+    return Math.round(base + menor + general) === Math.round(this.saldo)
+      && menor >= 0
+      && general >= 0;
   }
 
   private cargarBaseSugerida(): void {
@@ -139,8 +169,10 @@ export class DistribucionEfectivoDialogComponent implements OnInit, OnDestroy {
       .subscribe({
         next: ({ valor }) => {
           this.baseOriginal = valor;
-          this.form.get('base')!.setValue(valor, { emitEvent: false });
-          this.recalcularGeneral();
+          this.form
+            .get('base')!
+            .setValue(this.formatCurrency(valor), { emitEvent: false });
+          this.recalcularMenor();
           setTimeout(() => this.focusYSeleccionarBase(), 0);
         },
         error: () => {
@@ -149,15 +181,33 @@ export class DistribucionEfectivoDialogComponent implements OnInit, OnDestroy {
       });
   }
 
+  private redistribuirDesde(controlName: MontoControl): void {
+    if (controlName === 'aCajaMenor') {
+      this.recalcularGeneral();
+      return;
+    }
+    this.recalcularMenor();
+  }
+
+  private recalcularMenor(): void {
+    const base = this.parseCurrency(this.form.get('base')!.value);
+    const general = this.parseCurrency(this.form.get('aCajaGeneral')!.value);
+    const menor = this.saldo - base - general;
+    this.form
+      .get('aCajaMenor')!
+      .setValue(this.formatCurrency(menor), { emitEvent: false });
+  }
+
   private recalcularGeneral(): void {
-    const base = Number(this.form.get('base')!.value ?? 0);
-    const menor = Number(this.form.get('aCajaMenor')!.value ?? 0);
+    const base = this.parseCurrency(this.form.get('base')!.value);
+    const menor = this.parseCurrency(this.form.get('aCajaMenor')!.value);
     const general = this.saldo - base - menor;
-    this.form.get('aCajaGeneral')!.setValue(general, { emitEvent: false });
+    this.form
+      .get('aCajaGeneral')!
+      .setValue(this.formatCurrency(general), { emitEvent: false });
   }
 
   confirmar(): void {
-    this.recalcularGeneral();
     if (!this.sumaValida || this.form.invalid) {
       this.snackBar.open(
         'Base + Caja Menor + Caja General debe igualar el saldo de Caja: Efectivo.',
@@ -172,14 +222,16 @@ export class DistribucionEfectivoDialogComponent implements OnInit, OnDestroy {
     }
     this.guardando = true;
     const raw = this.form.getRawValue();
-    const base = Number(raw.base ?? 0);
+    const base = this.parseCurrency(raw.base);
+    const menor = this.parseCurrency(raw.aCajaMenor);
+    const general = this.parseCurrency(raw.aCajaGeneral);
     this.persistirBaseSiCambio(base)
       .pipe(
         switchMap(() =>
           this.corteVentaService.confirmarDistribucionEfectivo(corteId, {
             base,
-            montoCajaMenor: Number(raw.aCajaMenor ?? 0),
-            montoCajaGeneral: Number(raw.aCajaGeneral ?? 0),
+            montoCajaMenor: menor,
+            montoCajaGeneral: general,
             observacion: (raw.observacion as string)?.trim() || undefined
           })
         ),
@@ -221,5 +273,17 @@ export class DistribucionEfectivoDialogComponent implements OnInit, OnDestroy {
 
   private baseCambio(base: number): boolean {
     return Math.round(base) !== Math.round(this.baseOriginal);
+  }
+
+  formatCurrency(value: number | null | undefined): string {
+    return this.currencyFormatter.format(Number(value ?? 0)).replace('COP', '$').trim();
+  }
+
+  private parseCurrency(value: string | number | null | undefined): number {
+    const raw = String(value ?? '').trim();
+    const negative = raw.startsWith('-');
+    const digits = raw.replace(/[^\d]/g, '');
+    const numeric = digits ? Number(digits) : 0;
+    return negative ? -numeric : numeric;
   }
 }
