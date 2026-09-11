@@ -277,6 +277,11 @@
                         <tr class="border-b">
                           <th class="text-left py-1 px-3">Fecha</th>
                           <th class="text-right py-1 px-3 col-fisico">Ventas</th>
+                          <th
+                            class="text-right py-1 px-3 col-cobranzas"
+                            matTooltip="Abonos de cuentas por cobrar. No son ventas nuevas.">
+                            Cobranzas
+                          </th>
                           <th class="text-left py-1 px-3">Métodos de Pago</th>
                         </tr>
                       </thead>
@@ -316,7 +321,10 @@
                               }
                             </td>
                             <td class="text-right py-1 px-3 font-medium col-fisico">
-                              {{ formatCurrency(venta.total) }}
+                              {{ formatCurrency(venta.totalVentas) }}
+                            </td>
+                            <td class="text-right py-1 px-3 font-medium col-cobranzas">
+                              {{ formatCurrency(venta.totalCobranzas) }}
                             </td>
                             <td class="py-1 px-3 metodos-pago-cell">
                               <div class="metodos-pago-tiles">
@@ -353,11 +361,11 @@
               <div class="ingresos-content-panel flex flex-col">
                 <div class="ingresos-details-panel flex flex-col">
                   <h3 class="title font-medium mb-3">
-                    Cortes por día (ventas sistema)
+                    Cortes por día
                   </h3>
                   <div
                     class="ingresos-details-table overflow-x-auto -mx-1 px-1">
-                    <table class="w-full border-collapse text-sm min-w-[1100px]">
+                    <table class="w-full border-collapse text-sm min-w-[1180px]">
                       <thead>
                         <tr class="border-b">
                           <th class="text-left py-2 px-2">Usuario</th>
@@ -365,6 +373,11 @@
                           <th class="text-left py-2 px-2">Fecha fin</th>
                           <th class="text-left py-2 px-2">Estado</th>
                           <th class="text-right py-2 px-2 col-fisico">Ventas</th>
+                          <th
+                            class="text-right py-2 px-2 col-cobranzas"
+                            matTooltip="Abonos de cuentas por cobrar del día. No se asignan a un corte.">
+                            Cobranzas
+                          </th>
                           <th class="text-right py-2 px-2">Total caja</th>
                           <th class="text-left py-2 px-2">Métodos de pago</th>
                           <th class="text-left py-2 px-2">Observación</th>
@@ -384,6 +397,9 @@
                             </td>
                             <td class="text-right py-2 px-2 font-semibold col-fisico">
                               {{ formatCurrency(grupo.totalVentas) }}
+                            </td>
+                            <td class="text-right py-2 px-2 font-semibold col-cobranzas">
+                              {{ formatCurrency(grupo.totalCobranzas) }}
                             </td>
                             <td class="py-2 px-2" colspan="4">
                               <div class="flex flex-wrap gap-x-3 gap-y-1">
@@ -435,6 +451,9 @@
                               </td>
                               <td class="text-right py-2 px-2 font-medium col-fisico">
                                 {{ formatCurrency(totalVentasDeCorte(corte)) }}
+                              </td>
+                              <td class="text-right py-2 px-2 col-cobranzas text-secondary">
+                                —
                               </td>
                               <td class="text-right py-2 px-2">
                                 {{ formatCurrency(corte.total) }}

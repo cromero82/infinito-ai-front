@@ -1,0 +1,49 @@
+# Reverse proxy Tienda Infinito (v02) — paralelo a la caja productiva en :4200 / :8088.
+# Escucha :8280 → Angular :4220 + auth :8281 + POS :8288 + puente :8295.
+# Cloudflare: tienda-infinito.mayaksoluciones.com → http://127.0.0.1:8280
+#
+# La versión vieja de la tienda se deja en sus puertos actuales. Esta pila no los pisa.
+
+:8280 {
+	encode gzip
+
+	handle /auth/* {
+		reverse_proxy 127.0.0.1:8281
+	}
+
+	@pagosEmail {
+		path /api/email-inbound /api/email-inbound/* /api/notificaciones /api/notificaciones/* /api/recibos-electronicos /api/recibos-electronicos/* /api/notificaciones-email /api/notificaciones-email/* /api/plantillas-notificacion-pago /api/plantillas-notificacion-pago/* /api/tickets-sin-notificacion /api/tickets-sin-notificacion/*
+	}
+	handle @pagosEmail {
+		reverse_proxy 127.0.0.1:8295
+	}
+
+	@health {
+		path /actuator /actuator/* /health
+	}
+	handle @health {
+		reverse_proxy 127.0.0.1:3021
+	}
+
+	@spaRoutes {
+		path / /index.html /apps /apps/* /login /login/* /register /register/* /forgot-password /forgot-password/* /assets /assets/* /favicon.ico /manifest.webmanifest /ngsw-worker.js /ng-cli-ws /ng-cli-ws/* /sockjs-node /sockjs-node/*
+	}
+	handle @spaRoutes {
+		reverse_proxy 127.0.0.1:4220 {
+			header_up Host localhost:4220
+		}
+	}
+
+	@spaStatic {
+		path_regexp \.(js|css|mjs|map|woff2?|ttf|eot|png|jpe?g|gif|svg|ico|webp)$
+	}
+	handle @spaStatic {
+		reverse_proxy 127.0.0.1:4220 {
+			header_up Host localhost:4220
+		}
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:8288
+	}
+}

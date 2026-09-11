@@ -175,7 +175,20 @@
                   Contado
                 </th>
                 <td mat-cell *matCellDef="let d" class="col-fisico">
-                  {{ d.total ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                  <div class="contado-cell">
+                    <span>{{
+                      d.total ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0'
+                    }}</span>
+                    @if (esFilaEfectivo(d)) {
+                      <div class="efectivo-base-hint">
+                        <span class="efectivo-base-label">Efectivo - Base</span>
+                        <span class="efectivo-base-valor">{{
+                          contadoMenosBase(d)
+                            | currency: 'COP':'symbol-narrow':'1.0-0'
+                        }}</span>
+                      </div>
+                    }
+                  </div>
                 </td>
                 <td
                   mat-footer-cell

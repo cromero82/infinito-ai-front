@@ -1,0 +1,65 @@
+{
+  "/api/notificaciones": {
+    "target": "http://localhost:8295",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/recibos-electronicos": {
+    "target": "http://localhost:8295",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/email-inbound": {
+    "target": "http://localhost:8295",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/notificaciones-email": {
+    "target": "http://localhost:8295",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/plantillas-notificacion-pago": {
+    "target": "http://localhost:8295",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/tickets-sin-notificacion": {
+    "target": "http://localhost:8295",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/products": {
+    "target": "http://localhost:8288",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/origenes-fondos": {
+    "target": "http://localhost:8288",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/movimientos-origen-fondos": {
+    "target": "http://localhost:8288",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/motivos-movimiento": {
+    "target": "http://localhost:8288",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/actuator": {
+    "target": "http://localhost:3021",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/actuator": "/actuator"
+    }
+  },
+  "/health": {
+    "target": "http://localhost:3021",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

@@ -4,18 +4,28 @@
       class="card proveedores-card flex flex-col flex-1 min-h-0 overflow-hidden">
       <div
         class="px-6 py-4 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 class="title m-0">Proveedores</h2>
+        <h2 class="title m-0">Proveedores y personas</h2>
         <div class="flex items-center gap-4">
           <mat-form-field
             appearance="outline"
             class="search-input"
             subscriptSizing="dynamic">
-            <mat-label>Buscar proveedor</mat-label>
+            <mat-label>
+              {{
+                catalogTab === 'personas'
+                  ? 'Buscar persona'
+                  : 'Buscar proveedor'
+              }}
+            </mat-label>
             <input
               #searchInput
               matInput
               [formControl]="searchCtrl"
-              placeholder="Nombre, teléfono, documento, correo o ID" />
+              [placeholder]="
+                catalogTab === 'personas'
+                  ? 'Nombre, documento, teléfono o correo'
+                  : 'Nombre, teléfono, documento, correo o ID'
+              " />
             @if (searchCtrl.value) {
               <button
                 mat-icon-button
@@ -26,89 +36,186 @@
               </button>
             }
           </mat-form-field>
-          <button
-            (click)="createProveedor()"
-            color="primary"
-            mat-mini-fab
-            matTooltip="Agregar proveedor"
-            type="button">
-            <mat-icon svgIcon="mat:add" class="icon-sm"></mat-icon>
-          </button>
+          @if (catalogTab === 'personas') {
+            <button
+              (click)="createPersona()"
+              color="primary"
+              mat-mini-fab
+              matTooltip="Agregar persona"
+              type="button">
+              <mat-icon svgIcon="mat:add" class="icon-sm"></mat-icon>
+            </button>
+          } @else {
+            <button
+              (click)="createProveedor()"
+              color="primary"
+              mat-mini-fab
+              matTooltip="Agregar proveedor"
+              type="button">
+              <mat-icon svgIcon="mat:add" class="icon-sm"></mat-icon>
+            </button>
+          }
         </div>
       </div>
 
-      <div
-        class="proveedores-table-section px-6 py-4 flex flex-col flex-1 min-h-0 overflow-hidden">
-        @if (loading) {
-          <div class="text-center py-8">Cargando proveedores...</div>
-        }
+      <mat-tab-group
+        class="catalog-tabs flex-1 min-h-0"
+        (selectedIndexChange)="onCatalogTabChange($event)">
+        <mat-tab label="Empresas">
+          <div
+            class="proveedores-table-section px-6 py-4 flex flex-col flex-1 min-h-0 overflow-hidden">
+            @if (loading) {
+              <div class="text-center py-8">Cargando proveedores...</div>
+            }
 
-        @if (!loading) {
-          <div class="table-scroll-container">
-            <table
-              mat-table
-              [dataSource]="filteredDataSource"
-              class="w-full proveedores-table-compact">
-              <ng-container matColumnDef="nombre">
-                <th mat-header-cell *matHeaderCellDef>Nombre</th>
-                <td mat-cell *matCellDef="let proveedor">
-                  {{ proveedor.nombre }}
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="tipoEgreso">
-                <th mat-header-cell *matHeaderCellDef>Tipo usual</th>
-                <td mat-cell *matCellDef="let proveedor">
-                  {{ proveedor.tipoEgreso?.nombre || "-" }}
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="telefono">
-                <th mat-header-cell *matHeaderCellDef>Teléfono</th>
-                <td mat-cell *matCellDef="let proveedor">
-                  {{ proveedor.telefono || "-" }}
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="documento">
-                <th mat-header-cell *matHeaderCellDef>Documento</th>
-                <td mat-cell *matCellDef="let proveedor">
-                  {{ getDocumentoDisplay(proveedor.documento) }}
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="correo">
-                <th mat-header-cell *matHeaderCellDef>Correo</th>
-                <td mat-cell *matCellDef="let proveedor">
-                  {{ proveedor.correo || "-" }}
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="edit">
-                <th mat-header-cell *matHeaderCellDef></th>
-                <td mat-cell *matCellDef="let proveedor">
-                  <button
-                    mat-icon-button
-                    color="accent"
-                    class="edit-btn-compact"
-                    (click)="
-                      editProveedor(proveedor); $event.stopPropagation()
-                    ">
-                    <mat-icon svgIcon="mat:edit"></mat-icon>
-                  </button>
-                </td>
-              </ng-container>
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr
-                mat-row
-                *matRowDef="let row; columns: displayedColumns"
-                [class.selected-row]="isRowSelected(row)"
-                (click)="selectRow(row)"></tr>
-            </table>
-          </div>
-        }
+            @if (!loading) {
+              <div class="table-scroll-container">
+                <table
+                  mat-table
+                  [dataSource]="filteredDataSource"
+                  class="w-full proveedores-table-compact">
+                  <ng-container matColumnDef="nombre">
+                    <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                    <td mat-cell *matCellDef="let proveedor">
+                      {{ proveedor.nombre }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="tipoEgreso">
+                    <th mat-header-cell *matHeaderCellDef>Tipo usual</th>
+                    <td mat-cell *matCellDef="let proveedor">
+                      {{ proveedor.tipoEgreso?.nombre || "-" }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="telefono">
+                    <th mat-header-cell *matHeaderCellDef>Teléfono</th>
+                    <td mat-cell *matCellDef="let proveedor">
+                      {{ proveedor.telefono || "-" }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="documento">
+                    <th mat-header-cell *matHeaderCellDef>Documento</th>
+                    <td mat-cell *matCellDef="let proveedor">
+                      {{ getDocumentoDisplay(proveedor.documento) }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="correo">
+                    <th mat-header-cell *matHeaderCellDef>Correo</th>
+                    <td mat-cell *matCellDef="let proveedor">
+                      {{ proveedor.correo || "-" }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="edit">
+                    <th mat-header-cell *matHeaderCellDef></th>
+                    <td mat-cell *matCellDef="let proveedor">
+                      <button
+                        mat-icon-button
+                        color="accent"
+                        class="edit-btn-compact"
+                        (click)="
+                          editProveedor(proveedor); $event.stopPropagation()
+                        ">
+                        <mat-icon svgIcon="mat:edit"></mat-icon>
+                      </button>
+                    </td>
+                  </ng-container>
+                  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                  <tr
+                    mat-row
+                    *matRowDef="let row; columns: displayedColumns"
+                    [class.selected-row]="isRowSelected(row)"
+                    (click)="selectRow(row)"></tr>
+                </table>
+              </div>
+            }
 
-        @if (!loading && filteredDataSource.length === 0) {
-          <div class="text-center py-8 text-secondary">
-            No se encontraron proveedores
+            @if (!loading && filteredDataSource.length === 0) {
+              <div class="text-center py-8 text-secondary">
+                No se encontraron proveedores
+              </div>
+            }
           </div>
-        }
-      </div>
+        </mat-tab>
+        <mat-tab label="Personas">
+          <div
+            class="proveedores-table-section px-6 py-4 flex flex-col flex-1 min-h-0 overflow-hidden">
+            @if (loadingPersonas) {
+              <div class="text-center py-8">Cargando personas...</div>
+            }
+
+            @if (!loadingPersonas) {
+              <div class="table-scroll-container">
+                <table
+                  mat-table
+                  [dataSource]="filteredPersonas"
+                  class="w-full proveedores-table-compact">
+                  <ng-container matColumnDef="nombre">
+                    <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                    <td mat-cell *matCellDef="let persona">
+                      {{ persona.nombre }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="documento">
+                    <th mat-header-cell *matHeaderCellDef>Documento</th>
+                    <td mat-cell *matCellDef="let persona">
+                      {{ persona.documento || "-" }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="telefono">
+                    <th mat-header-cell *matHeaderCellDef>Teléfono</th>
+                    <td mat-cell *matCellDef="let persona">
+                      {{ persona.telefono || "-" }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="correo">
+                    <th mat-header-cell *matHeaderCellDef>Correo</th>
+                    <td mat-cell *matCellDef="let persona">
+                      {{ persona.correo || "-" }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="dueño">
+                    <th mat-header-cell *matHeaderCellDef>Dueño</th>
+                    <td mat-cell *matCellDef="let persona">
+                      {{ persona.esDuenoPropietario ? "Sí" : "—" }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="activo">
+                    <th mat-header-cell *matHeaderCellDef>Activo</th>
+                    <td mat-cell *matCellDef="let persona">
+                      {{ persona.activo === false ? "No" : "Sí" }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="edit">
+                    <th mat-header-cell *matHeaderCellDef></th>
+                    <td mat-cell *matCellDef="let persona">
+                      <button
+                        mat-icon-button
+                        color="accent"
+                        class="edit-btn-compact"
+                        (click)="editPersona(persona); $event.stopPropagation()">
+                        <mat-icon svgIcon="mat:edit"></mat-icon>
+                      </button>
+                    </td>
+                  </ng-container>
+                  <tr
+                    mat-header-row
+                    *matHeaderRowDef="displayedPersonaColumns"></tr>
+                  <tr
+                    mat-row
+                    *matRowDef="let row; columns: displayedPersonaColumns"
+                    [class.selected-row]="isPersonaRowSelected(row)"
+                    (click)="selectPersonaRow(row)"></tr>
+                </table>
+              </div>
+            }
+
+            @if (!loadingPersonas && filteredPersonas.length === 0) {
+              <div class="text-center py-8 text-secondary">
+                No se encontraron personas
+              </div>
+            }
+          </div>
+        </mat-tab>
+      </mat-tab-group>
     </div>
   </div>
 </div>

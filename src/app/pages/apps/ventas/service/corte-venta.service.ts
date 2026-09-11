@@ -427,6 +427,41 @@ export class CorteVentaService {
   }
 
   /**
+   * Ventas POS del medio en el detalle de corte (sin base, egresos ni cobranzas).
+   * Las cobranzas ENTRADA_COBRANZA se muestran aparte en el dashboard de Ingresos.
+   */
+  static montoIngresoDeDetalle(
+    d: Pick<CorteVentaDetalleDto, 'totalVentasSistema'>
+  ): number {
+    return Math.round(Number(d.totalVentasSistema) || 0);
+  }
+
+  /** Suma ventas POS por método a partir de `detalles` (fallback: ventasTipo). */
+  static agregarIngresosPorMetodo(
+    cortes: CorteVentaSearchItemDto[]
+  ): Map<number, number> {
+    const porMetodo = new Map<number, number>();
+    const add = (metodoPagoId: number, monto: number) => {
+      if (!Number.isFinite(monto) || monto === 0) {
+        return;
+      }
+      porMetodo.set(metodoPagoId, (porMetodo.get(metodoPagoId) ?? 0) + monto);
+    };
+    for (const c of cortes || []) {
+      if (c.detalles?.length) {
+        for (const d of c.detalles) {
+          add(d.metodoPagoId, CorteVentaService.montoIngresoDeDetalle(d));
+        }
+      } else {
+        for (const vt of c.ventasTipo || []) {
+          add(vt.metodoPagoId, CorteVentaService.montoVentasDeTipo(vt));
+        }
+      }
+    }
+    return porMetodo;
+  }
+
+  /**
    * Consulta los totales por método de pago en un rango de fechas
    * @param params Parámetros de consulta (fechaIni, fechaFin, ultimoCorte, actual)
    * @returns Observable con los datos del corte

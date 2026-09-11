@@ -13,6 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatTabsModule } from '@angular/material/tabs';
 import {
   UntypedFormControl,
   ReactiveFormsModule,
@@ -27,6 +28,11 @@ import {
   isUuidDocumento
 } from '../service/proveedor.service';
 import { ProveedorEditComponent } from '../proveedor-edit/proveedor-edit.component';
+import {
+  PersonaDto,
+  PersonaService
+} from '../../egresos/service/persona.service';
+import { PersonaGestionDialogComponent } from '../../../dominios/persona/persona-gestion-dialog.component';
 import { TableViewportService } from '../../../../../core/table-viewport/table-viewport.service';
 
 @Component({
@@ -38,6 +44,7 @@ import { TableViewportService } from '../../../../../core/table-viewport/table-v
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
+    MatTabsModule,
     ReactiveFormsModule,
     FormsModule
   ],
@@ -55,8 +62,21 @@ export class ProveedorListComponent implements OnInit, AfterViewInit {
   ];
   dataSource: ProveedorDto[] = [];
   filteredDataSource: ProveedorDto[] = [];
+  personas: PersonaDto[] = [];
+  filteredPersonas: PersonaDto[] = [];
+  catalogTab: 'empresas' | 'personas' = 'empresas';
+  displayedPersonaColumns = [
+    'nombre',
+    'documento',
+    'telefono',
+    'correo',
+    'dueño',
+    'activo',
+    'edit'
+  ];
   selectedRowId: number | null = null;
   loading = false;
+  loadingPersonas = false;
   searchCtrl = new UntypedFormControl('');
   tableScrollMaxHeight = 400;
   private justClosedDialog = false;
@@ -65,6 +85,7 @@ export class ProveedorListComponent implements OnInit, AfterViewInit {
 
   constructor(
     private proveedorService: ProveedorService,
+    private personaService: PersonaService,
     private dialog: MatDialog,
     private tableViewportService: TableViewportService
   ) {}
@@ -72,11 +93,13 @@ export class ProveedorListComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.applyViewport();
     this.loadProveedores();
+    this.loadPersonas();
     this.searchCtrl.valueChanges
       .pipe(debounceTime(400), distinctUntilChanged())
       .subscribe((value) => {
         this.justClosedDialog = false;
         this.filterProveedores(value);
+        this.filterPersonas(value);
       });
   }
 
@@ -94,7 +117,7 @@ export class ProveedorListComponent implements OnInit, AfterViewInit {
   }
 
   private applyViewport() {
-    const v = this.tableViewportService.calculate({ reservedHeight: 388 });
+    const v = this.tableViewportService.calculate({ reservedHeight: 428 });
     this.tableScrollMaxHeight = v.maxHeight;
   }
 
@@ -112,6 +135,84 @@ export class ProveedorListComponent implements OnInit, AfterViewInit {
         this.loading = false;
       }
     });
+  }
+
+  loadPersonas() {
+    this.loadingPersonas = true;
+    this.personaService.getAll(false).subscribe({
+      next: (list) => {
+        this.personas = [...(list || [])].sort((a, b) =>
+          (a.nombre || '').localeCompare(b.nombre || '')
+        );
+        this.filterPersonas(this.searchCtrl.value);
+        this.loadingPersonas = false;
+      },
+      error: () => {
+        this.personas = [];
+        this.filteredPersonas = [];
+        this.loadingPersonas = false;
+      }
+    });
+  }
+
+  onCatalogTabChange(index: number): void {
+    this.catalogTab = index === 1 ? 'personas' : 'empresas';
+    this.selectedRowId = null;
+    this.focusSearchInput();
+  }
+
+  filterPersonas(searchTerm: string) {
+    if (!searchTerm || searchTerm.trim() === '') {
+      this.filteredPersonas = [...this.personas];
+      return;
+    }
+    const term = searchTerm.toLowerCase().trim();
+    this.filteredPersonas = this.personas.filter(
+      (p) =>
+        (p.nombre || '').toLowerCase().includes(term) ||
+        (p.documento || '').toLowerCase().includes(term) ||
+        (p.telefono || '').toLowerCase().includes(term) ||
+        (p.correo || '').toLowerCase().includes(term) ||
+        String(p.id).includes(term)
+    );
+  }
+
+  createPersona() {
+    const dialogRef = this.dialog.open(PersonaGestionDialogComponent, {
+      width: '720px',
+      maxWidth: '95vw',
+      data: { startInCreate: true, returnOnSave: true }
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      this.justClosedDialog = true;
+      if (result) {
+        this.loadPersonas();
+      }
+      this.focusSearchInput();
+    });
+  }
+
+  editPersona(persona: PersonaDto) {
+    const dialogRef = this.dialog.open(PersonaGestionDialogComponent, {
+      width: '720px',
+      maxWidth: '95vw',
+      data: { editPersona: persona, returnOnSave: true }
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      this.justClosedDialog = true;
+      if (result) {
+        this.loadPersonas();
+      }
+      this.focusSearchInput();
+    });
+  }
+
+  selectPersonaRow(persona: PersonaDto): void {
+    this.selectedRowId = persona.id;
+  }
+
+  isPersonaRowSelected(persona: PersonaDto): boolean {
+    return this.selectedRowId === persona.id;
   }
 
   filterProveedores(searchTerm: string) {

@@ -89,6 +89,49 @@
       }
     </mat-form-field>
     <mat-form-field class="flex-1" appearance="outline">
+      <mat-label>A quién se pagó</mat-label>
+      <input
+        matInput
+        formControlName="beneficiario"
+        [matAutocomplete]="autoBeneficiario"
+        placeholder="Buscar por nombre"
+        (keydown.enter)="onBeneficiarioKeydown($any($event))" />
+      <mat-icon matIconPrefix svgIcon="mat:people"></mat-icon>
+      <mat-autocomplete
+        #autoBeneficiario="matAutocomplete"
+        [displayWith]="displayBeneficiario"
+        (optionSelected)="onBeneficiarioSelected($event)">
+        @for (opt of filteredBeneficiarios$ | async; track opt.kind + '-' + opt.id) {
+          <mat-option [value]="opt">
+            {{ etiquetaOpcionBeneficiario(opt) }}
+          </mat-option>
+        }
+      </mat-autocomplete>
+      @if (form.get("beneficiario")?.hasError("required")) {
+        <mat-error>Seleccione o cree a quién se pagó</mat-error>
+      }
+    </mat-form-field>
+    @if (mostrarBotonesCrearBeneficiario$ | async) {
+      <div class="beneficiario-crear">
+        <span class="beneficiario-crear-label">No está en el catálogo:</span>
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="crearProveedorDesdeBoton()">
+          Crear como empresa
+        </button>
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="crearPersonaDesdeBoton()">
+          Crear como persona
+        </button>
+      </div>
+    }
+    <mat-form-field
+      class="flex-1 tipo-egreso-field"
+      appearance="outline"
+      subscriptSizing="dynamic">
       <mat-label>Tipo de egreso</mat-label>
       <mat-select formControlName="tipoEgresoId">
         @for (t of tiposEgreso; track t.id) {
@@ -99,76 +142,14 @@
         <mat-error>Seleccione el tipo</mat-error>
       }
     </mat-form-field>
-    <mat-form-field class="flex-1" appearance="outline">
-      <mat-label>Naturaleza</mat-label>
-      <mat-select formControlName="naturaleza">
-        @for (n of naturalezas; track n.value) {
-          <mat-option [value]="n.value">{{ n.label }}</mat-option>
-        }
-      </mat-select>
-      @if (form.get("naturaleza")?.hasError("required")) {
-        <mat-error>Seleccione la naturaleza</mat-error>
+    <div class="tipo-categoria-row" [class.tipo-categoria-row--empty]="!form.get('naturaleza')?.value">
+      @if (form.get("naturaleza")?.value) {
+        <span>Categoría: {{ labelNaturalezaSeleccionada }}</span>
+        <button mat-button type="button" (click)="abrirCatalogoTipos()">
+          Editar tipos
+        </button>
       }
-    </mat-form-field>
-    @if (esBeneficiarioPersona) {
-      <mat-form-field class="flex-1" appearance="outline">
-        <mat-label>Persona beneficiaria</mat-label>
-        <input
-          matInput
-          formControlName="persona"
-          [matAutocomplete]="autoPersona"
-          placeholder="Buscar por nombre o documento" />
-        <mat-icon matIconPrefix svgIcon="mat:person"></mat-icon>
-        <mat-autocomplete
-          #autoPersona="matAutocomplete"
-          [displayWith]="displayPersona">
-          @for (per of filteredPersonas$ | async; track per.id) {
-            <mat-option [value]="per">
-              {{ per.nombre }} ({{ per.documento }})
-            </mat-option>
-          }
-        </mat-autocomplete>
-        @if (form.get("persona")?.hasError("required")) {
-          <mat-error>Seleccione una persona</mat-error>
-        }
-        <mat-hint>Catálogo Dominios → Personas</mat-hint>
-      </mat-form-field>
-    } @else {
-      <mat-form-field class="flex-1" appearance="outline">
-        <mat-label>Proveedor</mat-label>
-        <input
-          matInput
-          formControlName="proveedor"
-          [matAutocomplete]="autoProveedor"
-          placeholder="Escriba para buscar o presione Enter para crear nuevo proveedor"
-          (keydown.enter)="onProveedorKeydown($any($event))" />
-        <mat-icon matIconPrefix svgIcon="mat:local_shipping"></mat-icon>
-        @if (mostrarBotonCrearProveedor$ | async) {
-          <button
-            mat-button
-            matSuffix
-            type="button"
-            (click)="crearProveedorDesdeBoton()"
-            class="btn-crear-cliente"
-            aria-label="Crear nuevo proveedor">
-            <mat-icon class="icon-sm" svgIcon="mat:add"></mat-icon>
-            <span class="btn-crear-text">Enter o click aquí para crear</span>
-          </button>
-        }
-        <mat-autocomplete
-          #autoProveedor="matAutocomplete"
-          [displayWith]="displayProveedor">
-          @for (prov of filteredProveedores$ | async; track prov) {
-            <mat-option [value]="prov">
-              {{ prov.nombre }}
-            </mat-option>
-          }
-        </mat-autocomplete>
-        @if (form.get("proveedor")?.hasError("required")) {
-          <mat-error>Seleccione un proveedor</mat-error>
-        }
-      </mat-form-field>
-    }
+    </div>
     <mat-form-field class="flex-1" appearance="outline">
       <mat-label>Origen del egreso</mat-label>
       <mat-select

@@ -39,7 +39,7 @@ export class FinancieroComponent {
       badge: 'Créditos clientes'
     },
     {
-      label: 'Proveedores',
+      label: 'Proveedores y personas',
       route: './proveedores'
     },
     {

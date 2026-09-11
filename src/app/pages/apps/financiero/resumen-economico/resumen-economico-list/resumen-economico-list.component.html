@@ -59,9 +59,9 @@
         </div>
 
         <div class="resumen-disclaimer-banner px-2 py-2 rounded text-sm">
-          Resumen de ayuda gerencial. Calcula ventas registradas en cortes del POS menos egresos
-          anotados en el sistema. No sustituye contabilidad, libros oficiales ni declaración de
-          renta. Un egreso aquí no implica gasto deducible sin soporte y criterio de un contador.
+          Resumen de ayuda gerencial. Ventas = tickets del corte (sin base). Cobranzas = abonos CxC.
+          Ingresos = ventas + cobranzas. Resultado = ingresos − egresos. No sustituye
+          contabilidad ni declaración de renta.
         </div>
 
         <mat-menu
@@ -192,9 +192,36 @@
                     </td>
                   </ng-container>
                   <ng-container matColumnDef="totalVentas">
-                    <th mat-header-cell *matHeaderCellDef>Ventas</th>
+                    <th
+                      mat-header-cell
+                      *matHeaderCellDef
+                      matTooltip="Tickets cobrados del corte (sin base de caja)">
+                      Ventas
+                    </th>
                     <td mat-cell *matCellDef="let row">
                       {{ formatCurrency(row.totalVentas) }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="totalCobranzas">
+                    <th
+                      mat-header-cell
+                      *matHeaderCellDef
+                      matTooltip="Abonos de cuentas por cobrar (ENTRADA_COBRANZA)">
+                      Cobranzas
+                    </th>
+                    <td mat-cell *matCellDef="let row">
+                      {{ formatCurrency(row.totalCobranzas) }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="ingresos">
+                    <th
+                      mat-header-cell
+                      *matHeaderCellDef
+                      matTooltip="Ventas + cobranzas (plata recibida, sin base de caja)">
+                      Ingresos
+                    </th>
+                    <td mat-cell *matCellDef="let row">
+                      {{ formatCurrency(ingresosDe(row)) }}
                     </td>
                   </ng-container>
                   <ng-container matColumnDef="totalEgresos">
@@ -212,7 +239,7 @@
                     </td>
                   </ng-container>
                   <ng-container matColumnDef="porcentajeUtilidad">
-                    <th mat-header-cell *matHeaderCellDef>% sobre ventas</th>
+                    <th mat-header-cell *matHeaderCellDef>% sobre ingresos</th>
                     <td mat-cell *matCellDef="let row">
                       {{ formatPct(row.porcentajeUtilidad) }}
                     </td>
@@ -289,9 +316,36 @@
                     </td>
                   </ng-container>
                   <ng-container matColumnDef="totalVentas">
-                    <th mat-header-cell *matHeaderCellDef>Ventas</th>
+                    <th
+                      mat-header-cell
+                      *matHeaderCellDef
+                      matTooltip="Tickets cobrados del corte (sin base de caja)">
+                      Ventas
+                    </th>
                     <td mat-cell *matCellDef="let row">
                       {{ formatCurrency(row.totalVentas) }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="totalCobranzas">
+                    <th
+                      mat-header-cell
+                      *matHeaderCellDef
+                      matTooltip="Abonos de cuentas por cobrar (ENTRADA_COBRANZA)">
+                      Cobranzas
+                    </th>
+                    <td mat-cell *matCellDef="let row">
+                      {{ formatCurrency(row.totalCobranzas) }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="ingresos">
+                    <th
+                      mat-header-cell
+                      *matHeaderCellDef
+                      matTooltip="Ventas + cobranzas (plata recibida, sin base de caja)">
+                      Ingresos
+                    </th>
+                    <td mat-cell *matCellDef="let row">
+                      {{ formatCurrency(ingresosDe(row)) }}
                     </td>
                   </ng-container>
                   <ng-container matColumnDef="totalEgresos">
@@ -309,7 +363,7 @@
                     </td>
                   </ng-container>
                   <ng-container matColumnDef="porcentajeUtilidad">
-                    <th mat-header-cell *matHeaderCellDef>% sobre ventas</th>
+                    <th mat-header-cell *matHeaderCellDef>% sobre ingresos</th>
                     <td mat-cell *matCellDef="let row">
                       {{ formatPct(row.porcentajeUtilidad) }}
                     </td>
@@ -381,9 +435,36 @@
                     </td>
                   </ng-container>
                   <ng-container matColumnDef="totalVentas">
-                    <th mat-header-cell *matHeaderCellDef>Ventas</th>
+                    <th
+                      mat-header-cell
+                      *matHeaderCellDef
+                      matTooltip="Tickets cobrados del corte (sin base de caja)">
+                      Ventas
+                    </th>
                     <td mat-cell *matCellDef="let row">
                       {{ formatCurrency(row.totalVentas) }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="totalCobranzas">
+                    <th
+                      mat-header-cell
+                      *matHeaderCellDef
+                      matTooltip="Abonos de cuentas por cobrar (ENTRADA_COBRANZA)">
+                      Cobranzas
+                    </th>
+                    <td mat-cell *matCellDef="let row">
+                      {{ formatCurrency(row.totalCobranzas) }}
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="ingresos">
+                    <th
+                      mat-header-cell
+                      *matHeaderCellDef
+                      matTooltip="Ventas + cobranzas (plata recibida, sin base de caja)">
+                      Ingresos
+                    </th>
+                    <td mat-cell *matCellDef="let row">
+                      {{ formatCurrency(ingresosDe(row)) }}
                     </td>
                   </ng-container>
                   <ng-container matColumnDef="totalEgresos">
@@ -401,7 +482,7 @@
                     </td>
                   </ng-container>
                   <ng-container matColumnDef="porcentajeUtilidad">
-                    <th mat-header-cell *matHeaderCellDef>% sobre ventas</th>
+                    <th mat-header-cell *matHeaderCellDef>% sobre ingresos</th>
                     <td mat-cell *matCellDef="let row">
                       {{ formatPct(row.porcentajeUtilidad) }}
                     </td>

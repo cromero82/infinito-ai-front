@@ -10,9 +10,12 @@ const STARTUP_TIME_MS = process.env.STARTUP_TIME_MS
   ? parseInt(process.env.STARTUP_TIME_MS, 10)
   : 300;
 
-// Estado del servicio
 let serviceReady = false;
-const serverStartTime = Date.now();
+
+function isServiceReady() {
+  // process.uptime() no se rompe si cambias la fecha del sistema (pruebas de “otro día”).
+  return serviceReady && process.uptime() * 1000 >= STARTUP_TIME_MS;
+}
 
 // Middleware para parsear JSON
 app.use(express.json());
@@ -20,8 +23,7 @@ app.use(express.json());
 // Health check endpoint similar a Spring Actuator
 app.get('/actuator/health', (req, res) => {
   const uptime = process.uptime();
-  const elapsedTime = Date.now() - serverStartTime;
-  const isReady = serviceReady && elapsedTime >= STARTUP_TIME_MS;
+  const isReady = isServiceReady();
 
   const healthStatus = {
     status: isReady ? 'UP' : 'STARTING',
@@ -55,8 +57,7 @@ app.get('/actuator/health', (req, res) => {
 
 // Health check endpoint simplificado (alternativa más ligera)
 app.get('/health', (req, res) => {
-  const elapsedTime = Date.now() - serverStartTime;
-  const isReady = serviceReady && elapsedTime >= STARTUP_TIME_MS;
+  const isReady = isServiceReady();
 
   const healthStatus = {
     status: isReady ? 'UP' : 'STARTING',

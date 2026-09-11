@@ -132,6 +132,25 @@ export class MovimientoOrigenFondosService {
     );
   }
 
+  /**
+   * Ledger por tipo y fecha de negocio (YYYY-MM-DD).
+   */
+  findPorTipo(
+    tipo: string,
+    desde: string,
+    hasta: string
+  ): Observable<MovimientoOrigenFondosDto[]> {
+    const headers = new HttpHeaders({ Accept: 'application/json' });
+    const params = new HttpParams()
+      .set('tipo', tipo)
+      .set('desde', desde)
+      .set('hasta', hasta);
+    return this.http.get<MovimientoOrigenFondosDto[]>(
+      `${this.apiUrl}/por-tipo`,
+      { headers, params }
+    );
+  }
+
   entradaManual(payload: MovimientoEntradaRequest): Observable<MovimientoOrigenFondosDto> {
     return this.postJson('/entrada-manual', payload);
   }

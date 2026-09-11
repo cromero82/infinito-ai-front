@@ -27,7 +27,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { FormsModule } from '@angular/forms';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import {
+  MatAutocompleteModule,
+  MatAutocompleteSelectedEvent
+} from '@angular/material/autocomplete';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
@@ -79,6 +82,8 @@ import {
   PersonaService
 } from '../service/persona.service';
 import { ProveedorEditComponent } from '../../proveedores/proveedor-edit/proveedor-edit.component';
+import { PersonaGestionDialogComponent } from '../../../dominios/persona/persona-gestion-dialog.component';
+import { TipoEgresoGestionDialogComponent } from '../../../dominios/tipo-egreso/tipo-egreso-gestion-dialog.component';
 import { FechaUtilService } from '../../../ventas/service/fecha-util.service';
 import { OrigenFondosService } from '../../origenes-fondos/service/origen-fondos.service';
 import {
@@ -102,6 +107,10 @@ import {
   paramsConsultarRangoHastaAhora,
   saldoOrigenConVentasSinCorte
 } from '../../origenes-fondos/util/origen-fondos-arbol.util';
+
+export type BeneficiarioSel =
+  | (ProveedorDto & { kind: 'proveedor' })
+  | (PersonaDto & { kind: 'persona' });
 
 @Component({
   selector: 'gm-egreso-edit',
@@ -137,6 +146,9 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
   get naturalezas() {
     return this.naturalezasOptions;
   }
+  /** Empresa o persona en el mismo campo de búsqueda. */
+  filteredBeneficiarios$!: Observable<BeneficiarioSel[]>;
+  mostrarBotonesCrearBeneficiario$!: Observable<boolean>;
   origenesArbol: OrigenFondosArbolItemDto[] = [];
   /** Árbol completo (incluye hijos) para cruzar plantillas destino ↔ padre. */
   private arbolCompleto: OrigenFondosArbolItemDto[] = [];
@@ -145,15 +157,14 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
   private plantillas: PlantillaNotificacionPagoDto[] = [];
   modoEstricto = false;
   private ventasSinCortePorMetodo = new Map<number, number>();
-  filteredProveedores$!: Observable<ProveedorDto[]>;
-  filteredPersonas$!: Observable<PersonaDto[]>;
-  mostrarBotonCrearProveedor$!: Observable<boolean>;
   valorEditando = false;
   /** Evita pisar naturaleza/tipo elegidos a mano al cambiar proveedor. */
   private aplicandoDefaultTipo = false;
 
-  get esBeneficiarioPersona(): boolean {
-    return esNaturalezaPersona(this.form?.get('naturaleza')?.value);
+  get labelNaturalezaSeleccionada(): string {
+    const codigo = this.form?.get('naturaleza')?.value as string | null;
+    const found = this.naturalezasOptions.find((n) => n.value === codigo);
+    return found?.label ?? codigo ?? '—';
   }
 
   /**
@@ -218,8 +229,10 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
       fecha: [new Date() as Date | null, Validators.required],
       valor: ['', [Validators.required, this.validarValorMonto.bind(this)]],
       descripcion: [''],
-      proveedor: [null as ProveedorDto | string | null],
-      persona: [null as PersonaDto | string | null],
+      beneficiario: [
+        null as BeneficiarioSel | string | null,
+        this.requireBeneficiario.bind(this)
+      ],
       origenCuentaIds: [[] as number[], this.requireOrigenes.bind(this)],
       tipoEgresoId: [null as number | null, Validators.required],
       naturaleza: [null as string | null, Validators.required]
@@ -397,25 +410,18 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     this.loadPersonas();
     this.loadTiposEgreso();
     this.loadOrigenesArbol();
-    this.syncBeneficiarioValidators();
 
-    this.filteredProveedores$ = this.form.get('proveedor')!.valueChanges.pipe(
-      startWith(this.form.get('proveedor')!.value),
-      map((value) => this.filterProveedores(value))
-    );
-
-    this.filteredPersonas$ = this.form.get('persona')!.valueChanges.pipe(
-      startWith(this.form.get('persona')!.value),
-      map((value) => this.filterPersonas(value))
+    this.filteredBeneficiarios$ = this.form.get('beneficiario')!.valueChanges.pipe(
+      startWith(this.form.get('beneficiario')!.value),
+      map((value) => this.filterBeneficiarios(value))
     );
 
     this.form
-      .get('proveedor')!
+      .get('beneficiario')!
       .valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe((prov) => {
-        if (typeof prov === 'object' && prov !== null && (prov as ProveedorDto).id) {
-          this.aplicarDefaultDesdeProveedor(prov as ProveedorDto);
-        }
+      .subscribe((sel) => {
+        this.aplicarDefaultDesdeBeneficiario(sel);
+        this.refreshOrigenesDisponibles();
       });
 
     this.form
@@ -440,24 +446,15 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     this.form
       .get('naturaleza')!
       .valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.syncBeneficiarioValidators();
-        this.refreshOrigenesDisponibles();
-      });
-
-    this.form
-      .get('persona')!
-      .valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe(() => this.refreshOrigenesDisponibles());
 
-    this.mostrarBotonCrearProveedor$ = this.filteredProveedores$.pipe(
+    this.mostrarBotonesCrearBeneficiario$ = this.filteredBeneficiarios$.pipe(
       combineLatestWith(
-        this.form.get('proveedor')!.valueChanges.pipe(startWith(this.form.get('proveedor')!.value))
+        this.form
+          .get('beneficiario')!
+          .valueChanges.pipe(startWith(this.form.get('beneficiario')!.value))
       ),
       map(([filtered, value]) => {
-        if (this.esBeneficiarioPersona) {
-          return false;
-        }
         if (typeof value === 'object' && value !== null) {
           return false;
         }
@@ -477,7 +474,7 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
           : ''
       });
       this.form.get('origenCuentaIds')?.disable({ emitEvent: false });
-      this.patchProveedorAfterLoad();
+      this.patchBeneficiarioAfterLoad();
     } else if (egreso) {
       const prov = egreso.proveedor;
       const per = egreso.persona;
@@ -487,18 +484,21 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
           : null,
         valor: this.formatValorDisplay(egreso.valor ?? 0),
         descripcion: egreso.descripcion || '',
-        proveedor: prov
-          ? { id: prov.id, nombre: prov.nombre, tipoEgreso: prov.tipoEgreso }
-          : null,
-        persona: per
-          ? {
+        beneficiario: per
+          ? this.asPersonaOpt({
               id: per.id,
               documento: per.documento || '',
               nombre: per.nombre || '',
               esDuenoPropietario: !!(per as { esDuenoPropietario?: boolean })
                 .esDuenoPropietario
-            }
-          : null,
+            })
+          : prov
+            ? this.asProveedorOpt({
+                id: prov.id,
+                nombre: prov.nombre,
+                tipoEgreso: prov.tipoEgreso
+              } as ProveedorDto)
+            : null,
         origenCuentaIds: this.idsOrigenDesdeEgreso(egreso),
         tipoEgresoId:
           egreso.tipoEgreso?.id ?? egreso.proveedor?.tipoEgreso?.id ?? null,
@@ -507,9 +507,8 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
           naturalezaCodigoFromTipo(egreso.tipoEgreso) ??
           naturalezaCodigoFromTipo(egreso.proveedor?.tipoEgreso)
       });
-      this.syncBeneficiarioValidators();
       this.cargarMontosDesdeEgreso(egreso);
-      this.patchProveedorAfterLoad();
+      this.patchBeneficiarioAfterLoad();
     } else {
       this.form.patchValue({ valor: this.formatValorDisplay(0) });
       this.iniciarWatcherPagoLinea();
@@ -684,17 +683,32 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!nombre) {
       return;
     }
-    const actual = this.form.get('proveedor')?.value;
-    if (typeof actual === 'object' && actual !== null && (actual as ProveedorDto).id) {
+    const actual = this.form.get('beneficiario')?.value;
+    if (typeof actual === 'object' && actual !== null && (actual as BeneficiarioSel).id) {
       return;
     }
-    const match = this.proveedores.find(
+    const matchProv = this.proveedores.find(
       (p) => p.nombre.toLowerCase() === nombre.toLowerCase()
     );
-    if (match) {
-      this.form.patchValue({ proveedor: match }, { emitEvent: false });
-    } else if (!actual || (typeof actual === 'string' && !actual.trim())) {
-      this.form.patchValue({ proveedor: nombre }, { emitEvent: true });
+    if (matchProv) {
+      this.form.patchValue(
+        { beneficiario: this.asProveedorOpt(matchProv) },
+        { emitEvent: false }
+      );
+      return;
+    }
+    const matchPer = this.personas.find(
+      (p) => p.nombre.toLowerCase() === nombre.toLowerCase()
+    );
+    if (matchPer) {
+      this.form.patchValue(
+        { beneficiario: this.asPersonaOpt(matchPer) },
+        { emitEvent: false }
+      );
+      return;
+    }
+    if (!actual || (typeof actual === 'string' && !actual.trim())) {
+      this.form.patchValue({ beneficiario: nombre }, { emitEvent: true });
     }
   }
 
@@ -791,12 +805,12 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!esNaturalezaPersona(this.form.get('naturaleza')?.value)) {
       return false;
     }
-    const per = this.form.get('persona')?.value;
+    const sel = this.form.get('beneficiario')?.value as BeneficiarioSel | string | null;
     return (
-      typeof per === 'object' &&
-      per != null &&
-      !!(per as PersonaDto).id &&
-      !!(per as PersonaDto).esDuenoPropietario
+      typeof sel === 'object' &&
+      sel != null &&
+      sel.kind === 'persona' &&
+      !!sel.esDuenoPropietario
     );
   }
 
@@ -872,7 +886,11 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     this.proveedorService.getProveedores().subscribe({
       next: (prov) => {
         this.proveedores = prov;
-        this.patchProveedorAfterLoad();
+        this.patchBeneficiarioAfterLoad();
+        this.aplicarDefaultDesdeBeneficiario(
+          this.form.get('beneficiario')?.value,
+          true
+        );
       }
     });
   }
@@ -881,35 +899,40 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     this.personaService.getAll(true).subscribe({
       next: (list) => {
         this.personas = list || [];
+        this.patchBeneficiarioAfterLoad();
       }
     });
   }
 
-  /** PERSONAL/DIVIDENDOS → persona requerida; resto → proveedor. */
-  private syncBeneficiarioValidators(): void {
-    const proveedorCtrl = this.form.get('proveedor');
-    const personaCtrl = this.form.get('persona');
-    if (!proveedorCtrl || !personaCtrl) {
-      return;
+  private asProveedorOpt(p: ProveedorDto): BeneficiarioSel {
+    return { ...p, kind: 'proveedor' };
+  }
+
+  private asPersonaOpt(p: PersonaDto): BeneficiarioSel {
+    return { ...p, kind: 'persona' };
+  }
+
+  private requireBeneficiario(control: AbstractControl): ValidationErrors | null {
+    const v = control.value as BeneficiarioSel | string | null;
+    if (
+      v &&
+      typeof v === 'object' &&
+      v.id &&
+      (v.kind === 'proveedor' || v.kind === 'persona')
+    ) {
+      return null;
     }
-    if (esNaturalezaPersona(this.form.get('naturaleza')?.value)) {
-      proveedorCtrl.clearValidators();
-      proveedorCtrl.setValue(null, { emitEvent: false });
-      personaCtrl.setValidators([Validators.required]);
-    } else {
-      personaCtrl.clearValidators();
-      personaCtrl.setValue(null, { emitEvent: false });
-      proveedorCtrl.setValidators([Validators.required]);
-    }
-    proveedorCtrl.updateValueAndValidity({ emitEvent: false });
-    personaCtrl.updateValueAndValidity({ emitEvent: false });
-    this.refreshOrigenesDisponibles();
+    return { required: true };
   }
 
   private loadTiposEgreso() {
     this.tipoEgresoService.getTiposEgreso().subscribe({
       next: (tipos) => {
         this.tiposEgreso = tipos || [];
+        this.aplicarDefaultDesdeBeneficiario(
+          this.form.get('beneficiario')?.value,
+          true
+        );
       }
     });
     this.naturalezaTipoEgresoService.getAll(true).subscribe({
@@ -924,17 +947,40 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  private aplicarDefaultDesdeProveedor(prov: ProveedorDto): void {
+  private aplicarDefaultDesdeBeneficiario(
+    sel: BeneficiarioSel | string | null,
+    soloSiTipoVacio = false
+  ): void {
+    if (typeof sel !== 'object' || sel == null || !sel.id) {
+      return;
+    }
+    if (sel.kind === 'persona') {
+      this.aplicarDefaultDesdePersona(soloSiTipoVacio);
+      return;
+    }
+    const full =
+      this.proveedores.find((p) => p.id === sel.id) ?? (sel as ProveedorDto);
+    this.aplicarDefaultDesdeProveedor(full, soloSiTipoVacio);
+  }
+
+  private aplicarDefaultDesdeProveedor(
+    prov: ProveedorDto,
+    soloSiTipoVacio = false
+  ): void {
     if (this.isEditMode) {
       return;
     }
-    const tipoId = prov.tipoEgreso?.id ?? null;
+    if (soloSiTipoVacio && this.form.get('tipoEgresoId')?.value != null) {
+      return;
+    }
+    const tipoId =
+      prov.tipoEgreso?.id != null ? Number(prov.tipoEgreso.id) : null;
     if (tipoId == null) {
       return;
     }
     this.aplicandoDefaultTipo = true;
     const tipo =
-      this.tiposEgreso.find((t) => t.id === tipoId) ||
+      this.tiposEgreso.find((t) => Number(t.id) === tipoId) ||
       (prov.tipoEgreso as TipoEgresoDto | undefined);
     const naturaleza = (naturalezaCodigoFromTipo(tipo) || null) as NaturalezaEgreso | null;
     this.form.patchValue(
@@ -942,96 +988,205 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
         tipoEgresoId: tipoId,
         ...(naturaleza ? { naturaleza } : {})
       },
+      { emitEvent: true }
+    );
+    this.aplicandoDefaultTipo = false;
+  }
+
+  /** Solo si aún no eligió tipo: sugiere el primer tipo PERSONAL (se puede cambiar). */
+  private aplicarDefaultDesdePersona(soloSiTipoVacio = true): void {
+    if (this.isEditMode) {
+      return;
+    }
+    if (soloSiTipoVacio && this.form.get('tipoEgresoId')?.value != null) {
+      return;
+    }
+    const personal = this.tiposEgreso.find(
+      (t) => naturalezaCodigoFromTipo(t) === 'PERSONAL'
+    );
+    if (!personal) {
+      return;
+    }
+    this.aplicandoDefaultTipo = true;
+    this.form.patchValue(
+      { tipoEgresoId: personal.id, naturaleza: 'PERSONAL' },
       { emitEvent: false }
     );
     this.aplicandoDefaultTipo = false;
   }
 
-  private patchProveedorAfterLoad() {
+  private patchBeneficiarioAfterLoad() {
     const formalizar = this.formalizarData;
     if (formalizar) {
       const nombre = (formalizar.terceroNombre ?? '').trim();
-      if (!nombre || this.proveedores.length === 0) {
-        if (nombre) {
-          this.form.patchValue({ proveedor: nombre }, { emitEvent: true });
-        }
+      if (!nombre) {
         return;
       }
-      const match = this.proveedores.find(
+      const matchProv = this.proveedores.find(
         (p) => p.nombre.toLowerCase() === nombre.toLowerCase()
       );
-      if (match) {
-        this.form.patchValue({ proveedor: match }, { emitEvent: false });
-        this.aplicarDefaultDesdeProveedor(match);
-      } else {
-        this.form.patchValue({ proveedor: nombre }, { emitEvent: true });
+      if (matchProv) {
+        this.form.patchValue(
+          { beneficiario: this.asProveedorOpt(matchProv) },
+          { emitEvent: false }
+        );
+        this.aplicarDefaultDesdeProveedor(matchProv);
+        return;
+      }
+      const matchPer = this.personas.find(
+        (p) => p.nombre.toLowerCase() === nombre.toLowerCase()
+      );
+      if (matchPer) {
+        this.form.patchValue(
+          { beneficiario: this.asPersonaOpt(matchPer) },
+          { emitEvent: false }
+        );
+        return;
+      }
+      if (this.proveedores.length || this.personas.length) {
+        this.form.patchValue({ beneficiario: nombre }, { emitEvent: true });
       }
       return;
     }
     const egreso = this.egresoData;
-    if (!egreso?.proveedor?.id) return;
-    const prov = this.proveedores.find((p) => p.id === egreso.proveedor?.id);
-    if (prov) this.form.patchValue({ proveedor: prov }, { emitEvent: false });
+    if (egreso?.persona?.id) {
+      const per = this.personas.find((p) => p.id === egreso.persona?.id);
+      if (per) {
+        this.form.patchValue(
+          { beneficiario: this.asPersonaOpt(per) },
+          { emitEvent: false }
+        );
+      }
+      return;
+    }
+    if (egreso?.proveedor?.id) {
+      const prov = this.proveedores.find((p) => p.id === egreso.proveedor?.id);
+      if (prov) {
+        this.form.patchValue(
+          { beneficiario: this.asProveedorOpt(prov) },
+          { emitEvent: false }
+        );
+      }
+    }
   }
 
-  private filterProveedores(value: ProveedorDto | string | null): ProveedorDto[] {
-    if (typeof value === 'object' && value !== null) return [...this.proveedores];
-    const filterValue = typeof value === 'string' ? value.toLowerCase().trim() : '';
-    if (!filterValue) return [...this.proveedores];
-    return this.proveedores.filter((p) => p.nombre.toLowerCase().includes(filterValue));
+  private filterBeneficiarios(
+    value: BeneficiarioSel | string | null
+  ): BeneficiarioSel[] {
+    const empresas = this.proveedores.map((p) => this.asProveedorOpt(p));
+    const personas = this.personas.map((p) => this.asPersonaOpt(p));
+    const all = [...empresas, ...personas];
+    const filterValue =
+      typeof value === 'string' ? value.toLowerCase().trim() : '';
+    if (!filterValue || typeof value === 'object') {
+      return all;
+    }
+    return all.filter((item) => {
+      const nombre = (item.nombre || '').toLowerCase();
+      if (nombre.includes(filterValue)) {
+        return true;
+      }
+      if (item.kind === 'persona') {
+        return (item.documento || '').toLowerCase().includes(filterValue);
+      }
+      return (item.documento || '').toLowerCase().includes(filterValue);
+    });
   }
 
-  private filterPersonas(value: PersonaDto | string | null): PersonaDto[] {
-    if (typeof value === 'object' && value !== null) return [...this.personas];
-    const filterValue = typeof value === 'string' ? value.toLowerCase().trim() : '';
-    if (!filterValue) return [...this.personas];
-    return this.personas.filter(
-      (p) =>
-        (p.nombre || '').toLowerCase().includes(filterValue) ||
-        (p.documento || '').toLowerCase().includes(filterValue)
-    );
-  }
-
-  displayProveedor(prov: ProveedorDto | null): string {
-    return prov ? prov.nombre : '';
-  }
-
-  displayPersona(per: PersonaDto | null): string {
-    if (!per) {
+  displayBeneficiario = (opt: BeneficiarioSel | string | null): string => {
+    if (!opt) {
       return '';
     }
-    return per.documento ? `${per.nombre} (${per.documento})` : per.nombre;
+    if (typeof opt === 'string') {
+      return opt;
+    }
+    if (opt.kind === 'persona') {
+      return opt.documento ? `${opt.nombre} (${opt.documento})` : opt.nombre;
+    }
+    return opt.nombre || '';
+  };
+
+  etiquetaOpcionBeneficiario(opt: BeneficiarioSel): string {
+    if (opt.kind === 'persona' && opt.documento) {
+      return `${opt.nombre} (${opt.documento})`;
+    }
+    return opt.nombre || '';
   }
 
-  onProveedorKeydown(event: Event): void {
+  onBeneficiarioSelected(event: MatAutocompleteSelectedEvent): void {
+    const sel = event.option.value as BeneficiarioSel;
+    this.form.patchValue({ beneficiario: sel });
+    this.aplicarDefaultDesdeBeneficiario(sel);
+  }
+
+  onBeneficiarioKeydown(event: Event): void {
     const ke = event as KeyboardEvent;
-    if (ke.key !== 'Enter') return;
-
-    const value = this.form.get('proveedor')?.value;
-    if (typeof value === 'object' && value !== null) return;
-
+    if (ke.key !== 'Enter') {
+      return;
+    }
+    const value = this.form.get('beneficiario')?.value;
+    if (typeof value === 'object' && value !== null) {
+      return;
+    }
     const inputValue = typeof value === 'string' ? value.trim() : '';
-    if (!inputValue) return;
-
-    const exact = this.proveedores.find(
-      (p) => p.nombre.toLowerCase() === inputValue.toLowerCase()
+    if (!inputValue) {
+      return;
+    }
+    const matches = this.filterBeneficiarios(value);
+    const exact = matches.find(
+      (p) => (p.nombre || '').toLowerCase() === inputValue.toLowerCase()
     );
     if (exact) {
       ke.preventDefault();
       ke.stopPropagation();
-      this.form.patchValue({ proveedor: exact });
-      return;
+      this.form.patchValue({ beneficiario: exact });
     }
+  }
 
-    if (this.filterProveedores(value).length === 0) {
-      ke.preventDefault();
-      ke.stopPropagation();
-      this.crearProveedorDesdeBoton();
-    }
+  abrirCatalogoTipos(): void {
+    const ref = this.dialog.open(TipoEgresoGestionDialogComponent, {
+      width: '980px',
+      maxWidth: '96vw',
+      autoFocus: false
+    });
+    ref.afterClosed().subscribe(() => {
+      this.tipoEgresoService.getTiposEgreso().subscribe({
+        next: (tipos) => {
+          this.tiposEgreso = tipos || [];
+          const tipoId = this.form.get('tipoEgresoId')?.value;
+          const tipo = this.tiposEgreso.find((t) => Number(t.id) === Number(tipoId));
+          const codigo = naturalezaCodigoFromTipo(tipo);
+          if (codigo) {
+            this.form.patchValue({ naturaleza: codigo }, { emitEvent: true });
+          }
+        }
+      });
+    });
   }
 
   crearProveedorDesdeBoton(): void {
     this.openNuevoProveedor();
+  }
+
+  crearPersonaDesdeBoton(): void {
+    const valor = this.form.get('beneficiario')?.value;
+    const initialNombre =
+      typeof valor === 'string' && valor?.trim() ? valor.trim() : undefined;
+    const ref = this.dialog.open(PersonaGestionDialogComponent, {
+      width: '720px',
+      maxWidth: '95vw',
+      data: {
+        initialNombre,
+        startInCreate: true,
+        returnOnSave: true
+      }
+    });
+    ref.afterClosed().subscribe((result: PersonaDto | undefined) => {
+      if (result?.id) {
+        this.personas = [...this.personas, result];
+        this.form.patchValue({ beneficiario: this.asPersonaOpt(result) });
+      }
+    });
   }
 
   openNuevoProveedor(event?: Event) {
@@ -1039,7 +1194,7 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
       event.stopPropagation();
       (event as KeyboardEvent)?.preventDefault?.();
     }
-    const valor = this.form.get('proveedor')?.value;
+    const valor = this.form.get('beneficiario')?.value;
     const initialNombre =
       typeof valor === 'string' && valor?.trim() ? valor.trim() : undefined;
     const proveedorDialogRef = this.dialog.open(ProveedorEditComponent, {
@@ -1049,7 +1204,7 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
     proveedorDialogRef.afterClosed().subscribe((result: ProveedorDto | undefined) => {
       if (result) {
         this.proveedores = [...this.proveedores, result];
-        this.form.patchValue({ proveedor: result });
+        this.form.patchValue({ beneficiario: this.asProveedorOpt(result) });
       }
     });
   }
@@ -1294,29 +1449,21 @@ export class EgresoEditComponent implements OnInit, OnDestroy, AfterViewInit {
 
     const form = this.form.getRawValue();
     const naturaleza = form.naturaleza as NaturalezaEgreso;
-    const usaPersona = esNaturalezaPersona(naturaleza);
+    const sel = form.beneficiario as BeneficiarioSel | string | null;
 
     let proveedorPayload: { id: number } | null = null;
     let personaPayload: { id: number } | null = null;
 
-    if (usaPersona) {
-      const per = form.persona as PersonaDto;
-      if (!per || typeof per !== 'object' || !per.id) {
-        this.snackBar.open('Seleccione una persona beneficiaria', 'Cerrar', {
-          duration: 4000
-        });
-        return;
-      }
-      personaPayload = { id: per.id };
+    if (!sel || typeof sel !== 'object' || !sel.id) {
+      this.snackBar.open('Indique a quién se pagó (empresa o persona)', 'Cerrar', {
+        duration: 4000
+      });
+      return;
+    }
+    if (sel.kind === 'persona') {
+      personaPayload = { id: sel.id };
     } else {
-      const prov = form.proveedor as ProveedorDto;
-      if (!prov || typeof prov !== 'object' || !prov.id) {
-        this.snackBar.open('Seleccione o cree un proveedor', 'Cerrar', {
-          duration: 4000
-        });
-        return;
-      }
-      proveedorPayload = { id: prov.id };
+      proveedorPayload = { id: sel.id };
     }
 
     const formalizar = this.formalizarData;

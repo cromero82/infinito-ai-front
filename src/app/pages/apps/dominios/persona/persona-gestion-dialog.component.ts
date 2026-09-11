@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, Optional } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -7,6 +7,7 @@ import {
   Validators
 } from '@angular/forms';
 import {
+  MAT_DIALOG_DATA,
   MatDialog,
   MatDialogModule,
   MatDialogRef
@@ -30,6 +31,16 @@ import {
   PersonaService,
   PersonaWriteDto
 } from '../../financiero/egresos/service/persona.service';
+
+export interface PersonaGestionDialogData {
+  initialNombre?: string;
+  /** Cierra el diálogo con la ficha guardada (alta o edición). */
+  returnOnSave?: boolean;
+  /** Abre directo en alta, sin listado. */
+  startInCreate?: boolean;
+  /** Abre directo en edición. */
+  editPersona?: PersonaDto;
+}
 
 @Component({
   selector: 'vex-persona-gestion-dialog',
@@ -65,7 +76,8 @@ export class PersonaGestionDialogComponent implements OnInit {
     private personaService: PersonaService,
     private dialogRef: MatDialogRef<PersonaGestionDialogComponent>,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    @Optional() @Inject(MAT_DIALOG_DATA) public data: PersonaGestionDialogData | null
   ) {
     this.form = this.fb.group({
       documento: ['', [Validators.required, Validators.maxLength(50)]],
@@ -82,6 +94,14 @@ export class PersonaGestionDialogComponent implements OnInit {
     this.searchCtrl.valueChanges
       .pipe(debounceTime(250), distinctUntilChanged())
       .subscribe((q) => this.applyFilter(q));
+    if (this.data?.editPersona) {
+      this.startEdit(this.data.editPersona);
+    } else if (this.data?.startInCreate || this.data?.initialNombre) {
+      this.startCreate();
+      if (this.data.initialNombre) {
+        this.form.patchValue({ nombre: this.data.initialNombre });
+      }
+    }
   }
 
   close(): void {
@@ -182,9 +202,13 @@ export class PersonaGestionDialogComponent implements OnInit {
         : this.personaService.create(dto);
 
     req$.subscribe({
-      next: () => {
+      next: (saved: PersonaDto) => {
         this.saving = false;
         this.toast(this.editingId != null ? 'Persona actualizada' : 'Persona creada');
+        if (this.data?.returnOnSave) {
+          this.dialogRef.close(saved);
+          return;
+        }
         this.cancelForm();
         this.load();
       },

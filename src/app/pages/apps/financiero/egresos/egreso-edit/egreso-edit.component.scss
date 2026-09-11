@@ -1,3 +1,45 @@
+.tipo-egreso-field {
+  margin-bottom: 0;
+}
+
+.tipo-categoria-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  box-sizing: border-box;
+  min-height: 22px;
+  margin: 0 0 10px;
+  padding: 0 2px;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.tipo-categoria-row--empty {
+  min-height: 22px;
+}
+
+.tipo-categoria-row button {
+  min-height: 28px;
+  padding: 0 8px;
+  line-height: 28px;
+  font-size: 0.75rem;
+}
+
+.beneficiario-crear {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 12px;
+}
+
+.beneficiario-crear-label {
+  font-size: 0.8125rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
 .dialog-header {
   cursor: move;
 }

@@ -76,15 +76,11 @@ const MESES_CORTO = [
 
           @if (cuenta) {
             <div class="cxc-rail-saldos">
-              <div class="row">
+              <div class="row total">
                 <span>Total ticket</span>
-                <span>{{
+                <strong>{{
                   formatMoney(cuenta.totalTicket ?? cuenta.montoOriginal)
-                }}</span>
-              </div>
-              <div class="row">
-                <span>Original crédito</span>
-                <span>{{ formatMoney(cuenta.montoOriginal) }}</span>
+                }}</strong>
               </div>
               <div class="row">
                 <span>Abonado</span>
@@ -108,7 +104,13 @@ const MESES_CORTO = [
                 <ul class="abonos-list">
                   @for (a of abonos; track a.id) {
                     <li>
-                      <span class="f">{{ formatFecha(a.fechaAbono) }}</span>
+                      <span
+                        class="f"
+                        [matTooltip]="trazaFechaAbono(a.fechaAbono)"
+                        [matTooltipDisabled]="!a.fechaAbono"
+                        matTooltipPosition="above">
+                        {{ formatFecha(a.fechaAbono) }}
+                      </span>
                       <span class="m">
                         {{ a.metodoPagoDescripcion || '—' }}
                         @if (a.clientePagadorNombre) {
@@ -274,6 +276,13 @@ const MESES_CORTO = [
         gap: 8px;
         line-height: 1.5;
       }
+      .cxc-rail-saldos .total span,
+      .cxc-rail-saldos .total strong {
+        font-weight: 700;
+      }
+      .cxc-rail-saldos .total strong {
+        font-variant-numeric: tabular-nums;
+      }
       .cxc-rail-saldos .saldo {
         margin-top: 8px;
         margin-left: -6px;
@@ -333,6 +342,7 @@ const MESES_CORTO = [
       }
       .abonos-list .f {
         color: rgba(0, 0, 0, 0.5);
+        cursor: help;
       }
       .abonos-list .m {
         min-width: 0;
@@ -525,10 +535,11 @@ export class CxcTicketRailComponent implements OnChanges {
     if (!this.cuenta) {
       return 0;
     }
+    const total =
+      Number(this.cuenta.totalTicket ?? this.cuenta.montoOriginal) || 0;
     return Math.max(
       0,
-      (Number(this.cuenta.montoOriginal) || 0) -
-        (Number(this.cuenta.saldoPendiente) || 0)
+      total - (Number(this.cuenta.saldoPendiente) || 0)
     );
   }
 
@@ -571,6 +582,11 @@ export class CxcTicketRailComponent implements OnChanges {
     } catch {
       return fecha;
     }
+  }
+
+  /** Misma traza que tickets/historial: «Hoy, 8:30 p. m.». */
+  trazaFechaAbono(fecha: string | null | undefined): string {
+    return this.fechaUtil.formatDate(fecha) || '';
   }
 
   private diasDesdeOrigen(cuenta: CuentaPorCobrarDto): number {

@@ -107,6 +107,10 @@ table td {
     td.col-fisico {
       background-color: rgba(76, 175, 80, 0.18) !important;
     }
+
+    td.col-cobranzas {
+      background-color: rgba(33, 150, 243, 0.16) !important;
+    }
   }
 }
 
@@ -417,12 +421,26 @@ table td {
     font-variant-numeric: tabular-nums;
   }
 
+  th.col-cobranzas,
+  td.col-cobranzas {
+    background-color: rgba(33, 150, 243, 0.08);
+    font-variant-numeric: tabular-nums;
+  }
+
   tr:hover td.col-fisico {
     background-color: rgba(76, 175, 80, 0.12);
   }
 
+  tr:hover td.col-cobranzas {
+    background-color: rgba(33, 150, 243, 0.12);
+  }
+
   tr.ingresos-dia-header td.col-fisico {
     background-color: rgba(76, 175, 80, 0.14);
+  }
+
+  tr.ingresos-dia-header td.col-cobranzas {
+    background-color: rgba(33, 150, 243, 0.14);
   }
 }
 
@@ -484,6 +502,10 @@ table td {
 
       td.col-fisico {
         background-color: rgba(76, 175, 80, 0.22) !important;
+      }
+
+      td.col-cobranzas {
+        background-color: rgba(33, 150, 243, 0.22) !important;
       }
     }
 
@@ -559,12 +581,25 @@ table td {
       background-color: rgba(76, 175, 80, 0.14);
     }
 
+    th.col-cobranzas,
+    td.col-cobranzas {
+      background-color: rgba(33, 150, 243, 0.16);
+    }
+
     tr:hover td.col-fisico {
       background-color: rgba(76, 175, 80, 0.2);
     }
 
+    tr:hover td.col-cobranzas {
+      background-color: rgba(33, 150, 243, 0.22);
+    }
+
     tr.ingresos-dia-header td.col-fisico {
       background-color: rgba(76, 175, 80, 0.22);
+    }
+
+    tr.ingresos-dia-header td.col-cobranzas {
+      background-color: rgba(33, 150, 243, 0.24);
     }
   }
 }

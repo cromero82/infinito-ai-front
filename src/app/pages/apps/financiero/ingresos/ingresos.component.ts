@@ -25,7 +25,7 @@ import {
   CorteVentaService,
   CorteVentaSearchItemDto
 } from '../../ventas/service/corte-venta.service';
-import { Subject, Observable, of } from 'rxjs';
+import { Subject, Observable, of, forkJoin } from 'rxjs';
 import {
   takeUntil,
   switchMap,
@@ -42,33 +42,47 @@ import {
   DistribucionEfectivoDialogResult
 } from './distribucion-efectivo-dialog/distribucion-efectivo-dialog.component';
 import { MovimientoReferenciaDialogComponent } from '../origenes-fondos/movimiento-referencia-dialog/movimiento-referencia-dialog.component';
+import {
+  MovimientoOrigenFondosDto,
+  MovimientoOrigenFondosService
+} from '../origenes-fondos/service/movimiento-origen-fondos.service';
 import { SesionesService } from '../../ventas/service/sesiones.service';
 import { Router } from '@angular/router';
+
+interface MontoPorMetodo {
+  metodoPagoId: number;
+  metodoPagoNombre: string;
+  total: number;
+}
 
 interface VentasPorFecha {
   fecha: string;
   /** Clave YYYY-MM-DD para agrupar / track. */
   fechaKey: string;
+  /** Tickets cobrados del corte. */
+  totalVentas: number;
+  /** Abonos CxC del día (`ENTRADA_COBRANZA`). */
+  totalCobranzas: number;
+  /** Ventas + cobranzas (total recibido). */
   total: number;
   cantidadCortes: number;
   /** Ids de corte_venta del día (para modal Ver). */
   corteIds: number[];
-  detalles: {
-    metodoPagoId: number;
-    metodoPagoNombre: string;
-    total: number;
-  }[];
+  /** Recibido por medio (ventas + cobranzas) para tiles y gráfica. */
+  detalles: MontoPorMetodo[];
+}
+
+interface CargaIngresosRango {
+  cortes: CorteVentaSearchItemDto[];
+  cobranzas: MovimientoOrigenFondosDto[];
 }
 
 interface CortesPorDiaGrupo {
   fechaKey: string;
   fechaLabel: string;
   totalVentas: number;
-  detalles: {
-    metodoPagoId: number;
-    metodoPagoNombre: string;
-    total: number;
-  }[];
+  totalCobranzas: number;
+  detalles: MontoPorMetodo[];
   cortes: CorteVentaSearchItemDto[];
 }
 
@@ -107,6 +121,8 @@ export class IngresosComponent implements OnInit, OnDestroy {
   /** Vista datos: cortes agrupados por día con subtotal de ventas. */
   cortesPorDia: CortesPorDiaGrupo[] = [];
   todosCortesVenta: CorteVentaSearchItemDto[] = [];
+  /** Cobranzas ENTRADA_COBRANZA indexadas por día YYYY-MM-DD → método → monto. */
+  private cobranzasPorFecha = new Map<string, Map<number, number>>();
   estadoCorteCtrl = new FormControl<
     'vigentes' | 'creada' | 'revisada' | 'eliminado' | 'todos'
   >('vigentes');
@@ -231,6 +247,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
 
   constructor(
     private corteVentaService: CorteVentaService,
+    private movimientoOrigenFondosService: MovimientoOrigenFondosService,
     private metodoPagoService: MetodoPagoService,
     private dialog: MatDialog,
     private authService: AuthService,
@@ -296,8 +313,8 @@ export class IngresosComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe({
-        next: (cortes) => {
-          this.aplicarRespuestaSearch(cortes);
+        next: (carga) => {
+          this.aplicarRespuestaSearch(carga.cortes, carga.cobranzas);
           this.loading = false;
         },
         error: (err) => {
@@ -315,7 +332,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
     return `${year}-${month}-${day}T${hora}`;
   }
 
-  private obtenerVentasUltimos7Dias(): Observable<CorteVentaSearchItemDto[]> {
+  private obtenerVentasUltimos7Dias(): Observable<CargaIngresosRango> {
     const hoy = new Date();
     let fechaInicio: Date;
     let fechaFin: Date;
@@ -354,10 +371,24 @@ export class IngresosComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    return this.corteVentaService.search(
+    return this.buscarCortesYCobranzas(
       this.construirFechaHoraISO(fechaInicio, '00:00:00'),
       this.construirFechaHoraISO(fechaFin, '23:59:59')
     );
+  }
+
+  private buscarCortesYCobranzas(
+    fechaIniISO: string,
+    fechaFinISO: string
+  ): Observable<CargaIngresosRango> {
+    const desde = fechaIniISO.slice(0, 10);
+    const hasta = fechaFinISO.slice(0, 10);
+    return forkJoin({
+      cortes: this.corteVentaService.search(fechaIniISO, fechaFinISO),
+      cobranzas: this.movimientoOrigenFondosService
+        .findPorTipo('ENTRADA_COBRANZA', desde, hasta)
+        .pipe(catchError(() => of([])))
+    });
   }
 
   ngOnDestroy(): void {
@@ -405,8 +436,8 @@ export class IngresosComponent implements OnInit, OnDestroy {
     this.obtenerVentasUltimos7Dias()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (cortes) => {
-          this.aplicarRespuestaSearch(cortes);
+        next: (carga) => {
+          this.aplicarRespuestaSearch(carga.cortes, carga.cobranzas);
           this.loading = false;
         },
         error: (err) => {
@@ -515,15 +546,14 @@ export class IngresosComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    this.corteVentaService
-      .search(
-        this.construirFechaHoraISO(fechaInicio, '00:00:00'),
-        this.construirFechaHoraISO(fechaFin, '23:59:59')
-      )
+    this.buscarCortesYCobranzas(
+      this.construirFechaHoraISO(fechaInicio, '00:00:00'),
+      this.construirFechaHoraISO(fechaFin, '23:59:59')
+    )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (cortes) => {
-          this.aplicarRespuestaSearch(cortes);
+        next: (carga) => {
+          this.aplicarRespuestaSearch(carga.cortes, carga.cobranzas);
           this.loading = false;
         },
         error: (err) => {
@@ -547,15 +577,14 @@ export class IngresosComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
-    this.corteVentaService
-      .search(
-        this.construirFechaHoraISO(fechaInicio, '00:00:00'),
-        this.construirFechaHoraISO(fechaFin, '23:59:59')
-      )
+    this.buscarCortesYCobranzas(
+      this.construirFechaHoraISO(fechaInicio, '00:00:00'),
+      this.construirFechaHoraISO(fechaFin, '23:59:59')
+    )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (cortes) => {
-          this.aplicarRespuestaSearch(cortes);
+        next: (carga) => {
+          this.aplicarRespuestaSearch(carga.cortes, carga.cobranzas);
           this.loading = false;
         },
         error: (err) => {
@@ -568,9 +597,13 @@ export class IngresosComponent implements OnInit, OnDestroy {
 
   /**
    * Guarda la respuesta cruda para el modo listado (orden descendente por fechaIni)
-   * y construye el agregado solo para el dashboard.
+   * y construye el agregado del dashboard: ventas del corte + cobranzas CxC.
    */
-  private aplicarRespuestaSearch(cortes: CorteVentaSearchItemDto[]): void {
+  private aplicarRespuestaSearch(
+    cortes: CorteVentaSearchItemDto[],
+    cobranzas: MovimientoOrigenFondosDto[] = []
+  ): void {
+    this.indexarCobranzas(cobranzas);
     const lista = cortes ?? [];
     this.todosCortesVenta = [...lista].sort((a, b) =>
       b.fechaIni.localeCompare(a.fechaIni)
@@ -579,6 +612,52 @@ export class IngresosComponent implements OnInit, OnDestroy {
     this.procesarRespuestaDashboardDesdeCortes(
       lista.filter((c) => c.estado !== 'eliminado')
     );
+  }
+
+  private indexarCobranzas(movs: MovimientoOrigenFondosDto[]): void {
+    this.cobranzasPorFecha.clear();
+    for (const m of movs || []) {
+      const key = typeof m.fecha === 'string' ? m.fecha.slice(0, 10) : '';
+      const metodoPagoId = Number(m.metodoPagoId);
+      if (!key || !Number.isFinite(metodoPagoId) || metodoPagoId <= 0) {
+        continue;
+      }
+      const monto = Math.round(Number(m.impacto ?? m.valor) || 0);
+      if (!monto) {
+        continue;
+      }
+      let porMetodo = this.cobranzasPorFecha.get(key);
+      if (!porMetodo) {
+        porMetodo = new Map<number, number>();
+        this.cobranzasPorFecha.set(key, porMetodo);
+      }
+      porMetodo.set(metodoPagoId, (porMetodo.get(metodoPagoId) ?? 0) + monto);
+    }
+  }
+
+  private fusionarPorMetodo(
+    base: Map<number, number>,
+    extra?: Map<number, number>
+  ): Map<number, number> {
+    const out = new Map(base);
+    if (!extra) {
+      return out;
+    }
+    for (const [metodoPagoId, monto] of extra) {
+      out.set(metodoPagoId, (out.get(metodoPagoId) ?? 0) + monto);
+    }
+    return out;
+  }
+
+  private sumaMapa(porMetodo?: Map<number, number>): number {
+    if (!porMetodo) {
+      return 0;
+    }
+    let total = 0;
+    for (const monto of porMetodo.values()) {
+      total += monto;
+    }
+    return total;
   }
 
   private aplicarFiltroEstadoCorte(): void {
@@ -611,27 +690,18 @@ export class IngresosComponent implements OnInit, OnDestroy {
       const cortes = (grupos.get(fechaKey) ?? []).slice().sort((a, b) =>
         b.fechaIni.localeCompare(a.fechaIni)
       );
-      const agregado = this.corteVentaService.agruparPorFechaCalendario(cortes)[0];
-      const detalles = (agregado?.ventasTipo || [])
-        .map((vt) => {
-          const monto = CorteVentaService.montoVentasDeTipo(vt);
-          if (monto === 0) {
-            return null;
-          }
-          const metodoPago = this.metodosPago.find((m) => m.id === vt.metodoPagoId);
-          return {
-            metodoPagoId: vt.metodoPagoId,
-            metodoPagoNombre:
-              metodoPago?.descripcion || `Método ${vt.metodoPagoId}`,
-            total: monto
-          };
-        })
-        .filter((d): d is NonNullable<typeof d> => d != null);
-      const totalVentas = detalles.reduce((s, d) => s + d.total, 0);
+      const ventasPorMetodo = CorteVentaService.agregarIngresosPorMetodo(cortes);
+      const cobranzasPorMetodo = this.cobranzasPorFecha.get(fechaKey);
+      const detalles = this.detallesDesdeMapa(
+        this.fusionarPorMetodo(ventasPorMetodo, cobranzasPorMetodo)
+      );
+      const totalVentas = this.sumaMapa(ventasPorMetodo);
+      const totalCobranzas = this.sumaMapa(cobranzasPorMetodo);
       return {
         fechaKey,
-        fechaLabel: this.formatearFechaParaLabel(agregado?.fechaIni ?? cortes[0].fechaIni),
+        fechaLabel: this.formatearFechaParaLabel(cortes[0].fechaIni),
         totalVentas,
+        totalCobranzas,
         detalles,
         cortes
       };
@@ -639,46 +709,51 @@ export class IngresosComponent implements OnInit, OnDestroy {
   }
 
   private procesarRespuestaDashboardDesdeCortes(cortes: CorteVentaSearchItemDto[]): void {
-    const agrupados =
-      this.corteVentaService.agruparPorFechaCalendario(cortes || []);
+    const porDia = new Map<string, CorteVentaSearchItemDto[]>();
+    for (const c of cortes || []) {
+      const fechaKey = CorteVentaService.fechaCalendarioDeCorte(c);
+      if (!fechaKey) {
+        continue;
+      }
+      const arr = porDia.get(fechaKey);
+      if (arr) {
+        arr.push(c);
+      } else {
+        porDia.set(fechaKey, [c]);
+      }
+    }
 
-    this.ventasPorFecha = agrupados.map((item) => {
-      const fechaKey = CorteVentaService.fechaCalendarioDeCorte(item);
-      const fechaLabel = this.formatearFechaParaLabel(item.fechaIni);
-      const detalles = (item.ventasTipo || [])
-        .map((vt) => {
-          const monto = CorteVentaService.montoVentasDeTipo(vt);
-          if (monto === 0) {
-            return null;
-          }
-          const metodoPago = this.metodosPago.find(
-            (m) => m.id === vt.metodoPagoId
-          );
-          return {
-            metodoPagoId: vt.metodoPagoId,
-            metodoPagoNombre:
-              metodoPago?.descripcion || `Método ${vt.metodoPagoId}`,
-            total: monto
-          };
-        })
-        .filter((d): d is NonNullable<typeof d> => d != null);
+    const keys = new Set<string>([
+      ...porDia.keys(),
+      ...this.cobranzasPorFecha.keys()
+    ]);
 
-      const totalDia = detalles.reduce((s, d) => s + d.total, 0);
-      const delDia = (cortes || []).filter(
-        (c) =>
-          CorteVentaService.fechaCalendarioDeCorte(c) === fechaKey
+    this.ventasPorFecha = Array.from(keys).map((fechaKey) => {
+      const delDia = porDia.get(fechaKey) ?? [];
+      const ordenados = delDia
+        .slice()
+        .sort((a, b) => a.fechaIni.localeCompare(b.fechaIni));
+      const ventasPorMetodo = CorteVentaService.agregarIngresosPorMetodo(ordenados);
+      const cobranzasPorMetodo = this.cobranzasPorFecha.get(fechaKey);
+      const totalVentas = this.sumaMapa(ventasPorMetodo);
+      const totalCobranzas = this.sumaMapa(cobranzasPorMetodo);
+      const detalles = this.detallesDesdeMapa(
+        this.fusionarPorMetodo(ventasPorMetodo, cobranzasPorMetodo)
       );
-      const cantidadCortes = delDia.length;
-      const corteIds = delDia
+      const corteIds = ordenados
         .map((c) => c.id)
         .filter((id) => Number.isFinite(id))
         .sort((a, b) => a - b);
 
       return {
-        fecha: fechaLabel,
+        fecha: ordenados[0]
+          ? this.formatearFechaParaLabel(ordenados[0].fechaIni)
+          : this.formatearFechaParaLabel(`${fechaKey}T12:00:00`),
         fechaKey,
-        total: totalDia,
-        cantidadCortes,
+        totalVentas,
+        totalCobranzas,
+        total: totalVentas + totalCobranzas,
+        cantidadCortes: ordenados.length,
         corteIds,
         detalles
       };
@@ -719,30 +794,40 @@ export class IngresosComponent implements OnInit, OnDestroy {
     return m?.descripcion ?? `Método ${metodoPagoId}`;
   }
 
-  /** Ventas del sistema (tickets) por medio — fuente del dashboard Ingresos. */
+  /** Ventas POS del corte por medio (sin cobranzas ni base). */
   ventasTipoDeCorte(corte: CorteVentaSearchItemDto): {
     metodoPagoId: number;
     label: string;
     total: number;
   }[] {
-    return (corte.ventasTipo || [])
-      .map((vt) => {
-        const total = CorteVentaService.montoVentasDeTipo(vt);
-        if (total === 0) {
-          return null;
-        }
-        return {
-          metodoPagoId: vt.metodoPagoId,
-          label: this.metodoPagoDescripcion(vt.metodoPagoId),
-          total
-        };
-      })
-      .filter((x): x is NonNullable<typeof x> => x != null);
+    return this.detallesIngresoDesdeCortes([corte]).map((d) => ({
+      metodoPagoId: d.metodoPagoId,
+      label: d.metodoPagoNombre,
+      total: d.total
+    }));
   }
 
-  /** Suma de ventas sistema del corte (KPI de ingresos). */
+  /** Suma de ventas POS del corte (sin cobranzas ni base de caja). */
   totalVentasDeCorte(corte: CorteVentaSearchItemDto): number {
     return this.ventasTipoDeCorte(corte).reduce((s, v) => s + v.total, 0);
+  }
+
+  private detallesIngresoDesdeCortes(
+    cortes: CorteVentaSearchItemDto[]
+  ): MontoPorMetodo[] {
+    return this.detallesDesdeMapa(
+      CorteVentaService.agregarIngresosPorMetodo(cortes)
+    );
+  }
+
+  private detallesDesdeMapa(porMetodo: Map<number, number>): MontoPorMetodo[] {
+    return Array.from(porMetodo.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([metodoPagoId, total]) => ({
+        metodoPagoId,
+        metodoPagoNombre: this.metodoPagoDescripcion(metodoPagoId),
+        total
+      }));
   }
 
   formatearFechaHora(iso: string): string {

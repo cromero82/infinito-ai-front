@@ -77,6 +77,14 @@
                 }
               ]
             },
+            "tienda-infinito": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.tienda-infinito.ts"
+                }
+              ]
+            },
             "production": {
               "fileReplacements": [
                 {
@@ -111,6 +119,10 @@
             "sandbox": {
               "buildTarget": "vex:build:sandbox",
               "proxyConfig": "proxy.sandbox.conf.json"
+            },
+            "tienda-infinito": {
+              "buildTarget": "vex:build:tienda-infinito",
+              "proxyConfig": "proxy.tienda-infinito.conf.json"
             },
             "production": {
               "buildTarget": "vex:build:production"

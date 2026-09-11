@@ -75,11 +75,13 @@ export interface RegistrarAbonoCxcDialogResult {
           matInput
           type="text"
           inputmode="numeric"
+          autocomplete="off"
           [(ngModel)]="montoDisplay"
           name="monto"
-          (focus)="onMontoFocus()"
+          (focus)="onMontoFocus($event)"
           (blur)="onMontoBlur()"
-          (input)="onMontoInput($event)" />
+          (input)="onMontoInput($event)"
+          (mouseup)="$event.preventDefault()" />
         <mat-hint>Máximo {{ formatMoney(saldoPendiente) }}</mat-hint>
       </mat-form-field>
 
@@ -225,8 +227,12 @@ export class RegistrarAbonoCxcDialogComponent implements OnInit {
     return digits ? Number(digits) : 0;
   }
 
-  onMontoFocus(): void {
-    this.montoDisplay = String(Math.round(this.montoValue || 0));
+  onMontoFocus(event: FocusEvent): void {
+    const raw = String(Math.round(this.montoValue || 0));
+    this.montoDisplay = raw;
+    const input = event.target as HTMLInputElement;
+    input.value = raw;
+    setTimeout(() => input.select(), 0);
   }
 
   onMontoInput(event: Event): void {

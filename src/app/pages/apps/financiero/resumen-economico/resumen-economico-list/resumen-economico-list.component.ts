@@ -97,6 +97,8 @@ export class ResumenEconomicoListComponent
   displayedColumnsDiaria = [
     'periodo',
     'totalVentas',
+    'totalCobranzas',
+    'ingresos',
     'totalEgresos',
     'utilidad',
     'porcentajeUtilidad',
@@ -108,6 +110,8 @@ export class ResumenEconomicoListComponent
   displayedColumnsMensual = [
     'periodo',
     'totalVentas',
+    'totalCobranzas',
+    'ingresos',
     'totalEgresos',
     'utilidad',
     'porcentajeUtilidad',
@@ -119,6 +123,8 @@ export class ResumenEconomicoListComponent
   displayedColumnsAnual = [
     'periodo',
     'totalVentas',
+    'totalCobranzas',
+    'ingresos',
     'totalEgresos',
     'utilidad',
     'porcentajeUtilidad',
@@ -544,6 +550,13 @@ export class ResumenEconomicoListComponent
     }).format(value);
   }
 
+  ingresosDe(row: {
+    totalVentas?: number | null;
+    totalCobranzas?: number | null;
+  }): number {
+    return (row.totalVentas ?? 0) + (row.totalCobranzas ?? 0);
+  }
+
   formatPct(value: number | null | undefined): string {
     if (value === null || value === undefined) return '—';
     return `${value.toFixed(2)} %`;
@@ -863,31 +876,36 @@ export class ResumenEconomicoListComponent
 
   /**
    * Totales sobre las filas visibles (Diaria: paginación + recalcular; Mensual/Anual: lista completa + recalcular).
-   * Utilidad del footer = ventas − egresos por fila (null tratado como 0), sin depender de que el API rellene `utilidad`.
-   * % utilidad: sumUtilidad / sum(ventas) × 100 si hay ventas; si no hay ventas pero sí egresos (solo pérdidas), sumUtilidad / sum(egresos) × 100.
+   * Resultado del footer = ventas + cobranzas − egresos (null = 0).
+   * %: resultado / (ventas+cobranzas); si solo hay egresos, resultado / egresos.
    */
   private actualizarFooterPorFilas(
     labelPeriodo: 'Días' | 'Meses' | 'Años',
     rows: Array<{
       totalVentas?: number | null;
+      totalCobranzas?: number | null;
       totalEgresos?: number | null;
       utilidad?: number | null;
     }>
   ): void {
     const n = rows.length;
     let sumVentas = 0;
+    let sumCobranzas = 0;
     let sumEgresos = 0;
     let sumUtilidad = 0;
     for (const r of rows) {
       const v = r.totalVentas ?? 0;
+      const c = r.totalCobranzas ?? 0;
       const e = r.totalEgresos ?? 0;
       sumVentas += v;
+      sumCobranzas += c;
       sumEgresos += e;
-      sumUtilidad += v - e;
+      sumUtilidad += v + c - e;
     }
+    const ingresos = sumVentas + sumCobranzas;
     const pctUtilidad =
-      sumVentas !== 0
-        ? (sumUtilidad / sumVentas) * 100
+      ingresos !== 0
+        ? (sumUtilidad / ingresos) * 100
         : sumEgresos !== 0
           ? (sumUtilidad / sumEgresos) * 100
           : null;
@@ -904,13 +922,23 @@ export class ResumenEconomicoListComponent
         estiloCssClave: 'footer-item-utilidad-highlight'
       },
       {
-        textoClave: '% sobre ventas (aprox.)',
+        textoClave: '% sobre ingresos (aprox.)',
         valorClave: pctStr,
         estiloCssClave: 'footer-item-total-highlight'
       },
       {
         textoClave: 'Total ventas',
         valorClave: this.formatCurrency(sumVentas),
+        estiloCssClave: ''
+      },
+      {
+        textoClave: 'Total cobranzas',
+        valorClave: this.formatCurrency(sumCobranzas),
+        estiloCssClave: ''
+      },
+      {
+        textoClave: 'Total ingresos',
+        valorClave: this.formatCurrency(ingresos),
         estiloCssClave: ''
       },
       {

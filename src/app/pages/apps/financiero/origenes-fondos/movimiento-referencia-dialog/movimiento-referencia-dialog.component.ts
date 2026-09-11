@@ -336,7 +336,26 @@ export class MovimientoReferenciaDialogComponent implements OnInit {
   }
 
   get sumaTotalFisicoDetalle(): number {
-    return this.detallesCorte.reduce((s, d) => s + (Number(d.total) || 0), 0);
+    const bruto = this.detallesCorte.reduce(
+      (s, d) => s + (Number(d.total) || 0),
+      0
+    );
+    const baseEfectivo = this.detallesCorte
+      .filter((d) => this.esFilaEfectivo(d))
+      .reduce((s, d) => s + Math.round(Number(d.base) || 0), 0);
+    return Math.round(bruto) - baseEfectivo;
+  }
+
+  esFilaEfectivo(d: CorteVentaDetalleDto): boolean {
+    const mp = this.metodosPorId.get(d.metodoPagoId);
+    const sigla = (mp?.sigla || '').trim().toUpperCase();
+    const nombre = (mp?.descripcion || '').trim().toLowerCase();
+    return sigla === 'EF' || nombre === 'efectivo';
+  }
+
+  /** Contado físico menos la base de efectivo. */
+  contadoMenosBase(d: CorteVentaDetalleDto): number {
+    return Math.round(Number(d.total) || 0) - Math.round(Number(d.base) || 0);
   }
 
   get sumaDesfaseDetalle(): number {

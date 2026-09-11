@@ -1092,15 +1092,20 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Más reciente primero. `fecha` es solo día y se desordena si el reloj del host cambia. */
+  private ordenarMovimientosPorIdDesc(
+    movs: MovimientoOrigenFondosDto[] | null | undefined
+  ): MovimientoOrigenFondosDto[] {
+    return [...(movs ?? [])].sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
+  }
+
   private copiarCuentaConMovimientos(
     cuentaId: number,
     ficha: Record<string, unknown>
   ): void {
     this.movimientoService.findByCuenta(cuentaId).subscribe({
       next: (movs) => {
-        const ordenados = [...(movs ?? [])].sort(
-          (a, b) => b.fecha.localeCompare(a.fecha) || b.id - a.id
-        );
+        const ordenados = this.ordenarMovimientosPorIdDesc(movs);
         this.copiarTexto(
           JSON.stringify({
             ...ficha,
@@ -1180,9 +1185,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
     this.selectedMovimientoId = null;
     this.movimientoService.findByCuenta(cuentaId).subscribe({
       next: (movs) => {
-        this.movimientos = [...movs].sort(
-          (a, b) => b.fecha.localeCompare(a.fecha) || (b.id - a.id)
-        );
+        this.movimientos = this.ordenarMovimientosPorIdDesc(movs);
         this.loadingMovimientos = false;
         if (highlightMovimientoId != null) {
           this.aplicarResaltadoNavegacion(cuentaId, highlightMovimientoId);
@@ -1378,6 +1381,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
       ENTRADA_MANUAL: 'mat:add_circle',
       ENTRADA_PRESTAMO: 'mat:handshake',
       ENTRADA_VENTA: 'mat:point_of_sale',
+      ENTRADA_COBRANZA: 'mat:request_quote',
       TRASLADO: 'mat:swap_horiz',
       SALIDA_EGRESO: 'mat:money_off',
       SALIDA_DEVOLUCION_PRESTAMO: 'mat:undo',
@@ -1402,6 +1406,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
       ENTRADA_MANUAL: 'Entrada manual',
       ENTRADA_PRESTAMO: 'Préstamo',
       ENTRADA_VENTA: 'Entrada venta',
+      ENTRADA_COBRANZA: 'Cobranza',
       TRASLADO: 'Traslado',
       SALIDA_EGRESO: 'Egreso',
       AJUSTE_SALDO: 'Ajuste',

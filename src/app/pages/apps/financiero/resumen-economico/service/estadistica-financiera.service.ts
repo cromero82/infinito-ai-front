@@ -16,6 +16,7 @@ export interface EstadisticaFinancieraBaseDto {
   fechaCreacion: string;
   totalEgresos: number | null;
   totalVentas: number | null;
+  totalCobranzas?: number | null;
   utilidad: number | null;
   porcentajeUtilidad: number | null;
   valorTiempo: string;

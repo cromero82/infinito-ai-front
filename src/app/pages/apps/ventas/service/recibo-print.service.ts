@@ -24,7 +24,8 @@ export interface ReciboPagoImpresionLinea {
 }
 
 export interface ReciboCreditoImpresionResumen {
-  creditoOriginal: number;
+  /** Ya no se imprime; se acepta por compatibilidad. */
+  creditoOriginal?: number;
   abonado: number;
   saldoPendiente: number;
   /** Nota al pie, p. ej. crédito pendiente por pagar. */
@@ -563,12 +564,6 @@ p, div, span { color: #000; text-shadow: none; }
     const credito = opts.creditoResumen;
     if (credito) {
       lineas.push('<hr class="pos-sep-linea"/>');
-      lineas.push(
-        '<div class="pos-fila-pago">',
-        '<span>CREDITO:</span>',
-        `<span>${this.formatCurrency(credito.creditoOriginal)}</span>`,
-        '</div>'
-      );
       lineas.push(
         '<div class="pos-fila-pago">',
         '<span>ABONO:</span>',

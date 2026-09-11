@@ -1373,9 +1373,11 @@ export class TicketsComponent
     if (!cxc) {
       return;
     }
+    const total =
+      Number(cxc.totalTicket ?? cxc.montoOriginal) || 0;
     const abonado = Math.max(
       0,
-      (Number(cxc.montoOriginal) || 0) - (Number(cxc.saldoPendiente) || 0)
+      total - (Number(cxc.saldoPendiente) || 0)
     );
     if (!this.reciboComponent) {
       this.snackBar.open('No hay ticket cargado para imprimir.', 'Cerrar', {
@@ -1387,7 +1389,6 @@ export class TicketsComponent
       `botón acción: imprimir ticket con crédito (cxc: ${cxc.id})`
     );
     this.reciboComponent.imprimirTicketConCredito({
-      creditoOriginal: Number(cxc.montoOriginal) || 0,
       abonado,
       saldoPendiente: Number(cxc.saldoPendiente) || 0,
       nota: 'Tiene crédito pendiente por pagar.'
@@ -1396,7 +1397,7 @@ export class TicketsComponent
 
   /**
    * Cualquier cambio de ítems del ticket (aunque el rail esté colapsado)
-   * sincroniza saldo/original de la CxC vigente.
+   * sincroniza total y saldo de la CxC vigente.
    */
   onTicketTotalChanged(total: number): void {
     const ticket = this.tickets[this.selectedIndex];

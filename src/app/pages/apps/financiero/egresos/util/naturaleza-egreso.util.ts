@@ -41,7 +41,7 @@ export function naturalezaCodigoFromTipo(tipo: {
   return codigo ? codigo.toUpperCase() : null;
 }
 
-/** PERSONAL / DIVIDENDOS usan catálogo Persona (no proveedor). */
+/** PERSONAL / DIVIDENDOS habilitan Cuenta del dueño si el beneficiario es persona dueño. */
 export function esNaturalezaPersona(
   naturaleza: string | null | undefined
 ): boolean {

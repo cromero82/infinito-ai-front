@@ -4514,7 +4514,7 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
    * Ignora la preferencia «Imprimir ticket luego de pagar».
    */
   imprimirTicketConCredito(resumen: {
-    creditoOriginal: number;
+    creditoOriginal?: number;
     abonado: number;
     saldoPendiente: number;
     nota?: string | null;
@@ -4523,7 +4523,6 @@ export class DetalleTicketComponent implements OnChanges, OnInit, OnDestroy {
     this.ticketImpresionExtras = {
       ...(prevExtras ?? {}),
       creditoResumen: {
-        creditoOriginal: resumen.creditoOriginal,
         abonado: resumen.abonado,
         saldoPendiente: resumen.saldoPendiente,
         nota:
