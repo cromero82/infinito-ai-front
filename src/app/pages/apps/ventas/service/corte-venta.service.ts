@@ -211,15 +211,20 @@ export class CorteVentaService {
   }
 
   /**
-   * Día de calendario para agrupar un corte en Ingresos: fecha de registro del cierre
-   * si existe; si no, inicio del turno.
+   * Jornada del corte para Ingresos: día de {@code fechaIni} (apertura del turno).
+   * No usar fecha de registro: un cierre pasada medianoche apilaba dos turnos
+   * en el mismo día y inflaba el promedio (~5M / ~3.4M vs ~2.1M reales).
    */
   static fechaCalendarioDeCorte(c: CorteVentaSearchItemDto): string {
-    return CorteVentaService.fechaCalendarioDesdeIso(c.fechaCreacion || c.fechaIni);
+    const iso = c.fechaIni || c.fechaCreacion;
+    if (!iso) {
+      return '';
+    }
+    return CorteVentaService.fechaCalendarioDesdeIso(iso);
   }
 
   /**
-   * Agrupa cortes que comparten el mismo día de calendario (según registro del cierre),
+   * Agrupa cortes que comparten la misma jornada ({@code fechaIni}),
    * **sin** separar por usuario.
    * Suma totales y fusiona `ventasTipo` por `metodoPagoId` (incluye `totalVentasSistema`).
    * Sirve para vistas tipo dashboard: un solo valor por día.
