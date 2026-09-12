@@ -1075,13 +1075,18 @@ export class IngresosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const fechasFormateadas = this.ventasPorFechaVisibles.map((v) => v.fecha);
+    // Gráfico: más antiguo a la izquierda, más reciente a la derecha.
+    // La tabla "Detalles por Fecha" sigue en desc (ventasPorFechaVisibles).
+    const ventasParaGrafico = [...this.ventasPorFechaVisibles].sort((a, b) =>
+      (a.fechaKey || '').localeCompare(b.fechaKey || '')
+    );
+    const fechasFormateadas = ventasParaGrafico.map((v) => v.fecha);
     const seriesMap = new Map<
       number,
       { name: string; data: number[]; color: string }
     >();
 
-    this.ventasPorFechaVisibles.forEach((ventaPorFecha) => {
+    ventasParaGrafico.forEach((ventaPorFecha) => {
       ventaPorFecha.detalles.forEach((detalle) => {
         if (!seriesMap.has(detalle.metodoPagoId)) {
           const metodoPago = this.metodosPago.find(
@@ -1102,7 +1107,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
       });
     });
 
-    this.ventasPorFechaVisibles.forEach((ventaPorFecha, fechaIndex) => {
+    ventasParaGrafico.forEach((ventaPorFecha, fechaIndex) => {
       ventaPorFecha.detalles.forEach((detalle) => {
         const serie = seriesMap.get(detalle.metodoPagoId);
         if (serie) {
