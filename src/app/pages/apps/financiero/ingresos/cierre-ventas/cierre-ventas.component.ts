@@ -955,6 +955,7 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
       fechaFin,
       total: this.totalReal,
       totalSistema: this.totalSistema,
+      totalVentasSistema: this.totalVentasSistema,
       ultimoCorte: this.desdeUltimoCorteCtrl.value ?? false,
       actual: this.hastaActualmenteCtrl.value ?? false,
       observacion: this.observacionCtrl.value?.trim() || null,

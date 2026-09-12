@@ -23,7 +23,10 @@ export interface ConsultarRangoCorteDto {
   fechaFin: string;
   ultimoCorte: any | null;
   ventasTipo: VentaTipoCorteDto[];
+  /** Esperado = Σ totalSistema (base + ventas − egresos ± movimientos). No es la venta del día. */
   total: number;
+  /** Σ tickets cobrados. Fuente de verdad para Ingresos / dashboard. */
+  totalVentasSistema?: number;
   otrosCortesIntersectados: any[];
 }
 
@@ -125,8 +128,12 @@ export interface CorteVentaSearchItemDto {
   fechaIni: string;
   fechaFin: string;
   ultimoHistorialReciboId?: number;
+  /** Contado / declarado (arqueo). */
   total: number;
+  /** Esperado = base + ventas − egresos ± movimientos. */
   totalSistema: number;
+  /** Σ tickets cobrados. Fuente de verdad para dashboard Ingresos. */
+  totalVentasSistema?: number;
   ventasTipo: VentaTipoSearchDto[];
   detalles?: CorteVentaDetalleDto[];
   estado: EstadoCorteVenta;
@@ -169,6 +176,7 @@ export interface RegistrarCorteDto {
   fechaFin: string; // Formato ISO: YYYY-MM-DDTHH:mm:ss
   total: number;
   totalSistema: number;
+  totalVentasSistema?: number;
   ultimoCorte: boolean;
   actual: boolean;
   observacion?: string | null;
@@ -303,14 +311,11 @@ export class CorteVentaService {
     if (items.length === 1) {
       const only = items[0];
       const ventasTipo = (only.ventasTipo || []).map((vt) => ({ ...vt }));
-      const totalVentas = ventasTipo.reduce(
-        (s, vt) => s + CorteVentaService.montoVentasDeTipo(vt),
-        0
-      );
+      const totalVentas = CorteVentaService.totalVentasDeCorte(only);
       return {
         ...only,
         ventasTipo,
-        total: totalVentas > 0 ? totalVentas : Number(only.total) || 0,
+        totalVentasSistema: totalVentas,
         totalSistema: Number(only.totalSistema) || 0
       };
     }
@@ -343,6 +348,7 @@ export class CorteVentaService {
       }
       total += Number(it.total) || 0;
       totalSistema += Number(it.totalSistema) || 0;
+      totalVentasDia += CorteVentaService.totalVentasDeCorte(it);
       idMin = Math.min(idMin, it.id);
 
       for (const vt of it.ventasTipo || []) {
@@ -378,7 +384,6 @@ export class CorteVentaService {
 
     const ventasTipo: VentaTipoSearchDto[] = [];
     for (const [metodoPagoId, agg] of ventasPorMetodo) {
-      totalVentasDia += agg.totalVentasSistema;
       ventasTipo.push({
         metodoPagoId,
         total: agg.total,
@@ -402,9 +407,9 @@ export class CorteVentaService {
       fechaIni: fechaIniMin,
       fechaFin: fechaFinMax,
       ultimoHistorialReciboId: base.ultimoHistorialReciboId,
-      // Dashboard Ingresos: ventas sistema (tickets), no contado físico.
-      total: totalVentasDia > 0 ? totalVentasDia : total,
+      total,
       totalSistema,
+      totalVentasSistema: totalVentasDia,
       ventasTipo,
       detalles: [],
       estado: base.estado ?? 'revisada',
@@ -421,14 +426,30 @@ export class CorteVentaService {
   }
 
   /**
-   * Monto de ventas para dashboard/ingresos (por medio).
-   * Prefiere `totalVentasSistema`; si falta, cae a `total` (legacy).
+   * Ventas POS del medio. Solo `totalVentasSistema`.
+   * Nunca usa `total` (Contado) ni `totalSistema` (Esperado).
    */
-  static montoVentasDeTipo(vt: VentaTipoSearchDto): number {
-    if (vt.totalVentasSistema != null && Number.isFinite(Number(vt.totalVentasSistema))) {
-      return Number(vt.totalVentasSistema) || 0;
+  static montoVentasDeTipo(vt: Pick<VentaTipoSearchDto, 'totalVentasSistema'>): number {
+    return Math.round(Number(vt.totalVentasSistema) || 0);
+  }
+
+  /**
+   * Σ tickets cobrados del corte. Prefiere header, luego detalles, luego ventasTipo.
+   * Nunca Contado ni Esperado.
+   */
+  static totalVentasDeCorte(corte: CorteVentaSearchItemDto): number {
+    if (
+      corte.totalVentasSistema != null &&
+      Number.isFinite(Number(corte.totalVentasSistema))
+    ) {
+      return Math.round(Number(corte.totalVentasSistema) || 0);
     }
-    return Number(vt.total) || 0;
+    const porMetodo = CorteVentaService.agregarIngresosPorMetodo([corte]);
+    let suma = 0;
+    for (const monto of porMetodo.values()) {
+      suma += monto;
+    }
+    return suma;
   }
 
   /**

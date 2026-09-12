@@ -68,7 +68,7 @@ interface VentasPorFecha {
   cantidadCortes: number;
   /** Ids de corte_venta del día (para modal Ver). */
   corteIds: number[];
-  /** Recibido por medio (ventas + cobranzas) para tiles y gráfica. */
+  /** Ventas POS por medio (sin cobranzas ni base). Fuente de verdad del gráfico. */
   detalles: MontoPorMetodo[];
 }
 
@@ -635,20 +635,6 @@ export class IngresosComponent implements OnInit, OnDestroy {
     }
   }
 
-  private fusionarPorMetodo(
-    base: Map<number, number>,
-    extra?: Map<number, number>
-  ): Map<number, number> {
-    const out = new Map(base);
-    if (!extra) {
-      return out;
-    }
-    for (const [metodoPagoId, monto] of extra) {
-      out.set(metodoPagoId, (out.get(metodoPagoId) ?? 0) + monto);
-    }
-    return out;
-  }
-
   private sumaMapa(porMetodo?: Map<number, number>): number {
     if (!porMetodo) {
       return 0;
@@ -692,9 +678,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
       );
       const ventasPorMetodo = CorteVentaService.agregarIngresosPorMetodo(cortes);
       const cobranzasPorMetodo = this.cobranzasPorFecha.get(fechaKey);
-      const detalles = this.detallesDesdeMapa(
-        this.fusionarPorMetodo(ventasPorMetodo, cobranzasPorMetodo)
-      );
+      const detalles = this.detallesDesdeMapa(ventasPorMetodo);
       const totalVentas = this.sumaMapa(ventasPorMetodo);
       const totalCobranzas = this.sumaMapa(cobranzasPorMetodo);
       return {
@@ -737,9 +721,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
       const cobranzasPorMetodo = this.cobranzasPorFecha.get(fechaKey);
       const totalVentas = this.sumaMapa(ventasPorMetodo);
       const totalCobranzas = this.sumaMapa(cobranzasPorMetodo);
-      const detalles = this.detallesDesdeMapa(
-        this.fusionarPorMetodo(ventasPorMetodo, cobranzasPorMetodo)
-      );
+      const detalles = this.detallesDesdeMapa(ventasPorMetodo);
       const corteIds = ordenados
         .map((c) => c.id)
         .filter((id) => Number.isFinite(id))
@@ -765,7 +747,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
     );
 
     this.totalGeneral = this.ventasPorFecha.reduce(
-      (sum, v) => sum + (Number(v.total) || 0),
+      (sum, v) => sum + (Number(v.totalVentas) || 0),
       0
     );
     this.ventasDiaActual = this.totalGeneral;
@@ -807,9 +789,9 @@ export class IngresosComponent implements OnInit, OnDestroy {
     }));
   }
 
-  /** Suma de ventas POS del corte (sin cobranzas ni base de caja). */
+  /** Suma de ventas POS del corte (sin cobranzas, base ni Contado). */
   totalVentasDeCorte(corte: CorteVentaSearchItemDto): number {
-    return this.ventasTipoDeCorte(corte).reduce((s, v) => s + v.total, 0);
+    return CorteVentaService.totalVentasDeCorte(corte);
   }
 
   private detallesIngresoDesdeCortes(
