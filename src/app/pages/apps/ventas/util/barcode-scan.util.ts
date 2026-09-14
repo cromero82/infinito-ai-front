@@ -91,6 +91,63 @@ export function isLikelyProductBarcodeDigits(raw: string): boolean {
   return /^\d{8,14}$/.test(digits);
 }
 
+export type ScanKeyEvent = Pick<
+  KeyboardEvent,
+  'key' | 'code' | 'shiftKey' | 'altKey' | 'ctrlKey' | 'metaKey' | 'isComposing'
+>;
+
+/** Enter o Tab de sufijo de lectora (en Mac a veces no llega el Enter). */
+export function isBarcodeTerminatorKey(event: ScanKeyEvent): boolean {
+  return event.key === 'Enter' || event.key === 'Tab';
+}
+
+/**
+ * Carácter imprimible de un keydown de lectora.
+ * En macOS HID a veces `key` es Unidentified/Dead y el dígito viene en `code`.
+ */
+export function scanCharFromKeyboardEvent(event: ScanKeyEvent): string | null {
+  if (event.key.length === 1) {
+    return event.key;
+  }
+  if (
+    event.key === 'Unidentified' ||
+    event.key === 'Process' ||
+    event.key === 'Dead'
+  ) {
+    return scanCharFromCode(event.code, event.shiftKey);
+  }
+  return null;
+}
+
+function scanCharFromCode(code: string, shift: boolean): string | null {
+  if (!code) {
+    return null;
+  }
+  if (/^Digit[0-9]$/.test(code)) {
+    return code.slice(5);
+  }
+  if (/^Numpad[0-9]$/.test(code)) {
+    return code.slice(6);
+  }
+  if (/^Key[A-Z]$/.test(code)) {
+    const letter = code.slice(3);
+    return shift ? letter : letter.toLowerCase();
+  }
+  return null;
+}
+
+/**
+ * Código completo aunque la lectora no mande Enter.
+ * Evita confirmar tipeo humano corto ("coca", "123").
+ */
+export function shouldAutoCommitBarcodeBuffer(raw: string): boolean {
+  const text = String(raw ?? '').trim();
+  if (/^\d{8,14}$/.test(text)) {
+    return true;
+  }
+  return /^[A-Za-z0-9]{8,}$/.test(text) && /\d/.test(text);
+}
+
 export function resolveProductSearchTerm(raw: string): ProductSearchTermResolution {
   const term = normalizeProductSearchTerm(raw);
   if (!term) {

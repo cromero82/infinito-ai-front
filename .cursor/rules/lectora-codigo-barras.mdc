@@ -1,0 +1,11 @@
+---
+description: Lectora HID en Tickets — buffer, idle 400 ms, retomar validación física
+globs: src/app/pages/apps/ventas/tickets/tickets-pos-focus.service.ts,src/app/pages/apps/ventas/util/barcode-scan.util.ts,src/app/pages/apps/ventas/tickets/tickets.component.ts
+alwaysApply: false
+---
+
+# Lectora de código de barras (aparcado)
+
+Tema **aparcado** (2026-09-13). Contratos: `prompts-general-pos/openspec/specs/lectora-codigo-barras/spec.md`. Narrativo: `prompts-general-pos/contextos-ia/lectora-codigo-barras.md`. Foco: `tickets-pos-focus-coordinator.md`.
+
+Pitido sin texto ≠ marca vs macOS. El HID manda teclas; el buffer de `TicketsPosFocusService` no debe vaciarse a los 80 ms. Idle vigente: **400 ms**. Confirmar EAN/SKU completo al timeout. No `select()` a mitad de ráfaga. No más `setTimeout` sueltos de foco.

@@ -128,6 +128,8 @@ No restaurar ni capturar barcode si el `activeElement` (o el target del keydown)
 - Inputs de edición inline del detalle (`.editing-*` / controles `editing*Ctrl` activos).
 - Otros `input`, `textarea`, `[contenteditable]` legítimos dentro de un hold.
 
+Buffer de lectora: idle **400 ms** (no 80). En macOS el HID USB a menudo llega más lento; si se vacía el buffer antes del Enter, el lector pita y la app no escribe. Al timeout, confirmar EAN/SKU completo aunque no llegue Enter/Tab. No restaurar foco (`select`) a mitad de ráfaga.
+
 ---
 
 ## 7. Plan de implementación (fases)

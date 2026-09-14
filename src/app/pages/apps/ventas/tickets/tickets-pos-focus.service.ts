@@ -1,4 +1,9 @@
 import { Injectable, NgZone } from '@angular/core';
+import {
+  isBarcodeTerminatorKey,
+  scanCharFromKeyboardEvent,
+  shouldAutoCommitBarcodeBuffer
+} from '../util/barcode-scan.util';
 
 export type TicketsPosFocusOptions = {
   /** Seleccionar el texto del input al enfocar (default: true). */
@@ -27,7 +32,12 @@ export class TicketsPosFocusService {
 
   private barcodeBuffer = '';
   private barcodeTimer: ReturnType<typeof setTimeout> | null = null;
-  private readonly barcodeIdleMs = 80;
+  /**
+   * 80 ms era corto para lectoras USB en macOS: el HID llega más lento,
+   * el buffer se vaciaba antes del Enter y el pitido no escribía nada.
+   */
+  private readonly barcodeIdleMs = 400;
+  private scanBurstUntilMs = 0;
   private onBarcodeCommit: ((text: string) => void) | null = null;
 
   constructor(private readonly zone: NgZone) {}
@@ -111,6 +121,9 @@ export class TicketsPosFocusService {
       if (Date.now() < this.suppressUntilMs) {
         return;
       }
+      if (this.barcodeBuffer.length > 0 || Date.now() < this.scanBurstUntilMs) {
+        return;
+      }
     }
 
     this.clearRestoreTimers();
@@ -167,18 +180,23 @@ export class TicketsPosFocusService {
       return false;
     }
     // Si ya está en el buscador, el input nativo maneja la tecla.
+    // Marcamos ráfaga para que un restore/select no borre el escaneo a medias.
     if (target === this.inputEl || document.activeElement === this.inputEl) {
+      this.markScanBurst(event);
       return false;
     }
     if (this.isInsideOverlay(target)) {
       return false;
     }
 
-    if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey) {
+    const scanInProgress = this.barcodeBuffer.length > 0;
+    const ghostModifier =
+      event.altKey || event.ctrlKey || event.metaKey;
+    if (!scanInProgress && (event.isComposing || ghostModifier)) {
       return false;
     }
 
-    if (event.key === 'Enter') {
+    if (isBarcodeTerminatorKey(event)) {
       const text = this.barcodeBuffer.trim();
       this.resetBarcodeBuffer();
       if (!text) {
@@ -189,15 +207,14 @@ export class TicketsPosFocusService {
       return true;
     }
 
-    if (event.key.length !== 1) {
+    const ch = scanCharFromKeyboardEvent(event);
+    if (!ch) {
       return false;
     }
 
-    this.barcodeBuffer += event.key;
-    if (this.barcodeTimer) {
-      clearTimeout(this.barcodeTimer);
-    }
-    this.barcodeTimer = setTimeout(() => this.resetBarcodeBuffer(), this.barcodeIdleMs);
+    this.barcodeBuffer += ch;
+    this.markScanBurst(event);
+    this.armBarcodeIdleTimer();
     return true;
   }
 
@@ -257,6 +274,35 @@ export class TicketsPosFocusService {
       return false;
     }
     return !!node.closest('.cdk-overlay-container, .mat-mdc-dialog-container, .mat-mdc-menu-panel');
+  }
+
+  private markScanBurst(event: KeyboardEvent): void {
+    if (
+      event.key.length === 1 ||
+      event.key === 'Unidentified' ||
+      event.key === 'Process' ||
+      event.key === 'Dead'
+    ) {
+      this.scanBurstUntilMs = Date.now() + this.barcodeIdleMs;
+    }
+  }
+
+  private armBarcodeIdleTimer(): void {
+    if (this.barcodeTimer) {
+      clearTimeout(this.barcodeTimer);
+    }
+    this.barcodeTimer = setTimeout(() => {
+      const text = this.barcodeBuffer.trim();
+      if (shouldAutoCommitBarcodeBuffer(text) && this.onBarcodeCommit) {
+        this.resetBarcodeBuffer();
+        this.zone.run(() => {
+          this.onBarcodeCommit?.(text);
+          this.requestDefaultFocus({ select: false });
+        });
+        return;
+      }
+      this.resetBarcodeBuffer();
+    }, this.barcodeIdleMs);
   }
 
   private resetBarcodeBuffer(): void {
