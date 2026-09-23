@@ -1,0 +1,425 @@
+<div
+  class="cierre-ventas-draggable-root"
+  cdkDrag
+  cdkDragRootElement=".cdk-overlay-pane">
+  <div
+    class="cierre-ventas-drag-header"
+    mat-dialog-title
+    cdkDragHandle>
+    <h2 class="dialog-title m-0">Cierre de turno — medios de pago</h2>
+  </div>
+
+  <div mat-dialog-content class="dialog-content">
+  <p class="cierre-disclaimer">
+    La columna <strong>Ventas</strong> (tickets cobrados) es la que se reporta en
+    Ingresos. El Contado y las diferencias se guardan para el arqueo; más adelante
+    se verán como afectación a las cuentas (OF) o caja.
+    Efectivo: cuente billetes y monedas. Nequi / transferencia: indique el total
+    según su aplicación.
+  </p>
+  <div class="fechas-container">
+    <div class="fecha-grupo">
+      <span class="fecha-label">Desde:</span>
+      <mat-checkbox [formControl]="desdeUltimoCorteCtrl" class="fecha-checkbox">
+        Desde último cierre (primera venta o movimiento)
+      </mat-checkbox>
+      <div class="fecha-input-group">
+        <mat-form-field
+          appearance="outline"
+          class="fecha-field pos-field-dense"
+          subscriptSizing="dynamic">
+          <mat-label>Fecha Inicio</mat-label>
+          <input
+            matInput
+            [matDatepicker]="pickerInicio"
+            [formControl]="fechaInicioCtrl" />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="pickerInicio"></mat-datepicker-toggle>
+          <mat-datepicker #pickerInicio></mat-datepicker>
+        </mat-form-field>
+        <input
+          type="time"
+          class="hora-input"
+          [formControl]="horaInicioCtrl"
+          [class.disabled]="horaInicioCtrl.disabled" />
+      </div>
+    </div>
+
+    <div class="fecha-grupo">
+      <span class="fecha-label">Hasta:</span>
+      <mat-checkbox [formControl]="hastaActualmenteCtrl" class="fecha-checkbox">
+        Hasta Actualmente (última venta o movimiento)
+      </mat-checkbox>
+      <div class="fecha-input-group">
+        <mat-form-field
+          appearance="outline"
+          class="fecha-field pos-field-dense"
+          subscriptSizing="dynamic">
+          <mat-label>Fecha Fin</mat-label>
+          <input
+            matInput
+            [matDatepicker]="pickerFin"
+            [formControl]="fechaFinCtrl" />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="pickerFin"></mat-datepicker-toggle>
+          <mat-datepicker #pickerFin></mat-datepicker>
+        </mat-form-field>
+        <input
+          type="time"
+          class="hora-input"
+          [formControl]="horaFinCtrl"
+          [class.disabled]="horaFinCtrl.disabled" />
+      </div>
+    </div>
+
+    <div class="consultar-container">
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        class="consultar-btn"
+        (click)="consultar()"
+        [disabled]="consultando">
+        @if (consultando) {
+          <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+        }
+        @if (!consultando) {
+          <span>Consultar</span>
+        }
+        @if (consultando) {
+          <span>Consultando...</span>
+        }
+      </button>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <div class="table-scroll-wrap">
+      <div
+        class="table-loading-overlay"
+        [class.table-loading-overlay--visible]="consultando"
+        aria-live="polite"
+        [attr.aria-hidden]="!consultando">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p class="table-loading-text">
+          {{ cargaInicial ? 'Cargando datos...' : 'Consultando ventas...' }}
+        </p>
+      </div>
+      <div class="table-scroll">
+        <table
+          mat-table
+          [dataSource]="corteVentasRows"
+          class="corte-table"
+          [class.corte-table--admin]="esAdmin"
+          [class.corte-table--cajero]="!esAdmin">
+        <colgroup>
+          <col class="col-metodo" />
+          @if (esAdmin) {
+            <col class="col-base" />
+          }
+          <col class="col-ventas" />
+          <col class="col-egresos" />
+          @if (esAdmin) {
+            <col class="col-movimientos" />
+          }
+          <col class="col-neto" />
+          <col class="col-real" />
+          <col class="col-desfase" />
+        </colgroup>
+        <ng-container matColumnDef="metodoPago">
+          <th mat-header-cell *matHeaderCellDef class="header-cell">
+            Método de Pago
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell metodo-pago-cell">
+            <div class="metodo-pago-cell-inner">
+              <span class="metodo-pago-nombre">{{
+                row.metodoPago.descripcion
+              }}</span>
+              @if (esFilaEfectivo(row)) {
+                <button
+                  mat-icon-button
+                  type="button"
+                  class="btn-asistente-caja"
+                  matTooltip="ver asistente para cierre de caja"
+                  (click)="abrirAsistenteCierreCaja(row)">
+                  <mat-icon svgIcon="mat:help"></mat-icon>
+                </button>
+              }
+            </div>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="base">
+          <th mat-header-cell *matHeaderCellDef class="header-cell">Base</th>
+          <td mat-cell *matCellDef="let row" class="cell">
+            {{ formatCurrency(row.base) }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="totalVentasSistema">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="header-cell"
+            matTooltip="Tickets cobrados. Este valor es el que va al dashboard de Ingresos.">
+            Ventas
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell">
+            {{ formatCurrency(row.totalVentasSistema) }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="totalEgresosSistema">
+          <th mat-header-cell *matHeaderCellDef class="header-cell">
+            Egresos
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell">
+            {{ formatCurrencyEgreso(row.totalEgresosSistema) }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="totalMovimientosSistema">
+          <th mat-header-cell *matHeaderCellDef class="header-cell">
+            Movimientos
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell">
+            {{ formatCurrency(row.totalMovimientosSistema) }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="totalSistema">
+          <th mat-header-cell *matHeaderCellDef class="header-cell">
+            Esperado
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell total-sistema-cell">
+            <div class="total-sistema-container">
+              <span class="total-sistema-value">{{
+                formatCurrency(row.totalSistema)
+              }}</span>
+            </div>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="totalReal">
+          <th mat-header-cell *matHeaderCellDef class="header-cell">
+            Contado
+          </th>
+          <td
+            mat-cell
+            *matCellDef="let row; let i = index"
+            class="cell total-real-cell">
+            <div class="total-real-container">
+              <mat-form-field appearance="outline" class="total-real-field">
+                <span matPrefix class="currency-prefix">$</span>
+                <input
+                  matInput
+                  type="text"
+                  inputmode="numeric"
+                  [value]="displayTotalReal(row)"
+                  placeholder="0"
+                  (input)="onTotalRealInput($event, row)"
+                  (focus)="onTotalRealFocus($event, row)"
+                  (blur)="onTotalRealBlur($event, row)"
+                  (keydown)="onTotalRealKeydown($event, row, i)" />
+              </mat-form-field>
+              @if (esFilaEfectivo(row)) {
+                <div class="efectivo-base-hint">
+                  <span class="efectivo-base-label">Efectivo - Base</span>
+                  <span class="efectivo-base-valor">{{
+                    formatCurrency(efectivoMenosBase(row))
+                  }}</span>
+                </div>
+              }
+            </div>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="desfase">
+          <th mat-header-cell *matHeaderCellDef class="header-cell">
+            Diferencia
+          </th>
+          <td mat-cell *matCellDef="let row" class="cell desfase-cell">
+            <div class="desfase-stack">
+              <span
+                class="desfase-texto"
+                [ngClass]="getDesfaseClass(row.desfase)">
+                {{ getDesfaseTexto(row.desfase) }}
+              </span>
+              @if (tieneDesfase(row.desfase)) {
+                <mat-form-field
+                  appearance="outline"
+                  class="motivo-desfase-field"
+                  subscriptSizing="dynamic">
+                  <mat-label>Motivo</mat-label>
+                  <mat-select
+                    panelClass="cierre-motivo-desfase-panel"
+                    [formControl]="row.motivoDesfaseCtrl"
+                    [compareWith]="compareMotivoId"
+                    (selectionChange)="onMotivoDesfaseChange(row, $event)">
+                    @for (m of motivosDesfase; track m.id) {
+                      <mat-option [value]="m.id">{{ m.nombre }}</mat-option>
+                    }
+                  </mat-select>
+                  @if (row.motivoDesfaseCtrl.hasError('required')) {
+                    <mat-error>Obligatorio</mat-error>
+                  }
+                </mat-form-field>
+                @if (hintAccionMotivo(row); as hint) {
+                  <span class="motivo-accion-hint">{{ hint }}</span>
+                }
+                @if (requiereTrasladoOf(row)) {
+                  <button
+                    mat-stroked-button
+                    color="primary"
+                    type="button"
+                    class="btn-traslado-of"
+                    (click)="abrirTrasladoOf(row)">
+                    Abrir traslado OF
+                  </button>
+                }
+              }
+            </div>
+          </td>
+        </ng-container>
+        <tr
+          mat-header-row
+          *matHeaderRowDef="displayedColumns"
+          class="header-row"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumns; index as i"
+          class="data-row"
+          [class.row-alt]="i % 2 !== 0"></tr>
+        <tr *matNoDataRow class="mat-mdc-row no-data-mat-row">
+          <td
+            class="mat-mdc-cell no-data-cell"
+            [attr.colspan]="displayedColumns.length">
+            @if (!datosConsultados && !consultando && !cargaInicial) {
+              <div class="mensaje-inicial mensaje-inicial--inline">
+                <mat-icon svgIcon="mat:info" class="info-icon"></mat-icon>
+                <p>
+                  Seleccione el rango de fechas y presione "Consultar" para
+                  cargar los datos.
+                </p>
+              </div>
+            }
+            @if (datosConsultados && !consultando && corteVentasRows.length === 0) {
+              <div class="mensaje-inicial mensaje-inicial--inline">
+                <mat-icon svgIcon="mat:info" class="info-icon"></mat-icon>
+                <p>No hay medios de pago para este rango.</p>
+              </div>
+            }
+          </td>
+        </tr>
+      </table>
+      </div>
+    </div>
+      <div class="totales-container">
+        <table
+          class="totales-table"
+          [class.totales-table--admin]="esAdmin"
+          [class.totales-table--cajero]="!esAdmin">
+          <colgroup>
+            <col class="col-metodo" />
+            @if (esAdmin) {
+              <col class="col-base" />
+            }
+            <col class="col-ventas" />
+            <col class="col-egresos" />
+            @if (esAdmin) {
+              <col class="col-movimientos" />
+            }
+            <col class="col-neto" />
+            <col class="col-real" />
+            <col class="col-desfase" />
+          </colgroup>
+          <tr class="total-row">
+            <td class="total-cell total-label">TOTAL</td>
+            @if (esAdmin) {
+              <td class="total-cell total-value">{{ formatCurrency(totalBase) }}</td>
+            }
+            <td class="total-cell total-value">
+              {{ formatCurrency(totalVentasSistema) }}
+            </td>
+            <td class="total-cell total-value">
+              {{ formatCurrencyEgreso(totalEgresosSistema) }}
+            </td>
+            @if (esAdmin) {
+              <td class="total-cell total-value">
+                {{ formatCurrency(totalMovimientosSistema) }}
+              </td>
+            }
+            <td class="total-cell total-value">
+              {{ formatCurrency(totalSistema) }}
+            </td>
+            <td class="total-cell total-value total-real-final">
+              {{ formatCurrency(totalContadoSinBaseEfectivo) }}
+            </td>
+            <td class="total-cell" aria-hidden="true"></td>
+          </tr>
+          <tr class="total-row desfases-row">
+            <td class="total-cell total-label">TOTAL DIFERENCIAS</td>
+            @if (esAdmin) {
+              <td class="total-cell" aria-hidden="true"></td>
+            }
+            <td class="total-cell" aria-hidden="true"></td>
+            <td class="total-cell" aria-hidden="true"></td>
+            @if (esAdmin) {
+              <td class="total-cell" aria-hidden="true"></td>
+            }
+            <td class="total-cell" aria-hidden="true"></td>
+            <td class="total-cell" aria-hidden="true"></td>
+            <td class="total-cell total-desfase-cell">
+              <span
+                class="total-desfases-value"
+                [ngClass]="getTotalDesfaseClass()"
+                >{{ getDesfaseTexto(totalDesfases) }}</span
+              >
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <mat-form-field
+      appearance="outline"
+      class="observacion-cierre-field"
+      subscriptSizing="dynamic">
+      <mat-label>Observación general</mat-label>
+      <textarea
+        matInput
+        rows="2"
+        maxlength="200"
+        [formControl]="observacionCtrl"
+        (input)="refrescarPuedeRegistrar()"
+        placeholder="Observaciones para la revisión administrativa"></textarea>
+      <mat-hint align="end">{{ observacionCtrl.value?.length || 0 }}/200</mat-hint>
+      @if (observacionCtrl.hasError('maxlength')) {
+        <mat-error>Máximo 200 caracteres</mat-error>
+      }
+    </mat-form-field>
+  </div>
+
+  <div mat-dialog-actions align="end" class="dialog-actions">
+    @if (!puedeRegistrar && !loading && mensajeValidacion) {
+      <span class="hint-registro">{{ mensajeValidacion }}</span>
+    }
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="cancelar()"
+      [disabled]="loading">
+      Cancelar
+    </button>
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      (click)="registrar()"
+      [disabled]="!puedeRegistrar || loading || consultando">
+      @if (loading) {
+        <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+      }
+      @if (!loading) {
+        <span>Registrar cierre</span>
+      }
+      @if (loading) {
+        <span>Registrando...</span>
+      }
+    </button>
+  </div>
+</div>

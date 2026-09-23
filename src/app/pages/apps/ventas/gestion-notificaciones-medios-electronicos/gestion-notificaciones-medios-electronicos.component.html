@@ -1,0 +1,476 @@
+<div class="gestion-notif-page mt-1 flex flex-col flex-1 min-h-0 min-w-0 w-full">
+  <div class="card gestion-notif-card flex flex-col flex-1 min-h-0 overflow-hidden">
+    <div class="px-4 sm:px-6 py-3 border-b gestion-notif-toolbar">
+      <div class="header-title-row">
+        <h2 class="title m-0">Gestión notificaciones medios electrónicos</h2>
+        <button
+          type="button"
+          mat-stroked-button
+          class="btn-ayuda-en-linea"
+          matTooltip="Abrir ayuda en línea"
+          (click)="abrirAyudaEnLinea()"
+          (mouseenter)="mostrarTipFooter('Catálogo de tareas de esta pantalla', 'Ayuda en línea')"
+          (mouseleave)="ocultarTipFooter()">
+          <mat-icon svgIcon="mat:info"></mat-icon>
+          Ayuda en línea
+        </button>
+      </div>
+
+      <div
+        class="panel-activa-row mt-3"
+        (mouseenter)="
+          mostrarTipFooter(
+            'Solo oculta el panel en Tickets; el match email↔ticket sigue en background',
+            'Panel Pagos electrónicos'
+          )
+        "
+        (mouseleave)="ocultarTipFooter()">
+        <mat-checkbox
+          [checked]="panelNotificacionesActivo"
+          [disabled]="guardandoPanelActivo"
+          (change)="onPanelNotificacionesChange($event.checked)"
+          color="primary">
+          Mostrar panel «Pagos electrónicos» en Tickets
+        </mat-checkbox>
+      </div>
+    </div>
+
+    <mat-tab-group
+      animationDuration="0ms"
+      class="gestion-notif-tabs flex flex-col flex-1 min-h-0">
+    <mat-tab label="Notificaciones recibidas">
+      <section class="card-section tab-panel flex flex-col flex-1 min-h-0">
+        <div class="filters">
+          <mat-form-field appearance="outline">
+            <mat-label>Ciclo de vista</mat-label>
+            <mat-select [(ngModel)]="estadoVista" (selectionChange)="cargarLista()">
+              <mat-option value="POR_IDENTIFICAR">Por identificar</mat-option>
+              <mat-option value="TODAS">Todas</mat-option>
+              <mat-option value="PENDIENTE">Pendiente</mat-option>
+              <mat-option value="MOSTRADA">Mostrada</mat-option>
+              <mat-option value="ARCHIVADA">Archivada</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Vínculo operación</mat-label>
+            <mat-select [(ngModel)]="vinculoOperacion" (selectionChange)="cargarLista()">
+              <mat-option value="TODAS">Todos</mat-option>
+              <mat-option value="PENDIENTE">Pendiente</mat-option>
+              <mat-option value="ASOCIADA">Asociada</mat-option>
+              <mat-option value="NO_APLICA">No aplica</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Plantilla extracción</mat-label>
+            <mat-select
+              [(ngModel)]="filtroPlantillaExtraccion"
+              (selectionChange)="cargarLista()">
+              <mat-option value="">Todas</mat-option>
+              <mat-option value="true">Con plantilla</mat-option>
+              <mat-option value="false">Sin plantilla (spam / otros)</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="search">
+            <mat-label>Buscar</mat-label>
+            <input
+              matInput
+              [(ngModel)]="busqueda"
+              (keydown.enter)="cargarLista()"
+              placeholder="Asunto, cuerpo o pagador" />
+          </mat-form-field>
+          <button mat-stroked-button type="button" (click)="cargarLista()">
+            <mat-icon svgIcon="mat:search"></mat-icon>
+            Buscar
+          </button>
+        </div>
+
+        @if (cargandoLista) {
+          <mat-spinner diameter="32"></mat-spinner>
+        } @else {
+          <div class="table-wrap table-scroll-container flex-1 min-h-0">
+            <table mat-table [dataSource]="items" class="notif-table">
+              <ng-container matColumnDef="plantilla">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let row" class="col-plantilla">
+                  @if (provienePlantilla(row) && row.plantillaIcono) {
+                    <img
+                      class="row-plantilla-icon"
+                      [src]="iconoUrl(row.plantillaIcono)"
+                      [alt]="row.plantillaNombre || ''"
+                      [matTooltip]="row.plantillaNombre || 'Con plantilla'"
+                      width="24"
+                      height="24" />
+                  } @else if (provienePlantilla(row)) {
+                    <span
+                      class="text-secondary"
+                      [matTooltip]="row.plantillaNombre || 'Con plantilla'">✓</span>
+                  } @else {
+                    <span class="text-secondary" matTooltip="Sin plantilla de extracción">—</span>
+                  }
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="recibidoEn">
+                <th mat-header-cell *matHeaderCellDef>Recibido</th>
+                <td mat-cell *matCellDef="let row">
+                  {{ row.recibidoEn | date: 'dd/MM/yyyy HH:mm' }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="asunto">
+                <th mat-header-cell *matHeaderCellDef>Asunto</th>
+                <td
+                  mat-cell
+                  *matCellDef="let row"
+                  class="col-asunto"
+                  [class.asunto-no-permitido]="asuntoNoPermitido(row)"
+                  [matTooltip]="tooltipAsunto(row)">
+                  <span class="asunto-cell-inner">
+                    @if (asuntoNoPermitido(row)) {
+                      <mat-icon class="asunto-warn-icon" svgIcon="mat:warning"></mat-icon>
+                    }
+                    <span class="asunto-text">{{ row.asunto || '—' }}</span>
+                  </span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="cuerpoTexto">
+                <th mat-header-cell *matHeaderCellDef>cuerpo_texto</th>
+                <td mat-cell *matCellDef="let row" class="col-cuerpo">
+                  <div class="cuerpo-cell">
+                    <span
+                      class="cuerpo-preview"
+                      [matTooltip]="previewCuerpo(row.cuerpoTexto, 400)"
+                      >{{ previewCuerpo(row.cuerpoTexto) }}</span
+                    >
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      class="btn-mensaje-completo"
+                      [disabled]="!tieneMensajeCompleto(row)"
+                      matTooltip="Ver correo tal como llegó (con vínculos)"
+                      (click)="verMensajeCompleto(row, $event)">
+                      Ver mensaje completo
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="monto">
+                <th mat-header-cell *matHeaderCellDef>Monto</th>
+                <td mat-cell *matCellDef="let row">
+                  {{ row.monto != null ? (row.monto | currency: 'COP' : 'symbol-narrow' : '1.0-0') : '—' }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="nombrePagador">
+                <th mat-header-cell *matHeaderCellDef>Pagador</th>
+                <td mat-cell *matCellDef="let row">{{ row.nombrePagador || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="clasificacion">
+                <th mat-header-cell *matHeaderCellDef>Clasificación</th>
+                <td mat-cell *matCellDef="let row">
+                  {{ labelClasificacion(row) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="vinculoOperacion">
+                <th mat-header-cell *matHeaderCellDef>Vínculo</th>
+                <td mat-cell *matCellDef="let row">{{ labelVinculo(row) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="estadoVista">
+                <th mat-header-cell *matHeaderCellDef>Ciclo de vista</th>
+                <td mat-cell *matCellDef="let row">{{ labelCicloVista(row.estadoVista) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="acciones">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let row">
+                  <button mat-icon-button type="button" matTooltip="Ver" (click)="ver(row)">
+                    <mat-icon svgIcon="mat:visibility"></mat-icon>
+                  </button>
+                  @if (row.estadoVista !== 'ARCHIVADA') {
+                    <button mat-icon-button type="button" matTooltip="Archivar" (click)="archivar(row)">
+                      <mat-icon svgIcon="mat:folder"></mat-icon>
+                    </button>
+                  }
+                  <button mat-icon-button type="button" matTooltip="Eliminar" (click)="eliminar(row)">
+                    <mat-icon svgIcon="mat:delete"></mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+            @if (items.length === 0) {
+              <p class="empty text-secondary">No hay notificaciones para este filtro.</p>
+            }
+          </div>
+        }
+      </section>
+    </mat-tab>
+
+    <mat-tab label="Tickets sin notificación">
+      <section class="card-section tab-panel">
+        <div class="tab-title-row">
+          <h3 class="section-title mb-0">Tickets sin notificación</h3>
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="cargandoTicketsSinNotif"
+            (click)="cargarTicketsSinNotificacion()">
+            <mat-icon svgIcon="mat:refresh"></mat-icon>
+            Actualizar
+          </button>
+        </div>
+        <p class="hint text-secondary">
+          Ventas electrónicas en las que la caja dejó de esperar confirmación (Ya no esperar).
+        </p>
+        <div class="filters">
+          <mat-form-field appearance="outline">
+            <mat-label>Fecha</mat-label>
+            <input matInput [matDatepicker]="pickerSinNotif" [(ngModel)]="filtroFecha" />
+            <mat-datepicker-toggle matIconSuffix [for]="pickerSinNotif"></mat-datepicker-toggle>
+            <mat-datepicker #pickerSinNotif></mat-datepicker>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="search">
+            <mat-label>Persona</mat-label>
+            <input
+              matInput
+              [(ngModel)]="filtroPersona"
+              (keydown.enter)="aplicarFiltroTickets()"
+              placeholder="Nombre" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Valor</mat-label>
+            <input
+              matInput
+              [(ngModel)]="filtroValor"
+              (keydown.enter)="aplicarFiltroTickets()"
+              placeholder="Ej. 2000" />
+          </mat-form-field>
+          <button mat-stroked-button type="button" (click)="aplicarFiltroTickets()">
+            <mat-icon svgIcon="mat:search"></mat-icon>
+            Buscar
+          </button>
+        </div>
+        @if (cargandoTicketsSinNotif) {
+          <mat-spinner diameter="32"></mat-spinner>
+        } @else {
+          <div class="table-wrap">
+            <table mat-table [dataSource]="ticketsSinNotif" class="notif-table">
+              <ng-container matColumnDef="numeroVenta">
+                <th mat-header-cell *matHeaderCellDef>Venta</th>
+                <td mat-cell *matCellDef="let row" [matTooltip]="'Recibo #' + row.historialReciboId">
+                  {{ row.numeroVenta || ('Recibo #' + row.historialReciboId) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="valor">
+                <th mat-header-cell *matHeaderCellDef>Valor</th>
+                <td mat-cell *matCellDef="let row">
+                  {{ row.valor | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="fecha">
+                <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                <td mat-cell *matCellDef="let row">
+                  {{ row.fecha | date: 'dd/MM/yyyy HH:mm' }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="persona">
+                <th mat-header-cell *matHeaderCellDef>Persona</th>
+                <td mat-cell *matCellDef="let row">{{ row.persona || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="acciones">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let row">
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="verProductosTicket(row)">
+                    Ver productos
+                  </button>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="displayedColumnsSinNotif"></tr>
+              <tr
+                mat-row
+                *matRowDef="let row; columns: displayedColumnsSinNotif"
+                [class.selected-row]="esTicketSinNotifSeleccionado(row)"
+                (click)="seleccionarTicketSinNotif(row)"></tr>
+            </table>
+            @if (ticketsSinNotif.length === 0) {
+              <p class="empty text-secondary">
+                {{
+                  ticketsSinNotifAll.length === 0
+                    ? 'No hay tickets sin notificación.'
+                    : 'No hay resultados para este filtro.'
+                }}
+              </p>
+            }
+          </div>
+        }
+      </section>
+    </mat-tab>
+
+    <mat-tab label="Plantillas de extracción">
+      <section class="card-section tab-panel">
+        <p class="hint text-secondary">
+          Tags:
+          <code ngNonBindable>{{nombrePagador}}</code>,
+          <code ngNonBindable>{{monto}}</code>,
+          <code ngNonBindable>{{referenciaCuenta}}</code>,
+          <code ngNonBindable>{{lugarRetiro}}</code>
+          <span ngNonBindable>({{lugarRetiro}} se guarda como pagador/tercero).</span>
+          La plantilla es un <strong>fragmento</strong>: basta con que ese tramo
+          aparezca en el correo (se ignoran mayúsculas, tildes y espacios de más).
+          No hace falta copiar el «Bancolombia:» ni el resto del mensaje.
+          Fechas/horas en la plantilla se tratan como variables.
+          <strong>Ingreso</strong>: método de pago (icono del medio).
+          <strong>Egreso</strong>: orígenes de fondos.
+          El movimiento asociado usa origen_tipo «MOVIMIENTO BANCO POR IDENTIFICAR».
+        </p>
+        @if (cargandoPlantillas) {
+          <mat-spinner diameter="32"></mat-spinner>
+        } @else {
+          @for (p of plantillas; track p.id || $index) {
+            <div class="plantilla-card">
+              <div class="plantilla-head">
+                @if (esPlantillaIngreso(p) && iconoPlantilla(p); as icoSrc) {
+                  <img
+                    class="plantilla-icon-preview"
+                    [src]="icoSrc"
+                    [alt]="p.nombre"
+                    width="40"
+                    height="40" />
+                }
+                <mat-form-field appearance="outline" class="nombre-field">
+                  <mat-label>Nombre</mat-label>
+                  <input matInput [(ngModel)]="p.nombre" placeholder="QR, BREVE, OTRO" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="naturaleza-field">
+                  <mat-label>Naturaleza</mat-label>
+                  <mat-select
+                    [(ngModel)]="p.naturaleza"
+                    (ngModelChange)="onNaturalezaPlantillaChange(p)">
+                    @for (n of naturalezasPlantilla; track n.value) {
+                      <mat-option [value]="n.value">{{ n.label }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <button
+                  mat-flat-button
+                  color="primary"
+                  type="button"
+                  [disabled]="guardandoPlantillaId === (p.id || 0) || !plantillaDirty(p)"
+                  (click)="guardarPlantilla(p)">
+                  {{ guardandoPlantillaId === (p.id || 0) ? 'Guardando…' : 'Guardar' }}
+                </button>
+                <button mat-icon-button type="button" matTooltip="Eliminar" (click)="eliminarPlantilla(p)">
+                  <mat-icon svgIcon="mat:delete"></mat-icon>
+                </button>
+              </div>
+              <div class="plantilla-mov-fields">
+                <mat-form-field appearance="outline" class="metodo-field">
+                  <mat-label>Método de pago</mat-label>
+                  <mat-select
+                    [(ngModel)]="p.metodoPagoId">
+                    <mat-option [value]="null">—</mat-option>
+                    @if (metodosNotificacion.length === 0) {
+                      <mat-option [value]="null" disabled>
+                        Ninguno con notificaciones (activa en Dominios)
+                      </mat-option>
+                    }
+                    @for (m of metodosNotificacion; track m.id) {
+                      <mat-option [value]="m.id">
+                        <span class="of-option">
+                          @if (m.file) {
+                            <img
+                              class="mp-opt-icon"
+                              [src]="iconoUrl(m.file)"
+                              [alt]="m.descripcion"
+                              width="22"
+                              height="22" />
+                          }
+                          {{ m.descripcion }}
+                        </span>
+                      </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <button
+                  mat-stroked-button
+                  type="button"
+                  class="metodos-pago-btn"
+                  matTooltip="Abrir catálogo Dominios → Métodos de pago"
+                  (click)="abrirMetodosPagoDominios()">
+                  <mat-icon svgIcon="mat:payments" class="ltr:mr-1 rtl:ml-1"></mat-icon>
+                  Métodos de pago
+                </button>
+                <mat-form-field appearance="outline">
+                  <mat-label>Origen de fondos origen</mat-label>
+                  <mat-select
+                    [(ngModel)]="p.origenFondosOrigenId"
+                    [disabled]="!esPlantillaEgreso(p)">
+                    <mat-option [value]="null">—</mat-option>
+                    @for (c of origenesArbol; track c.id) {
+                      <mat-option [value]="c.id">
+                        <span class="of-option">
+                          @if (iconoOrigenFondosUrl(c); as iconUrl) {
+                            <span class="of-avatar of-avatar--img">
+                              <img [src]="iconUrl" [alt]="c.nombre" />
+                            </span>
+                          } @else {
+                            <span class="of-avatar" [style.background]="colorOrigen(c)">
+                              {{ inicialesOrigen(c.nombre) }}
+                            </span>
+                          }
+                          <span>{{ c.nombreDisplay }}</span>
+                        </span>
+                      </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Origen de fondos destino</mat-label>
+                  <mat-select
+                    [(ngModel)]="p.origenFondosDestinoId"
+                    [disabled]="!esPlantillaEgreso(p)">
+                    <mat-option [value]="null">—</mat-option>
+                    @for (c of origenesArbol; track c.id) {
+                      <mat-option [value]="c.id">
+                        <span class="of-option">
+                          @if (iconoOrigenFondosUrl(c); as iconUrl) {
+                            <span class="of-avatar of-avatar--img">
+                              <img [src]="iconUrl" [alt]="c.nombre" />
+                            </span>
+                          } @else {
+                            <span class="of-avatar" [style.background]="colorOrigen(c)">
+                              {{ inicialesOrigen(c.nombre) }}
+                            </span>
+                          }
+                          <span>{{ c.nombreDisplay }}</span>
+                        </span>
+                      </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Cuerpo</mat-label>
+                <textarea matInput rows="4" [(ngModel)]="p.cuerpo"></textarea>
+              </mat-form-field>
+            </div>
+          }
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="tienePlantillaNueva()"
+            (click)="agregarPlantilla()">
+            <mat-icon svgIcon="mat:add"></mat-icon>
+            Agregar plantilla
+          </button>
+        }
+      </section>
+    </mat-tab>
+  </mat-tab-group>
+  </div>
+
+  <app-ayuda-en-linea-panel
+    [abierto]="ayudaAbierta"
+    [contenido]="ayudaContenido"
+    (cerrar)="cerrarAyudaEnLinea()" />
+</div>

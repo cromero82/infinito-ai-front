@@ -1,0 +1,27 @@
+@if (detalles.length > 0) {
+  <div class="metodos-pago">
+    @for (metodo of metodosPago; track metodo) {
+      @if (metodo.estado !== "inactivo") {
+        <button
+          type="button"
+          class="metodo-pago-btn"
+          mat-icon-button
+          disableRipple
+          [matTooltip]="metodo.descripcion"
+          (click)="seleccionarMetodoPago(metodo)"
+          [attr.aria-disabled]="disabled || null"
+          [class.metodo-pago-disabled]="disabled"
+          [class.metodo-pago-seleccionado]="isMetodoSeleccionado(metodo)">
+          <img
+            [src]="'assets/img/icons/payments/' + metodo.file"
+            [alt]="metodo.descripcion"
+            class="metodo-pago-icon" />
+          @if (metodo.estado !== "activo") {
+            <mat-icon class="metodo-pago-warning" svgIcon="mat:warning">
+            </mat-icon>
+          }
+        </button>
+      }
+    }
+  </div>
+}

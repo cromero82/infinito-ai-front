@@ -1,0 +1,957 @@
+/* Cadena flex hasta mat-dialog-content: el hueco extra queda dentro del área scrollable, no bajo las acciones */
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+  /* Misma anchura exterior para total (badge) y campo efectivo (outline). */
+  --pago-efectivo-monto-caja-ancho: 176px;
+}
+
+.pago-efectivo-dialog-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pago-efectivo-dialog-header {
+  flex-shrink: 0;
+}
+
+/* Arrastre del diálogo (mismo patrón que editar-producto) */
+.pago-efectivo-dialog-shell[cdkDrag] {
+  cursor: move;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  .dialog-actions {
+    cursor: default;
+  }
+}
+
+.pago-efectivo-dialog-header[cdkDragHandle] {
+  cursor: grab;
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+}
+
+.pago-efectivo-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.pago-efectivo-modo-toggle {
+  flex-shrink: 0;
+
+  ::ng-deep .mat-button-toggle-label-content {
+    line-height: 36px;
+    padding: 0 12px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+/* Sin flex-grow en el contenido: evita la franja blanca entre "Cambio" y mat-dialog-actions */
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  max-height: none !important;
+}
+
+/* Sin min-height ni space-between: evita un bloque vacío enorme entre "Cambio" y los botones. */
+.extra-spacing {
+  min-height: 0;
+  justify-content: flex-start;
+  padding-bottom: 0;
+}
+
+.imprimir-luego-preferencia {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-right: 8px;
+
+  mat-checkbox {
+    font-size: 14px;
+    line-height: 1.35;
+  }
+}
+
+.total-a-pagar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  font-size: 18px;
+  font-weight: 600;
+
+  .label {
+    color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+  }
+
+  .value {
+    background-color: rgba(76, 175, 80, 0.15);
+    color: rgba(0, 0, 0, 0.85);
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    box-sizing: border-box;
+
+    &.pago-efectivo-monto-caja {
+      width: var(--pago-efectivo-monto-caja-ancho);
+      min-width: var(--pago-efectivo-monto-caja-ancho);
+      max-width: var(--pago-efectivo-monto-caja-ancho);
+    }
+  }
+}
+
+/* Bloque efectivo + billetes: aire claro entre el outline del input (foco) y la rejilla; sin márgenes negativos que los peguen. */
+.paga-con-y-billetes {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: -2px;
+
+  /* Separación respecto al borde inferior del mat-form-field (incl. anillo de foco MDC). */
+  > .paga-con-row {
+    margin-bottom: 0;
+    padding-bottom: 12px;
+  }
+
+  > .billetes-grid {
+    margin-top: 0;
+    row-gap: 8px;
+  }
+}
+
+/* Etiqueta + monto/input alineados al borde derecho del modal (bloque RL). */
+.pago-efectivo-fila-rl {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+
+  > .label {
+    flex-shrink: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+  }
+}
+
+.paga-con-row {
+  width: 100%;
+  min-width: 0;
+}
+
+.paga-con-alerta-escaneo {
+  width: 100%;
+  margin: 6px 0 0;
+  padding: 0;
+  box-sizing: border-box;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #b71c1c;
+}
+
+.paga-con-field {
+  width: 80%;
+  font-size: 18px;
+
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+
+  /* outline compacto: menos aire bajo el input en esta fila */
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    padding-bottom: 0;
+  }
+
+  ::ng-deep .mat-mdc-form-field-infix {
+    padding-top: 7px;
+    padding-bottom: 7px;
+    min-height: 38px;
+  }
+}
+
+/* Input de efectivo: mismo ancho que el badge del total; label + outline en un solo flex para alinear en cruz. */
+.pago-efectivo-efectivo-grupo {
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  min-width: 0;
+
+  > .label {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+    /* Centrado óptico con el outline MDC (el notch sin mat-label suele desplazar el centro visual). */
+    transform: translateY(-4px);
+  }
+}
+
+.paga-con-y-billetes .paga-con-row .paga-con-field.pago-efectivo-monto-caja {
+  flex: 0 0 var(--pago-efectivo-monto-caja-ancho);
+  width: var(--pago-efectivo-monto-caja-ancho);
+  min-width: var(--pago-efectivo-monto-caja-ancho);
+  max-width: var(--pago-efectivo-monto-caja-ancho);
+  margin: 0;
+
+  .paga-con-input {
+    font-size: 16px;
+  }
+
+  ::ng-deep .mat-mdc-form-field {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    display: block;
+  }
+
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    width: 100%;
+  }
+
+  ::ng-deep .mat-mdc-form-field-flex {
+    align-items: center;
+  }
+
+  /* Outline sin mat-label: padding simétrico para que el centro visual coincida con el label. */
+  ::ng-deep .mat-mdc-form-field-infix {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    min-height: 0;
+  }
+}
+
+.paga-con {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.paga-con-label {
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.75);
+  min-width: 120px;
+}
+
+.paga-con-input {
+  text-align: right;
+  font-size: 22px;
+  font-weight: 600;
+  padding-right: 8px;
+}
+
+.currency-suffix {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  margin-left: 4px;
+}
+
+.billetes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  column-gap: 12px;
+  row-gap: 8px;
+  justify-items: center;
+}
+
+/* Botón nativo (sin mat-stroked-button): MatButton proyectaba mat-icon fuera del label y rompía top/bottom */
+.billete {
+  appearance: none;
+  margin: 0;
+  font: inherit;
+  font-family: inherit;
+  line-height: normal;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 14px;
+  gap: 8px;
+  border-radius: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.08) !important;
+  background: #fff;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  min-height: 116px;
+  width: 148px;
+  -webkit-tap-highlight-color: transparent;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mdc-theme-primary, #673ab7);
+    outline-offset: 2px;
+  }
+
+  .billete-contenido {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    position: relative;
+    z-index: 0;
+  }
+
+  .billete-visual {
+    width: 100%;
+
+    img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      pointer-events: none;
+      display: block;
+      border-radius: 8px;
+    }
+  }
+
+  &.billete-modo-dual {
+    position: relative;
+    /* translateY en flechas sobresale unos px; sin esto overflow:hidden las recorta */
+    overflow: visible;
+
+    .billete-contenido {
+      pointer-events: none;
+    }
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  .billete-zona {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    cursor: pointer;
+    box-sizing: border-box;
+    background: transparent;
+  }
+
+  /* Mitades exactas sin depender de height: % (más estable dentro de mat-button) */
+  .billete-zona-sumar {
+    top: 0;
+    bottom: 50%;
+  }
+
+  .billete-zona-restar {
+    top: 50%;
+    bottom: 0;
+  }
+
+  /* Referencia: caja de padding del botón .billete (borde interior), no la imagen */
+  .billete-flecha {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    pointer-events: none;
+    width: 28px;
+    height: 28px;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.9;
+    color: rgba(0, 0, 0, 0.82);
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 1))
+      drop-shadow(0 1px 2px rgba(0, 0, 0, 0.28));
+
+    ::ng-deep svg {
+      width: 24px;
+      height: 24px;
+      display: block;
+    }
+  }
+
+  /* Más cerca del borde: el SVG trae aire interno; empujamos el trazo hacia arriba/abajo */
+  &.billete-modo-dual .billete-flecha--sup {
+    top: 0;
+    transform: translate(-50%, -5px);
+  }
+
+  &.billete-modo-dual .billete-flecha--inf {
+    bottom: 0;
+    transform: translate(-50%, 5px);
+  }
+
+  .billete-label {
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.85);
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
+  }
+
+  &.selected {
+    border-color: var(--mdc-theme-primary, #673ab7) !important;
+    box-shadow: 0 0 0 4px rgba(103, 58, 183, 0.16);
+    transform: translateY(-2px);
+  }
+}
+
+.otros-metodos-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.otros-metodos-cabecera {
+  width: 100%;
+}
+
+.otros-metodos-titulo {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.65);
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.otros-metodos-subtotal {
+  flex: 0 0 var(--pago-efectivo-monto-caja-ancho);
+  width: var(--pago-efectivo-monto-caja-ancho);
+  min-width: var(--pago-efectivo-monto-caja-ancho);
+  max-width: var(--pago-efectivo-monto-caja-ancho);
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.85);
+  background-color: rgba(0, 0, 0, 0.06);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+}
+
+.otros-metodos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  column-gap: 10px;
+  row-gap: 4px;
+  justify-items: center;
+}
+
+.otro-metodo-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 4px 6px 14px;
+  gap: 0;
+  border-radius: 12px;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  width: 140px;
+  min-height: 96px;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: rgba(103, 58, 183, 0.35);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mdc-theme-primary, #673ab7);
+    outline-offset: 2px;
+  }
+}
+
+.otro-metodo-contenido {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+}
+
+.otro-metodo-visual {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 2px 0 0;
+  line-height: 0;
+
+  img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    display: block;
+  }
+}
+
+.otro-metodo-warning {
+  position: absolute;
+  right: 2px;
+  bottom: 0;
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  color: #ff9800;
+}
+
+.otro-metodo-monto-field {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+
+  &.mat-mdc-form-field {
+    line-height: normal;
+  }
+
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  ::ng-deep .mat-mdc-form-field-wrapper {
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+
+  ::ng-deep .mdc-text-field--outlined {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+
+  ::ng-deep .mat-mdc-form-field-flex {
+    align-items: stretch;
+  }
+
+  ::ng-deep .mat-mdc-form-field-infix {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    min-height: 36px;
+    border-top: 0;
+    box-sizing: border-box;
+  }
+
+  ::ng-deep .mdc-text-field--no-label .mat-mdc-form-field-infix {
+    min-height: 34px;
+  }
+
+  ::ng-deep .mdc-notched-outline__leading,
+  ::ng-deep .mdc-notched-outline__notch,
+  ::ng-deep .mdc-notched-outline__trailing {
+    border-width: 1px;
+  }
+
+  ::ng-deep .mat-mdc-input-element {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    box-sizing: border-box;
+    line-height: 1.3;
+    align-self: center;
+  }
+
+  ::ng-deep .mat-mdc-form-field-bottom-align::before {
+    display: none;
+  }
+
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: right;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+}
+
+.cambio {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background-color: rgba(255, 235, 59, 0.2);
+  font-weight: 600;
+  font-size: 18px;
+  box-sizing: border-box;
+  justify-content: space-between;
+
+  > .label {
+    flex-shrink: 0;
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  > .value {
+    flex: 0 0 auto;
+    color: rgba(0, 0, 0, 0.85);
+    font-weight: 700;
+    font-size: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 140px;
+  }
+
+  &.cambio-insuficiente {
+    background-color: rgba(244, 67, 54, 0.12);
+
+    > .value {
+      color: #d32f2f;
+    }
+  }
+}
+
+.mixto-resumen-cambio-fila {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 10px;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  margin: 0 0 2px;
+  box-sizing: border-box;
+
+  > .mixto-resumen-fieldset {
+    margin: 0;
+    min-width: 0;
+    width: auto;
+    height: 100%;
+  }
+
+  > .cambio--mixto-en-fila {
+    width: auto;
+    min-width: 0;
+    height: 100%;
+    align-self: stretch;
+    padding: 8px 10px;
+
+    > .value {
+      min-width: 0;
+    }
+  }
+}
+
+.mixto-resumen-fieldset {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  margin: 0;
+  padding: 6px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+
+  > .resumen-metodos-pago-legend {
+    float: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  > .cambio-desglose {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.55);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  box-sizing: border-box;
+  padding-top: 2px;
+  margin-top: 0;
+  gap: 8px 12px;
+  flex-shrink: 0;
+}
+
+.dialog-actions--entrada {
+  justify-content: space-between;
+}
+
+.dialog-actions-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.estado-procesando {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  color: rgba(0, 0, 0, 0.6);
+
+  p {
+    margin: 0;
+    font-size: 16px;
+  }
+}
+
+.estado-exito {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+
+  .icono-exito {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #4caf50;
+  }
+
+  .mensaje-exito {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.85);
+  }
+
+  .total-exito {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: #4caf50;
+  }
+}
+
+.estado-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+
+  .icono-error {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #f44336;
+  }
+
+  .mensaje-error {
+    margin: 0;
+    font-size: 16px;
+    color: rgba(0, 0, 0, 0.75);
+    text-align: center;
+  }
+}
+
+// —— Dark mode ——
+:host-context(.dark) {
+  .pago-efectivo-dialog-header[cdkDragHandle]:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+  }
+
+  .total-a-pagar {
+    .label {
+      color: rgba(255, 255, 255, 0.65);
+    }
+
+    .value {
+      background-color: rgba(76, 175, 80, 0.22);
+      color: rgba(255, 255, 255, 0.95);
+    }
+  }
+
+  .pago-efectivo-fila-rl > .label,
+  .pago-efectivo-efectivo-grupo > .label {
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  .paga-con-alerta-escaneo {
+    color: #ef9a9a;
+  }
+
+  .paga-con-label {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .currency-suffix {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .billete {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.14) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+
+    .billete-label {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .billete-flecha {
+      color: rgba(255, 255, 255, 0.9);
+      filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.85))
+        drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    }
+
+    &.selected {
+      border-color: rgb(var(--vex-color-primary-400) / 0.85) !important;
+      box-shadow: 0 0 0 4px rgb(var(--vex-color-primary-500) / 0.28);
+      background: rgba(121, 134, 203, 0.16);
+    }
+  }
+
+  .otros-metodos-titulo {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .otros-metodos-subtotal {
+    color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .otro-metodo-card {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+
+    &:hover {
+      border-color: rgb(var(--vex-color-primary-400) / 0.55);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+      background: rgba(255, 255, 255, 0.12);
+    }
+  }
+
+  .cambio {
+    background-color: rgba(255, 235, 59, 0.14);
+
+    > .label {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    > .value {
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    &.cambio-insuficiente {
+      background-color: rgba(244, 67, 54, 0.2);
+
+      > .value {
+        color: #ef9a9a;
+      }
+    }
+  }
+
+  .mixto-resumen-fieldset {
+    border-color: rgba(255, 255, 255, 0.14);
+
+    > .resumen-metodos-pago-legend,
+    > .cambio-desglose {
+      color: rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  .estado-procesando {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .estado-exito .mensaje-exito {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .estado-error .mensaje-error {
+    color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+

@@ -1,0 +1,66 @@
+---
+description: Monitor (bug-reporter) — captura HTTP requests/responses para copiar JSON o revisar en detalle
+alwaysApply: false
+---
+
+# Monitor (bug-reporter)
+
+## Propósito
+
+Cuando un usuario reporta un bug, este sistema captura **todas las peticiones HTTP** (con headers, body, status, duración) y permite **copiar** un JSON estructurado o abrirlo en **Ver detalle** como contexto para debugging en Cursor AI.
+
+## Arquitectura
+
+```
+HttpClient (app)
+  │
+  ▼
+bugReporterInterceptor (captura request/response)
+  │
+  ├─ success (2xx) → tap.next → BugReporterService.add()
+  └─ error (4xx/5xx) → tap.error → BugReporterService.add()
+
+reporte-frontend (fetch)
+  │
+  └─ fallo HTTP o de red → ReporteFrontendService → BugReporterService.addManual()
+                                                    con source: 'reporte-frontend'
+
+Usuario hace clic en botón Monitor (FAB o en mat-dialog-actions)
+  │
+  ├─ Ver detalle → modal (tabla + editor JSON)
+  ├─ Copiar al portapapeles → BugReporterService.exportJson()
+  └─ Limpiar → BugReporterService.clear()
+```
+
+## Archivos clave
+
+| Archivo | Rol |
+|---------|-----|
+| `src/app/core/bug-reporter/bug-reporter.service.ts` | Almacena hasta 200 entries, exporta JSON (sin descarga de archivo) |
+| `src/app/core/bug-reporter/bug-reporter.interceptor.ts` | Interceptor HTTP funcional, captura success + error, filtra assets estáticos. Usa `req.urlWithParams` + `requestParams` (HttpParams). |
+| `src/app/core/bug-reporter/bug-reporter-button.component.*` | FAB Monitor: menú Ver detalle / Copiar / Limpiar (sin tooltip de “actividad sospechosa”) |
+| `src/app/core/bug-reporter/bug-reporter-in-dialog.component.ts` | Monitor inyectado en `mat-dialog-actions` |
+| `src/app/core/bug-reporter/bug-reporter-detail-dialog.component.*` | Modal Ver detalle |
+| `src/app/app.config.ts` | Registro del interceptor |
+| `src/app/layouts/layout/layout.component.*` | `<vex-bug-reporter-button>` en el layout |
+
+## Integración con reporte-frontend
+
+El servicio `ReporteFrontendService` inyecta `BugReporterService`. Cuando el `fetch` a `reporte-frontend` falla, lo registra con `source: 'reporte-frontend'`.
+
+## Uso
+
+1. Al navegar, el interceptor captura requests al backend (filtra assets estáticos).
+2. Clic en **Monitor** → menú: **Ver detalle**, **Copiar al portapapeles**, **Limpiar**.
+3. Visible solo si `configuracion-app` tiene `monitor-bug=true` (se guarda en localStorage al login).
+4. Sin opción “Exportar JSON (para Cursor AI)” ni `downloadJson()`.
+
+## Límites conocidos
+
+- Máximo 200 entries en memoria (buffer circular).
+- Solo captura `HttpClient` (no `fetch()` nativo), excepto `reporte-frontend` registrado manualmente.
+- Assets estáticos se excluyen automáticamente.
+
+## Seguridad
+
+Headers sensibles (`authorization`, `cookie`, etc.) se truncan (primeros ~20 caracteres + `... [truncated]`).

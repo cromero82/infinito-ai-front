@@ -1,0 +1,483 @@
+<div class="card historial-ventas-container">
+  <div class="split-pane-container">
+    <!-- Left side -->
+    <div class="split-pane-left left-side pos-field-dense" [style.width.px]="leftPanelWidth">
+        <h2 class="title mt-0 mb-4">Historial Tickets</h2>
+
+    <div class="filter-section">
+      <mat-button-toggle-group
+        appearance="legacy"
+        hideSingleSelectionIndicator
+        [value]="selectedFilter"
+        (valueChange)="selectFilter($event)">
+        <mat-button-toggle value="todos">Todos</mat-button-toggle>
+        <mat-button-toggle value="pagado">Pagado</mat-button-toggle>
+        <mat-button-toggle value="anulados">Anulados</mat-button-toggle>
+        <mat-button-toggle value="restaurados">Restaurados</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <div class="fecha-section">
+      <mat-form-field appearance="outline" class="fecha-field" subscriptSizing="dynamic">
+        <mat-label>Fecha</mat-label>
+        <input
+          matInput
+          [matDatepicker]="picker"
+          [formControl]="fechaCtrl"
+          (dateChange)="onFechaChange()" />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+      <mat-checkbox
+        [formControl]="hoyCtrl"
+        color="primary"
+        class="hoy-check"
+        (change)="onHoyToggle($event.checked)">
+        Hoy
+      </mat-checkbox>
+    </div>
+
+    <div class="medio-filters">
+      <mat-form-field appearance="outline" class="medio-field" subscriptSizing="dynamic">
+        <mat-label>Método de pago</mat-label>
+        <mat-select [formControl]="metodoPagoFilterCtrl">
+          <mat-option value="">Todos</mat-option>
+          @for (m of metodosPago; track m.id) {
+            <mat-option [value]="m.id">{{ m.descripcion }}</mat-option>
+          }
+          <mat-option value="MIXTO">Mixto</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-checkbox [formControl]="sinCorteCtrl" color="primary" class="sin-corte-check">
+        Tickets sin corte
+      </mat-checkbox>
+    </div>
+
+    <div class="extra-filters">
+      <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
+        <mat-label>Cliente</mat-label>
+        <input
+          matInput
+          [formControl]="clienteSearchCtrl"
+          [matAutocomplete]="autoCliente"
+          placeholder="Buscar cliente..." />
+        @if (clienteIdSeleccionado) {
+          <button
+            matSuffix
+            mat-icon-button
+            type="button"
+            (click)="clearClienteFilter()"
+            aria-label="Limpiar filtro cliente">
+            <mat-icon svgIcon="mat:close"></mat-icon>
+          </button>
+        }
+        <mat-autocomplete
+          #autoCliente="matAutocomplete"
+          (optionSelected)="onClienteSelected($event)"
+          [displayWith]="displayCliente">
+          @for (c of clientesFiltrados; track c.id) {
+            <mat-option [value]="c">{{ c.nombre }}</mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
+        <mat-label>Producto</mat-label>
+        <input
+          matInput
+          [formControl]="productoFilterCtrl"
+          [matAutocomplete]="autoProducto"
+          placeholder="Buscar producto..." />
+        @if (productoIdSeleccionado) {
+          <button
+            matSuffix
+            mat-icon-button
+            type="button"
+            (click)="clearProductoFilter()"
+            aria-label="Limpiar filtro producto">
+            <mat-icon svgIcon="mat:close"></mat-icon>
+          </button>
+        }
+        <mat-autocomplete
+          #autoProducto="matAutocomplete"
+          (optionSelected)="onProductoSelected($event)"
+          [displayWith]="displayProducto">
+          @for (p of productosFiltrados; track p.id) {
+            <mat-option [value]="p">{{ p.nombre }}</mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+    </div>
+
+    @if (sesionIdFromUrl) {
+      <div class="filter-labels">
+        @if (userInfoLoading) {
+          <div class="text-secondary text-sm">Cargando usuario...</div>
+        }
+        @if (!userInfoLoading && userInfo) {
+          <div class="flex flex-wrap gap-2 items-center">
+            <span class="filter-label filter-label--success">{{
+              userInfo.nombre
+            }}</span>
+            <span class="filter-label filter-label--normal">{{
+              userInfo.correoElectronico
+            }}</span>
+          </div>
+        }
+      </div>
+    }
+
+    <div class="recibos-list-container">
+      @if (loading) {
+        <div class="loading">Cargando...</div>
+      }
+      @if (!loading && error) {
+        <div class="error">{{ error }}</div>
+      }
+
+      @if (!loading && !error) {
+        <div class="recibos-list" #recibosList (scroll)="onRecibosListScroll()">
+          @for (recibo of historialRecibos; track recibo) {
+            <div
+              class="recibo-item"
+              [class.selected]="selectedReciboId === recibo.id"
+              (click)="selectRecibo(recibo)">
+              <div class="recibo-item-main">
+                <div class="recibo-item-body">
+                  <div class="recibo-item-row recibo-item-row--primary">
+                    <span
+                      class="recibo-total"
+                      [innerHTML]="formatCurrencyWithBold(recibo.total)"></span>
+                    <span class="recibo-id-cell">
+                      <span class="recibo-consecutivo">{{
+                        recibo.documentoVentaConsecutivo || '#' + recibo.id
+                      }}</span>
+                      @if (recibo.restaurado || selectedFilter === 'restaurados') {
+                        <span class="recibo-chip restaurado">Restaurado</span>
+                      }
+                    </span>
+                    <span class="recibo-fecha">{{
+                      formatDate(recibo.fechaCreacion)
+                    }}</span>
+                  </div>
+                  <div class="recibo-item-meta">
+                    @if (getClienteNombre(recibo.clienteId); as nombreCliente) {
+                      <span
+                        class="recibo-cliente"
+                        [matTooltip]="nombreCliente">
+                        <mat-icon
+                          class="recibo-cliente-icon"
+                          svgIcon="mat:person"></mat-icon>
+                        {{ nombreCliente }}
+                      </span>
+                    }
+                    <span class="recibo-meta-spacer"></span>
+                    @if (getCajeroAtendio(recibo.sesionId); as cajero) {
+                      <span
+                        class="recibo-cajero"
+                        [matTooltip]="'Atendió: ' + cajero">
+                        atendió: {{ abreviarNombreCajero(cajero) }}
+                      </span>
+                    }
+                  </div>
+                </div>
+                <div class="recibo-item-end">
+                  <div
+                    class="recibo-medio-stack"
+                    [matTooltip]="tooltipMedioLista(recibo)">
+                    <span class="notif-visto-slot">
+                      @if (
+                        tieneFlujoNotifElectronica(recibo) && notifOk(recibo)
+                      ) {
+                        <mat-icon
+                          class="notif-visto-icon"
+                          svgIcon="mat:done_all"
+                          aria-hidden="true"></mat-icon>
+                      }
+                    </span>
+                    <img
+                      class="recibo-medio-icon"
+                      [class.recibo-medio-icon--muted]="
+                        medioIconGrayscale(recibo)
+                      "
+                      [src]="iconoMetodoLista(recibo)"
+                      [alt]="medioListaLabel(recibo)"
+                      width="26"
+                      height="26" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+          @if (loadingMore) {
+            <div class="loading-more">Cargando más...</div>
+          }
+          @if (historialRecibos.length === 0 && !loadingMore) {
+            <div class="empty-message">No hay recibos disponibles</div>
+          }
+        </div>
+      }
+    </div>
+    </div>
+
+    <div
+      class="split-pane-divider"
+      (mousedown)="startResize($event)"
+      [class.resizing]="isResizing">
+      <div class="divider-handle"></div>
+    </div>
+
+    <!-- Right side -->
+    <div class="split-pane-right right-side">
+    <div class="right-side-inner">
+      <div class="right-header">
+        <h2 class="title mt-0 mb-4">Detalles</h2>
+        @if (selectedReciboId) {
+          <div class="action-section">
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              class="editar-button"
+              [disabled]="volviendoAEditar || isReciboAnulado()"
+              (click)="volverAEditar()">
+              {{ volviendoAEditar ? "Editando..." : "Editar en Ventas" }}
+            </button>
+            <button
+              mat-flat-button
+              color="warn"
+              type="button"
+              class="anular-button"
+              [disabled]="anulandoRecibo || isReciboAnulado() || !isReciboPagado()"
+              (click)="anularVenta()">
+              {{ anulandoRecibo ? "Anulando..." : "Anular venta" }}
+            </button>
+            <button
+              mat-flat-button
+              color="accent"
+              type="button"
+              class="restaurar-button"
+              [disabled]="restaurandoTicket || !isReciboPagado()"
+              (click)="restaurarTicket()">
+              {{ restaurandoTicket ? "Restaurando..." : "Restaurar ticket" }}
+            </button>
+            <button
+              mat-flat-button
+              color="basic"
+              type="button"
+              class="imprimir-button"
+              [disabled]="
+                imprimiendoRecibo || !detalles || detalles.length === 0
+              "
+              (click)="imprimirReciboSeleccionado()">
+              <mat-icon
+                class="ltr:mr-2 rtl:ml-2 icon-sm"
+                svgIcon="mat:print"></mat-icon>
+              {{ imprimiendoRecibo ? "Imprimiendo..." : "Imprimir recibo" }}
+            </button>
+          </div>
+        }
+      </div>
+
+      @if (!selectedReciboId) {
+        <div class="text-secondary">
+          Seleccione un recibo para ver los detalles
+        </div>
+      }
+
+      @if (selectedReciboId && detallesLoading) {
+        <div class="loading">Cargando detalles...</div>
+      }
+
+      @if (selectedReciboId && detallesError) {
+        <div class="error">
+          {{ detallesError }}
+        </div>
+      }
+
+      @if (selectedReciboId && !detallesLoading && !detallesError) {
+        @if (documentosLoading) {
+          <div class="loading documentos-loading">Cargando documentos...</div>
+        }
+        @if (!documentosLoading) {
+          <mat-expansion-panel class="documentos-panel" expanded>
+            <mat-expansion-panel-header>
+              <mat-panel-title>Documentos y operaciones</mat-panel-title>
+            </mat-expansion-panel-header>
+            <div class="documentos-content">
+              <div class="doc-summary">
+                <div class="doc-summary-col">
+                  @if (documentos?.documentoVenta?.consecutivo) {
+                    <div class="doc-row">
+                      <span class="doc-label">Comprobante venta</span>
+                      <span class="doc-badge">{{
+                        documentos!.documentoVenta!.consecutivo
+                      }}</span>
+                    </div>
+                    <div class="doc-row">
+                      <span class="doc-label">Estado documento</span>
+                      <span>{{ documentos!.documentoVenta!.estado ?? '—' }}</span>
+                    </div>
+                  }
+                </div>
+                @if (getSelectedRecibo(); as sel) {
+                  <div class="doc-summary-col">
+                    <div class="doc-row">
+                      <span class="doc-label">Fecha de venta</span>
+                      <span>{{ formatDate(sel.fechaCreacion) }}</span>
+                    </div>
+                    <div class="doc-row">
+                      <span class="doc-label">Cajero que atendió</span>
+                      <span>{{ getCajeroAtendio(sel.sesionId) ?? '—' }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+              @for (nota of documentos?.notasAjuste ?? []; track nota.id) {
+                <div class="doc-row nota-row">
+                  <span class="doc-label">{{
+                    nota.tipo === 'DEBITO' ? 'Nota débito' : 'Nota crédito'
+                  }}</span>
+                  <span class="doc-badge nc">{{ nota.consecutivo }}</span>
+                </div>
+                @if (nota.motivoNombre || nota.motivoTexto) {
+                  <div class="doc-row sub">
+                    <span class="doc-label">Motivo</span>
+                    <span>{{
+                      nota.motivoNombre ?? nota.motivoCodigo
+                    }}@if (nota.motivoTexto) {
+                      — {{ nota.motivoTexto }}
+                    }</span>
+                  </div>
+                }
+                @if (nota.fechaHecho) {
+                  <div class="doc-row sub">
+                    <span class="doc-label">Fecha operación</span>
+                    <span>{{ formatDate(nota.fechaHecho) }}</span>
+                  </div>
+                }
+              }
+              @if (documentos?.documentoVentaNuevo?.consecutivo) {
+                <div class="doc-row">
+                  <span class="doc-label">VTA nueva</span>
+                  <span class="doc-badge">{{
+                    documentos!.documentoVentaNuevo!.consecutivo
+                  }}</span>
+                </div>
+              }
+            </div>
+          </mat-expansion-panel>
+        }
+
+        <div class="detalle-content">
+          <div class="detalle-container">
+            <div class="detalle-wrapper">
+              <div class="detalle-header">
+                <span class="detalle-col producto">Producto</span>
+                <span class="detalle-col unitario">Valor unitario</span>
+                <span class="detalle-col cantidad">Cantidad</span>
+                <span class="detalle-col subtotal">Subtotal</span>
+              </div>
+              <div class="detalle-list">
+                @for (detalle of detalles; track detalle) {
+                  <div class="detalle-row">
+                    <span class="detalle-col producto">
+                      {{
+                        detalle.producto
+                          ? detalle.producto.nombre
+                          : "Producto " + detalle.productoId
+                      }}
+                    </span>
+                    <span class="detalle-col unitario">
+                      {{
+                        formatCurrency(
+                          detalle.producto?.precio ??
+                            (detalle.cantidad
+                              ? detalle.subtotal / detalle.cantidad
+                              : 0)
+                        )
+                      }}
+                    </span>
+                    <span class="detalle-col cantidad">
+                      {{ detalle.cantidad }}
+                    </span>
+                    <span class="detalle-col subtotal">
+                      {{ formatCurrency(detalle.subtotal) }}
+                    </span>
+                  </div>
+                }
+              </div>
+            </div>
+            @if (detalles.length > 0) {
+              <div class="detalle-footer">
+                <div class="detalle-footer-left">
+                  @if (esPagoMixtoSeleccionado()) {
+                    <div class="metodo-pago-container metodo-pago-container--mixto">
+                      <span class="metodo-pago-label">Pago mixto:</span>
+                      <div class="pagos-mixto-lineas">
+                        @for (pago of pagosSeleccionados; track $index) {
+                          <div class="pago-mixto-linea">
+                            @if (getMetodoPago(pago.metodoPagoId); as mp) {
+                              <img
+                                [src]="'assets/img/icons/payments/' + mp.file"
+                                [alt]="mp.descripcion"
+                                class="metodo-pago-icon metodo-pago-icon--sm" />
+                              <span>{{ mp.descripcion }}</span>
+                            } @else {
+                              <span>Medio {{ pago.metodoPagoId }}</span>
+                            }
+                            <span class="pago-mixto-monto">{{
+                              formatCurrency(pago.monto)
+                            }}</span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  } @else if (
+                    getSelectedRecibo() &&
+                    getMetodoPago(getSelectedRecibo()!.metodoPagoId)
+                  ) {
+                    <div class="metodo-pago-container">
+                      <span class="metodo-pago-label">Pago con:</span>
+                      <img
+                        [src]="
+                          'assets/img/icons/payments/' +
+                          getMetodoPago(getSelectedRecibo()!.metodoPagoId)!.file
+                        "
+                        [alt]="
+                          getMetodoPago(getSelectedRecibo()!.metodoPagoId)!
+                            .descripcion
+                        "
+                        class="metodo-pago-icon" />
+                      @if (
+                        isMetodoPagoEfectivo(
+                          getSelectedRecibo()!.metodoPagoId
+                        ) && getMontoRecibido(getSelectedRecibo()!) !== null
+                      ) {
+                        <span class="monto-recibido-label">
+                          {{
+                            formatCurrency(
+                              getMontoRecibido(getSelectedRecibo()!)!
+                            )
+                          }}
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+                <div class="detalle-footer-total">
+                  <span class="detalle-col cantidad">TOTAL</span>
+                  <span
+                    class="detalle-col subtotal total-value total-value--highlight">
+                    {{ formatCurrency(getTotalDetalles()) }}
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+  </div>
+</div>

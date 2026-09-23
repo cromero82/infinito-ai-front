@@ -1,0 +1,229 @@
+<div class="mp-dialog flex flex-col">
+  <div class="flex items-center justify-between gap-3 px-5 pt-4 pb-2">
+    <div class="min-w-0">
+      <h2 class="m-0 text-xl font-semibold tracking-tight">
+        @if (mode === 'list') {
+          Métodos de pago
+        } @else if (editingId != null) {
+          Editar método de pago
+        } @else {
+          Nuevo método de pago
+        }
+      </h2>
+      <p class="m-0 mt-1 text-sm text-secondary">
+        Catálogo de medios (tickets, egresos). Activa «Permite notificación» para
+        confirmación por email y plantillas de extracción.
+      </p>
+    </div>
+  </div>
+
+  @if (mode === 'list') {
+    <div class="flex items-center gap-2 px-5 pb-3 flex-wrap">
+      <mat-form-field
+        appearance="outline"
+        class="search-field flex-1 min-w-[180px]"
+        subscriptSizing="dynamic">
+        <mat-label>Buscar</mat-label>
+        <input matInput [formControl]="searchCtrl" placeholder="Descripción, sigla…" />
+        @if (searchCtrl.value) {
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Limpiar"
+            (click)="searchCtrl.setValue('')">
+            <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+          </button>
+        }
+      </mat-form-field>
+      <button mat-stroked-button type="button" (click)="abrirPlantillasAsociadas()">
+        <mat-icon svgIcon="mat:description" class="ltr:mr-1 rtl:ml-1"></mat-icon>
+        Plantillas asociadas
+      </button>
+      <button mat-flat-button color="primary" type="button" (click)="startCreate()">
+        <mat-icon svgIcon="mat:add" class="ltr:mr-1 rtl:ml-1"></mat-icon>
+        Nuevo
+      </button>
+    </div>
+
+    <div class="table-wrap px-5">
+      @if (loading) {
+        <div class="flex justify-center py-10">
+          <mat-spinner diameter="36"></mat-spinner>
+        </div>
+      } @else if (filtered.length === 0) {
+        <div class="empty text-secondary text-sm py-8 text-center">
+          No hay métodos de pago
+          @if (searchCtrl.value) {
+            para «{{ searchCtrl.value }}»
+          }
+          .
+        </div>
+      } @else {
+        <table mat-table [dataSource]="filtered" class="w-full mp-table-compact">
+          <ng-container matColumnDef="icono">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let row">
+              @if (row.file) {
+                <img
+                  class="mp-icon"
+                  [src]="iconoUrl(row.file)"
+                  [alt]="row.descripcion"
+                  width="28"
+                  height="28" />
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef>Id</th>
+            <td mat-cell *matCellDef="let row">{{ row.id }}</td>
+          </ng-container>
+          <ng-container matColumnDef="descripcion">
+            <th mat-header-cell *matHeaderCellDef>Descripción</th>
+            <td mat-cell *matCellDef="let row" class="font-medium">{{ row.descripcion }}</td>
+          </ng-container>
+          <ng-container matColumnDef="sigla">
+            <th mat-header-cell *matHeaderCellDef>Sigla</th>
+            <td mat-cell *matCellDef="let row">{{ row.sigla || '—' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="tickets">
+            <th mat-header-cell *matHeaderCellDef>Tickets</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.visiblePagoTickets !== false ? 'Sí' : 'No' }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="egresos">
+            <th mat-header-cell *matHeaderCellDef>Egresos</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.visiblePagosEgresos !== false ? 'Sí' : 'No' }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="notif">
+            <th mat-header-cell *matHeaderCellDef>Notif.</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.permiteNotificacion ? 'Sí' : 'No' }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="estado">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let row">{{ row.estado || '—' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef class="col-acciones"></th>
+            <td mat-cell *matCellDef="let row" class="acciones">
+              <button
+                mat-icon-button
+                type="button"
+                matTooltip="Editar"
+                (click)="startEdit(row)">
+                <mat-icon svgIcon="mat:edit"></mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                type="button"
+                matTooltip="Plantillas asociadas"
+                (click)="abrirPlantillasDeMetodo(row)">
+                <mat-icon svgIcon="mat:description"></mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                type="button"
+                color="warn"
+                matTooltip="Desactivar"
+                (click)="confirmDelete(row)">
+                <mat-icon svgIcon="mat:delete"></mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      }
+    </div>
+  } @else {
+    <form class="form-body px-5 flex flex-col gap-1" [formGroup]="form" (ngSubmit)="save()">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Descripción</mat-label>
+        <input matInput formControlName="descripcion" maxlength="120" autocomplete="off" />
+        @if (form.get('descripcion')?.hasError('required')) {
+          <mat-error>Requerido</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Descripción egreso</mat-label>
+        <input matInput formControlName="descripcionEgreso" maxlength="100" autocomplete="off" />
+      </mat-form-field>
+      <div class="grid-2">
+        <mat-form-field appearance="outline">
+          <mat-label>Sigla</mat-label>
+          <input matInput formControlName="sigla" maxlength="10" autocomplete="off" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Color</mat-label>
+          <input matInput formControlName="color" maxlength="20" autocomplete="off" />
+        </mat-form-field>
+      </div>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Icono</mat-label>
+        <mat-select formControlName="file">
+          @for (ico of iconosDisponibles; track ico) {
+            <mat-option [value]="ico">
+              <span class="ico-option">
+                <img [src]="iconoUrl(ico)" [alt]="ico" width="24" height="24" />
+                {{ ico }}
+              </span>
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Estado</mat-label>
+        <mat-select formControlName="estado">
+          <mat-option value="ACTIVO">ACTIVO</mat-option>
+          <mat-option value="INACTIVO">INACTIVO</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <div class="flex flex-col gap-2 py-1">
+        <mat-slide-toggle formControlName="visiblePagoTickets" color="primary">
+          Visible en pago de tickets
+        </mat-slide-toggle>
+        <mat-slide-toggle formControlName="visiblePagosEgresos" color="primary">
+          Visible en egresos
+        </mat-slide-toggle>
+        <mat-slide-toggle formControlName="permiteNotificacion" color="primary">
+          Permite notificación electrónica
+        </mat-slide-toggle>
+        <p class="m-0 text-xs text-secondary">
+          Si está activo, un pago con este medio crea pendiente en el panel y puede
+          usarse en plantillas de extracción.
+        </p>
+      </div>
+      <div class="grid-2">
+        <mat-form-field appearance="outline">
+          <mat-label>Monto (referencia)</mat-label>
+          <input matInput type="number" formControlName="monto" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Código DIAN</mat-label>
+          <input matInput formControlName="codigoDianPaymentMeans" maxlength="3" />
+        </mat-form-field>
+      </div>
+      <div class="flex justify-end gap-2 mt-2 mb-1">
+        <button mat-button type="button" (click)="cancelForm()" [disabled]="saving">
+          Cancelar
+        </button>
+        <button
+          mat-flat-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid || saving">
+          {{ editingId != null ? 'Guardar' : 'Crear' }}
+        </button>
+      </div>
+    </form>
+  }
+
+  <mat-dialog-actions align="end" class="dialog-footer px-5 pb-4">
+    <button mat-stroked-button type="button" (click)="close()">Cerrar</button>
+  </mat-dialog-actions>
+</div>

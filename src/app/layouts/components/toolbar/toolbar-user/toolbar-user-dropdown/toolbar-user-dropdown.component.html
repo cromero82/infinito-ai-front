@@ -1,0 +1,144 @@
+<div class="dropdown">
+  <div class="dropdown-header flex items-center justify-between">
+    <div class="flex items-center">
+      <div class="dropdown-heading-icon flex items-center justify-center">
+        <mat-icon svgIcon="mat:person"></mat-icon>
+      </div>
+      <div class="dropdown-heading">{{ rolNombre }}</div>
+    </div>
+
+    <button
+      [matMenuTriggerFor]="settingsMenu"
+      mat-icon-button
+      matTooltip="Settings"
+      matTooltipPosition="before"
+      type="button">
+      <mat-icon
+        class="notifications-header-icon"
+        svgIcon="mat:settings"></mat-icon>
+    </button>
+  </div>
+
+  <div class="dropdown-content">
+    @for (item of items; track trackById($index, item)) {
+      <!-- Item con ruta -->
+      @if (item.route && !item.submenu) {
+        <a
+          (click)="close()"
+          [routerLink]="item.route"
+          class="notification flex items-center"
+          matRipple>
+          <mat-icon
+            [ngClass]="item.colorClass"
+            [svgIcon]="item.icon"
+            class="notification-icon flex-none"></mat-icon>
+          <div class="flex-auto">
+            <div class="notification-label">{{ item.label }}</div>
+            <div class="notification-description">{{ item.description }}</div>
+          </div>
+        </a>
+      }
+      <!-- Item con acción directa -->
+      @if (!item.route && !item.submenu && item.action) {
+        <div
+          (click)="item.action(); close()"
+          class="notification flex items-center pointer"
+          matRipple>
+          <mat-icon
+            [ngClass]="item.colorClass"
+            [svgIcon]="item.icon"
+            class="notification-icon flex-none"></mat-icon>
+          <div class="flex-auto">
+            <div class="notification-label">{{ item.label }}</div>
+            <div class="notification-description">{{ item.description }}</div>
+          </div>
+        </div>
+      }
+      <!-- Item con submenú -->
+      @if (item.submenu) {
+        <div
+          [matMenuTriggerFor]="
+            item.id === '6'
+              ? copiasSeguridadMenu
+              : item.id === '10'
+                ? dominiosMenu
+                : null
+          "
+          class="notification flex items-center pointer"
+          matRipple>
+          <mat-icon
+            [ngClass]="item.colorClass"
+            [svgIcon]="item.icon"
+            class="notification-icon flex-none"></mat-icon>
+          <div class="flex-auto">
+            <div class="notification-label">{{ item.label }}</div>
+            <div class="notification-description">{{ item.description }}</div>
+          </div>
+          <mat-icon
+            class="notification-chevron flex-none"
+            svgIcon="mat:chevron_right"></mat-icon>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Submenú de Copias de Seguridad -->
+  <mat-menu #copiasSeguridadMenu="matMenu" xPosition="after" yPosition="below">
+    <button (click)="generarBackup()" mat-menu-item>
+      <mat-icon svgIcon="mat:download"></mat-icon>
+      <span>Generar y descargar backup</span>
+    </button>
+    <button (click)="exportarACorreo()" mat-menu-item>
+      <mat-icon svgIcon="mat:email"></mat-icon>
+      <span>Enviar al correo</span>
+    </button>
+  </mat-menu>
+
+  <!-- Submenú Dominios (catálogos) -->
+  <mat-menu #dominiosMenu="matMenu" xPosition="after" yPosition="below">
+    <button (click)="openTipoEgresoGestion()" mat-menu-item>
+      <mat-icon svgIcon="mat:receipt"></mat-icon>
+      <span>Tipos de egreso</span>
+    </button>
+    <button (click)="openNaturalezaTipoEgresoGestion()" mat-menu-item>
+      <mat-icon svgIcon="mat:label"></mat-icon>
+      <span>Naturalezas de tipo egreso</span>
+    </button>
+    <button (click)="openPersonaGestion()" mat-menu-item>
+      <mat-icon svgIcon="mat:person"></mat-icon>
+      <span>Personas</span>
+    </button>
+    <button (click)="openMetodoPagoGestion()" mat-menu-item>
+      <mat-icon svgIcon="mat:payments"></mat-icon>
+      <span>Métodos de pago</span>
+    </button>
+  </mat-menu>
+
+  <div class="dropdown-footer flex items-center justify-end">
+    <button (click)="logout()" color="primary" mat-button type="button">
+      Finalizar sesión
+    </button>
+  </div>
+</div>
+
+<mat-menu #settingsMenu="matMenu" xPosition="before" yPosition="below">
+  <button mat-menu-item>
+    <mat-icon svgIcon="mat:business"></mat-icon>
+    <span>Change Address</span>
+  </button>
+
+  <button mat-menu-item>
+    <mat-icon svgIcon="mat:verified_user"></mat-icon>
+    <span>Change Username</span>
+  </button>
+
+  <button mat-menu-item>
+    <mat-icon svgIcon="mat:lock"></mat-icon>
+    <span>Change Password</span>
+  </button>
+
+  <button mat-menu-item>
+    <mat-icon svgIcon="mat:notifications_off"></mat-icon>
+    <span>Disable Notifications</span>
+  </button>
+</mat-menu>

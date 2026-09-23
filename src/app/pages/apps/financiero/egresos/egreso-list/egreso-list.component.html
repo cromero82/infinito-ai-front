@@ -1,0 +1,327 @@
+<div class="egresos-page mt-1 flex flex-col flex-1 min-h-0 min-w-0 w-full">
+  <div class="flex flex-col flex-1 min-h-0 w-full">
+    <div class="card egresos-card flex flex-col flex-1 min-h-0 overflow-hidden">
+      <div class="px-6 py-4 border-b flex flex-col gap-2 egresos-toolbar">
+        <div class="egresos-toolbar-main flex items-center gap-2 min-w-0">
+          <h2 class="title m-0 egresos-toolbar-title">Egresos</h2>
+          @if (filtroEgresoId != null) {
+            <button
+              mat-stroked-button
+              color="primary"
+              type="button"
+              class="btn-borrar-filtro-notif"
+              (click)="limpiarFiltroEgresoId()">
+              Borrar filtro notificación
+            </button>
+          }
+          <mat-form-field
+            appearance="outline"
+            class="filter-select filter-select--naturaleza"
+            subscriptSizing="dynamic">
+            <mat-label>Naturaleza</mat-label>
+            <mat-select [formControl]="naturalezaCtrl">
+              <mat-option [value]="">Todas</mat-option>
+              @for (n of naturalezas; track n.value) {
+                <mat-option [value]="n.value">{{ n.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field
+            appearance="outline"
+            class="filter-select"
+            subscriptSizing="dynamic">
+            <mat-label>Proveedor</mat-label>
+            <mat-select [formControl]="proveedorIdCtrl">
+              <mat-option [value]="">Todos</mat-option>
+              @for (p of proveedores; track p) {
+                <mat-option [value]="p.id">{{ p.nombre }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field
+            appearance="outline"
+            class="filter-select"
+            subscriptSizing="dynamic">
+            <mat-label>Persona</mat-label>
+            <mat-select [formControl]="personaIdCtrl">
+              <mat-option [value]="">Todas</mat-option>
+              @for (p of personas; track p.id) {
+                <mat-option [value]="p.id">{{ p.nombre }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <button
+            mat-button
+            type="button"
+            class="btn-mas-opciones"
+            (click)="mostrarMasOpciones = !mostrarMasOpciones"
+            [attr.aria-expanded]="mostrarMasOpciones">
+            <mat-icon
+              class="icon-sm"
+              [svgIcon]="
+                mostrarMasOpciones ? 'mat:expand_less' : 'mat:expand_more'
+              "></mat-icon>
+            {{ mostrarMasOpciones ? 'Ocultar opciones' : 'Ver más opciones' }}
+          </button>
+          <span class="egresos-toolbar-spacer"></span>
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            (click)="createEgreso()"
+            matTooltip="Agregar egreso"
+            class="shrink-0">
+            <mat-icon svgIcon="mat:add"></mat-icon>
+            <span class="ml-1">Nuevo egreso</span>
+          </button>
+        </div>
+
+        @if (mostrarMasOpciones) {
+          <div class="egresos-toolbar-extra flex items-center gap-2 flex-wrap">
+            <mat-form-field
+              appearance="outline"
+              class="search-input"
+              subscriptSizing="dynamic">
+              <mat-label>Observación</mat-label>
+              <input
+                #searchInput
+                matInput
+                [formControl]="descripcionCtrl"
+                placeholder="Buscar por observación" />
+              @if (descripcionCtrl.value) {
+                <button
+                  mat-icon-button
+                  matSuffix
+                  aria-label="Limpiar"
+                  (click)="descripcionCtrl.setValue('')">
+                  <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+                </button>
+              }
+            </mat-form-field>
+            <mat-form-field
+              appearance="outline"
+              class="filter-select"
+              subscriptSizing="dynamic">
+              <mat-label>Tipo</mat-label>
+              <mat-select [formControl]="tipoEgresoIdCtrl">
+                <mat-option [value]="">Todos</mat-option>
+                @for (t of tiposEgreso; track t) {
+                  <mat-option [value]="t.id">{{ t.nombre }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field
+              appearance="outline"
+              class="filter-date"
+              subscriptSizing="dynamic">
+              <mat-label>Fecha inicio</mat-label>
+              <input
+                matInput
+                [matDatepicker]="pickerInicio"
+                [formControl]="filterFechaInicioCtrl" />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="pickerInicio"></mat-datepicker-toggle>
+              <mat-datepicker #pickerInicio></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field
+              appearance="outline"
+              class="filter-date"
+              subscriptSizing="dynamic">
+              <mat-label>Fecha fin</mat-label>
+              <input
+                matInput
+                [matDatepicker]="pickerFin"
+                [formControl]="filterFechaFinCtrl" />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="pickerFin"></mat-datepicker-toggle>
+              <mat-datepicker #pickerFin></mat-datepicker>
+            </mat-form-field>
+            <button
+              mat-stroked-button
+              type="button"
+              class="btn-filter-compact"
+              (click)="limpiarFiltros()">
+              Limpiar
+            </button>
+            <button
+              mat-stroked-button
+              type="button"
+              class="btn-filter-compact"
+              [disabled]="exporting"
+              matTooltip="Exportar CSV con filtros actuales"
+              (click)="exportarCsv()">
+              <mat-icon svgIcon="mat:download" class="icon-sm"></mat-icon>
+              CSV
+            </button>
+          </div>
+        }
+      </div>
+
+      <div
+        class="egresos-table-section px-6 pt-4 pb-2 flex flex-col flex-1 min-h-0 overflow-hidden">
+        @if (filtroEgresoId != null) {
+          <div class="filtro-egreso-id">
+            <span>Mostrando egreso #{{ filtroEgresoId }}</span>
+            <button
+              mat-stroked-button
+              color="primary"
+              type="button"
+              (click)="limpiarFiltroEgresoId()">
+              Borrar filtro notificación
+            </button>
+          </div>
+        }
+        @if (loading) {
+          <div class="text-center py-8">Cargando egresos...</div>
+        }
+
+        @if (!loading) {
+          <div #tableScroll class="table-scroll-container">
+            <table
+              mat-table
+              [dataSource]="dataSource"
+              class="w-full egresos-table-compact">
+              <ng-container matColumnDef="fecha">
+                <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                <td mat-cell *matCellDef="let egreso">
+                  {{ formatFecha(egreso.fecha) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="valor">
+                <th mat-header-cell *matHeaderCellDef class="col-valor">
+                  Valor
+                </th>
+                <td mat-cell *matCellDef="let egreso" class="col-valor">
+                  {{ formatCurrency(egreso.valor) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="origen">
+                <th mat-header-cell *matHeaderCellDef>Origen</th>
+                <td mat-cell *matCellDef="let egreso">
+                  {{ origenLabel(egreso) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="beneficiario">
+                <th mat-header-cell *matHeaderCellDef>Beneficiario</th>
+                <td mat-cell *matCellDef="let egreso">
+                  {{ beneficiarioLabel(egreso) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="naturaleza">
+                <th mat-header-cell *matHeaderCellDef>Naturaleza</th>
+                <td mat-cell *matCellDef="let egreso">
+                  {{ naturalezaLabel(egreso) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="tipoEgreso">
+                <th mat-header-cell *matHeaderCellDef>Tipo</th>
+                <td mat-cell *matCellDef="let egreso">
+                  {{ tipoEgresoLabel(egreso) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="descripcion">
+                <th mat-header-cell *matHeaderCellDef>Observación</th>
+                <td mat-cell *matCellDef="let egreso">
+                  {{ egreso.descripcion || "-" }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="entradaInventario">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let egreso">
+                  @if (permiteEntradaInventario(egreso)) {
+                    <button
+                      mat-icon-button
+                      type="button"
+                      color="primary"
+                      class="edit-btn-compact"
+                      [matTooltip]="tooltipEntradaInventario(egreso.id)"
+                      (click)="irEntradaInventario(egreso, $event)">
+                      <mat-icon [svgIcon]="iconoEntradaInventario(egreso.id)"></mat-icon>
+                    </button>
+                  }
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="notificacion">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let egreso">
+                  @if (egreso.notificacionEmailPagoId) {
+                    <button
+                      mat-icon-button
+                      type="button"
+                      class="edit-btn-compact"
+                      [matTooltip]="'Notificación #' + egreso.notificacionEmailPagoId"
+                      (click)="$event.stopPropagation()">
+                      <mat-icon svgIcon="mat:email"></mat-icon>
+                    </button>
+                  } @else if (puedeAsociarNotificacion(egreso)) {
+                    <button
+                      mat-icon-button
+                      type="button"
+                      color="primary"
+                      class="edit-btn-compact"
+                      matTooltip="Asociar notificación (correo tardío)"
+                      (click)="asociarNotificacion(egreso, $event)">
+                      <mat-icon svgIcon="mat:link"></mat-icon>
+                    </button>
+                  }
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="edit">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let egreso">
+                  <button
+                    mat-icon-button
+                    color="accent"
+                    class="edit-btn-compact"
+                    (click)="editEgreso(egreso); $event.stopPropagation()">
+                    <mat-icon svgIcon="mat:edit"></mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="delete">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let egreso">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    color="warn"
+                    class="edit-btn-compact"
+                    [disabled]="eliminandoEgresoId === egreso.id"
+                    matTooltip="Eliminar egreso"
+                    (click)="eliminarEgreso(egreso, $event)">
+                    @if (eliminandoEgresoId === egreso.id) {
+                      <mat-icon
+                        class="animate-spin"
+                        svgIcon="mat:hourglass_empty"></mat-icon>
+                    } @else {
+                      <mat-icon svgIcon="mat:delete_forever"></mat-icon>
+                    }
+                  </button>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr
+                mat-row
+                *matRowDef="let row; columns: displayedColumns"
+                [attr.data-egreso-id]="row.id"
+                [class.selected-row]="isRowSelected(row)"
+                [class.egreso-row--nav-flash]="egresoResaltadoId === row.id"
+                (click)="selectRow(row)"></tr>
+            </table>
+            @if (loadingMore) {
+              <div class="text-center py-4 text-secondary">Cargando más...</div>
+            }
+          </div>
+        }
+
+        @if (!loading && dataSource.length === 0) {
+          <div class="text-center py-8 text-secondary">
+            No se encontraron egresos
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

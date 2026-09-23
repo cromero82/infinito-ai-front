@@ -1,35 +1,64 @@
-# Compiled output
-/dist
-/out-tsc
+# See http://help.github.com/ignore-files/ for more about ignoring files.
 
-# Dependencies
+# compiled output
+# /dist
+/tmp
+/out-tsc
+# Only exists if Bazel was run
+/bazel-out
+
+# dependencies
 /node_modules
 
-# Testing
-/coverage
+# profiling files
+chrome-profiler-events.json
+speed-measure-plugin.json
 
 # IDEs and editors
-.idea/
-.vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+dist/
 
-# System files
+# Sandbox tester secrets (DBeaver)
+scripts/sandbox/credentials.tester.local
+
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+
+# misc
+/.angular/cache
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
 .DS_Store
 Thumbs.db
 
-# Angular specific files that can be regenerated
-angular.json
-package-lock.json
+/ARCHIVE/*
 
-# Environment files - keep only example or template
-src/environments/environment*.ts
-!src/environments/environment.example.ts
+# Sandbox tester secrets (DBeaver)
+scripts/sandbox/credentials.tester.local
+scripts/sandbox/logs/
+scripts/sandbox/.run/
 
-# Logs
-*.log
-
-# Temporary files
-*~
+# Documentación Cursor en .cursor/ (override: ~/.gitignore_global ignora *.md)
+!.cursor/
+!.cursor/**/
+!.cursor/**/*.md

@@ -1,0 +1,106 @@
+<div
+  cdkDrag
+  cdkDragRootElement=".cdk-overlay-pane"
+  class="dialog-root">
+  <div class="dialog-header" mat-dialog-title cdkDragHandle>
+    <div class="dialog-title">
+      <span>Tickets sin corte</span>
+      <span class="medio" [style.color]="medioColor">{{ medioNombre }}</span>
+    </div>
+    <button
+      type="button"
+      mat-icon-button
+      mat-dialog-close
+      aria-label="Cerrar"
+      class="btn-close"
+      (click)="close()">
+      <mat-icon svgIcon="mat:close"></mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="dialog-body">
+    @if (loading) {
+      <div class="state">
+        <mat-spinner diameter="36"></mat-spinner>
+      </div>
+    } @else if (error) {
+      <div class="state error">{{ error }}</div>
+    } @else if (recibos.length === 0) {
+      <div class="state empty">No hay tickets sin corte para este medio.</div>
+    } @else {
+      <div class="recibos-panel">
+        @if (data.totalTicketsSinCorte != null) {
+          <div class="row-grid total-card">
+            <span class="col-info total-label">Total parcial de tickets</span>
+            <strong class="col-total" [style.color]="medioColor">{{
+              data.totalTicketsSinCorte
+                | currency: 'COP' : 'symbol-narrow' : '1.0-0'
+            }}</strong>
+            <span class="col-acciones col-acciones--spacer" aria-hidden="true"></span>
+          </div>
+        }
+
+        <div class="recibos-list" (scroll)="onScroll($event)">
+          @for (r of recibos; track r.id) {
+            <div class="row-grid recibo-item">
+              <div class="col-info">
+                <div class="recibo-line-main">
+                  @if (r.documentoVentaConsecutivo) {
+                    <span class="recibo-consecutivo">{{
+                      r.documentoVentaConsecutivo
+                    }}</span>
+                  } @else {
+                    <span class="recibo-consecutivo">#{{ r.id }}</span>
+                  }
+                  @if (labelNotif(r); as notif) {
+                    <span
+                      class="notif-chip"
+                      [class.notif-chip--ok]="notifOk(r)"
+                      [class.notif-chip--pendiente]="!notifOk(r)">
+                      {{ notif }}
+                    </span>
+                  }
+                </div>
+                <div class="recibo-meta">
+                  <span>{{ formatDate(r.fechaCreacion) }}</span>
+                  @if (clienteNombre(r.clienteId); as nom) {
+                    <span class="cliente">{{ nom }}</span>
+                  }
+                  @if (usuarioAtendio(r.sesionId); as u) {
+                    <span class="usuario" [matTooltip]="u.full">{{
+                      u.short
+                    }}</span>
+                  }
+                </div>
+              </div>
+              <div class="col-total">
+                {{ r.total | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+              </div>
+              <div class="col-acciones">
+                <button
+                  mat-icon-button
+                  type="button"
+                  class="btn-productos"
+                  matTooltip="Ver productos"
+                  aria-label="Ver productos"
+                  (click)="verProductos(r, $event)">
+                  <mat-icon svgIcon="mat:inventory_2"></mat-icon>
+                </button>
+              </div>
+            </div>
+          }
+          @if (loadingMore) {
+            <div class="state small">Cargando más…</div>
+          }
+        </div>
+      </div>
+      <p class="count">{{ recibos.length }} / {{ totalElements }} tickets</p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-flat-button color="primary" type="button" (click)="close()">
+      Cerrar
+    </button>
+  </mat-dialog-actions>
+</div>

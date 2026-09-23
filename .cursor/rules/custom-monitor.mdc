@@ -1,0 +1,62 @@
+---
+description: Monitor custom POS — buffer de actividad, reporte POST /reporte-frontend, ErrorHandler e interceptor HTTP (sin Sentry)
+alwaysApply: false
+---
+
+# Monitor custom de errores (frontend Infinito)
+
+## Problema
+
+En producción (y en instalaciones locales del cliente) aparecían errores difíciles de reproducir, sobre todo en rutas como `apps/tickets`. Los usuarios finales no suelen abrir la consola ni copiar stacks. Se necesitaba **contexto** antes del fallo: últimas acciones y llamadas HTTP, más el mensaje/stack del error.
+
+## Enfoque (sin servicios extra en el cliente)
+
+- **Buffer circular en memoria** (no `localStorage` por defecto): últimas **N** líneas de actividad (`FRONTEND_MONITOR_MAX_ACTIONS`, típicamente 10).
+- Al ocurrir un error, **POST** a `{apiUrlRelationalDb}/reporte-frontend` con JSON:
+  - `url`: `Router.url` en el momento del reporte.
+  - `actividadReciente`: líneas unidas con `\n` (navegación, HTTP, y entradas manuales).
+  - `error`: texto del fallo (stack si existe).
+- **Autenticación**: mismo criterio que el interceptor de auth — header `Authorization: Bearer` leyendo `user-token` de `localStorage`.
+- El envío usa **`fetch` con `keepalive: true`**, no `HttpClient`, para **evitar dependencia circular** con el interceptor HTTP que también participa en el monitoreo.
+- El backend responde **202 Accepted sin cuerpo**: el cliente **no** lee `.json()` ni espera payload; el reporte es fire-and-forget.
+- **Prioridad**: si falla cualquier paso de observabilidad (serialización, `fetch`, buffer, router), se **ignora** sin propagar: la operación de negocio sigue igual.
+
+## Archivos clave
+
+| Archivo | Rol |
+|---------|-----|
+| `src/app/core/monitoring/frontend-activity-buffer.service.ts` | Ring buffer; método público `record(mensaje: string)`. Ignora URLs que contengan `reporte-frontend`. |
+| `src/app/core/monitoring/reporte-frontend.service.ts` | `reportFromError`, `reportFromUnhandledRejection`, `reportFromHttpFailure`; deduplicación ~2.5s; `postReporte` vía `fetch`. |
+| `src/app/core/monitoring/frontend-monitor.interceptor.ts` | Registra cada petición saliente (método, URL, payload truncado) y dispara reporte en `HttpErrorResponse` (excepto hacia `reporte-frontend`). |
+| `src/app/core/monitoring/frontend-monitor.error-handler.ts` | `ErrorHandler` global: reporta y luego `console.error`. |
+| `src/app/core/monitoring/frontend-monitor-lifecycle.service.ts` | `NavigationEnd` → `record`; `window` `unhandledrejection` → reporte. |
+| `src/app/core/monitoring/frontend-monitor.constants.ts` | `REPORTE_FRONTEND_URL_FRAGMENT`, `FRONTEND_MONITOR_MAX_ACTIONS`, etc. |
+| `src/app/core/monitoring/frontend-monitor-string.util.ts` | `truncarParaMonitoreo` (tamaño máximo de JSON en logs). |
+| `src/app/app.config.ts` | `ErrorHandler` + `withInterceptors([authInterceptor, frontendMonitorInterceptor])` (monitor **después** de auth). |
+| `src/app/app.component.ts` | `inject(FrontendMonitorLifecycleService)` en el constructor para activar listeners en el arranque. |
+| `src/environments/environment*.ts` | `reporteFrontendDeshabilitado`: si `true`, no se envía el POST (útil en desarrollo o pruebas). |
+
+## Cómo enriquecer el contexto (modales, componentes)
+
+El interceptor ya registra **HTTP**. Para eventos de UI (modal, paso de wizard, etc.), inyectar `FrontendActivityBufferService` y llamar:
+
+```typescript
+this.activity.record('despliega modal: selector-productos');
+```
+
+Convención: mensajes cortos en español, una acción por línea.
+
+## Límites conocidos
+
+- TypeScript **no** detecta errores en runtime; captura **ErrorHandler**, **promesas no capturadas** y **fallos HTTP** en el interceptor.
+- Errores dentro de `subscribe` que se manejan con `error:` callback **sin** re-lanzar pueden no pasar por `ErrorHandler`; conviene `catchError` / rethrow o manejo explícito que llame a `ReporteFrontendService` si se quiere trazabilidad uniforme.
+- **Deduplicación** evita spam si el mismo error dispara varios canales cercanos en el tiempo.
+
+## Verificación
+
+1. `ng build` debe compilar.
+2. Con backend disponible y usuario logueado, forzar un 404/500 o un `throw new Error('test')` en un componente y comprobar en red que sale **un** POST a `/reporte-frontend` con los tres campos esperados.
+
+## Alternativa futura (SaaS)
+
+Para producto multi-tenant o más analítica, evaluar **Sentry** (u otro APM): mismos conceptos de breadcrumbs con menos código custom; aquí se priorizó **endpoint propio** y **cero servicios adicionales** en la máquina del cliente.

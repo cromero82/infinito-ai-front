@@ -1,0 +1,26 @@
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+  margin-bottom: 24px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.toggle-row {
+  margin-bottom: 8px;
+}
+
+.toggle-hint {
+  margin: 8px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}

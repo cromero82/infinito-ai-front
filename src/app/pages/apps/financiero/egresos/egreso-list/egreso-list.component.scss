@@ -1,0 +1,390 @@
+@use '../../../../../core/table-viewport/table-viewport.scss' as *;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+.egresos-page {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.egresos-card {
+  min-height: 0;
+}
+
+.egresos-table-section .table-scroll-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  height: 100%;
+}
+
+.filtro-egreso-id {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border: 1px solid rgba(21, 101, 192, 0.35);
+  border-radius: 6px;
+  background: rgba(21, 101, 192, 0.08);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.btn-borrar-filtro-notif {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+@keyframes egreso-nav-flash {
+  0% {
+    background-color: rgba(255, 152, 0, 0.4) !important;
+  }
+  40% {
+    background-color: rgba(255, 152, 0, 0.22) !important;
+  }
+  100% {
+    background-color: rgba(63, 81, 181, 0.12);
+  }
+}
+
+.egresos-toolbar {
+  overflow: visible;
+}
+
+.egresos-toolbar-title {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.egresos-toolbar-main {
+  width: 100%;
+  overflow: visible;
+  align-items: center;
+}
+
+.egresos-toolbar-spacer {
+  flex: 1 1 auto;
+  min-width: 8px;
+}
+
+.egresos-toolbar-extra {
+  padding-top: 4px;
+  overflow: visible;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+:host-context(.dark) .egresos-toolbar-extra {
+  border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+.btn-mas-opciones {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  min-height: 28px !important;
+  line-height: 28px !important;
+  font-size: 13px !important;
+  padding: 0 8px !important;
+}
+
+.search-input {
+  @apply w-48;
+}
+
+.filter-select {
+  min-width: 130px;
+  flex: 0 1 auto;
+}
+
+.filter-select--naturaleza {
+  min-width: 180px;
+  width: 200px;
+  max-width: 220px;
+  flex: 0 1 200px;
+}
+
+.filter-date {
+  width: 148px;
+  min-width: 148px;
+}
+
+.egresos-filters-menu-content {
+  width: 252px;
+  max-width: min(252px, calc(100vw - 40px));
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.filters-field-dense {
+  min-width: 0;
+  margin-bottom: -1.25em;
+}
+
+// Filtros compactos: alinear con tabla (13px, ~28px altura)
+:host ::ng-deep {
+  .filters-custom-menu {
+    max-width: min(272px, calc(100vw - 24px)) !important;
+
+    .mat-mdc-menu-content {
+      padding: 6px !important;
+      overflow-x: hidden !important;
+    }
+  }
+
+  .search-input.mat-mdc-form-field,
+  .filter-select.mat-mdc-form-field,
+  .filter-date.mat-mdc-form-field {
+    font-size: 13px !important;
+
+    .mat-mdc-form-field-flex {
+      height: 28px !important;
+      align-items: center !important;
+    }
+
+    .mat-mdc-form-field-infix {
+      min-height: 24px !important;
+      padding-top: 4px !important;
+      padding-bottom: 4px !important;
+    }
+
+    .mat-mdc-text-field-wrapper input,
+    .mat-mdc-select-value,
+    .mat-mdc-floating-label {
+      font-size: 13px !important;
+    }
+
+    .mat-mdc-input-element,
+    .mat-mdc-select-value-text {
+      font-size: 13px !important;
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none !important;
+      height: 0 !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+    }
+  }
+
+  .egresos-toolbar .mat-mdc-form-field-subscript-wrapper {
+    display: none !important;
+  }
+
+  .filters-field-dense {
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+
+    .mat-mdc-form-field-flex {
+      min-width: 0;
+      align-items: center !important;
+    }
+
+    .mat-mdc-form-field-infix {
+      min-width: 0 !important;
+      width: auto !important;
+    }
+  }
+
+  // mat-input / mat-select / date: compactos sin mezclar label y valor
+  .search-input.mat-mdc-form-field,
+  .filter-select.mat-mdc-form-field,
+  .filter-date.mat-mdc-form-field {
+    .mat-mdc-form-field-infix {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .mat-mdc-text-field-wrapper,
+    .mat-mdc-form-field-flex {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .mdc-notched-outline__notch {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .mat-mdc-select-value,
+    .mat-mdc-input-element {
+      line-height: 24px !important;
+    }
+
+    &.mat-form-field-should-float .mdc-notched-outline__notch,
+    &:focus-within .mdc-notched-outline__notch {
+      padding-top: 12px !important;
+    }
+
+    // Solo centrar label cuando NO flota (no pisar --float-above de MDC)
+    &:not(.mat-form-field-should-float):not(:focus-within)
+      .mat-mdc-floating-label:not(.mdc-floating-label--float-above) {
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+    }
+
+    &.mat-form-field-should-float .mat-mdc-floating-label,
+    &:focus-within .mat-mdc-floating-label,
+    .mat-mdc-floating-label.mdc-floating-label--float-above {
+      top: 50% !important;
+      transform: translateY(calc(-50% - 14px)) scale(0.75) !important;
+    }
+  }
+
+  .filter-select--naturaleza .mat-mdc-select-value-text {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+  }
+
+  .filter-select .mat-mdc-select {
+    min-height: 24px !important;
+  }
+
+  .btn-filter-compact {
+    min-height: 26px !important;
+    min-width: 0 !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    line-height: 26px !important;
+    font-size: 13px !important;
+  }
+
+  .btn-mas-opciones .mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    margin-right: 2px;
+  }
+}
+
+// Botón editar compacto para no inflar la altura de las filas
+:host ::ng-deep .edit-btn-compact {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  padding: 0 !important;
+
+  .mat-icon {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 18px !important;
+  }
+}
+
+// Tabla compacta: usar ::ng-deep para atravesar encapsulación de Angular Material
+:host ::ng-deep {
+  table.egresos-table-compact.mat-mdc-table {
+    font-size: 13px !important;
+    --mat-table-row-item-container-height: 28px;
+    --mat-table-header-container-height: 28px;
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell],
+    td.mat-mdc-cell,
+    td[mat-cell] {
+      font-size: 13px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      line-height: 1.2 !important;
+      min-height: unset !important;
+      height: 28px !important;
+      vertical-align: middle !important;
+    }
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell] {
+      font-weight: 600 !important;
+      color: var(--vex-foreground, rgba(0, 0, 0, 0.87)) !important;
+    }
+
+    tr.mat-mdc-row {
+      height: 28px !important;
+      min-height: unset !important;
+      cursor: pointer;
+
+      &:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.005) !important;
+      }
+
+      &:hover {
+        background-color: var(--pos-mat-table-row-hover) !important;
+      }
+
+      &.selected-row {
+        background-color: rgba(63, 81, 181, 0.12) !important;
+
+        td.mat-mdc-cell,
+        td[mat-cell] {
+          font-weight: 500;
+        }
+      }
+
+      &.egreso-row--nav-flash {
+        animation: egreso-nav-flash 1.8s ease;
+      }
+    }
+
+    tr.mat-mdc-header-row {
+      height: 28px !important;
+      min-height: unset !important;
+      background-color: rgba(0, 0, 0, 0.04) !important;
+    }
+  }
+
+  // Columna Valor: fondo verde suave (igual que Precio en product-list)
+  th.col-valor {
+    background-color: #edf7ef !important;
+  }
+
+  td.col-valor {
+    background-color: rgba(76, 175, 80, 0.08) !important;
+  }
+
+  table.egresos-table-compact tr.mat-mdc-row:hover td.col-valor {
+    background-color: rgba(76, 175, 80, 0.16) !important;
+  }
+}
+
+:host-context(.dark) ::ng-deep {
+  table.egresos-table-compact.mat-mdc-table {
+    tr.mat-mdc-header-row {
+      background-color: rgba(0, 0, 0, 0.35) !important;
+    }
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell] {
+      color: rgba(255, 255, 255, 0.92) !important;
+      background-color: rgba(0, 0, 0, 0.35) !important;
+    }
+
+    tr.mat-mdc-row:nth-child(even) {
+      background-color: rgba(255, 255, 255, 0.03) !important;
+    }
+  }
+
+  th.col-valor {
+    background-color: rgba(46, 125, 50, 0.45) !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+  }
+
+  td.col-valor {
+    background-color: rgba(76, 175, 80, 0.12) !important;
+  }
+
+  table.egresos-table-compact tr.mat-mdc-row:hover td.col-valor {
+    background-color: rgba(76, 175, 80, 0.2) !important;
+  }
+}

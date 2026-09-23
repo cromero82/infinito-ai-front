@@ -1,0 +1,2 @@
+# IP LAN del servidor POS (modificable desde el lanzador)
+192.168.1.6

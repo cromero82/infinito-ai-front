@@ -1,0 +1,219 @@
+@use '../../../core/table-viewport/table-viewport.scss' as *;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+.logs-list-page {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.logs-list-card {
+  min-height: 0;
+}
+
+.logs-table-section .table-scroll-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  height: 100%;
+}
+
+.limit-field {
+  flex: 0 0 auto;
+  width: 5.25rem;
+  max-width: 5.25rem;
+  min-width: 0;
+}
+
+.logs-active-filters {
+  max-width: 100%;
+  flex: 0 0 auto;
+}
+
+.filter-chip-label {
+  margin-right: 0.25rem;
+  font-size: 0.8125rem;
+}
+
+.filter-chip-value {
+  font-weight: 700;
+  font-size: 0.8125rem;
+}
+
+.logs-filters-menu-content {
+  width: 252px;
+  max-width: min(252px, calc(100vw - 40px));
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.filters-field-dense {
+  min-width: 0;
+  margin-bottom: -1.25em;
+}
+
+:host ::ng-deep {
+  .filters-custom-menu {
+    max-width: min(272px, calc(100vw - 24px)) !important;
+
+    .mat-mdc-menu-content {
+      padding: 6px !important;
+      overflow-x: hidden !important;
+    }
+  }
+
+  .limit-field.mat-mdc-form-field {
+    font-size: 13px !important;
+    width: 5.25rem !important;
+    max-width: 5.25rem !important;
+
+    .mat-mdc-text-field-wrapper {
+      max-width: 5.25rem !important;
+    }
+
+    .mat-mdc-form-field-flex {
+      height: 28px !important;
+      align-items: center !important;
+      max-width: 5.25rem !important;
+    }
+
+    .mat-mdc-form-field-infix {
+      min-height: 24px !important;
+      padding-top: 4px !important;
+      padding-bottom: 4px !important;
+      width: 3rem !important;
+      min-width: 3rem !important;
+    }
+
+    .mat-mdc-select-value,
+    .mat-mdc-floating-label {
+      font-size: 13px !important;
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      min-height: 0 !important;
+    }
+  }
+
+  .filters-field-dense {
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+
+    .mat-mdc-form-field-flex {
+      min-width: 0;
+      align-items: center !important;
+    }
+
+    .mat-mdc-form-field-infix {
+      min-width: 0 !important;
+      width: auto !important;
+    }
+  }
+
+  .btn-filter-compact {
+    min-height: 26px !important;
+    min-width: 0 !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    line-height: 26px !important;
+    font-size: 13px !important;
+  }
+
+  .btn-export-menu.mat-mdc-outlined-button,
+  .btn-export-menu.mat-mdc-button {
+    min-height: 28px !important;
+    font-size: 13px !important;
+    padding-left: 10px !important;
+    padding-right: 6px !important;
+
+    .mat-icon {
+      width: 20px;
+      height: 20px;
+      font-size: 20px;
+      margin-left: 2px;
+    }
+  }
+
+  .logs-export-menu.mat-mdc-menu-panel {
+    min-width: 10rem;
+  }
+
+  .logs-export-menu .mat-mdc-menu-item .mat-icon {
+    margin-right: 10px;
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+  }
+}
+
+:host ::ng-deep {
+  table.logs-table-compact.mat-mdc-table {
+    font-size: 13px !important;
+    --mat-table-row-item-container-height: 28px;
+    --mat-table-header-container-height: 28px;
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell],
+    td.mat-mdc-cell,
+    td[mat-cell] {
+      font-size: 13px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      line-height: 1.2 !important;
+      min-height: unset !important;
+      vertical-align: middle !important;
+    }
+
+    td.col-message,
+    td.col-extra {
+      white-space: normal;
+      word-break: break-word;
+      max-width: 420px;
+    }
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell] {
+      font-weight: 600 !important;
+    }
+
+    tr.mat-mdc-row {
+      min-height: unset !important;
+      cursor: pointer;
+
+      &:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.005) !important;
+      }
+
+      &:hover {
+        background-color: var(--pos-mat-table-row-hover) !important;
+      }
+
+      &.selected-row {
+        background-color: rgba(63, 81, 181, 0.12) !important;
+
+        td.mat-mdc-cell,
+        td[mat-cell] {
+          font-weight: 500;
+        }
+      }
+    }
+
+    tr.mat-mdc-header-row {
+      min-height: unset !important;
+      background-color: rgba(0, 0, 0, 0.008) !important;
+    }
+  }
+
+  .logs-active-filters .mdc-evolution-chip-set__chips {
+    flex-wrap: nowrap;
+  }
+}

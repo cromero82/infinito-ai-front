@@ -1,0 +1,185 @@
+.tipo-egreso-field {
+  margin-bottom: 0;
+}
+
+.tipo-categoria-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  box-sizing: border-box;
+  min-height: 22px;
+  margin: 0 0 10px;
+  padding: 0 2px;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.tipo-categoria-row--empty {
+  min-height: 22px;
+}
+
+.tipo-categoria-row button {
+  min-height: 28px;
+  padding: 0 8px;
+  line-height: 28px;
+  font-size: 0.75rem;
+}
+
+.beneficiario-crear {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 12px;
+}
+
+.beneficiario-crear-label {
+  font-size: 0.8125rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.dialog-header {
+  cursor: move;
+}
+
+.headline {
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.valor-field {
+  .valor-preview-suffix {
+    font-style: italic;
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+    /* A la derecha del infix, sin pegarse al borde ni tapar el label flotante */
+    margin-inline-end: 2px;
+    padding-inline-end: 2px;
+    max-width: 7.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &.valor-field--editando {
+    ::ng-deep .mat-mdc-form-field-infix {
+      padding-inline-end: 6.75rem;
+    }
+
+    ::ng-deep .mat-mdc-form-field-text-suffix {
+      align-self: center;
+      padding-inline-start: 0.25rem;
+    }
+  }
+}
+
+.origen-warning {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(255, 152, 0, 0.12);
+  color: #e65100;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.origen-warning--inline {
+  margin-top: 4px;
+}
+
+.origenes-montos {
+  margin: 0 0 12px;
+  padding: 10px 12px 4px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.origenes-montos-title {
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.origen-monto-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.origen-monto-nombre {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.875rem;
+  line-height: 1.3;
+}
+
+.origen-monto-field {
+  flex: 0 0 9.5rem;
+  width: 9.5rem;
+}
+
+.formalizar-hint {
+  margin: 12px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.pago-linea-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+
+  mat-icon,
+  mat-spinner {
+    flex: 0 0 auto;
+    margin-top: 1px;
+  }
+
+  mat-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+  }
+}
+
+.pago-linea-banner--wait {
+  background: rgba(255, 152, 0, 0.12);
+  color: #e65100;
+}
+
+.pago-linea-banner--ok {
+  background: rgba(46, 125, 50, 0.1);
+  color: #1b5e20;
+}
+
+.pago-linea-msg {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pago-linea-banner button {
+  flex: 0 0 auto;
+  align-self: center;
+}
+
+:host ::ng-deep .opcion-hijo .mdc-list-item__primary-text {
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.75);
+}

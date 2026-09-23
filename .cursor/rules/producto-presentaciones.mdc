@@ -1,0 +1,21 @@
+---
+description: Presentaciones UoM menudeo/paquete — merge ticket, toggle, selector inactivos
+globs: "**/detalle-ticket/**,**/selector-productos/**,**/producto-presentacion.service.ts,**/recibo-detalle.service.ts"
+alwaysApply: false
+---
+
+# Presentaciones / UoM (menudeo)
+
+OpenSpec: `prompts-general-pos/openspec/specs/producto-presentaciones-uom/spec.md`  
+Narrativo: `prompts-general-pos/contextos-ia/producto-presentaciones.md`  
+QA: `CONTEXTO-TESTER-POS.md` §4.2
+
+## Reglas
+
+1. Identidad de línea = `presentacionId` (paquete y unidad no se fusionan).
+2. Agrupar visualmente líneas del mismo `productoId`.
+3. Etiqueta `(Por unidad)` en negrita en líneas UNIDAD.
+4. Ocultar toggle unidad/empaque si ya coexisten ambas presentaciones en el ticket.
+5. Toggle: `ensure` presentaciones + cambiar `presentacionId` y precio (no solo subtotal).
+6. Selector: inactivos grises y no seleccionables.
+7. Al cambiar comportamiento: actualizar triple doc (spec + narrativo + §4.2).

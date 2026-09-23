@@ -1,0 +1,34 @@
+<div class="guia-root" (click)="onBackdropClick($event)">
+  <div class="guia-backdrop"></div>
+
+  @for (box of highlights; track $index) {
+    <div
+      class="guia-highlight"
+      [class.guia-highlight--destino]="box.esDestino"
+      [style.top.px]="box.top - 4"
+      [style.left.px]="box.left - 4"
+      [style.width.px]="box.width + 8"
+      [style.height.px]="box.height + 8">
+      @if (box.etiqueta) {
+        <span class="guia-highlight-label">{{ box.etiqueta }}</span>
+      }
+    </div>
+  }
+
+  <div class="guia-popover" [ngStyle]="popoverStyle" (click)="$event.stopPropagation()">
+    <div class="guia-popover-arrow" [ngStyle]="arrowStyle"></div>
+    @if (config.titulo) {
+      <h3 class="guia-popover-titulo">{{ config.titulo }}</h3>
+    }
+    <p class="guia-popover-mensaje">{{ config.mensaje }}</p>
+    <div class="guia-popover-actions">
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        (click)="onCerrar()">
+        {{ config.cerrarLabel || 'Cerrar ayuda en línea' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,21 @@
+---
+description: Comentario libre del ticket — rail Crédito/Observación, menú tab, limpieza al liquidar
+globs: "**/ticket-observacion-dialog/**,**/cxc-ticket-rail/**,**/tickets/tickets.component.ts,**/tickets.service.ts"
+alwaysApply: false
+---
+
+# Observaciones de ticket
+
+OpenSpec: `prompts-general-pos/openspec/specs/ticket-observaciones/spec.md`  
+Narrativo: `prompts-general-pos/contextos-ia/ticket-observaciones.md`  
+QA: `CONTEXTO-TESTER-POS.md` §4.5 / §10.3 + oleada `ACTUALIZACION-QA-2026-09-06.md`
+
+## Reglas
+
+1. Persistencia: `PUT /tickets/{id}/observaciones`; vacío → `null`. SQL `56_ticket_observaciones.sql`.
+2. Títulos rail: **Crédito** / **Observación** / **Crédito y observación**.
+3. Cita (comilla, itálica, ~4 líneas + tooltip). Sin label «Observación».
+4. Dialog: foco textarea; en edición, seleccionar todo. `hold('dialog:ticket-observacion')`.
+5. Menú tab: Registrar/Editar comentario y Generar crédito a: {ticket}.
+6. Al liquidar CxC o `crearReciboYEnlace`, limpiar observaciones (BE + parche FE).
+7. Al cambiar comportamiento: actualizar triple (spec + narrativo + §4.5).

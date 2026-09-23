@@ -1,0 +1,264 @@
+<div
+  class="pago-efectivo-dialog-shell"
+  cdkDrag
+  cdkDragRootElement=".cdk-overlay-pane">
+  <div class="pago-efectivo-dialog-header" mat-dialog-title cdkDragHandle>
+    <div class="pago-efectivo-header-row">
+      <mat-button-toggle-group
+        [formControl]="modoPagoCtrl"
+        appearance="legacy"
+        class="pago-efectivo-modo-toggle shrink-0">
+        <mat-button-toggle value="solo-efectivo">Pago en Efectivo</mat-button-toggle>
+        <mat-button-toggle value="mixto">Mixto</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+  </div>
+
+  <div mat-dialog-content class="dialog-content extra-spacing">
+    @if (estado === "entrada" || estado === "procesando") {
+      <div class="total-a-pagar">
+        <div class="pago-efectivo-fila-rl">
+          <span class="label">Total a pagar:</span>
+          <span class="value pago-efectivo-monto-caja">{{ formatCurrency(total) }}</span>
+        </div>
+      </div>
+      @if (estado === "entrada") {
+        <div class="paga-con-y-billetes">
+          <div class="paga-con-row">
+            <div class="pago-efectivo-fila-rl">
+              <div class="pago-efectivo-efectivo-grupo">
+                <span class="label">Paga con: Efectivo</span>
+                <mat-form-field
+                  appearance="outline"
+                  class="paga-con-field pago-efectivo-monto-caja"
+                  subscriptSizing="dynamic">
+                  <input
+                    matInput
+                    #pagaConInput
+                    class="paga-con-input"
+                    type="text"
+                    [formControl]="pagaConCtrl"
+                    (focus)="onPagaConFocus($event)"
+                    (blur)="onPagaConBlur()"
+                    (input)="onPagaConInput($event)"
+                    (keydown)="onPagaConKeydown($event)" />
+                </mat-form-field>
+              </div>
+            </div>
+            @if (alertaEscaneo) {
+              <p class="paga-con-alerta-escaneo" role="alert">
+                {{ alertaEscaneo }}
+              </p>
+            }
+          </div>
+          <div class="billetes-grid">
+            @for (billete of billetes; track billete) {
+              <button
+                type="button"
+                class="billete"
+                [class.selected]="esBilleteSeleccionado(billete.valor)"
+                [class.billete-modo-dual]="modoSumaRestaBilletes"
+                (click)="onBilleteButtonClick($event, billete.valor)">
+                <div class="billete-contenido">
+                  <div class="billete-visual">
+                    <img [src]="billete.imagen" [alt]="billete.label" />
+                  </div>
+                  <span class="billete-label">{{ billete.label }}</span>
+                </div>
+                @if (modoSumaRestaBilletes) {
+                  <div
+                    class="billete-zona billete-zona-sumar"
+                    role="button"
+                    [attr.aria-label]="'Sumar ' + billete.label + ' a Paga con'"
+                    (click)="onZonaSumarBillete($event, billete.valor)"></div>
+                  <div
+                    class="billete-zona billete-zona-restar"
+                    role="button"
+                    [attr.aria-label]="'Restar ' + billete.label + ' de Paga con'"
+                    (click)="onZonaRestarBillete($event, billete.valor)"></div>
+                  <mat-icon
+                    class="billete-flecha billete-flecha--sup"
+                    svgIcon="mat:keyboard_arrow_up"
+                    aria-hidden="true"></mat-icon>
+                  <mat-icon
+                    class="billete-flecha billete-flecha--inf"
+                    svgIcon="mat:keyboard_arrow_down"
+                    aria-hidden="true"></mat-icon>
+                }
+              </button>
+            }
+          </div>
+          @if (modoPagoCtrl.value === "mixto") {
+            <div class="otros-metodos-section">
+              <div class="otros-metodos-cabecera pago-efectivo-fila-rl">
+                <span class="otros-metodos-titulo">Pago con: Otros medios de pago</span>
+                <span class="otros-metodos-subtotal" aria-live="polite">{{
+                  formatCurrency(montoOtrosMediosPagaCon)
+                }}</span>
+              </div>
+              <div class="otros-metodos-grid">
+                @for (metodo of metodosOtros; track metodo.id) {
+                  <div
+                    class="otro-metodo-card"
+                    role="button"
+                    tabindex="0"
+                    [matTooltip]="metodo.descripcion"
+                    matTooltipPosition="above"
+                    (click)="onOtroMetodoCardClick(metodo.id, $event)"
+                    (keydown.enter)="onOtroMetodoCardClick(metodo.id, $event)"
+                    (keydown.space)="
+                      onOtroMetodoCardClick(metodo.id, $event);
+                      $event.preventDefault()
+                    ">
+                    <div class="otro-metodo-contenido">
+                      <div class="otro-metodo-visual">
+                        <img
+                          [src]="
+                            'assets/img/icons/payments/' + metodo.file
+                          "
+                          [alt]="metodo.descripcion" />
+                        @if (metodo.estado !== "activo") {
+                          <mat-icon
+                            class="otro-metodo-warning"
+                            svgIcon="mat:warning"
+                            aria-hidden="true"></mat-icon>
+                        }
+                      </div>
+                      <mat-form-field
+                        appearance="outline"
+                        class="otro-metodo-monto-field"
+                        subscriptSizing="dynamic">
+                        <input
+                          matInput
+                          type="text"
+                          inputmode="numeric"
+                          autocomplete="off"
+                          [value]="montosMixtosPorId[metodo.id]"
+                          (focus)="onMontoMixtoFocus(metodo.id, $event)"
+                          (blur)="onMontoMixtoBlur(metodo.id)"
+                          (input)="
+                            onMontoMixtoInput(
+                              metodo.id,
+                              $any($event.target).value
+                            )
+                          " />
+                      </mat-form-field>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+      @if (estado === "entrada") {
+        @if (modoPagoCtrl.value === "mixto") {
+          <div class="mixto-resumen-cambio-fila">
+            <fieldset class="mixto-resumen-fieldset">
+              <legend class="resumen-metodos-pago-legend">
+                Resumen metodos pago
+              </legend>
+              <span class="cambio-desglose" aria-live="polite">
+                {{ formatCurrency(montoEfectivoPagaCon) }} (Efectivo) +
+                {{ formatCurrency(montoOtrosMediosPagaCon) }} (Otros medios)
+              </span>
+            </fieldset>
+            <div
+              class="cambio cambio--mixto-en-fila"
+              [class.cambio-insuficiente]="pagoInsuficiente">
+              <span class="label">Cambio:</span>
+              <span class="value">{{ formatCurrency(cambioParaMostrar) }}</span>
+            </div>
+          </div>
+        } @else {
+          <div
+            class="cambio"
+            [class.cambio-insuficiente]="pagoInsuficiente">
+            <span class="label">Cambio:</span>
+            <span class="value">{{ formatCurrency(cambioParaMostrar) }}</span>
+          </div>
+        }
+      }
+      @if (estado === "procesando") {
+        <div class="estado-procesando">
+          <mat-spinner diameter="48"></mat-spinner>
+          <p>Registrando pago...</p>
+        </div>
+      }
+    }
+
+    @if (estado === "exito") {
+      <div class="estado-exito">
+        <mat-icon class="icono-exito">check_circle</mat-icon>
+        <p class="mensaje-exito">Pago registrado correctamente</p>
+        <p class="total-exito">{{ formatCurrency(totalGuardado) }}</p>
+      </div>
+    }
+
+    @if (estado === "error") {
+      <div class="estado-error">
+        <mat-icon class="icono-error">error</mat-icon>
+        <p class="mensaje-error">{{ errorMsg }}</p>
+      </div>
+    }
+  </div>
+
+  <div
+    mat-dialog-actions
+    class="dialog-actions"
+    [class.dialog-actions--entrada]="estado === 'entrada'">
+    @if (estado === "entrada") {
+      <div class="imprimir-luego-preferencia">
+        <mat-checkbox
+          [checked]="imprimirSoloEsteRecibo"
+          (change)="onImprimirSoloEsteReciboChange($event.checked)">
+          {{ imprimirTicketLuegoDePagarLabel }}
+        </mat-checkbox>
+      </div>
+      <div class="dialog-actions-buttons">
+        <button mat-stroked-button type="button" (click)="cancelar()">
+          Cancelar
+        </button>
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          (click)="confirmar()"
+          [disabled]="confirmarDeshabilitado">
+          Confirmar
+        </button>
+      </div>
+    }
+    @if (estado === "exito") {
+      <div class="dialog-actions-buttons">
+        @if (data.imprimirRecibo) {
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            (click)="onImprimirRecibo()">
+            <mat-icon>print</mat-icon>
+            Imprimir recibo
+          </button>
+        }
+        <button mat-stroked-button type="button" (click)="onCerrarExito()">
+          Cerrar
+        </button>
+      </div>
+    }
+    @if (estado === "error") {
+      <div class="dialog-actions-buttons">
+        <button mat-stroked-button type="button" (click)="cancelar()">
+          Cerrar
+        </button>
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          (click)="onReintentar()">
+          Reintentar
+        </button>
+      </div>
+    }
+  </div>
+</div>

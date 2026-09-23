@@ -1,0 +1,207 @@
+@if (isLink(item) && !isFunction(item.route)) {
+  <div
+    [class.hover:bg-hover]="!(isActive$ | async)?.(item)"
+    [ngClass]="{
+      'bg-primary-600 text-on-primary-600': (isActive$ | async)?.(item),
+      'navigation-color': !(isActive$ | async)?.(item)
+    }"
+    class="navigation-item"
+    [class.navigation-item--with-shortcuts]="!!item.shortcuts?.length">
+    <a
+      [routerLink]="item.route"
+      class="navigation-item__label"
+      matRipple>
+      {{ item.label }}
+    </a>
+    @if (item.shortcuts?.length) {
+      <button
+        type="button"
+        class="navigation-item__chevron"
+        [matMenuTriggerFor]="shortcutsMenu"
+        (click)="$event.preventDefault(); $event.stopPropagation()"
+        [attr.aria-label]="'Accesos de ' + item.label"
+        matRipple>
+        <mat-icon class="navigation-item__chevron-icon" svgIcon="mat:arrow_drop_down"></mat-icon>
+      </button>
+      <mat-menu #shortcutsMenu="matMenu" yPosition="below" xPosition="before">
+        @for (shortcut of item.shortcuts; track shortcut.label) {
+          <a
+            [routerLink]="shortcut.route"
+            [queryParams]="shortcut.queryParams || null"
+            class="navigation-menu-item"
+            mat-menu-item>
+            @if (shortcut.icon) {
+              <mat-icon [svgIcon]="shortcut.icon" class="text-current"></mat-icon>
+            }
+            <span>{{ shortcut.label }}</span>
+          </a>
+        }
+      </mat-menu>
+    }
+  </div>
+}
+
+@if (isLink(item) && isFunction(item.route)) {
+  <div
+    (click)="item.route()"
+    [class.hover:bg-hover]="!(isActive$ | async)?.(item)"
+    class="navigation-item navigation-color"
+    matRipple>
+    {{ item.label }}
+  </div>
+}
+
+@if (
+  (isSubheading(item) && item.children.length > 0) || isDropdown(item)
+) {
+  <div
+    [class.hover:bg-hover]="!(isActive$ | async)?.(item)"
+    [matMenuTriggerFor]="menu"
+    [ngClass]="{
+      'bg-primary-600 text-on-primary-600': (isActive$ | async)?.(item),
+      'navigation-color': !(isActive$ | async)?.(item)
+    }"
+    class="navigation-item"
+    matRipple>
+    {{ item.label }}
+  </div>
+  <mat-menu #menu="matMenu" yPosition="below">
+    @for (child of item.children; track child) {
+      @if (isLink(child) && !isFunction(child.route)) {
+        <a
+          [ngClass]="{ 'text-primary-600': (isActive$ | async)?.(child) }"
+          [routerLink]="child.route"
+          class="navigation-menu-item"
+          mat-menu-item>
+          @if (child.icon) {
+            <mat-icon [svgIcon]="child.icon" class="text-current"></mat-icon>
+          }
+          <span>{{ child.label }}</span>
+        </a>
+      }
+      @if (isLink(child) && isFunction(child.route)) {
+        <div (click)="child.route()" class="navigation-menu-item" mat-menu-item>
+          @if (child.icon) {
+            <mat-icon [svgIcon]="child.icon" class="text-current"></mat-icon>
+          }
+          <span>{{ child.label }}</span>
+        </div>
+      }
+      @if (isDropdown(child)) {
+        <button
+          [matMenuTriggerFor]="level1"
+          [ngClass]="{ 'text-primary-600': (isActive$ | async)?.(child) }"
+          class="navigation-menu-item"
+          mat-menu-item>
+          @if (child.icon) {
+            <mat-icon [svgIcon]="child.icon" class="text-current"></mat-icon>
+          }
+          <span>{{ child.label }}</span>
+        </button>
+        <mat-menu #level1="matMenu" yPosition="below">
+          @for (item of child.children; track item) {
+            <ng-container
+              [ngTemplateOutletContext]="{ item: item }"
+              [ngTemplateOutlet]="linkTemplate"></ng-container>
+            @if (isDropdown(item)) {
+              <button
+                [matMenuTriggerFor]="level2"
+                [ngClass]="{ 'text-primary-600': (isActive$ | async)?.(item) }"
+                class="navigation-menu-item"
+                mat-menu-item>
+                {{ item.label }}
+              </button>
+              <mat-menu #level2="matMenu" yPosition="below">
+                @for (child of item.children; track child) {
+                  <ng-container
+                    [ngTemplateOutletContext]="{ item: child }"
+                    [ngTemplateOutlet]="linkTemplate"></ng-container>
+                  @if (isDropdown(child)) {
+                    <button
+                      [matMenuTriggerFor]="level3"
+                      [ngClass]="{
+                        'text-primary-600': (isActive$ | async)?.(child)
+                      }"
+                      class="navigation-menu-item"
+                      mat-menu-item>
+                      {{ child.label }}
+                    </button>
+                    <mat-menu #level3="matMenu" yPosition="below">
+                      @for (item of child.children; track item) {
+                        <ng-container
+                          [ngTemplateOutletContext]="{ item: item }"
+                          [ngTemplateOutlet]="linkTemplate"></ng-container>
+                        @if (isDropdown(item)) {
+                          <button
+                            [matMenuTriggerFor]="level4"
+                            [ngClass]="{
+                              'text-primary-600': (isActive$ | async)?.(item)
+                            }"
+                            class="navigation-menu-item"
+                            mat-menu-item>
+                            {{ item.label }}
+                          </button>
+                          <mat-menu #level4="matMenu" yPosition="below">
+                            @for (child of item.children; track child) {
+                              <ng-container
+                                [ngTemplateOutletContext]="{ item: child }"
+                                [ngTemplateOutlet]="
+                                  linkTemplate
+                                "></ng-container>
+                              @if (isDropdown(child)) {
+                                <button
+                                  [matMenuTriggerFor]="level5"
+                                  [ngClass]="{
+                                    'text-primary-600': (isActive$ | async)?.(
+                                      child
+                                    )
+                                  }"
+                                  class="navigation-menu-item"
+                                  mat-menu-item>
+                                  {{ child.label }}
+                                </button>
+                                <mat-menu #level5="matMenu" yPosition="below">
+                                  @for (item of child.children; track item) {
+                                    <ng-container
+                                      [ngTemplateOutletContext]="{ item: item }"
+                                      [ngTemplateOutlet]="
+                                        linkTemplate
+                                      "></ng-container>
+                                  }
+                                </mat-menu>
+                              }
+                            }
+                          </mat-menu>
+                        }
+                      }
+                    </mat-menu>
+                  }
+                }
+              </mat-menu>
+            }
+          }
+        </mat-menu>
+      }
+    }
+  </mat-menu>
+  <ng-template #linkTemplate let-item="item">
+    @if (isLink(item) && !isFunction(item.route)) {
+      <a
+        [ngClass]="{ 'text-primary-600': (isActive$ | async)?.(item) }"
+        [routerLink]="item.route"
+        class="navigation-menu-item"
+        mat-menu-item
+        >{{ item.label }}</a
+      >
+    }
+    @if (isLink(item) && isFunction(item.route)) {
+      <div
+        (click)="item.route()"
+        [ngClass]="{ 'text-primary-600': (isActive$ | async)?.(item) }"
+        class="navigation-menu-item"
+        mat-menu-item>
+        {{ item.label }}
+      </div>
+    }
+  </ng-template>
+}

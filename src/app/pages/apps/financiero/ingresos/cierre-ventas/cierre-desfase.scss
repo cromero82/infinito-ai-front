@@ -1,0 +1,47 @@
+// Chip Diferencia del módulo Cierre de turno (tabla + asistente).
+.desfase-texto,
+.total-desfases-value {
+  display: inline-block;
+  box-sizing: border-box;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  padding: 6px 10px;
+  border-radius: 4px;
+  text-align: right;
+  line-height: 1.3;
+  max-width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+.desfase-ok {
+  color: #1b5e20;
+  background-color: rgba(46, 125, 50, 0.18);
+}
+
+.desfase-mas {
+  color: #0d47a1;
+  background-color: rgba(25, 118, 210, 0.18);
+}
+
+.desfase-menos {
+  color: #b71c1c;
+  background-color: rgba(211, 47, 47, 0.2);
+}
+
+:host-context(.dark) {
+  .desfase-ok {
+    color: #c8e6c9;
+    background-color: rgba(76, 175, 80, 0.28);
+  }
+
+  .desfase-mas {
+    color: #bbdefb;
+    background-color: rgba(33, 150, 243, 0.28);
+  }
+
+  .desfase-menos {
+    color: #ffcdd2;
+    background-color: rgba(244, 67, 54, 0.32);
+  }
+}

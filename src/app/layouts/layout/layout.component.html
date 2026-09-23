@@ -1,0 +1,52 @@
+@if (config$ | async; as config) {
+  <vex-base-layout>
+    <vex-progress-bar></vex-progress-bar>
+    <vex-search></vex-search>
+    <mat-sidenav-container class="vex-layout-sidenav-container">
+      <mat-sidenav
+        (closedStart)="onSidenavClosed()"
+        [disableClose]="!!(sidenavDisableClose$ | async)"
+        [fixedInViewport]="!!(sidenavFixedInViewport$ | async)"
+        [mode]="(sidenavMode$ | async) ?? 'side'"
+        [opened]="!!(sidenavOpen$ | async)">
+        <vex-sidenav [collapsed]="!!(sidenavCollapsed$ | async)"></vex-sidenav>
+      </mat-sidenav>
+      <mat-sidenav
+        (closedStart)="onQuickpanelClosed()"
+        [opened]="!!(quickpanelOpen$ | async)"
+        class="vex-layout-quickpanel"
+        mode="over"
+        position="end">
+        <vex-quickpanel></vex-quickpanel>
+      </mat-sidenav>
+      <mat-sidenav-content class="vex-layout-sidenav-content">
+        <vex-toolbar
+          [class.dark]="config.layout === 'vertical'"
+          class="vex-toolbar"></vex-toolbar>
+        <main class="vex-layout-content">
+          <div class="vex-main-route-host">
+            <router-outlet></router-outlet>
+          </div>
+        </main>
+        @if (config.footer.visible) {
+          <vex-footer
+            class="vex-footer"
+            [footerItems]="(footerItems$ | async) ?? []"
+            [itemsFlow]="(footerItemsFlow$ | async) ?? 'ltr'"></vex-footer>
+        }
+      </mat-sidenav-content>
+    </mat-sidenav-container>
+    <vex-config-panel-toggle
+      (openConfig)="configpanel.open()"></vex-config-panel-toggle>
+    <!-- CONFIGPANEL -->
+    <vex-sidebar
+      #configpanel
+      [invisibleBackdrop]="true"
+      [opened]="!!(configPanelOpen$ | async)"
+      position="right">
+      <vex-config-panel></vex-config-panel>
+    </vex-sidebar>
+    <!-- END CONFIGPANEL -->
+    <vex-bug-reporter-button></vex-bug-reporter-button>
+  </vex-base-layout>
+}

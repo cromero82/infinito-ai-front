@@ -1,0 +1,555 @@
+# Contexto Legal y de Responsabilidad para Diseño de Software POS
+
+## Propósito
+Este documento establece los lineamientos legales, de diseño y de responsabilidad para la construcción de un sistema POS (Punto de Venta) que cumpla con la normativa colombiana mientras delega la responsabilidad de declaración al Cliente final.
+
+---
+
+## 1. Marco Legal y Normativo
+
+### 1.1 Normativa Aplicable
+- **Resolución 000165 de 2023 de la DIAN** - Normativa principal para facturación electrónica
+- **Anexo 1.0** - Documento Equivalente Electrónico POS
+- **Anexo 1.9** - Factura Electrónica de Venta
+- **Estatuto Tributario - Artículo 305** - Delito de Evasión Fiscal
+- **Código Penal - Artículo 17** - Complicidad
+
+### 1.2 Distinción Fundamental entre Modelos
+
+| Modelo | Descripción | Responsabilidad |
+|--------|-------------|-----------------|
+| ❌ **Software Trampa** | Diseñado para OCULTAR ventas, permite eliminar o no registrar transacciones | **Desarrollador = Cómplice** |
+| ✅ **Software Neutro** | Diseñado para REGISTRAR TODO, usuario decide cuándo/qué declarar | **Desarrollador = Proveedor de herramienta** |
+
+---
+
+## 2. Principios de Diseño que DEBES Cumplir
+
+### 2.1 Principio de Registro Total
+**TODO movimiento que el usuario ingresa al sistema debe quedar registrado.**
+
+**Requisitos técnicos:**
+- Ninguna transacción puede ser eliminada físicamente de la base de datos
+- Todo cambio de estado debe quedar registrado en logs
+- Las ventas registradas no pueden ser modificadas en sus montos/fechas
+
+### 2.2 Principio de Inmodificabilidad
+**Ningún registro de venta puede ser modificado después de creado.**
+
+**Excepción PERMITIDA:**
+- Solo se permite "anular" mediante un documento oficial (Nota Crédito)
+- La Nota Crédito TAMBIÉN queda registrada permanentemente
+- La anulación NO elimina la venta original, solo crea un documento compensador
+
+### 2.3 Principio de Trazabilidad Completa
+**TODO lo que sucede en el sistema debe quedar registrado con:**
+- Fecha y hora exacta (timestamp)
+- Usuario que realizó la acción
+- Acción específica realizada
+- Valores antes/después (si aplica)
+- Hash o firma para garantizar integridad
+
+### 2.4 Principio de Responsabilidad Clara
+**El usuario debe ser consciente y aceptar explícitamente su responsabilidad.**
+
+**Requisitos:**
+- Aviso explícito antes de usar funcionalidades "pendientes"
+- Confirmación de entendimiento de responsabilidad
+- Cláusula en licencia de uso que establece límites de responsabilidad
+
+---
+
+## 3. Lo que SÍ está Permitido (Diseño Legal)
+
+### 3.1 Emisión Diferida de Documentos Electrónicos
+
+**Flujo Permitido:**
+```
+1. Usuario registra VENTA COMPLETA (todos los datos DIAN)
+         ↓
+2. Opciones:
+   (✓) Emitir a DIAN INMEDIATAMENTE
+   (✓) Guardar como PENDIENTE DE EMISIÓN
+         ↓
+3. Vista con TODAS las facturas pendientes
+         ↓
+4. Botón "EMITIR SELECCIONADOS" (fin de día/semana)
+```
+
+**Por qué es permitido:**
+- La venta queda REGISTRADA en logs inmodificables
+- El usuario solo decide CUÁNDO emitir, no SI emitir
+- Existe una ruta clara para emitir eventualmente
+- En inspección, la venta ESTÁ AHÍ (solo documento pendiente)
+
+### 3.2 Estados Válidos para Documentos
+
+```
+VENTA_REGISTRADA (estado inicial - no editable)
+    ↓
+┌───┴───┐
+│       │
+│   EMITIDA_INMEDIATAMENTE (enviada a DIAN, CUFE asignado)
+│       │
+│       ↓
+│   EMITIDA_LOTE (enviada posteriormente desde pendientes)
+│
+PENDIENTE_DE_EMISION (usuario puede emitir cuando decida)
+    │
+    ├─── EMITIDA (cuando usuario decide emitir)
+    │
+    └─── ANULADA_MEDIANTE_NOTA_CREDITO (solo forma válida de cancelar)
+             │
+             └─── La venta original SIGUE registrada
+```
+
+---
+
+## 4. Lo que NUNCA Debes Implementar
+
+### 4.1 Funcionalidades Prohibidas Absolutamente
+
+| ❌ Prohibido | Por qué | Riesgo |
+|--------------|---------|--------|
+| Botón "Eliminar Venta" | Diseño para ocultar | **Muy Alto** |
+| Opción "No registrar esta venta" | Diseño para evadir | **Muy Alto** |
+| Permitir modificar montos/fechas después | Manipulación | **Alto** |
+| Permitir reiniciar numeración | Huecos en facturación | **Alto** |
+| Logs editables o borrables | Sin rastro de acciones | **Alto** |
+| "Modo DIAN" vs "Modo Real" | Doble caja por diseño | **Muy Alto** |
+
+### 4.2 La Línea Roja que Nunca Debes Cruzar
+
+```
+❌ CRUZAS LA LÍNEA si:
+   - Tu sistema tiene funcionalidades diseñadas ESPECÍFICAMENTE para OCULTAR
+   - NADA queda registrado de ciertas transacciones
+   - El usuario puede "hacer desaparecer" ventas
+
+✅ TE MANTIENES SEGURO si:
+   - Tu sistema REGISTRA TODO lo que el usuario ingresa
+   - NADA se elimina físicamente
+   - El usuario solo decide QUÉ HACER con lo registrado
+   - Hay logs inmodificables de TODO
+```
+
+---
+
+## 5. Estructura de Datos Requerida para Protección
+
+### 5.1 Tabla Principal de Ventas (Inmodificable)
+
+```sql
+-- Esta tabla NUNCA permite DELETE ni UPDATE de campos clave
+CREATE TABLE ventas (
+    id_venta BIGSERIAL PRIMARY KEY,
+    fecha_hora_registro TIMESTAMP NOT NULL DEFAULT NOW(),
+    fecha_hora_venta TIMESTAMP NOT NULL,
+    usuario_id BIGINT NOT NULL,
+    
+    -- Datos de la venta (NO EDITABLES después de creado)
+    monto_total DECIMAL(18,2) NOT NULL,
+    subtotal DECIMAL(18,2) NOT NULL,
+    iva_total DECIMAL(18,2) NOT NULL,
+    inc_total DECIMAL(18,2) NOT NULL,
+    
+    -- Estado y control
+    estado VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE_DE_EMISION',
+    -- Estados permitidos: PENDIENTE_DE_EMISION, EMITIDA, ANULADA
+    
+    -- Si fue emitida electrónicamente
+    id_documento_electronico BIGINT NULL,
+    cufe_cude VARCHAR(100) NULL,
+    fecha_emision_dian TIMESTAMP NULL,
+    
+    -- Integridad del registro
+    hash_registro VARCHAR(256) NOT NULL,  -- SHA256 de los datos clave
+    hash_anterior VARCHAR(256) NULL,      -- Para cadena de bloques ligera
+    
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    -- NO updated_at - los campos no se actualizan, solo cambia estado mediante transacciones
+);
+```
+
+### 5.2 Tabla de Logs del Sistema (Inmodificable)
+
+```sql
+-- Esta tabla registra TODO lo que sucede
+-- NUNCA permite DELETE ni UPDATE
+CREATE TABLE logs_sistema (
+    id_log BIGSERIAL PRIMARY KEY,
+    fecha_hora TIMESTAMP NOT NULL DEFAULT NOW(),
+    usuario_id BIGINT NOT NULL,
+    
+    -- Tipo de acción
+    accion VARCHAR(100) NOT NULL,
+    -- Ejemplos:
+    -- 'VENTA_REGISTRADA', 'VENTA_EMITIDA_DIAN', 'VENTA_ANULADA',
+    -- 'INTENTO_ELIMINACION', 'LOGIN_EXITOSO', 'CONFIGURACION_CAMBIADA'
+    
+    -- Detalle en JSON
+    detalle JSONB NOT NULL,
+    -- Ejemplo: {"id_venta": 1234, "monto": 100000, "metodo_pago": "EFECTIVO"}
+    
+    -- Nivel de severidad
+    nivel VARCHAR(20) NOT NULL DEFAULT 'INFO',
+    -- 'DEBUG', 'INFO', 'WARN', 'ERROR', 'SEGURIDAD'
+    
+    -- Integridad
+    hash_log VARCHAR(256) NOT NULL,
+    hash_anterior VARCHAR(256) NULL
+);
+
+-- Índices para búsqueda rápida
+CREATE INDEX idx_logs_fecha ON logs_sistema(fecha_hora);
+CREATE INDEX idx_logs_usuario ON logs_sistema(usuario_id);
+CREATE INDEX idx_logs_accion ON logs_sistema(accion);
+```
+
+### 5.3 Tabla de Transacciones de Estado (Historial)
+
+```sql
+-- Cada cambio de estado de una venta genera un registro aquí
+-- NUNCA permite DELETE ni UPDATE
+CREATE TABLE venta_estado_historial (
+    id_historial BIGSERIAL PRIMARY KEY,
+    venta_id BIGINT NOT NULL REFERENCES ventas(id_venta),
+    fecha_hora TIMESTAMP NOT NULL DEFAULT NOW(),
+    usuario_id BIGINT NOT NULL,
+    
+    estado_anterior VARCHAR(50) NULL,
+    estado_nuevo VARCHAR(50) NOT NULL,
+    
+    motivo VARCHAR(500) NULL,
+    -- Ejemplo: "Emisión lote fin de día", "Anulación por devolución"
+    
+    -- Referencia a documento si aplica
+    id_nota_credito BIGINT NULL,
+    id_documento_electronico BIGINT NULL,
+    
+    hash_registro VARCHAR(256) NOT NULL
+);
+```
+
+---
+
+## 6. Cláusula de Responsabilidad para el Usuario
+
+### 6.1 Aviso Obligatorio para Funcionalidad "Pendiente de Emisión"
+
+```
+================================================================================
+⚠️ AVISO IMPORTANTE SOBRE RESPONSABILIDAD
+================================================================================
+
+Esta venta ha sido REGISTRADA permanentemente en el sistema y queda
+consignada en los logs inmodificables.
+
+Al elegir "Guardar como Pendiente de Emisión", usted entiende y acepta que:
+
+1. La venta ESTÁ REGISTRADA y no puede ser eliminada ni ocultada
+2. La responsabilidad de emitir el documento electrónico ante la DIAN
+   dentro de los plazos legales es EXCLUSIVAMENTE suya
+3. El sistema le proporciona la herramienta para emitirla cuando decida
+4. Usted declara entender que el incumplimiento de las obligaciones
+   tributarias es de su exclusiva responsabilidad
+
+El desarrollador del software no asume responsabilidad por:
+- Las decisiones operativas que usted tome
+- El incumplimiento de plazos de emisión
+- Las declaraciones tributarias que usted presente
+
+================================================================================
+
+[ ] He leído y acepto que la responsabilidad de emisión es mía
+
+                        [Cancelar]    [Confirmar - Guardar Pendiente]
+```
+
+### 6.2 Cláusula para Contrato/Licencia de Uso
+
+```
+CLAÚSULA DE LIMITACIÓN DE RESPONSABILIDAD
+
+1. Propósito del Software:
+   Este sistema está diseñado como herramienta de gestión empresarial y punto
+   de venta. Registra todas las operaciones ingresadas por el usuario y
+   proporciona la funcionalidad para emitir documentos electrónicos válidos
+   ante la DIAN de acuerdo con la normativa vigente.
+
+2. Responsabilidad del Usuario:
+   EL USUARIO es exclusivamente responsable de:
+   - Emitir los documentos electrónicos dentro de los plazos legales establecidos
+   - Declarar correctamente todas sus operaciones ante las entidades tributarias
+   - No utilizar la funcionalidad de "pendiente de emisión" para evadir
+     obligaciones fiscales
+   - La veracidad y completitud de los datos ingresados al sistema
+
+3. Responsabilidad del Desarrollador:
+   El desarrollador garantiza que el software:
+   - Registra permanentemente todas las operaciones ingresadas por el usuario
+   - Mantiene logs inmodificables de todas las acciones
+   - Puede generar documentos electrónicos válidos según normativa DIAN
+   
+   El desarrollador NO asume responsabilidad por:
+   - Las decisiones operativas o declarativas del usuario
+   - El incumplimiento de plazos legales por parte del usuario
+   - Multas, sanciones o procesos legales derivados del uso del software
+     por parte del usuario
+   - La interpretación o aplicación de la normativa tributaria por parte del usuario
+
+4. Registros y Logs:
+   El usuario acepta que el sistema mantiene registros completos e
+   inmodificables de todas las operaciones. Estos registros están disponibles
+   para el usuario y para las entidades competentes cuando sea legalmente
+   requerido.
+```
+
+---
+
+## 7. Flujos de Trabajo Recomendados
+
+### 7.1 Flujo: Venta Normal con Emisión Inmediata
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. Cajero registra productos, montos, cliente (si aplica)       │
+└─────────────────────────┬───────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. Sistema muestra resumen y opciones:                          │
+│                                                                    │
+│    [✓] Emitir Documento Electrónico AHORA                        │
+│    [ ] Guardar como Pendiente de Emisión                         │
+└─────────────────────────┬───────────────────────────────────────┘
+                          ↓ (Usuario elige "Emitir Ahora")
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. Sistema:                                                      │
+│    - Genera XML según UBL 2.1                                    │
+│    - Envía a Proveedor Tecnológico / DIAN                        │
+│    - Recibe CUFE/CUDE                                            │
+│    - Actualiza estado: VENTA_EMITIDA                             │
+│    - Registra TODO en logs_sistema                               │
+└─────────────────────────┬───────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 4. Imprime/PDF con QR y CUFE                                     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 7.2 Flujo: Venta con Emisión Diferida (Pendiente)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. Cajero registra venta completa                                │
+└─────────────────────────┬───────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. Usuario elige "Guardar como Pendiente"                       │
+└─────────────────────────┬───────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. ⚠️ MUESTRA AVISO DE RESPONSABILIDAD OBLIGATORIO             │
+│                                                                    │
+│    "Esta venta queda REGISTRADA permanentemente..."              │
+│    "Usted es responsable de emitir el documento..."              │
+│                                                                    │
+│    [ ] He leído y acepto la responsabilidad                      │
+│                                                                    │
+│          [Cancelar]              [Confirmar]                     │
+└─────────────────────────┬───────────────────────────────────────┘
+                          ↓ (Usuario confirma)
+┌─────────────────────────────────────────────────────────────────┐
+│ 4. Sistema:                                                      │
+│    - Guarda venta con estado: PENDIENTE_DE_EMISION              │
+│    - NO elimina NADA                                             │
+│    - Registra en logs_sistema: "VENTA_PENDIENTE" + confirmación │
+│    - Crea hash de integridad                                     │
+└─────────────────────────┬───────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 5. Posteriormente (fin de día/semana):                          │
+│    - Usuario accede a "Ventas Pendientes"                       │
+│    - Selecciona una o varias                                     │
+│    - Clica "Emitir Seleccionados"                                │
+│    - Sistema envía lote a DIAN                                   │
+│    - Actualiza estados a EMITIDA                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 7.3 Flujo: Anulación de Venta (SOLO mediante Nota Crédito)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ IMPORTANTE: NO existe "eliminar venta". Solo existe:            │
+│           "Anular mediante Nota Crédito"                         │
+│                                                                    │
+│ La venta original SIGUE registrada. La Nota Crédito es un       │
+│ documento separado que la compensa.                               │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. Usuario solicita "anular" una venta                           │
+└─────────────────────────┬───────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. Sistema pregunta:                                             │
+│                                                                    │
+│    "Para anular esta venta debe generar una Nota Crédito.        │
+│     ¿Desea continuar?"                                            │
+│                                                                    │
+│          [Cancelar]              [Generar Nota Crédito]         │
+└─────────────────────────┬───────────────────────────────────────┘
+                          ↓ (Continuar)
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. Usuario ingresa motivo de anulación:                          │
+│    - Devolución completa                                          │
+│    - Devolución parcial                                           │
+│    - Error de facturación                                         │
+│    - Otro (especificar)                                           │
+└─────────────────────────┬───────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 4. Sistema:                                                      │
+│    - Genera Nota Crédito electrónica                             │
+│    - La envía a DIAN                                             │
+│    - Recibe CUFE de la Nota Crédito                              │
+│    - Actualiza estado venta: ANULADA                             │
+│    - Crea en venta_estado_historial: registro de transición     │
+│    - Registra TODO en logs_sistema                               │
+│                                                                    │
+│    IMPORTANTE: La venta original NO es eliminada. Solo          │
+│    cambia su estado a ANULADA y queda ligada a la Nota Crédito.│
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 8. Consideraciones de Seguridad y Protección
+
+### 8.1 Integridad de Datos
+
+**Implementar cadena de bloques ligera:**
+```
+Cada registro tiene:
+- hash_registro = SHA256(datos + nonce)
+- hash_anterior = hash_registro del registro anterior
+
+Esto garantiza que:
+1. No se puede modificar un registro sin romper la cadena
+2. Cualquier manipulación es detectable
+3. Hay prueba irrefutable de cuándo se creó cada registro
+```
+
+### 8.2 Acceso a Logs
+
+**Los logs deben ser:**
+- Visibles para el usuario (para su propia gestión)
+- No editables ni borrables
+- Exportables en formatos estándar (CSV, JSON, PDF)
+- Disponibles para autoridades cuando sea requerido
+
+### 8.3 Roles y Permisos
+
+**Definir roles claros:**
+```
+ROL_CAJERO:
+- Puede registrar ventas
+- Puede emitir documentos pendientes
+- NO puede anular ventas (necesita supervisor)
+- NO puede acceder a configuraciones de sistema
+
+ROL_SUPERVISOR:
+- Puede todo lo del cajero
+- Puede generar Notas Crédito
+- Puede ver reportes
+- NO puede eliminar registros
+
+ROL_ADMIN:
+- Puede todo lo anterior
+- Puede configurar sistema
+- Puede gestionar usuarios
+- PERO TAMPOCO puede eliminar registros de ventas/logs
+- Todas sus acciones quedan registradas
+```
+
+---
+
+## 9. Resumen de Principios Clave
+
+### ✅ LO QUE TE PROTEGE:
+1. **TODO queda registrado** - Nada se elimina, nada se oculta
+2. **Logs inmodificables** - Prueba irrefutable de todo lo sucedido
+3. **Responsabilidad aceptada explícitamente** - El usuario confirma entender
+4. **No hay funcionalidades diseñadas para evadir** - Tu código es limpio
+5. **Solo emisión diferida, no ocultación** - El usuario decide cuándo, no si
+
+### ❌ LO QUE TE PONE EN RIESGO:
+1. **Cualquier cosa que permita "desaparecer" una venta**
+2. **Logs editables o borrables**
+3. **"Modo DIAN" vs "Modo Real"** (doble caja)
+4. **Permitir modificar montos/fechas después**
+5. **No tener aviso de responsabilidad**
+
+---
+
+## 10. Próximos Pasos para la Implementación
+
+1. **Revisar modelo de datos existente** - Identificar dónde permite DELETE/UPDATE de ventas
+2. **Implementar tabla de logs** - Si no existe, crearla urgentemente
+3. **Agregar columna de estado** - A las ventas existentes
+4. **Implementar historial de estados** - Cada cambio debe quedar registrado
+5. **Agregar aviso de responsabilidad** - Antes de permitir "pendiente"
+6. **Eliminar funcionalidades peligrosas** - Botón "eliminar", "cancelar sin rastro"
+7. **Implementar integridad (hash)** - Para garantizar inmodificabilidad
+8. **Crear página de términos y condiciones** - Con cláusula de responsabilidad
+
+---
+
+## Documento: DIAN Facturación Electrónica - Guía para Integración con Proveedor Tecnológico
+
+### Contexto Actual
+El sistema POS necesita integración con facturación electrónica DIAN para cumplir con la normativa colombiana.
+
+### Opciones Evaluadas
+
+#### Opción 1: Ser Proveedor Tecnológico Directo
+- **Requisitos:** Patrimonio 20,000 UVT (~$1B COP), ISO 27001, etc.
+- **Viabilidad:** NO viable para proyecto actual
+
+#### Opción 2: Integración con Proveedor Tecnológico Existente (RECOMENDADA)
+- **Cómo funciona:** Tu sistema envía datos al PT, él maneja firma digital y transmisión DIAN
+- **Proveedores evaluados:**
+  - Nextpyme: $60/doc, certificado incluido, $95k/año por NIT
+  - Plemsi: Precios públicos, muy establecido, programa de aliados
+  - Factus: API moderna, buena documentación
+  - Alegra: Muy grande, ecosistema completo
+
+### Modelo de Negocio para Integración
+
+#### Flujo Recomendado (Legal y Seguro):
+```
+1. Venta registrada completamente en POS
+2. Opciones:
+   - Emitir inmediatamente a DIAN
+   - Guardar como Pendiente de Emisión (con aviso de responsabilidad)
+3. Vista de pendientes para emitir lote al fin de día
+4. Todo registrado en logs inmodificables
+```
+
+#### Responsabilidad:
+- **Tú:** Proveer herramienta que registra TODO
+- **Cliente:** Decidir qué declarar, asumir responsabilidad
+
+### Próximos Pasos Técnicos
+1. **Evaluar e integrar API de Proveedor Tecnológico**
+2. **Implementar modelo de estados (Pendiente/Emitido/Anulado)**
+3. **Crear logs sistema inmodificables**
+4. **Agregar aviso de responsabilidad para funcionalidades pendientes**
+5. **Eliminar cualquier opción de "eliminar venta" sin rastro**
+
+---
+
+**Documento generado para:** Adaptación del sistema POS a modelo legal seguro
+**Fecha:** 2026
+**Responsabilidad:** Este documento establece lineamientos, no asesoría legal. Se recomienda consultar abogado especializado para revisar contratos y cláusulas específicas.

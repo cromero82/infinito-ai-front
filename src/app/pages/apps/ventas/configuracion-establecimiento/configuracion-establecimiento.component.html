@@ -1,0 +1,73 @@
+<div class="p-6 max-w-2xl">
+  <h2 class="title mt-0 mb-2">Datos del negocio</h2>
+  <p class="text-secondary mb-6">
+    Estos datos aparecen en la tirilla POS. No constituyen factura electrónica DIAN.
+  </p>
+
+  @if (loading) {
+    <mat-spinner diameter="36"></mat-spinner>
+  }
+
+  @if (!loading) {
+    <div class="form-grid">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Razón social</mat-label>
+        <input matInput [(ngModel)]="form.razonSocial" required />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Nombre comercial</mat-label>
+        <input matInput [(ngModel)]="form.nombreComercial" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>NIT</mat-label>
+        <input matInput [(ngModel)]="form.nit" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Dígito verificación</mat-label>
+        <input matInput [(ngModel)]="form.digitoVerificacion" maxlength="1" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Dirección</mat-label>
+        <input matInput [(ngModel)]="form.direccion" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Teléfono</mat-label>
+        <input matInput [(ngModel)]="form.telefono" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" [(ngModel)]="form.email" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Leyenda régimen (impresión)</mat-label>
+        <textarea matInput rows="2" [(ngModel)]="form.regimenLeyendaImpresion"></textarea>
+      </mat-form-field>
+
+      <div class="toggle-row full-width">
+        <mat-slide-toggle [(ngModel)]="form.manejoEstrictoCuentas" color="primary">
+          Manejo estricto de orígenes de fondos
+        </mat-slide-toggle>
+        <p class="toggle-hint text-secondary">
+          Si está activo, los egresos y traslados se bloquean cuando el origen de fondos no tiene saldo suficiente.
+          Si está desactivado, se permite con advertencia.
+        </p>
+      </div>
+    </div>
+
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      [disabled]="guardando"
+      (click)="guardar()">
+      {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
+    </button>
+  }
+</div>

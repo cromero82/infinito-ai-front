@@ -1,0 +1,78 @@
+.navigation-item {
+  @apply rounded cursor-pointer text-sm font-medium relative select-none no-underline me-2;
+  @apply transition-all duration-400 ease-out-swift;
+  display: inline-flex;
+  align-items: stretch;
+  padding: 0;
+  overflow: hidden;
+  line-height: 1.25;
+
+  /* Misma altura que el chip activo (Financiero): sin py extra en el contenedor. */
+  &:not(:has(.navigation-item__label)) {
+    padding: 0.5rem 1rem;
+  }
+}
+
+.navigation-item__label {
+  @apply no-underline text-inherit;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.navigation-item--with-shortcuts {
+  .navigation-item__label {
+    padding-right: 0.35rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+.navigation-item__chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0 0.15rem 0 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  line-height: 1;
+  align-self: stretch;
+  border-radius: 0;
+  outline: none;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.06);
+  }
+}
+
+.navigation-item.bg-primary-600 .navigation-item__chevron:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.navigation-item__chevron-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+.navigation-color {
+  color: var(--vex-navigation-color);
+}
+
+.navigation-menu-item {
+  @apply transition-all duration-400 ease-out-swift;
+
+  &:hover {
+    @apply text-primary-600;
+
+    .mat-icon {
+      @apply text-primary-600;
+    }
+  }
+}

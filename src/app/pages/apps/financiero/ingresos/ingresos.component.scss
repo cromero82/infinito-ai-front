@@ -1,0 +1,605 @@
+.card {
+  @apply rounded shadow bg-foreground;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.ingresos-page {
+  flex: 1 1 0%;
+  min-height: 0;
+}
+
+// Contenedor interno (wrapper bajo .ingresos-page) debe propagar altura al card
+.ingresos-page > div {
+  flex: 1 1 0%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ingresos-card {
+  flex: 1 1 0%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+table {
+  font-size: 14px;
+}
+
+table th {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+table td {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.estado-corte {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  text-transform: capitalize;
+  background: #eef1f4;
+}
+
+.estado-creada {
+  color: #8a4b00;
+  background: #fff3d6;
+}
+
+.estado-revisada {
+  color: #137333;
+  background: #e6f4ea;
+}
+
+.estado-eliminado {
+  color: #8b1a1a;
+  background: #fce8e6;
+}
+
+.ingresos-dia-header {
+  background: rgba(25, 118, 210, 0.06);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.detalles-fecha-table {
+  font-size: 13px;
+
+  th,
+  td {
+    vertical-align: top;
+  }
+
+  th {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+
+  td {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+
+  tr.selected-row {
+    background-color: rgba(63, 81, 181, 0.12) !important;
+
+    td {
+      font-weight: 500;
+    }
+
+    &:hover {
+      background-color: rgba(63, 81, 181, 0.16) !important;
+    }
+
+    // Mantener acento verde de Físico sobre la selección
+    td.col-fisico {
+      background-color: rgba(76, 175, 80, 0.18) !important;
+    }
+
+    td.col-cobranzas {
+      background-color: rgba(33, 150, 243, 0.16) !important;
+    }
+  }
+}
+
+.fecha-cell {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+
+.fecha-label {
+  white-space: nowrap;
+}
+
+.metodos-pago-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.25;
+}
+
+.metodo-pago-linea {
+  display: block;
+}
+
+.metodos-pago-cell {
+  min-width: 280px;
+  width: 55%;
+}
+
+.metodos-pago-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+  width: 100%;
+}
+
+.metodo-pago-tile {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.035);
+  font-size: 0.8125rem;
+  line-height: 1.3;
+}
+
+.metodo-pago-tile-nombre {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.metodo-pago-tile-valor {
+  flex: 0 0 auto;
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.btn-ver-ref {
+  flex: 0 0 auto;
+  min-width: 0 !important;
+  height: 24px !important;
+  line-height: 24px !important;
+  padding: 0 10px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em;
+  box-shadow: 0 1px 3px rgb(var(--vex-color-primary-500) / 0.35);
+}
+
+.btn-ver-count {
+  margin-left: 2px;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.estado-corte-toggle {
+  max-width: 460px;
+}
+
+.navigation-button {
+  min-width: 120px;
+  height: 40px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.split-pane-container {
+  display: flex;
+  flex: 1 1 0%;
+  min-height: 0;
+  // height: 100% no resuelve bien aquí; 0 + flex-grow reparte el alto real del card
+  height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+// Menos separación entre Fecha Inicio, Fecha Fin y el botón (panel izquierdo)
+.ingresos-filtros-fields {
+  gap: 0.375rem;
+}
+
+:host ::ng-deep .ingresos-filtros-fields {
+  .mat-mdc-form-field {
+    margin-bottom: 0;
+  }
+
+  .mat-mdc-form-field-subscript-wrapper {
+    min-height: 0 !important;
+  }
+}
+
+.split-pane-left {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding-right: 8px;
+  border-right: 1px solid rgba(0, 0, 0, 0.12);
+  min-width: 200px;
+  min-height: 0;
+  transition: width 0.3s ease;
+
+  &.oculto {
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    border-right: none;
+
+    > * {
+      display: none;
+    }
+  }
+}
+
+.split-pane-divider {
+  width: 8px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background-color: transparent;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, width 0.3s ease;
+
+  &:hover:not(.oculto) {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  &.resizing {
+    background-color: rgba(25, 118, 210, 0.2);
+    cursor: col-resize;
+  }
+
+  &.oculto {
+    width: 40px;
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0.02);
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  .divider-handle {
+    width: 4px;
+    height: 40px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+    transition: background-color 0.2s ease;
+  }
+
+  &:hover:not(.oculto) .divider-handle,
+  &.resizing .divider-handle {
+    background-color: rgba(25, 118, 210, 0.6);
+  }
+}
+
+.toggle-filtros-btn {
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.toggle-filtros-btn-divider {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  &:hover mat-icon {
+    color: rgba(0, 0, 0, 0.87);
+  }
+}
+
+.split-pane-right {
+  flex: 1 1 0%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding-left: 12px;
+}
+
+.ingresos-toolbar-panel {
+  flex-shrink: 0;
+}
+
+// Un solo scroll vertical para gráfico + tabla (misma idea que .split-pane-left)
+.ingresos-right-scroll {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+  padding-bottom: 8px;
+
+  &::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.28);
+    border-radius: 6px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.4);
+    background-clip: padding-box;
+  }
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.35) transparent;
+}
+
+.ingresos-content-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.ingresos-chart-panel {
+  flex-shrink: 0;
+}
+
+.ingresos-details-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.ingresos-details-table {
+  overflow-x: auto;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.02);
+
+  // Misma referencia visual que Precio (admin-productos)
+  th.col-fisico,
+  td.col-fisico {
+    background-color: rgba(76, 175, 80, 0.08);
+    font-variant-numeric: tabular-nums;
+  }
+
+  th.col-cobranzas,
+  td.col-cobranzas {
+    background-color: rgba(33, 150, 243, 0.08);
+    font-variant-numeric: tabular-nums;
+  }
+
+  tr:hover td.col-fisico {
+    background-color: rgba(76, 175, 80, 0.12);
+  }
+
+  tr:hover td.col-cobranzas {
+    background-color: rgba(33, 150, 243, 0.12);
+  }
+
+  tr.ingresos-dia-header td.col-fisico {
+    background-color: rgba(76, 175, 80, 0.14);
+  }
+
+  tr.ingresos-dia-header td.col-cobranzas {
+    background-color: rgba(33, 150, 243, 0.14);
+  }
+}
+
+.split-pane-left > * {
+  width: 100%;
+}
+
+.resumen-total {
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+// —— Dark mode: fondos / textos / bordes (sin forzar blanco) ——
+:host-context(.dark) {
+  .card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  }
+
+  table th {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  table td {
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  .estado-corte {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .estado-creada {
+    color: #ffcc80;
+    background: rgba(255, 193, 7, 0.18);
+  }
+
+  .estado-revisada {
+    color: #a5d6a7;
+    background: rgba(76, 175, 80, 0.2);
+  }
+
+  .estado-eliminado {
+    color: #ef9a9a;
+    background: rgba(244, 67, 54, 0.2);
+  }
+
+  .ingresos-dia-header {
+    background: rgba(144, 202, 249, 0.1);
+    border-top-color: rgba(255, 255, 255, 0.1);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .detalles-fecha-table {
+    tr.selected-row {
+      background-color: rgba(121, 134, 203, 0.22) !important;
+
+      &:hover {
+        background-color: rgba(121, 134, 203, 0.3) !important;
+      }
+
+      td.col-fisico {
+        background-color: rgba(76, 175, 80, 0.22) !important;
+      }
+
+      td.col-cobranzas {
+        background-color: rgba(33, 150, 243, 0.22) !important;
+      }
+    }
+
+    tr:hover:not(.selected-row) {
+      background-color: rgba(255, 255, 255, 0.06);
+    }
+  }
+
+  .metodo-pago-tile {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .metodo-pago-tile-nombre {
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  .metodo-pago-tile-valor {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .split-pane-left {
+    border-right-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .split-pane-divider {
+    &:hover:not(.oculto) {
+      background-color: rgba(255, 255, 255, 0.06);
+    }
+
+    &.oculto {
+      background-color: rgba(255, 255, 255, 0.04);
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    .divider-handle {
+      background-color: rgba(255, 255, 255, 0.28);
+    }
+  }
+
+  .toggle-filtros-btn-divider {
+    mat-icon {
+      color: rgba(255, 255, 255, 0.65);
+    }
+
+    &:hover mat-icon {
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  .ingresos-right-scroll {
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.28);
+      background-clip: padding-box;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.42);
+      background-clip: padding-box;
+    }
+
+    scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+  }
+
+  .ingresos-details-table {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+
+    th.col-fisico,
+    td.col-fisico {
+      background-color: rgba(76, 175, 80, 0.14);
+    }
+
+    th.col-cobranzas,
+    td.col-cobranzas {
+      background-color: rgba(33, 150, 243, 0.16);
+    }
+
+    tr:hover td.col-fisico {
+      background-color: rgba(76, 175, 80, 0.2);
+    }
+
+    tr:hover td.col-cobranzas {
+      background-color: rgba(33, 150, 243, 0.22);
+    }
+
+    tr.ingresos-dia-header td.col-fisico {
+      background-color: rgba(76, 175, 80, 0.22);
+    }
+
+    tr.ingresos-dia-header td.col-cobranzas {
+      background-color: rgba(33, 150, 243, 0.24);
+    }
+  }
+}

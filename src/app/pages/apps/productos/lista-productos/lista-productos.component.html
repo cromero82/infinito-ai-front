@@ -1,0 +1,729 @@
+<div class="productos-page mt-1 flex flex-col flex-1 min-h-0 min-w-0 w-full">
+  <div class="flex flex-col flex-1 min-h-0 w-full">
+    <div class="card products-card flex flex-col flex-1 min-h-0 overflow-hidden">
+      <div
+        class="bg-app-bar px-6 border-b sticky left-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2 class="title m-0">Productos</h2>
+        <div class="flex items-center gap-4 flex-wrap">
+          <button
+            *ngIf="mostrarBotonCrearGrupoEspejoBarraSuperior()"
+            mat-flat-button
+            color="accent"
+            type="button"
+            class="grupo-espejo-bar-btn flex-none"
+            matTooltip="Crear o asociar grupo espejo con los productos seleccionados (Ctrl+clic en filas)"
+            (click)="abrirModalGrupoEspejoDesdeBarraSeleccion()">
+            <mat-icon class="ltr:mr-1.5 rtl:ml-1.5 icon-sm" svgIcon="mat:link"></mat-icon>
+            <span>Grupo espejo</span>
+          </button>
+          <div
+            class="search-field-shell flex-none"
+            [class.search-field-shell--has-clear]="!!searchCtrl.value">
+            <mat-form-field
+              appearance="outline"
+              class="search-input"
+              subscriptSizing="dynamic">
+              <mat-label>Buscar producto</mat-label>
+              <input
+                #searchInput
+                matInput
+                autocomplete="off"
+                autofocus
+                class="search-input-control"
+                [formControl]="searchCtrl"
+                placeholder="Código o nombre" />
+            </mat-form-field>
+            <div class="search-field-actions">
+              <button
+                mat-icon-button
+                type="button"
+                class="search-field-action-btn"
+                aria-label="Escanear código de barras con la cámara"
+                matTooltip="Escanear código de barras"
+                (click)="abrirEscannerCodigoBarras(); $event.stopPropagation()">
+                <mat-icon class="icon-sm" svgIcon="mat:photo_camera"></mat-icon>
+              </button>
+              @if (searchCtrl.value) {
+                <button
+                  mat-icon-button
+                  type="button"
+                  class="search-field-action-btn"
+                  aria-label="Limpiar búsqueda"
+                  (click)="searchCtrl.setValue('')">
+                  <mat-icon class="icon-sm" svgIcon="mat:close"></mat-icon>
+                </button>
+              }
+            </div>
+          </div>
+          <button
+            mat-flat-button
+            color="primary"
+            class="add-product-btn flex-none"
+            type="button"
+            (click)="createProduct(searchCtrl.value)">
+            <mat-icon class="ltr:mr-1.5 rtl:ml-1.5 icon-sm" svgIcon="mat:add"></mat-icon>
+            <span>Agregar producto</span>
+          </button>
+          <button mat-icon-button type="button" [matMenuTriggerFor]="filtersMenu" #filtersMenuTrigger="matMenuTrigger" matTooltip="Filtros" color="primary">
+            <mat-icon svgIcon="mat:filter_list"></mat-icon>
+          </button>
+          <button
+            #columnVisibilityMenuTrigger="matMenuTrigger"
+            mat-stroked-button
+            class="column-visibility-btn flex-none"
+            type="button"
+            [matMenuTriggerFor]="columnVisibilityMenu"
+            (menuOpened)="onColumnVisibilityMenuOpened()"
+            [disabled]="savingColumnConfig"
+            matTooltip="Columnas visibles">
+            <mat-icon class="icon-sm" svgIcon="mat:view_column"></mat-icon>
+            <mat-icon class="ltr:ml-0.5 rtl:mr-0.5 icon-sm" svgIcon="mat:arrow_drop_down"></mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <mat-menu #columnVisibilityMenu="matMenu" xPosition="before" yPosition="below" class="column-visibility-menu">
+        <div class="flex flex-col gap-0 min-w-[220px] p-2" (click)="$event.stopPropagation()">
+          <div class="flex items-center gap-2 pb-2 border-b border-primary/30 mb-2">
+            <mat-icon svgIcon="mat:view_column" class="icon-sm text-primary"></mat-icon>
+            <h3 class="m-0 font-medium text-sm">Columnas visibles</h3>
+          </div>
+          <button
+            *ngFor="let col of allTableColumns"
+            mat-button
+            class="column-visibility-item w-full justify-start"
+            (click)="toggleColumnVisibility(col.key)">
+            <mat-icon *ngIf="isColumnSelected(col.key)" class="icon-sm mr-2 text-primary" svgIcon="mat:check"></mat-icon>
+            <span *ngIf="!isColumnSelected(col.key)" class="icon-placeholder mr-2"></span>
+            {{ col.label }}
+          </button>
+          <button mat-flat-button color="primary" class="w-full mt-2" (click)="applyColumnVisibility()" [disabled]="savingColumnConfig">
+            <mat-icon svgIcon="mat:check" class="icon-sm mr-1"></mat-icon>
+            Aplicar
+          </button>
+        </div>
+      </mat-menu>
+
+      <!-- Filters Menu Definition - Unified filters (Precio, % Ganancia, Fecha act. precio, Total ventas, Última venta, Fecha creación) -->
+      <mat-menu #filtersMenu="matMenu" class="filters-custom-menu" panelClass="filters-custom-menu" xPosition="before" (menuOpened)="restoreAllFiltersState()">
+          <div class="flex flex-col gap-4 min-w-[480px] p-3" (click)="$event.stopPropagation()">
+            <div class="flex items-center gap-2 pb-2 border-b border-primary/30">
+              <mat-icon svgIcon="mat:tune" class="icon-sm text-primary"></mat-icon>
+              <h3 class="m-0 font-medium text-sm">Filtros</h3>
+            </div>
+
+            <!-- 1. Precio -->
+            <div class="filter-block">
+              <span class="filter-label">Precio</span>
+              <div class="flex gap-2 items-center flex-wrap">
+                <mat-form-field appearance="outline" class="filters-field-condicion filters-field-dense">
+                  <mat-label>Condición</mat-label>
+                  <mat-select [formControl]="filterPrecioCondCtrl">
+                    <mat-option value="=">Igual (=)</mat-option>
+                    <mat-option value=">=">Mayor / Igual (&gt;=)</mat-option>
+                    <mat-option value="<=">Menor / Igual (&lt;=)</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1 min-w-[100px] filters-field-dense">
+                  <mat-label>Valor</mat-label>
+                  <input matInput type="number" min="0" step="0.01" [formControl]="filterPrecioValorCtrl" placeholder="0">
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- 2. % Ganancia -->
+            <div class="filter-block">
+              <span class="filter-label">% Ganancia</span>
+              <mat-form-field appearance="outline" class="w-full filters-field-dense">
+                <mat-label>Opción</mat-label>
+                <mat-select [formControl]="filterGananciaPresetCtrl">
+                  <mat-option value="no_calcular">No se puede calcular (No tiene fecha de Compra)</mat-option>
+                  <mat-option value="personalizado">Personalizado</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <div class="flex gap-2 items-center flex-wrap" *ngIf="filterGananciaPresetCtrl.value === 'personalizado'">
+                <mat-form-field appearance="outline" class="filters-field-condicion filters-field-dense">
+                  <mat-label>Condición</mat-label>
+                  <mat-select [formControl]="filterGananciaCondCtrl">
+                    <mat-option value="=">Igual (=)</mat-option>
+                    <mat-option value=">=">Mayor / Igual (&gt;=)</mat-option>
+                    <mat-option value="<=">Menor / Igual (&lt;=)</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1 min-w-[100px] filters-field-dense">
+                  <mat-label>Valor %</mat-label>
+                  <input matInput type="number" step="0.01" [formControl]="filterGananciaValorCtrl" placeholder="ej. -5 o 25">
+                  <mat-hint *ngIf="filterGananciaValorCtrl.value !== '' && filterGananciaValorCtrl.value !== null && !isValidPercent(filterGananciaValorCtrl.value)">Entre -100 y 100</mat-hint>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- 3. Fecha actualización precio -->
+            <div class="filter-block">
+              <span class="filter-label">Fecha actualización precio</span>
+              <mat-form-field appearance="outline" class="w-full filters-field-dense">
+                <mat-label>Actualizado</mat-label>
+                <mat-select [formControl]="filterFechaActPrecioPresetCtrl">
+                  <mat-option value="nunca">Nunca han sido actualizados</mat-option>
+                  <mat-option value="mas_2_meses">Hace más de 2 (dos) meses</mat-option>
+                  <mat-option value="mas_4_meses">Hace más de 4 (cuatro) meses</mat-option>
+                  <mat-option value="menos_2_meses">Recientemente (menos de 2 meses)</mat-option>
+                  <mat-option value="personalizado">Personalizado...</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <div class="flex gap-2 mt-0" *ngIf="filterFechaActPrecioPresetCtrl.value === 'personalizado'">
+                <mat-form-field appearance="outline" class="filters-field-condicion filters-field-dense">
+                  <mat-label>Condición</mat-label>
+                  <mat-select [formControl]="filterFechaActPrecioCustomCondCtrl">
+                    <mat-option value="=">=</mat-option>
+                    <mat-option value=">=">&gt;=</mat-option>
+                    <mat-option value="<=">&lt;=</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1 filters-field-dense">
+                  <mat-label>Fecha</mat-label>
+                  <input matInput [matDatepicker]="pickerActPrecio" [formControl]="filterFechaActPrecioCustomDateCtrl">
+                  <mat-datepicker-toggle matSuffix [for]="pickerActPrecio"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerActPrecio></mat-datepicker>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- 4. Total ventas -->
+            <div class="filter-block">
+              <span class="filter-label">Total ventas</span>
+              <div class="flex gap-2 items-center flex-wrap">
+                <mat-form-field appearance="outline" class="filters-field-condicion filters-field-dense">
+                  <mat-label>Condición</mat-label>
+                  <mat-select [formControl]="filterTotalVentasCondCtrl">
+                    <mat-option value="=">Igual (=)</mat-option>
+                    <mat-option value=">=">Mayor / Igual (&gt;=)</mat-option>
+                    <mat-option value="<=">Menor / Igual (&lt;=)</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1 min-w-[100px] filters-field-dense">
+                  <mat-label>Valor</mat-label>
+                  <input matInput type="number" min="0" [formControl]="filterTotalVentasValorCtrl" placeholder="0">
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- 5. Última venta -->
+            <div class="filter-block">
+              <span class="filter-label">Última venta</span>
+              <mat-form-field appearance="outline" class="w-full filters-field-dense">
+                <mat-label>Vendido</mat-label>
+                <mat-select [formControl]="filterFechaUltimaVentaPresetCtrl">
+                  <mat-option value="nunca">Nunca ha sido vendido</mat-option>
+                  <mat-option value="mas_2_meses">Hace más de 2 (dos) meses</mat-option>
+                  <mat-option value="mas_4_meses">Hace más de 4 (cuatro) meses</mat-option>
+                  <mat-option value="menos_2_meses">Recientemente (menos de 2 meses)</mat-option>
+                  <mat-option value="personalizado">Personalizado...</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <div class="flex gap-2 mt-0" *ngIf="filterFechaUltimaVentaPresetCtrl.value === 'personalizado'">
+                <mat-form-field appearance="outline" class="filters-field-condicion filters-field-dense">
+                  <mat-label>Condición</mat-label>
+                  <mat-select [formControl]="filterFechaUltimaVentaCustomCondCtrl">
+                    <mat-option value="=">=</mat-option>
+                    <mat-option value=">=">&gt;=</mat-option>
+                    <mat-option value="<=">&lt;=</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1 filters-field-dense">
+                  <mat-label>Fecha</mat-label>
+                  <input matInput [matDatepicker]="pickerUltimaVenta" [formControl]="filterFechaUltimaVentaCustomDateCtrl">
+                  <mat-datepicker-toggle matSuffix [for]="pickerUltimaVenta"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerUltimaVenta></mat-datepicker>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- 6. Fecha de creación -->
+            <div class="filter-block">
+              <span class="filter-label">Fecha de creación</span>
+              <mat-form-field appearance="outline" class="w-full filters-field-dense">
+                <mat-label>Creación</mat-label>
+                <mat-select [formControl]="filterFechaCreacionPresetCtrl">
+                  <mat-option value="mas_2_meses">Hace más de 2 (dos) meses</mat-option>
+                  <mat-option value="mas_4_meses">Hace más de 4 (cuatro) meses</mat-option>
+                  <mat-option value="menos_2_meses">Recientemente (menos de 2 meses)</mat-option>
+                  <mat-option value="personalizado">Personalizado...</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <div class="flex gap-2 mt-0" *ngIf="filterFechaCreacionPresetCtrl.value === 'personalizado'">
+                <mat-form-field appearance="outline" class="filters-field-condicion filters-field-dense">
+                  <mat-label>Condición</mat-label>
+                  <mat-select [formControl]="filterFechaCreacionCustomCondCtrl">
+                    <mat-option value="=">=</mat-option>
+                    <mat-option value=">=">&gt;=</mat-option>
+                    <mat-option value="<=">&lt;=</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1 filters-field-dense">
+                  <mat-label>Fecha</mat-label>
+                  <input matInput [matDatepicker]="pickerCreacion" [formControl]="filterFechaCreacionCustomDateCtrl">
+                  <mat-datepicker-toggle matSuffix [for]="pickerCreacion"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerCreacion></mat-datepicker>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- Botones Aplicar, Limpiar y checkbox Ver solo activos -->
+            <div class="flex gap-2 pt-2 border-t border-primary/20 items-center flex-wrap">
+              <button type="button" mat-flat-button color="primary" (click)="onApplyFiltersClick($event)">
+                <mat-icon svgIcon="mat:check" class="icon-sm mr-1"></mat-icon>
+                Aplicar
+              </button>
+              <button mat-button color="warn" (click)="clearAllFiltersInMenu()" *ngIf="hasAnyFilterValue()">
+                <mat-icon svgIcon="mat:delete_sweep" class="icon-sm mr-1"></mat-icon>
+                Limpiar
+              </button>
+              <mat-checkbox [formControl]="filterVerSoloActivosCtrl" class="ml-auto">
+                Productos activos únicamente
+              </mat-checkbox>
+            </div>
+          </div>
+        </mat-menu>
+
+      <!-- Active Filters Bar -->
+      <div class="productos-active-filters w-full px-6 py-3 border-b flex items-center gap-2 flex-wrap bg-foreground/5"
+        *ngIf="activeFilters.length > 0 || filterVerSoloActivosCtrl.value">
+        <span class="text-sm font-medium text-secondary">Filtros:</span>
+        <mat-chip-set>
+          <mat-chip *ngFor="let filter of activeFilters" [removable]="true" (removed)="removeFilter(filter)"
+            color="primary" selected>
+            {{ filter.label || (filter.campo + ' ' + filter.condicion + ' ' + filter.valor) }}
+            <button matChipRemove aria-label="Quitar filtro">
+              <mat-icon svgIcon="mat:close" class="icon-sm"></mat-icon>
+            </button>
+          </mat-chip>
+        </mat-chip-set>
+        <button mat-button color="warn" class="ml-2" (click)="clearAllFilters()">
+          <mat-icon svgIcon="mat:delete_sweep" class="icon-sm mr-1"></mat-icon>
+          Limpiar todos
+        </button>
+        <span class="ml-auto text-sm text-secondary" *ngIf="percentFromTotal != null">
+          {{ (percentFromTotal * 100) | number:'1.1-1' }}% del total
+        </span>
+      </div>
+
+      <!-- Modo edición: grupo espejo -->
+      <div class="grupo-espejo-panel w-full px-6 py-3 flex flex-col gap-3" *ngIf="grupoEspejoEdicion">
+        <div class="grupo-espejo-panel-toolbar flex flex-wrap items-center gap-x-3 gap-y-2 justify-between">
+          <div class="grupo-espejo-panel-toolbar-main flex flex-wrap items-center gap-2 min-w-0 flex-1">
+            <div class="flex items-center gap-2 text-primary shrink-0">
+              <mat-icon svgIcon="mat:tune" class="icon-sm"></mat-icon>
+              <span class="text-sm font-medium whitespace-nowrap">Espejo de productos</span>
+            </div>
+            <div class="grupo-espejo-nombre-row flex items-center gap-0.5 min-w-0">
+              <mat-form-field
+                *ngIf="!grupoEspejoEditandoNombre"
+                appearance="outline"
+                subscriptSizing="dynamic"
+                class="grupo-espejo-nombre-field">
+                <mat-label>Nombre</mat-label>
+                <input matInput [value]="grupoEspejoEdicion.nombre" readonly />
+              </mat-form-field>
+              <mat-form-field
+                *ngIf="grupoEspejoEditandoNombre"
+                appearance="outline"
+                subscriptSizing="dynamic"
+                class="grupo-espejo-nombre-field">
+                <mat-label>Nombre del grupo</mat-label>
+                <input matInput [formControl]="grupoEspejoNombreCtrl"
+                  (keydown.enter)="guardarNombreGrupoEspejo()"
+                  (keydown.escape)="cancelarEdicionNombreGrupoEspejo()" />
+              </mat-form-field>
+              <button
+                *ngIf="!grupoEspejoEditandoNombre"
+                mat-icon-button
+                type="button"
+                matTooltip="Editar nombre del grupo"
+                class="shrink-0"
+                [disabled]="grupoEspejoBusy || grupoEspejoGuardandoNombre"
+                (click)="iniciarEdicionNombreGrupoEspejo()">
+                <mat-icon svgIcon="mat:edit"></mat-icon>
+              </button>
+              <button
+                *ngIf="grupoEspejoEditandoNombre"
+                mat-icon-button
+                type="button"
+                color="primary"
+                matTooltip="Guardar nombre"
+                class="shrink-0"
+                [disabled]="grupoEspejoGuardandoNombre"
+                (click)="guardarNombreGrupoEspejo()">
+                <mat-icon svgIcon="mat:check"></mat-icon>
+              </button>
+              <button
+                *ngIf="grupoEspejoEditandoNombre"
+                mat-icon-button
+                type="button"
+                matTooltip="Cancelar"
+                class="shrink-0"
+                [disabled]="grupoEspejoGuardandoNombre"
+                (click)="cancelarEdicionNombreGrupoEspejo()">
+                <mat-icon svgIcon="mat:close"></mat-icon>
+              </button>
+            </div>
+          </div>
+          <div class="grupo-espejo-panel-header-actions flex flex-wrap items-center justify-end gap-2 shrink-0">
+            <button
+              *ngIf="mostrarBotonCorregirPrecioGrupoEspejo()"
+              mat-flat-button
+              type="button"
+              color="accent"
+              class="grupo-espejo-corregir-precio-btn"
+              matTooltip="Editar el producto con precio más bajo (o nulo) para alinear el grupo"
+              [disabled]="grupoEspejoBusy"
+              (click)="abrirCorregirPrecioGrupoEspejo()">
+              <mat-icon class="grupo-espejo-corregir-precio-icon" svgIcon="mat:bolt"></mat-icon>
+              <span>Corregir precio</span>
+            </button>
+            <button
+              *ngIf="mostrarBotonAgregarSeleccionAlGrupoEspejo()"
+              mat-flat-button
+              type="button"
+              color="primary"
+              class="grupo-espejo-agregar-seleccion-btn flex-none"
+              matTooltip="Agregar a este grupo los productos seleccionados en la tabla que aún no están listados arriba"
+              [disabled]="grupoEspejoBusy"
+              (click)="agregarSeleccionAlGrupoEspejoDesdePanel()">
+              <mat-icon class="ltr:mr-1.5 rtl:ml-1.5 icon-sm" svgIcon="mat:link"></mat-icon>
+              <span>Agregar productos al grupo</span>
+            </button>
+            <button mat-stroked-button type="button" color="primary" (click)="salirModoGrupoEspejoEdicion()">
+              Salir del modo edición
+            </button>
+          </div>
+        </div>
+
+        <div class="grupo-espejo-productos-section">
+          <span class="text-xs font-medium text-secondary block mb-1">Productos del grupo</span>
+          <div class="grupo-espejo-productos-panel-wrap">
+            <div
+              *ngIf="mostrarBloquePrecioHomogeneoGrupoEspejo()"
+              class="grupo-espejo-precio-homogeneo-float">
+              <div class="grupo-espejo-precio-homogeneo-box">
+                <span class="grupo-espejo-precio-homogeneo-label">Precio homogéneo:</span>
+                <ng-container *ngIf="precioHomogeneoVentaGrupoEspejo() !== null; else sinPrecioHomog">
+                  <span class="grupo-espejo-precio-homogeneo-valor tabular-nums"
+                    >$ {{ precioHomogeneoVentaGrupoEspejo()! | number:'1.2-2' }}</span
+                  >
+                </ng-container>
+                <ng-template #sinPrecioHomog>
+                  <span class="grupo-espejo-precio-homogeneo-valor">—</span>
+                </ng-template>
+                <button
+                  mat-icon-button
+                  type="button"
+                  class="grupo-espejo-precio-homogeneo-lapiz"
+                  matTooltip="Editar precio (se abre el producto representativo; el servidor alinea el grupo)"
+                  [disabled]="grupoEspejoBusy || grupoEspejoEditandoNombre"
+                  (click)="abrirEditarPrecioHomogeneoGrupoEspejo()">
+                  <mat-icon svgIcon="mat:edit" class="icon-sm"></mat-icon>
+                </button>
+              </div>
+            </div>
+            <div class="grupo-espejo-productos-scroll">
+            <div class="grupo-espejo-productos">
+            <div
+              *ngFor="let p of grupoEspejoEdicion.productos; trackBy: trackByProductoPanelId"
+              class="grupo-espejo-prod-row border border-black/10 rounded px-2 py-1 bg-card"
+              [class.grupo-espejo-prod-row--precio-conflicto]="esProductoGrupoEspejoPrecioDesalineado(p)">
+              <div class="grupo-espejo-prod-top">
+                <span
+                  class="grupo-espejo-prod-nombre"
+                  [matTooltip]="p.nombre"
+                  [matTooltipDisabled]="(p.nombre || '').trim().length <= 32">
+                  {{ nombreGrupoEspejoVisible(p.nombre) }}
+                </span>
+                <div class="grupo-espejo-prod-actions">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    class="grupo-espejo-icon-sm"
+                    matTooltip="Editar producto"
+                    [disabled]="grupoEspejoBusy"
+                    (click)="abrirEditarProductoGrupoEspejo(p); $event.stopPropagation()">
+                    <mat-icon svgIcon="mat:edit" class="icon-sm"></mat-icon>
+                  </button>
+                  <ng-container *ngIf="hayConflictoPreciosGrupoEspejo()">
+                    <button
+                      mat-icon-button
+                      type="button"
+                      class="grupo-espejo-icon-sm"
+                      [matMenuTriggerFor]="precioDetalleMenu"
+                      #precioPopoverTr="matMenuTrigger"
+                      (mouseenter)="onPrecioPopoverTriggerEnter(precioPopoverTr)"
+                      (mouseleave)="onPrecioPopoverTriggerLeave()"
+                      matTooltip="Ver desglose de precios"
+                      [disabled]="grupoEspejoBusy"
+                      (click)="$event.stopPropagation()">
+                      <mat-icon svgIcon="mat:attach_money" class="icon-sm"></mat-icon>
+                    </button>
+                    <mat-menu
+                      #precioDetalleMenu="matMenu"
+                      [hasBackdrop]="false"
+                      class="grupo-espejo-precio-mat-menu"
+                      yPosition="below"
+                      xPosition="before">
+                      <div
+                        class="grupo-espejo-prod-precios-interno grupo-espejo-prod-precios-interno--popover"
+                        (mouseenter)="onPrecioPopoverPanelEnter()"
+                        (mouseleave)="onPrecioPopoverPanelLeave()"
+                        (click)="$event.stopPropagation()">
+                        <div class="grupo-espejo-prod-precios-interno-head">
+                          <span>Valores de precio</span>
+                        </div>
+                        <div
+                          class="grupo-espejo-prod-precio-line grupo-espejo-prod-precio-line--principal"
+                          [class.grupo-espejo-prod-precio-line--difiere]="campoPrecioGrupoEspejoDifiereReferencia(p, 'precio')">
+                          <span class="grupo-espejo-prod-precio-label">Precio</span>
+                          <span class="grupo-espejo-prod-precio-valor">{{
+                            tieneValorNumericoPrecioPanel(p.precio) ? (p.precio | number:'1.2-2') : '—'
+                          }}</span>
+                        </div>
+                        <div
+                          class="grupo-espejo-prod-precio-line"
+                          [class.grupo-espejo-prod-precio-line--difiere]="campoPrecioGrupoEspejoDifiereReferencia(p, 'precioUnidad')">
+                          <span class="grupo-espejo-prod-precio-label">Precio unidad</span>
+                          <span class="grupo-espejo-prod-precio-valor">{{
+                            tieneValorNumericoPrecioPanel(p.precioUnidad) ? (p.precioUnidad | number:'1.2-4') : '—'
+                          }}</span>
+                        </div>
+                        <div
+                          class="grupo-espejo-prod-precio-line"
+                          [class.grupo-espejo-prod-precio-line--difiere]="campoPrecioGrupoEspejoDifiereReferencia(p, 'precioCompra')">
+                          <span class="grupo-espejo-prod-precio-label">Precio compra</span>
+                          <span class="grupo-espejo-prod-precio-valor">{{
+                            tieneValorNumericoPrecioPanel(p.precioCompra) ? (p.precioCompra | number:'1.2-2') : '—'
+                          }}</span>
+                        </div>
+                        <div
+                          class="grupo-espejo-prod-precio-line"
+                          [class.grupo-espejo-prod-precio-line--difiere]="campoPrecioGrupoEspejoDifiereReferencia(p, 'porcentajeGanancia')">
+                          <span class="grupo-espejo-prod-precio-label">% Ganancia</span>
+                          <span class="grupo-espejo-prod-precio-valor">{{
+                            tieneValorNumericoPrecioPanel(p.porcentajeGanancia)
+                              ? (p.porcentajeGanancia | number:'1.1-1') + ' %'
+                              : '—'
+                          }}</span>
+                        </div>
+                      </div>
+                    </mat-menu>
+                  </ng-container>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    class="grupo-espejo-icon-sm"
+                    color="warn"
+                    matTooltip="Quitar del grupo"
+                    [disabled]="grupoEspejoBusy"
+                    (click)="quitarProductoDeGrupoEspejo(p); $event.stopPropagation()">
+                    <mat-icon svgIcon="mat:link_off" class="icon-sm"></mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="productos-table-section px-6 py-4 flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div
+            #tableScroll
+            class="products-list table-scroll-container"
+            (scroll)="onTableScroll($event)">
+            <table class="w-full" mat-table [dataSource]="dataSource" matSort (matSortChange)="sortData($event)">
+              <!-- Barcode Column -->
+              <ng-container matColumnDef="id">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-barcode">Código barras</th>
+                <td *matCellDef="let product; let i = index" mat-cell class="col-barcode">
+                  <div class="barcode-cell-wrapper"
+                    (mouseenter)="onBarcodeCellHover(i)"
+                    (mouseleave)="onBarcodeCellLeave()">
+                    <span class="barcode-text">{{ product.barcode }}</span>
+                    <button *ngIf="showBarcodeCopyIcon(i)"
+                      mat-icon-button
+                      type="button"
+                      class="barcode-copy-btn"
+                      (click)="copyBarcodeToClipboard(product.barcode, i); $event.stopPropagation()"
+                      matTooltip="Copiar código">
+                      <mat-icon svgIcon="mat:content_copy" class="icon-sm"></mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+              <!-- Name Column -->
+              <ng-container matColumnDef="nombre">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-producto">Producto</th>
+                <td *matCellDef="let product; let i = index" mat-cell class="col-producto"
+                  (dblclick)="onProductNameDoubleClick(i, $event); $event.stopPropagation()">
+                  <input *ngIf="editingProductNameIndex === i" class="product-name-input product-name-input-{{ i }}"
+                    type="text" [formControl]="editingProductNameCtrl"
+                    (keydown.enter)="onProductNameInputKeydown($event, i)" (keydown.escape)="cancelProductNameEdit()"
+                    (blur)="onProductNameInputBlur(i)" (click)="$event.stopPropagation()"
+                    (input)="$event.stopPropagation()"
+                    style="width: 100%; border: 1px solid #ccc; padding: 2px 4px; border-radius: 4px;" />
+                  <span *ngIf="editingProductNameIndex !== i" [matTooltip]="(product.nombre?.length || 0) > 40 ? product.nombre : null">
+                    {{ product.nombre }}
+                  </span>
+                </td>
+              </ng-container>
+              <!-- Price Column -->
+              <ng-container matColumnDef="precio">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-precio">Precio</th>
+                <td *matCellDef="let product; let i = index" mat-cell class="col-precio"
+                  (dblclick)="onProductPriceDoubleClick(i, $event); $event.stopPropagation()">
+                  <input *ngIf="editingProductPriceIndex === i" class="product-price-input product-price-input-{{ i }}"
+                    type="number" min="0" step="0.01" [formControl]="editingProductPriceCtrl"
+                    (keydown.enter)="onProductPriceInputKeydown($event, i)" (keydown.escape)="cancelProductPriceEdit()"
+                    (blur)="onProductPriceInputBlur(i)" (click)="$event.stopPropagation()"
+                    (input)="$event.stopPropagation()"
+                    style="width: 100%; border: 1px solid #ccc; padding: 2px 4px; border-radius: 4px;" />
+                  <span *ngIf="editingProductPriceIndex !== i">
+                    ${{ product.precio | number:'1.2-2' }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Precio Unidad Column (personalizable) -->
+              <ng-container matColumnDef="precioUnidad">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-precio-unidad">Precio unidad</th>
+                <td *matCellDef="let product" mat-cell class="col-precio-unidad">
+                  {{ product.precioUnidad != null ? ('$' + (product.precioUnidad | number:'1.2-2')) : '-' }}
+                </td>
+              </ng-container>
+
+              <!-- Precio Compra Column (personalizable) -->
+              <ng-container matColumnDef="precioCompra">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-precio-compra">Precio compra</th>
+                <td *matCellDef="let product" mat-cell class="col-precio-compra">
+                  {{ product.precioCompra === 0 ? '-' : '$' + ((product.precioCompra || product.precio || 0) | number:'1.2-2') }}
+                </td>
+              </ng-container>
+              <!-- Fecha Actualizacion Column -->
+              <ng-container matColumnDef="fechaUltimaActualizacionPrecio">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-fecha-wide">Actualización precio</th>
+                <td *matCellDef="let product" mat-cell class="col-fecha-wide">
+                  <ng-container *ngIf="getFechaRelativa(product.fechaUltimaActualizacionPrecio) as f; else fechaEmptyPrecio">
+                    <span *ngIf="!f.hasTwoLines">{{ f.line1 }}</span>
+                    <div *ngIf="f.hasTwoLines" class="fecha-relativa-cell">
+                      <span>{{ f.line1 }}</span>
+                      <span>{{ f.line2 }}</span>
+                    </div>
+                  </ng-container>
+                  <ng-template #fechaEmptyPrecio>-</ng-template>
+                </td>
+              </ng-container>
+
+              <!-- Fecha Creacion Column (personalizable) -->
+              <ng-container matColumnDef="fechaCreacion">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-fecha">Fecha creacion</th>
+                <td *matCellDef="let product" mat-cell class="col-fecha">
+                  <ng-container *ngIf="getFechaRelativa(product.fechaCreacion) as f; else fechaEmptyCreacion">
+                    <span *ngIf="!f.hasTwoLines">{{ f.line1 }}</span>
+                    <div *ngIf="f.hasTwoLines" class="fecha-relativa-cell">
+                      <span>{{ f.line1 }}</span>
+                      <span>{{ f.line2 }}</span>
+                    </div>
+                  </ng-container>
+                  <ng-template #fechaEmptyCreacion>-</ng-template>
+                </td>
+              </ng-container>
+              <!-- Total Ventas Column -->
+              <ng-container matColumnDef="totalVentas">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-total-ventas">Total ventas</th>
+                <td *matCellDef="let product" mat-cell class="col-total-ventas">{{ product.totalVentas || 0 }}</td>
+              </ng-container>
+              <!-- Porcentaje ganancia Column -->
+              <ng-container matColumnDef="porcentajeGanancia">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-pct-ganancia">% Ganancia</th>
+                <td *matCellDef="let product" mat-cell class="col-pct-ganancia">{{ (product.porcentaje_ganancia ?? product.porcentajeGanancia) != null ? ((product.porcentaje_ganancia ?? product.porcentajeGanancia) + '%') : '-' }}</td>
+              </ng-container>
+              <!-- Fecha última venta Column -->
+              <ng-container matColumnDef="fechaUltimaVenta">
+                <th *matHeaderCellDef mat-header-cell mat-sort-header class="col-fecha-wide">Última venta</th>
+                <td *matCellDef="let product" mat-cell class="col-fecha-wide">
+                  <ng-container *ngIf="getFechaRelativa(product.fecha_ultima_venta ?? product.fechaUltimaVenta) as f; else fechaEmptyVenta">
+                    <span *ngIf="!f.hasTwoLines">{{ f.line1 }}</span>
+                    <div *ngIf="f.hasTwoLines" class="fecha-relativa-cell">
+                      <span>{{ f.line1 }}</span>
+                      <span>{{ f.line2 }}</span>
+                    </div>
+                  </ng-container>
+                  <ng-template #fechaEmptyVenta>-</ng-template>
+                </td>
+              </ng-container>
+              <!-- Edit Column -->
+              <ng-container matColumnDef="edit">
+                <th *matHeaderCellDef mat-header-cell class="edit-col-header edit-col-sticky"></th>
+                <td *matCellDef="let product" mat-cell class="edit-col-cell">
+                  <div class="edit-col-icons">
+                    <button mat-icon-button color="primary" (click)="editProduct(product); $event.stopPropagation()">
+                      <mat-icon svgIcon="mat:edit"></mat-icon>
+                    </button>
+                    <vex-google-search-button searchType="name" [productName]="product.nombre" customTooltip="Buscar"
+                      size="small" color="accent" (searchClicked)="onGoogleSearchClicked($event)">
+                    </vex-google-search-button>
+                    <button
+                      *ngIf="mostrarBotonEditarGrupoEspejoEnFila(product)"
+                      mat-icon-button
+                      type="button"
+                      color="primary"
+                      matTooltip="Editar grupo espejo"
+                      [disabled]="grupoEspejoBusy"
+                      (click)="entrarModoEdicionGrupoDesdeProducto(product); $event.stopPropagation()">
+                      <mat-icon svgIcon="mat:art_track"></mat-icon>
+                    </button>
+                    <button
+                      *ngIf="mostrarBotonGrupoEspejoEnFila(product)"
+                      mat-icon-button
+                      type="button"
+                      color="accent"
+                      [matTooltip]="tooltipVincularGrupoEspejo(product)"
+                      [disabled]="grupoEspejoBusy"
+                      (click)="ejecutarAccionGrupoEspejoEnFila(product); $event.stopPropagation()">
+                      <mat-icon svgIcon="mat:link"></mat-icon>
+                    </button>
+                    <button
+                      mat-icon-button
+                      type="button"
+                      class="row-actions-more-btn"
+                      [matMenuTriggerFor]="productActionsMenu"
+                      [matMenuTriggerData]="{ product: product }"
+                      (click)="$event.stopPropagation()"
+                      matTooltip="Más acciones">
+                      <mat-icon svgIcon="mat:arrow_drop_down"></mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+              <mat-menu #productActionsMenu="matMenu" xPosition="before">
+                <ng-template matMenuContent let-product="product">
+                  <button mat-menu-item type="button" (click)="searchProductByBarcodeInGoogle(product); $event.stopPropagation()">
+                    <mat-icon svgIcon="mat:qr_code"></mat-icon>
+                    <span>Buscar código de barras en Google</span>
+                  </button>
+                  <button mat-menu-item type="button" (click)="toggleProductActivation(product); $event.stopPropagation()">
+                    <mat-icon svgIcon="mat:{{ isProductActive(product) ? 'block' : 'check_circle' }}"></mat-icon>
+                    <span>{{ isProductActive(product) ? 'Deshabilitar' : 'Habilitar' }}</span>
+                  </button>
+                </ng-template>
+              </mat-menu>
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index" (click)="onRowClick(row, $event)"
+                (mousedown)="onRowMouseDown(i, $event)" [class.inactive-row]="!isProductActive(row)"
+                [class.selected-row]="isRowSelected(row)"></tr>
+            </table>
+            <div class="loading-more" *ngIf="loadingMore">Cargando más productos...</div>
+            <div class="products-list-spacer" aria-hidden="true"></div>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>

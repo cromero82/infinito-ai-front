@@ -1,0 +1,18 @@
+---
+description: Guardrails para cambios delicados en tickets y detalle-ticket del POS
+globs: src/app/pages/apps/ventas/tickets/tickets.component.{ts,html,scss}, src/app/pages/apps/ventas/detalle-ticket/detalle-ticket.component.{ts,html,scss}
+alwaysApply: false
+---
+
+# Tickets And Detalle Ticket Guardrails
+
+- Tratar `TicketsComponent` y `DetalleTicketComponent` como un flujo acoplado: cambios en selección, pagos, tabs o labels deben revisarse en ambos componentes.
+- No reutilizar `loading` como único flag para bloquear UI. Mantener separados los estados de recarga general, acciones del header y acciones de tabs.
+- No usar recargas por navegación (`router.navigateByUrl(...)`) para refrescar tabs después de eliminar o procesar tickets; preferir `loadTickets(...)` y selección forzada local.
+- Si se cambia la selección visual de filas en `detalle-ticket`, mantener sincronizados `selectedDetalleIndex` y `selectedDetalleIndices`. La UI pinta selección con la lista múltiple y los atajos de teclado siguen usando el índice principal.
+- Cuando se agregue un producto desde búsqueda o se incremente uno existente, la fila afectada debe quedar marcada visualmente como seleccionada.
+- El menú contextual `Mover a` depende de una foto local de tickets destino (`availableTicketMoveOptions`) al abrir el overlay. No volver a depender solo del binding directo si rompe el submenu.
+- La división de productos usa metadata local en `tickets`: conteo por ticket dividido y comentario por ticket origen. El label visible siempre debe recalcularse desde el nombre actual del ticket, no desde texto congelado.
+- Si un tab renombra su cliente o nombre, `getTicketLabel(...)` y el comentario inferior deben reflejar el nuevo label automáticamente.
+- Cuando un ticket dividido se paga y el sistema recrea otro ticket en su lugar, limpiar la metadata local de división para que el nuevo tab vuelva a la nomenclatura base (`Ticket N`).
+- El evento `ticketProcesado` existe para distinguir pago exitoso de otros refresh normales. No reemplazarlo por `metodoPagoActualizado` si la lógica depende de limpiar metadata solo al pagar.

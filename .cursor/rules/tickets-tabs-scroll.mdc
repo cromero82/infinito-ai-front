@@ -1,0 +1,80 @@
+---
+description: Mecanismo de scroll de tabs en TicketsComponent (mat-tab-nav-bar) — offset por anchos de .tab-item + scrollDistance, noop de _scrollToLabel, pointerdown + cdkDragStartDelay
+globs: src/app/pages/apps/ventas/tickets/tickets.component.{ts,html}
+alwaysApply: false
+---
+
+# Tickets Tab Scroll Mechanism
+
+## Problema
+
+`TicketsComponent` usa `<nav mat-tab-nav-bar>` para los tabs de tickets. Con muchos tabs aparecen los botones `<` / `>` del paginador MDC. Sintomas frecuentes:
+
+1. Al hacer clic en un tab a la derecha (p. ej. Ticket 12/13), el contenedor **vuelve** hacia el tab activo anterior en vez de centrar/mostrar el nuevo.
+2. Tabs parcialmente cortados junto al botón `>`.
+3. A veces el clic ni siquiera cambia la selección (interferencia de `cdkDrag`).
+
+## Arquitectura DOM del nav
+
+```
+nav#ticketTabNav.mat-mdc-tab-nav-bar (host, position: relative)
+  div.mat-mdc-tab-header-pagination-before  (<)
+  div.mat-mdc-tab-link-container (viewport, overflow: hidden)
+    div.mat-mdc-tab-list (transform: translateX(Npx) para scroll)
+      div.mat-mdc-tab-links
+        div.tab-item (position: relative) ← wrapper nuestro + cdkDrag
+          a.mat-mdc-tab-link ([active] binding)
+  div.mat-mdc-tab-header-pagination-after   (>)
+```
+
+El scroll lo gestiona `MatPaginatedTabHeader` vía `transform: translateX()` en `.mat-mdc-tab-list`.
+
+## Por qué NO funcionan otros enfoques
+
+| Enfoque | Problema |
+|---------|----------|
+| `element.scrollIntoView()` | Desplaza el contenedor equivocado con `scrollLeft`, desincroniza `_scrollDistance` — los botones `<`/`>` dejan de funcionar |
+| `updateActiveLink()` → `_scrollToLabel()` | Usa `offsetLeft` del `<a mat-tab-link>`. Con `.tab-item { position: relative }`, el `offsetParent` del `<a>` es `.tab-item` (~12px), no la lista — el scroll “salta” cerca del inicio |
+| Solo `offsetLeft` de `.tab-item` + race con Material | Mejora parcial: Material en `ngAfterContentChecked` vuelve a llamar `_scrollToLabel` y pisa el valor correcto |
+
+## Solución implementada
+
+### 1. Anular `_scrollToLabel` del `MatTabNav` (`disableBrokenMatTabScrollToLabel`)
+
+En `ngAfterViewInit`, se reemplaza `matTabNav._scrollToLabel` por un no-op. Así Material no vuelve a empujar el scroll al inicio cuando cambia el link activo. El scroll lo controlamos solo nosotros.
+
+### 2. `selectedIndex` setter → `scrollSelectedTabIntoView()`
+
+Cada cambio de `selectedIndex` (vía `queueMicrotask`) llama a `scrollSelectedTabIntoView()`, respetando `_suppressAutoScrollUntil` durante el toggle de clientes (transición CSS ~400ms).
+
+### 3. Cálculo de offset por suma de anchos
+
+`getTabItemContentOffset(tabItems, index)` suma `offsetWidth + marginRight` de los `.tab-item` anteriores. Eso es la posición en el contenido (sin depender de `offsetLeft` / transform). Luego se asigna `matTabNav.scrollDistance` para alinear el tab si queda fuera del viewport.
+
+Se reaplica en rAF + timeouts cortos por si el layout aún no midió anchos tras CD.
+
+### 4. Selección fiable con drag
+
+- `(pointerdown)` → `onTicketTabPointerDown` selecciona **antes** del umbral de drag.
+- `[cdkDragStartDelay]="200"` para que un clic normal no inicie drag.
+- `(pointerdown)="$event.stopPropagation()"` en el botón cerrar.
+
+### 5. Toggle clientes (`toggleTicketsConCliente`)
+
+`_suppressAutoScrollUntil = Date.now() + 400` y `setTimeout(..., 400)` para reposicionar tras la transición de `.tab-collapsed`.
+
+## Reglas para mantenimiento futuro
+
+- **No** reintroducir `scrollIntoView()` ni reactivar `_scrollToLabel` de Material sin arreglar el wrapper.
+- Si se quita `position: relative` de `.tab-item`, revisar ink-bar / close button; el noop de `_scrollToLabel` puede volverse opcional, pero el offset por anchos sigue siendo más robusto.
+- Si cambia la duración de `.tab-collapsed`, actualizar el `400` ms del toggle.
+- El setter público `MatTabNav.scrollDistance` es la vía correcta (clampa, sincroniza paginador y aplica transform).
+
+## Estilos de layout (`preferencias-estilo-tickets`)
+
+| Valor | UI |
+|-------|-----|
+| `todo-en-linea` (default) | Una sola `mat-tab-nav-bar`. Botones Nuevo/Rápido/menú en el header (junto a “Buscar producto”). |
+| `2-lineas` | Sin MatTabNav: fila clientes identificados + fila anónimos; mismos botones en el header. Selección única vía `selectedIndex` / `.is-selected` |
+
+- Drag & drop: en `2-lineas` el scroll vive en `.tabs-line-scroll` y el `cdkDropList` en `.tabs-line-list` (sin overflow), reordenando solo dentro del grupo (`onTicketDropInGroup`).

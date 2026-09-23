@@ -1,0 +1,25 @@
+.dialog-content {
+  min-width: 320px;
+  max-width: 480px;
+}
+
+.hint {
+  margin: 0 0 16px;
+  font-size: 0.875rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 480px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

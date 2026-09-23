@@ -1,0 +1,199 @@
+@use '../../../../../core/table-viewport/table-viewport.scss' as *;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+.resumen-page {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.resumen-card {
+  min-height: 0;
+}
+
+.resumen-table-section .table-scroll-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  height: 100%;
+}
+
+.vista-toggle {
+  flex-wrap: wrap;
+}
+
+.resumen-active-filters {
+  max-width: 100%;
+}
+
+.filter-chip-label {
+  margin-right: 0.25rem;
+}
+
+.filter-chip-value {
+  font-weight: 700;
+}
+
+.resumen-filters-menu-content {
+  width: 252px;
+  max-width: min(252px, calc(100vw - 40px));
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.filters-field-dense {
+  min-width: 0;
+  margin-bottom: -1.25em;
+}
+
+.icon-sm {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  vertical-align: middle;
+}
+
+.cell-semaforo {
+  text-align: center;
+  width: 72px;
+}
+
+.semaforo-dot {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+
+// Columna Utilidad: header opaco y celdas con violeta suave.
+th.col-utilidad {
+  background-color: #eee8ff !important;
+}
+
+td.col-utilidad {
+  background-color: rgba(124, 77, 255, 0.08) !important;
+}
+
+.resumen-disclaimer-banner {
+  background: rgba(33, 150, 243, 0.08);
+  border-left: 3px solid #2196f3;
+  color: rgba(0, 0, 0, 0.78);
+  line-height: 1.45;
+}
+
+.resumen-table-footnote {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+:host ::ng-deep {
+  .filters-custom-menu {
+    max-width: min(272px, calc(100vw - 24px)) !important;
+
+    .mat-mdc-menu-content {
+      padding: 6px !important;
+      overflow-x: hidden !important;
+    }
+  }
+
+  .filters-field-dense {
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+
+    .mat-mdc-form-field-flex {
+      min-width: 0;
+      align-items: center !important;
+    }
+
+    .mat-mdc-form-field-infix {
+      min-width: 0 !important;
+      width: auto !important;
+    }
+  }
+
+  .resumen-active-filters .mdc-evolution-chip-set__chips {
+    flex-wrap: wrap;
+  }
+
+  table.resumen-table-compact.mat-mdc-table tr:hover td.col-utilidad {
+    background-color: rgba(124, 77, 255, 0.12) !important;
+  }
+
+  table.resumen-table-compact.mat-mdc-table {
+    font-size: 13px !important;
+    --mat-table-row-item-container-height: 28px;
+    --mat-table-header-container-height: 28px;
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell],
+    td.mat-mdc-cell,
+    td[mat-cell] {
+      font-size: 13px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      line-height: 1.2 !important;
+      min-height: unset !important;
+      height: 28px !important;
+      vertical-align: middle !important;
+    }
+
+    th.mat-mdc-header-cell,
+    th[mat-header-cell] {
+      font-weight: 600 !important;
+    }
+
+    tr.mat-mdc-row {
+      height: 28px !important;
+      min-height: unset !important;
+      cursor: pointer;
+
+      &:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.005) !important;
+      }
+
+      &:hover {
+        background-color: var(--pos-mat-table-row-hover) !important;
+      }
+
+      &.selected-row {
+        background-color: rgba(63, 81, 181, 0.12) !important;
+
+        td.mat-mdc-cell,
+        td[mat-cell] {
+          font-weight: 500;
+        }
+      }
+    }
+
+    tr.mat-mdc-header-row {
+      height: 28px !important;
+      min-height: unset !important;
+      background-color: rgba(0, 0, 0, 0.008) !important;
+    }
+
+    td .btn-recalcular {
+      min-height: 26px !important;
+      padding: 0 8px !important;
+      line-height: 26px !important;
+      font-size: 12px !important;
+    }
+
+    td.col-utilidad {
+      font-weight: 700 !important;
+    }
+  }
+}

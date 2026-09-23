@@ -1,0 +1,218 @@
+<div class="logs-list-page mt-1 flex flex-col flex-1 min-h-0 min-w-0 w-full">
+  <div class="flex flex-col flex-1 min-h-0 w-full">
+    <div class="card logs-list-card flex flex-col flex-1 min-h-0 overflow-hidden">
+      <div class="px-6 py-4 border-b flex flex-col gap-4">
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div class="flex items-center gap-2 min-w-0 sm:flex-nowrap">
+            <h2 class="title m-0">Logs aplicaciones</h2>
+            <button
+              mat-icon-button
+              type="button"
+              color="primary"
+              [matMenuTriggerFor]="filtersMenu"
+              #filtersMenuTrigger="matMenuTrigger"
+              (menuOpened)="restoreFiltersState()"
+              matTooltip="Filtrar por fechas">
+              <mat-icon svgIcon="mat:filter_list"></mat-icon>
+            </button>
+            @if (activeFilters.length > 0) {
+              <mat-chip-set class="logs-active-filters">
+                @for (filter of activeFilters; track filter.label) {
+                  <mat-chip
+                    [removable]="true"
+                    color="primary"
+                    selected
+                    (removed)="clearActiveFilter()">
+                    <span class="filter-chip-label">{{ filter.label }}</span>
+                    <span class="filter-chip-value">{{ filter.value }}</span>
+                    <button matChipRemove aria-label="Quitar filtro">
+                      <mat-icon svgIcon="mat:close" class="icon-sm"></mat-icon>
+                    </button>
+                  </mat-chip>
+                }
+              </mat-chip-set>
+            }
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <mat-form-field
+              appearance="outline"
+              class="limit-field"
+              subscriptSizing="dynamic">
+              <mat-label>Límite</mat-label>
+              <mat-select [formControl]="limitCtrl">
+                @for (n of limitOptions; track n) {
+                  <mat-option [value]="n">{{ n }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              (click)="fetchLogs()">
+              Consultar
+            </button>
+            <button
+              mat-stroked-button
+              type="button"
+              class="btn-filter-compact"
+              (click)="limpiarFiltros()">
+              Limpiar
+            </button>
+            <button
+              mat-stroked-button
+              type="button"
+              class="btn-export-menu"
+              [matMenuTriggerFor]="exportMenu"
+              [disabled]="loading || dataSource.length === 0 || exportingExcel"
+              matTooltip="Exportar registros visibles">
+              Exportar a
+              <mat-icon
+                iconPositionEnd
+                class="icon-sm"
+                svgIcon="mat:arrow_drop_down"></mat-icon>
+            </button>
+            <mat-menu
+              #exportMenu="matMenu"
+              class="logs-export-menu"
+              panelClass="logs-export-menu">
+              <button
+                mat-menu-item
+                type="button"
+                (click)="exportarExcel()"
+                [disabled]="exportingExcel">
+                <mat-icon svgIcon="mat:download"></mat-icon>
+                <span>Excel</span>
+              </button>
+              <button mat-menu-item type="button" (click)="exportarLog()">
+                <mat-icon svgIcon="mat:description"></mat-icon>
+                <span>Log</span>
+              </button>
+            </mat-menu>
+          </div>
+        </div>
+
+        <mat-menu
+          #filtersMenu="matMenu"
+          class="filters-custom-menu"
+          panelClass="filters-custom-menu"
+          xPosition="before">
+          <div
+            class="logs-filters-menu-content flex flex-col gap-4 p-3"
+            (click)="$event.stopPropagation()">
+            <div
+              class="flex items-center gap-2 pb-2 border-b border-primary/30">
+              <mat-icon
+                svgIcon="mat:tune"
+                class="icon-sm text-primary"></mat-icon>
+              <h3 class="m-0 font-medium text-sm">Filtros</h3>
+            </div>
+
+            <mat-form-field
+              appearance="outline"
+              class="w-full filters-field-dense">
+              <mat-label>Fecha inicio</mat-label>
+              <input
+                matInput
+                [matDatepicker]="pickerInicio"
+                [formControl]="filterFechaInicioCtrl" />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="pickerInicio"></mat-datepicker-toggle>
+              <mat-datepicker #pickerInicio></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field
+              appearance="outline"
+              class="w-full filters-field-dense">
+              <mat-label>Fecha fin</mat-label>
+              <input
+                matInput
+                [matDatepicker]="pickerFin"
+                [formControl]="filterFechaFinCtrl" />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="pickerFin"></mat-datepicker-toggle>
+              <mat-datepicker #pickerFin></mat-datepicker>
+            </mat-form-field>
+
+            <div class="flex justify-end gap-2 flex-wrap">
+              @if (hasActiveDateFilter()) {
+                <button
+                  mat-button
+                  color="warn"
+                  type="button"
+                  (click)="clearActiveFilter(); filtersMenuTrigger.closeMenu()">
+                  Limpiar
+                </button>
+              }
+              <button
+                mat-flat-button
+                color="primary"
+                type="button"
+                (click)="applyDateFilters()">
+                Aplicar
+              </button>
+            </div>
+          </div>
+        </mat-menu>
+      </div>
+
+      <div
+        class="logs-table-section px-6 pt-4 pb-2 flex flex-col flex-1 min-h-0 overflow-hidden">
+        @if (loading) {
+          <div class="text-center py-8">Cargando errores del frontend...</div>
+        }
+
+        @if (!loading) {
+          <div
+            #tableScroll
+            class="table-scroll-container"
+            [style.max-height.px]="tableScrollMaxHeight">
+            <table
+              mat-table
+              [dataSource]="dataSource"
+              class="w-full logs-table-compact">
+              <ng-container matColumnDef="time">
+                <th mat-header-cell *matHeaderCellDef>Fecha / hora</th>
+                <td mat-cell *matCellDef="let row">{{ cellTime(row) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="level">
+                <th mat-header-cell *matHeaderCellDef>Nivel</th>
+                <td mat-cell *matCellDef="let row">{{ cellLevel(row) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="message">
+                <th mat-header-cell *matHeaderCellDef>Mensaje</th>
+                <td mat-cell *matCellDef="let row" class="col-message">
+                  {{ cellMessage(row) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="extra">
+                <th mat-header-cell *matHeaderCellDef>Otros campos</th>
+                <td
+                  mat-cell
+                  *matCellDef="let row"
+                  class="col-extra col-extra-readable">
+                  {{ cellExtraDisplay(row) }}
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr
+                mat-row
+                *matRowDef="let row; let i = index; columns: displayedColumns"
+                [class.selected-row]="isRowSelected(i)"
+                (click)="selectRow(i)"></tr>
+            </table>
+          </div>
+        }
+
+        @if (!loading && dataSource.length === 0) {
+          <div class="text-center py-8 text-secondary">
+            No hay registros para los filtros seleccionados
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

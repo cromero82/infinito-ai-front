@@ -1,0 +1,21 @@
+:host {
+  background: var(--vex-toolbar-background);
+  box-sizing: border-box;
+  display: block;
+  white-space: nowrap;
+  width: 100%;
+  z-index: var(--vex-toolbar-z-index);
+  overflow: visible;
+  @apply backdrop-blur border-b;
+}
+
+.toolbar {
+  height: var(--vex-toolbar-height);
+  min-height: var(--vex-toolbar-height);
+  padding-block: 0;
+  overflow: visible;
+}
+
+a {
+  text-decoration: none;
+}

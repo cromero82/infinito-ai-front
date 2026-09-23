@@ -1,0 +1,491 @@
+<div class="origenes-page px-2 py-3 sm:px-3 sm:py-4 flex flex-col h-full min-h-0">
+  <div class="header-row">
+    <div class="header-title-row">
+      <h2 class="title mt-0 mb-0">Orígenes de fondos</h2>
+      <button
+        type="button"
+        mat-stroked-button
+        class="btn-ayuda-en-linea"
+        matTooltip="Abrir ayuda en línea"
+        (click)="abrirAyudaEnLinea()">
+        <mat-icon svgIcon="mat:info"></mat-icon>
+        Ayuda en línea
+      </button>
+    </div>
+    <div class="legend-row">
+      <p class="text-secondary subtitle">
+        @if (modoEstricto) {
+          <span class="modo-badge estricto">Modo estricto</span>
+        } @else {
+          <span class="modo-badge flexible">Modo flexible</span>
+        }
+      </p>
+
+      @if (esAdmin) {
+        <div class="acciones-admin">
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            (click)="abrirMovimiento('traslado')">
+            <mat-icon svgIcon="mat:swap_horiz"></mat-icon>
+            Trasladar
+          </button>
+          <button mat-stroked-button type="button" (click)="abrirMovimiento('entrada')">
+            <mat-icon svgIcon="mat:add"></mat-icon>
+            Entrada
+          </button>
+          <button mat-stroked-button type="button" (click)="abrirMovimiento('prestamo')">
+            <mat-icon svgIcon="mat:handshake"></mat-icon>
+            Préstamo
+          </button>
+          <button mat-stroked-button type="button" (click)="abrirAjuste()">
+            <mat-icon svgIcon="mat:tune"></mat-icon>
+            Ajuste
+          </button>
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="abrirReporteClasificacion()">
+            <mat-icon svgIcon="mat:assessment"></mat-icon>
+            Por clasificación
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <app-ayuda-en-linea-panel
+    [abierto]="ayudaAbierta"
+    [contenido]="ayudaContenido"
+    (cerrar)="cerrarAyudaEnLinea()" />
+
+  @if (loadingCuentas) {
+    <div class="loading-center">
+      <mat-spinner diameter="36"></mat-spinner>
+    </div>
+  }
+
+  @if (errorCuentas) {
+    <div class="error-msg">
+      <strong>No se pudieron cargar los orígenes.</strong>
+      <p class="m-0 mt-1">{{ errorCuentas }}</p>
+      <button mat-stroked-button type="button" color="warn" (click)="cargarCuentas()">
+        Reintentar
+      </button>
+    </div>
+  }
+
+  @if (!loadingCuentas && !errorCuentas && grupos.length === 0) {
+    <p class="empty-msg text-secondary">
+      No hay orígenes configurados. Aplica los scripts SQL 12–18.
+    </p>
+  }
+
+  @if (!loadingCuentas && grupos.length > 0) {
+    <div class="body-split">
+      <div class="origenes-panel">
+        <div class="origenes-scroll flex flex-row gap-2 overflow-x-auto">
+          @for (grupo of grupos; track grupo.raiz.id) {
+            <section class="grupo-origen flex-shrink-0 min-w-[200px]">
+              <div class="cards-stack">
+                @if (saldoVista(grupo.raiz); as svRaiz) {
+                  <div
+                    class="raiz-wrap"
+                    [class.con-hijos]="grupo.hijos.length > 0">
+                    @if (grupo.hijos.length) {
+                      <button
+                        type="button"
+                        class="expand-hijos-btn"
+                        mat-icon-button
+                        [attr.aria-label]="tooltipExpandHijos(grupo)"
+                        [attr.aria-expanded]="estaExpandido(grupo.raiz.id)"
+                        (mouseenter)="mostrarTipFooter(tooltipExpandHijos(grupo))"
+                        (mouseleave)="ocultarTipFooter()"
+                        (click)="toggleHijos(grupo.raiz.id, $event)">
+                        <mat-icon
+                          [svgIcon]="
+                            estaExpandido(grupo.raiz.id) ? 'mat:remove' : 'mat:add'
+                          "></mat-icon>
+                      </button>
+                    }
+                    @if (muestraMenuGestion(grupo.raiz)) {
+                      <button
+                        type="button"
+                        class="card-menu-btn"
+                        mat-icon-button
+                        [matMenuTriggerFor]="menuRaiz"
+                        aria-label="Opciones"
+                        (mouseenter)="mostrarTipFooter('Opciones')"
+                        (mouseleave)="ocultarTipFooter()"
+                        (click)="$event.stopPropagation()">
+                        <mat-icon svgIcon="mat:menu"></mat-icon>
+                      </button>
+                      <mat-menu #menuRaiz="matMenu">
+                        <button
+                          mat-menu-item
+                          type="button"
+                          (click)="abrirCrearFondoHijo(grupo.raiz)">
+                          Crear Fondo Hijo
+                        </button>
+                        <button
+                          mat-menu-item
+                          type="button"
+                          (click)="confirmarArchivar(grupo.raiz)">
+                          Archivar
+                        </button>
+                      </mat-menu>
+                    }
+                    @if (puedeAbrirTicketsSinCorte(grupo.raiz)) {
+                      <button
+                        type="button"
+                        class="tickets-sin-corte-btn"
+                        mat-icon-button
+                        aria-label="Ver tickets sin corte"
+                        (mouseenter)="mostrarTipFooter('Ver tickets sin corte de este medio', 'Tickets sin corte')"
+                        (mouseleave)="ocultarTipFooter()"
+                        (click)="abrirTicketsSinCorte(grupo.raiz, $event)">
+                        <mat-icon svgIcon="mat:receipt_long"></mat-icon>
+                      </button>
+                    }
+                    <button
+                      type="button"
+                      class="origen-card raiz"
+                      [attr.data-of-id]="grupo.raiz.id"
+                      [class.selected]="cuentaSeleccionada?.id === grupo.raiz.id"
+                      [class.origen-card--nav-flash]="cuentaResaltadaId === grupo.raiz.id"
+                      [class.con-desglose]="svRaiz.mostrarDesglose"
+                      [class.con-hijos]="grupo.hijos.length > 0"
+                      [class.con-menu]="muestraMenuGestion(grupo.raiz)"
+                      [class.con-tickets-btn]="puedeAbrirTicketsSinCorte(grupo.raiz)"
+                      [style.border-top-color]="cardAccent(grupo.raiz)"
+                      [draggable]="esAdmin"
+                      (click)="seleccionarCuenta(grupo.raiz)"
+                      (dblclick)="copiarInfoRaiz(grupo.raiz)"
+                      (dragstart)="onDragStart(grupo.raiz, $event)"
+                      (dragover)="onDragOver(grupo.raiz, $event)"
+                      (drop)="onDrop(grupo.raiz, $event)"
+                      (dragend)="onDragEnd()">
+                      <span class="card-head">
+                        @if (iconoMetodoPagoUrl(grupo.raiz); as iconUrl) {
+                          <span class="origen-avatar origen-avatar--img">
+                            <img [src]="iconUrl" [alt]="grupo.raiz.nombre" />
+                          </span>
+                        } @else {
+                          <span
+                            class="origen-avatar"
+                            [style.background]="cardAccent(grupo.raiz) || '#5c6bc0'">
+                            {{ inicialesOrigen(grupo.raiz.nombre) }}
+                          </span>
+                        }
+                        <span class="nombre">{{ grupo.raiz.nombre }}</span>
+                      </span>
+                      @if (svRaiz.mostrarDesglose) {
+                        <span class="saldo-desglose">
+                          <span class="linea-ledger">
+                            {{ svRaiz.ledger | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                            <span class="etiqueta">movimientos</span>
+                          </span>
+                          <span class="linea-tickets">
+                            + {{ svRaiz.ventasSinCorte | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                            <span class="etiqueta">tickets sin corte</span>
+                          </span>
+                          <span class="saldo parcial" [ngClass]="saldoClass(svRaiz.parcial)">
+                            {{ svRaiz.parcial | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                            <span class="etiqueta-parcial">total parcial</span>
+                          </span>
+                        </span>
+                      } @else {
+                        <span class="saldo" [ngClass]="saldoClass(svRaiz.parcial)">
+                          {{ svRaiz.parcial | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                        </span>
+                      }
+                    </button>
+                  </div>
+                }
+
+                @if (grupo.hijos.length && estaExpandido(grupo.raiz.id)) {
+                  <div class="hijos-col">
+                    @for (hijo of grupo.hijos; track hijo.id) {
+                      <div class="hijo-wrap">
+                        @if (muestraMenuGestion(hijo)) {
+                          <button
+                            type="button"
+                            class="card-menu-btn"
+                            mat-icon-button
+                            [matMenuTriggerFor]="menuHijo"
+                            aria-label="Opciones"
+                            (mouseenter)="mostrarTipFooter('Opciones')"
+                            (mouseleave)="ocultarTipFooter()"
+                            (click)="$event.stopPropagation()">
+                            <mat-icon svgIcon="mat:menu"></mat-icon>
+                          </button>
+                          <mat-menu #menuHijo="matMenu">
+                            <button
+                              mat-menu-item
+                              type="button"
+                              (click)="confirmarArchivar(hijo)">
+                              Archivar
+                            </button>
+                          </mat-menu>
+                        }
+                        @if (countAlertaEgreso(hijo) > 0) {
+                          <button
+                            type="button"
+                            class="alerta-egreso-btn"
+                            mat-icon-button
+                            [attr.aria-label]="
+                              'Notificación de pago: QR y posible egreso no relacionado (' +
+                              countAlertaEgreso(hijo) +
+                              ')'
+                            "
+                            (mouseenter)="
+                              mostrarTipFooter(
+                                'Notificación de pago: QR y posible egreso no relacionado',
+                                'Posible egreso no relacionado'
+                              )
+                            "
+                            (mouseleave)="ocultarTipFooter()"
+                            (click)="abrirAlertaEgreso(hijo, $event)">
+                            <mat-icon svgIcon="mat:notifications"></mat-icon>
+                            <span class="alerta-egreso-count">{{ countAlertaEgreso(hijo) }}</span>
+                          </button>
+                        }
+                        <button
+                          type="button"
+                          class="origen-card hijo"
+                          [attr.data-of-id]="hijo.id"
+                          [class.selected]="cuentaSeleccionada?.id === hijo.id"
+                          [class.origen-card--nav-flash]="cuentaResaltadaId === hijo.id"
+                          [class.con-menu]="muestraMenuGestion(hijo)"
+                          [class.con-alerta-egreso]="countAlertaEgreso(hijo) > 0"
+                          [style.border-top-color]="cardAccent(hijo)"
+                          [draggable]="esAdmin"
+                          (click)="seleccionarCuenta(hijo)"
+                          (dblclick)="copiarInfoHijo(hijo)"
+                          (dragstart)="onDragStart(hijo, $event)"
+                          (dragover)="onDragOver(hijo, $event)"
+                          (drop)="onDrop(hijo, $event)"
+                          (dragend)="onDragEnd()">
+                          <span class="card-head">
+                            @if (iconoMetodoPagoUrl(hijo); as iconUrlHijo) {
+                              <span class="origen-avatar origen-avatar--sm origen-avatar--img">
+                                <img [src]="iconUrlHijo" [alt]="hijo.nombre" />
+                              </span>
+                            } @else {
+                              <span
+                                class="origen-avatar origen-avatar--sm"
+                                [style.background]="cardAccent(hijo) || '#7986cb'">
+                                {{ inicialesOrigen(hijo.nombre) }}
+                              </span>
+                            }
+                            <span class="nombre">{{ hijo.nombre }}</span>
+                          </span>
+                          <span class="saldo" [ngClass]="saldoClass(hijo.saldo)">
+                            {{ hijo.saldo ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                          </span>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </section>
+          }
+        </div>
+      </div>
+
+      @if (cuentaSeleccionada) {
+        <section class="historial">
+          <h3 class="historial-title">
+            Movimientos — {{ cuentaSeleccionada.nombre }}
+          </h3>
+          @if (esAdmin) {
+            <p class="historial-hint text-secondary">
+              Arrastre una fila con impacto + hacia un OF permitido, o use
+              <strong>Trasladar</strong> (retiro de banco/cajero → caja física).
+              En movimientos por identificar también: Formalizar egreso o A Cuenta del dueño.
+            </p>
+          }
+
+          @if (loadingMovimientos) {
+            <mat-spinner diameter="28"></mat-spinner>
+          } @else if (movimientos.length === 0) {
+            <p class="text-secondary historial-empty">Sin movimientos registrados.</p>
+          } @else {
+            <div class="table-wrap">
+              <table mat-table [dataSource]="movimientos" class="mov-table mov-table-compact">
+                <ng-container matColumnDef="icono">
+                  <th mat-header-cell *matHeaderCellDef class="icono-col"></th>
+                  <td mat-cell *matCellDef="let m" class="icono-col">
+                    <span
+                      class="mov-tipo-icon"
+                      (mouseenter)="mostrarTipFooter(tipoMovimientoLabel(m.tipoMovimiento, m.origenTipo))"
+                      (mouseleave)="ocultarTipFooter()">
+                      <mat-icon [svgIcon]="iconoTipoMovimiento(m.tipoMovimiento)"></mat-icon>
+                    </span>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="fecha">
+                  <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                  <td mat-cell *matCellDef="let m">{{ m.fecha | date: 'dd/MM/yyyy' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="tipoMovimiento">
+                  <th mat-header-cell *matHeaderCellDef>Tipo</th>
+                  <td mat-cell *matCellDef="let m">{{ tipoMovimientoLabel(m.tipoMovimiento, m.origenTipo) }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="valor">
+                  <th mat-header-cell *matHeaderCellDef>Valor</th>
+                  <td mat-cell *matCellDef="let m">
+                    {{ m.valor | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="impacto">
+                  <th mat-header-cell *matHeaderCellDef>Impacto</th>
+                  <td mat-cell *matCellDef="let m" [class.impacto-neg]="(m.impacto ?? 0) < 0">
+                    {{ m.impacto ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="saldoDespues">
+                  <th mat-header-cell *matHeaderCellDef>Saldo</th>
+                  <td mat-cell *matCellDef="let m">
+                    {{ m.saldoDespues ?? 0 | currency: 'COP':'symbol-narrow':'1.0-0' }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="clasificacion">
+                  <th mat-header-cell *matHeaderCellDef>Clasif.</th>
+                  <td mat-cell *matCellDef="let m" class="clasif-col">
+                    {{ labelClasificacion(m.clasificacionOperativa) }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="usuario">
+                  <th mat-header-cell *matHeaderCellDef>Usuario</th>
+                  <td
+                    mat-cell
+                    *matCellDef="let m"
+                    class="usuario-col"
+                    (mouseenter)="mostrarTipFooter(nombreUsuarioMovimiento(m))"
+                    (mouseleave)="ocultarTipFooter()">
+                    {{ nombreUsuarioMovimiento(m) }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="detalle">
+                  <th mat-header-cell *matHeaderCellDef>Detalle</th>
+                  <td
+                    mat-cell
+                    *matCellDef="let m"
+                    class="detalle-cell"
+                    (mouseenter)="mostrarTipFooter(detalleMovimiento(m))"
+                    (mouseleave)="ocultarTipFooter()">
+                    <span class="detalle-inner">
+                      @if (tieneReferenciaVer(m)) {
+                        <button
+                          type="button"
+                          mat-flat-button
+                          color="primary"
+                          class="btn-ver-ref"
+                          aria-label="Ver documento de origen"
+                          (mouseenter)="mostrarTipFooter('Ver documento de origen', 'Ver')"
+                          (mouseleave)="onDetalleBotonLeave(m, $event)"
+                          (click)="verReferencia(m, $event)">
+                          Ver
+                        </button>
+                      }
+                      @if (puedeNavegarTrasladoAtras(m)) {
+                        <button
+                          type="button"
+                          mat-stroked-button
+                          class="btn-nav-traslado"
+                          aria-label="Ir al OF origen del traslado"
+                          (mouseenter)="mostrarTipFooter('Ir al OF de donde salió este dinero', 'Atrás')"
+                          (mouseleave)="onDetalleBotonLeave(m, $event)"
+                          (click)="navegarTraslado(m, 'atras', $event)">
+                          <mat-icon svgIcon="mat:arrow_back"></mat-icon>
+                          Atrás
+                        </button>
+                      }
+                      @if (puedeNavegarTrasladoAdelante(m)) {
+                        <button
+                          type="button"
+                          mat-stroked-button
+                          class="btn-nav-traslado"
+                          aria-label="Ir al OF destino del traslado"
+                          (mouseenter)="mostrarTipFooter('Seguir el dinero al OF destino', 'Adelante')"
+                          (mouseleave)="onDetalleBotonLeave(m, $event)"
+                          (click)="navegarTraslado(m, 'adelante', $event)">
+                          Adelante
+                          <mat-icon svgIcon="mat:arrow_forward"></mat-icon>
+                        </button>
+                      }
+                      <span class="detalle-texto">{{ detalleMovimiento(m) }}</span>
+                      @if (puedeTrasladarMovimiento(m)) {
+                        <button
+                          type="button"
+                          mat-flat-button
+                          color="primary"
+                          class="btn-formalizar"
+                          aria-label="Trasladar"
+                          (mouseenter)="mostrarTipFooter('Mover este saldo a otro OF (p.ej. caja física tras un retiro)', 'Trasladar')"
+                          (mouseleave)="onDetalleBotonLeave(m, $event)"
+                          (click)="trasladarMovimiento(m, $event)">
+                          Trasladar
+                        </button>
+                      }
+                      @if (puedeFormalizarEgreso(m)) {
+                        <button
+                          type="button"
+                          mat-stroked-button
+                          color="primary"
+                          class="btn-formalizar"
+                          aria-label="Formalizar egreso"
+                          (mouseenter)="mostrarTipFooter('Crear egreso desde Sin Clasificar (sin restar el banco otra vez)', 'Formalizar egreso')"
+                          (mouseleave)="onDetalleBotonLeave(m, $event)"
+                          (click)="formalizarEgreso(m, $event)">
+                          Formalizar egreso
+                        </button>
+                      }
+                      @if (puedeClasificarCuentaDueno(m)) {
+                        <button
+                          type="button"
+                          mat-stroked-button
+                          class="btn-clasificar-dueno"
+                          aria-label="A Cuenta del dueño"
+                          (mouseenter)="mostrarTipFooter('Igual que arrastrar esta fila a Cuenta del dueño (personal / no gasto del negocio)', 'A Cuenta del dueño')"
+                          (mouseleave)="onDetalleBotonLeave(m, $event)"
+                          (click)="clasificarACuentaDueno(m, $event)">
+                          A Cuenta del dueño
+                        </button>
+                      }
+                    </span>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="movimientoColumns; sticky: true"></tr>
+                <tr
+                  mat-row
+                  *matRowDef="let row; columns: movimientoColumns"
+                  class="mov-row"
+                  [attr.data-mov-id]="row.id"
+                  [class.selected-row]="isMovimientoSelected(row)"
+                  [class.mov-row--nav-flash]="movimientoResaltadoId === row.id"
+                  [class.mov-row-draggable]="puedeArrastrarMovimiento(row)"
+                  [attr.draggable]="puedeArrastrarMovimiento(row) ? true : null"
+                  (dragstart)="onDragStartMovimiento(row, $event)"
+                  (dragend)="onDragEnd()"
+                  (click)="selectMovimiento(row)"></tr>
+              </table>
+            </div>
+          }
+        </section>
+      }
+    </div>
+  }
+</div>

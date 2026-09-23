@@ -1,0 +1,66 @@
+.metodos-pago {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .metodo-pago-btn {
+    width: 84px;
+    height: 48px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.05);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, transform 0.2s ease;
+    position: relative;
+    overflow: hidden;
+
+    // El state-layer de mat-icon-button es circular; alinearlo al botón.
+    ::ng-deep .mat-mdc-button-persistent-ripple,
+    ::ng-deep .mat-mdc-button-ripple,
+    ::ng-deep .mdc-icon-button__ripple {
+      border-radius: inherit;
+      inset: 0;
+      width: auto;
+      height: auto;
+    }
+
+    ::ng-deep .mat-mdc-button-persistent-ripple::before,
+    ::ng-deep .mdc-icon-button__ripple::before {
+      border-radius: inherit;
+    }
+
+    &:hover:not(.metodo-pago-disabled) {
+      background: rgba(0, 0, 0, 0.12);
+      transform: translateY(-1px);
+    }
+
+    &.metodo-pago-disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    &.metodo-pago-seleccionado {
+      background: rgba(76, 175, 80, 0.18);
+      border: 2px solid rgba(76, 175, 80, 0.7);
+      transform: none;
+    }
+
+    .metodo-pago-icon {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .metodo-pago-warning {
+      position: absolute;
+      right: 6px;
+      bottom: 2px;
+      font-size: 18px;
+      color: #ff9800;
+    }
+  }
+}
+

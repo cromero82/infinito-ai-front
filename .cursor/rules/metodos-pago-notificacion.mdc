@@ -1,0 +1,21 @@
+---
+description: Métodos de pago — Dominios CRUD, permiteNotificacion, iconos en tickets/panel
+globs: "**/dominios/metodo-pago/**,**/metodo-pago.service.ts,**/metodos-pago/**,**/PlantillaNotificacion*"
+alwaysApply: false
+---
+
+# Métodos de pago + notificaciones
+
+Fuente contractual: `prompts-general-pos/openspec/specs/metodos-pago-notificacion/spec.md`  
+Narrativo: `prompts-general-pos/contextos-ia/metodos-pago-notificacion.md`  
+QA: `CONTEXTO-TESTER-POS.md` §4.12 / §4.14 / §10.5 + oleada `ACTUALIZACION-QA-2026-09-02.md`
+
+- CRUD en **Dominios → Métodos de pago** (`MetodoPagoGestionDialogComponent`).
+- Bidireccional UI: Plantillas → botón «Métodos de pago»; Dominios → «Plantillas asociadas» (+ form modal).
+- Flag `permiteNotificacion`: crea HRE pendiente al pagar / abonar CxC; habilita el medio en plantillas.
+- Confirmación automática de venta: `permiteNotificacion` + plantilla `naturaleza=INGRESO` + `metodoPagoId` del mismo medio.
+- EGRESO: movimiento ledger (OF origen/destino), no confirma ticket.
+- Asociar multi-método: iconos; emails de otro medio no seleccionables; Corregir medio → `PUT …/corregir-metodo-pago`.
+- Iconos: `assets/img/icons/payments/{file}` (mismo en tickets, panel y plantillas).
+- SQL: `53_metodo_pago_permite_notificacion.sql`, `54_plantilla_naturaleza_ingreso.sql`.
+- Al cambiar comportamiento: actualizar **triple** (spec + narrativo + CONTEXTO-TESTER / oleada).

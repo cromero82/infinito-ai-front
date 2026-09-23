@@ -1,0 +1,361 @@
+@import "~simplebar/dist/simplebar.css";
+@import "~highlight.js/styles/androidstudio.css";
+// Vex Core
+@import "./@vex/styles/core";
+
+/*
+  You can override any CSS Variable or style here
+  Example:
+
+  :root {
+   --vex-sidenav-background: #333333;
+  }
+
+  All possible variables can be found in @vex/styles/core or by simply inspecting the element you want to change
+  in Chrome/Firefox DevTools
+*/
+
+/**
+  Uncomment the below code and adjust the values to fit your colors, the application will automatically adjust
+ */
+html {
+  // --vex-color-primary: blue;
+  // --vex-color-primary-contrast: white;
+
+  // --vex-color-accent: yellow;
+  // --vex-color-accent-contrast: black;
+
+  // --vex-color-warn: yellow;
+  // --vex-color-warn-contrast: black;
+}
+
+/* Snackbar (mismo estilo que recibo; panelClass usado desde cualquier pantalla) */
+.recibo-snackbar-success,
+.recibo-snackbar-error {
+  .mat-mdc-snack-bar-label {
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 400;
+    line-height: 1.5;
+    padding: 4px 8px;
+
+    strong {
+      font-weight: 900;
+      font-size: 1.15em;
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+.mat-mdc-snack-bar-container.recibo-snackbar-success,
+.mat-mdc-snack-bar-container.recibo-snackbar-error {
+  padding: 14px 16px;
+  min-height: 48px;
+}
+
+.recibo-snackbar-success {
+  .mat-mdc-snack-bar-label {
+    strong {
+      color: rgba(129, 199, 132, 1);
+    }
+  }
+}
+
+.recibo-snackbar-error {
+  .mat-mdc-snack-bar-label {
+    strong {
+      color: rgba(239, 154, 154, 1);
+    }
+  }
+}
+
+/* Mat button toggles compactos: usado globalmente en la app */
+.mat-button-toggle {
+  height: 34px !important;
+}
+
+.mat-button-toggle-button {
+  height: 34px !important;
+}
+
+.mat-button-toggle-label-content {
+  line-height: 34px !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+/**
+ * mat-checkbox (MDC + tema Vex/M2): sin --mat-sys-* de capa de estado, hover/focus/pressed
+ * pueden verse casi opacos (ripple oscuro). Misma corrección que antes en cierre-ventas.
+ */
+mat-checkbox.mat-mdc-checkbox {
+  --mat-sys-hover-state-layer-opacity: 0.08;
+  --mat-sys-focus-state-layer-opacity: 0.12;
+  --mat-sys-pressed-state-layer-opacity: 0.12;
+}
+
+/* Listados POS (mat-table MDC): hover de fila más visible que el default casi blanco */
+:root {
+  /* Tono primario (#3f51b5) muy suave: menos “gris negro”, ligero matiz azul */
+  --pos-mat-table-row-hover: rgba(63, 81, 181, 0.055);
+}
+
+.dark {
+  /* En dark, el azul al 5.5% se ve sucio/oliva; usar velo neutro */
+  --pos-mat-table-row-hover: rgba(255, 255, 255, 0.06);
+}
+
+/* Overlay de ayuda en línea (CDK): pane a pantalla completa sin padding */
+.cdk-overlay-pane.guia-en-linea-overlay-pane {
+  pointer-events: auto !important;
+  max-width: none !important;
+}
+
+/*
+  Autocomplete "Tipo de egreso" (proveedor-edit):
+  En Material 21 la clase del panel es el input `class` en <mat-autocomplete> (ya no panelClass en overlay).
+  Vex :root .mat-mdc-option (h-10/min-h-10) fijaba ~40px; con overflow:visible el texto invadía la fila siguiente.
+*/
+.mat-mdc-autocomplete-panel.proveedor-tipo-egreso-autocomplete-panel {
+  .proveedor-tipo-egreso-option-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 2px 12px 2px 0;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mat-mdc-option.mdc-list-item {
+    align-items: flex-start !important;
+    height: auto !important;
+    min-height: 3rem !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    line-height: 1.45 !important;
+    margin-top: 6px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .mat-mdc-option.mdc-list-item:first-child {
+    margin-top: 0 !important;
+  }
+
+  .mat-mdc-option.mdc-list-item:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  .mat-mdc-option .mdc-list-item__primary-text {
+    white-space: normal !important;
+    text-overflow: clip !important;
+    line-height: 1.45 !important;
+    word-break: break-word;
+    flex: 1 1 auto;
+    min-width: 0;
+    align-self: stretch;
+  }
+
+  .mat-mdc-option .mat-pseudo-checkbox-minimal {
+    margin-top: 4px;
+  }
+}
+
+/*
+  Cierre de turno — Motivo (columna Diferencia):
+  Vex :root .mat-mdc-option (h-10) recorta nombres largos. Cada opción crece y envuelve.
+*/
+.mat-mdc-select-panel.cierre-motivo-desfase-panel {
+  .mat-mdc-option.mdc-list-item {
+    align-items: flex-start !important;
+    height: auto !important;
+    min-height: 3.5rem !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    line-height: 1.4 !important;
+    white-space: normal !important;
+    margin-top: 6px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .mat-mdc-option.mdc-list-item:first-child {
+    margin-top: 0 !important;
+  }
+
+  .mat-mdc-option.mdc-list-item:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  .mat-mdc-option .mdc-list-item__primary-text {
+    white-space: normal !important;
+    text-overflow: clip !important;
+    line-height: 1.4 !important;
+    word-break: break-word;
+    overflow: visible !important;
+    flex: 1 1 auto;
+    min-width: 0;
+    align-self: stretch;
+  }
+}
+
+/*
+  Lista de productos (detalle-ticket): columna flex + lista con scroll acotado (height:0 + min-height:0).
+*/
+.detalle-ticket-host .detalle-list-wrapper {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.detalle-ticket-host .detalle-list {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  height: 0 !important;
+  min-width: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+}
+
+/* Edición: detalle a altura de contenido; lista scroll; edicion-ticket crece en tickets.scss / component */
+.detalle-ticket-host .recibo-container.recibo-edicion-activa .detalle-container,
+.detalle-ticket-host .recibo-container.recibo-edicion-activa .detalle-wrapper,
+.detalle-ticket-host .recibo-container.recibo-edicion-activa .detalle-content,
+.detalle-ticket-host .recibo-container.recibo-edicion-activa .detalle-list-wrapper {
+  flex: 0 1 auto !important;
+}
+
+.detalle-ticket-host .recibo-container.recibo-edicion-activa .detalle-list {
+  flex: 0 1 auto !important;
+  height: auto !important;
+  max-height: min(8.25rem, 36vh) !important;
+}
+
+.detalle-ticket-host .recibo-container.recibo-edicion-activa > edicion-ticket {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+/* Modal pago en efectivo: alto según contenido (sin franja vacía bajo mat-dialog-actions) */
+.cdk-overlay-pane.pago-efectivo-dialog-panel {
+  .mat-mdc-dialog-container {
+    display: flex;
+    flex-direction: column;
+    max-height: 100vh;
+    height: auto !important;
+  }
+
+  .mat-mdc-dialog-surface {
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 auto;
+    min-height: 0;
+    height: auto !important;
+  }
+
+  .mat-mdc-dialog-inner-container {
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 auto;
+    min-height: 0;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* MDC aplica padding generoso; aquí se compacta de forma visible */
+  .mat-mdc-dialog-title {
+    padding-bottom: 8px !important;
+  }
+
+  .mat-mdc-dialog-content {
+    padding-top: 8px !important;
+    padding-bottom: 5px !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    margin: 0 !important;
+  }
+
+  .mat-mdc-dialog-actions {
+    padding-top: 4px !important;
+    padding-bottom: 8px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    margin-top: 0 !important;
+  }
+}
+
+/* Autocomplete: botón verde "Enter o click aquí para crear" (cliente, proveedor, etc.) */
+.btn-crear-cliente {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background-color: #4caf50 !important;
+  color: white !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  height: 32px !important;
+  min-width: auto !important;
+  margin-right: 4px !important;
+
+  &:hover {
+    background-color: #45a049 !important;
+  }
+
+  .icon-sm {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .btn-crear-text {
+    white-space: nowrap;
+    font-weight: 500;
+  }
+}
+
+.mat-mdc-form-field .mat-mdc-form-field-icon-suffix {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Bug en modales: empuja el control a la izquierda; Cancelar/Registrar siguen a la derecha */
+.mat-mdc-dialog-actions vex-bug-reporter-in-dialog,
+[mat-dialog-actions] vex-bug-reporter-in-dialog,
+.dialog-actions vex-bug-reporter-in-dialog {
+  margin-right: auto;
+  order: -1;
+}
+
+.bug-reporter-dialog-actions-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 8px 16px;
+  gap: 8px;
+}
+
+/* Tooltip descripción completa — Dominios / tipo_egreso */
+.tipo-egreso-desc-tooltip {
+  max-width: min(420px, 90vw);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.cxc-observacion-tooltip {
+  max-width: min(360px, 90vw);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 13px;
+  line-height: 1.35;
+}
+

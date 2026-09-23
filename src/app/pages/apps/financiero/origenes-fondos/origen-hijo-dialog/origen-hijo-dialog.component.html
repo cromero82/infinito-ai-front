@@ -1,0 +1,28 @@
+<h2 mat-dialog-title>Crear Fondo Hijo</h2>
+
+<mat-dialog-content class="dialog-content">
+  <p class="hint">
+    Nuevo bolsillo bajo <strong>{{ data.parentNombre }}</strong>.
+  </p>
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nombre del fondo</mat-label>
+      <input matInput formControlName="nombre" maxlength="120" autocomplete="off" />
+      @if (form.get('nombre')?.hasError('required')) {
+        <mat-error>Obligatorio</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancelar()">Cancelar</button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    [disabled]="guardando"
+    (click)="guardar()">
+    {{ guardando ? 'Guardando…' : 'Crear' }}
+  </button>
+</mat-dialog-actions>

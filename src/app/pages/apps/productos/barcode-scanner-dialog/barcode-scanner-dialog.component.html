@@ -1,0 +1,41 @@
+<div mat-dialog-title class="scanner-dialog-title">
+  <span>Escanear código de barras</span>
+  <button
+    type="button"
+    mat-icon-button
+    aria-label="Cerrar"
+    (click)="cerrar()">
+    <mat-icon svgIcon="mat:close"></mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content class="scanner-dialog-content">
+  <p class="scanner-hint m-0">
+    Apunte la cámara al código de barras del producto. Se pedirá permiso si el
+    navegador lo requiere.
+  </p>
+
+  <div class="scanner-viewport-wrap">
+    <div id="barcode-scanner-viewport" #scannerHost class="scanner-viewport"></div>
+    @if (loading && !errorMessage) {
+      <div class="scanner-overlay">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span>Iniciando cámara…</span>
+      </div>
+    }
+  </div>
+
+  @if (errorMessage) {
+    <p class="scanner-error m-0" role="alert">{{ errorMessage }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="scanner-dialog-actions">
+  @if (canSwitchCamera && !errorMessage) {
+    <button mat-stroked-button type="button" (click)="cambiarCamara()">
+      <mat-icon class="icon-sm" svgIcon="mat:cameraswitch"></mat-icon>
+      Cambiar cámara
+    </button>
+  }
+  <button mat-button type="button" (click)="cerrar()">Cancelar</button>
+</mat-dialog-actions>

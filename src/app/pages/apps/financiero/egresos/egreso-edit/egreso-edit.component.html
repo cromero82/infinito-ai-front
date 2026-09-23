@@ -1,0 +1,228 @@
+<form
+  (ngSubmit)="save()"
+  [formGroup]="form"
+  cdkDrag
+  cdkDragRootElement=".cdk-overlay-pane">
+  <div class="flex items-center dialog-header" mat-dialog-title cdkDragHandle>
+    <h2 class="headline m-0 flex-auto">
+      {{ dialogTitle }}
+    </h2>
+    <button
+      class="text-secondary"
+      mat-dialog-close
+      mat-icon-button
+      type="button">
+      <mat-icon svgIcon="mat:close"></mat-icon>
+    </button>
+  </div>
+  <mat-divider class="text-border"></mat-divider>
+  <mat-dialog-content class="flex flex-col">
+    @if (formalizarData) {
+      <p class="formalizar-hint text-secondary">
+        El dinero ya está en la bolsa (p.ej. Sin Clasificar). Se registra el egreso
+        y sale de esa cuenta — sin restar de nuevo el banco.
+      </p>
+    }
+    @if (!formalizarData && !isEditMode && mensajePagoLinea) {
+      <div
+        class="pago-linea-banner"
+        [class.pago-linea-banner--ok]="!!movimientoPagoLinea"
+        [class.pago-linea-banner--wait]="!movimientoPagoLinea">
+        @if (buscandoMatchPagoLinea && !movimientoPagoLinea) {
+          <mat-spinner diameter="18"></mat-spinner>
+        } @else {
+          <mat-icon
+            [svgIcon]="
+              movimientoPagoLinea ? 'mat:check_circle' : 'mat:hourglass_empty'
+            "></mat-icon>
+        }
+        <p class="pago-linea-msg">{{ mensajePagoLinea }}</p>
+      </div>
+    }
+    @if (puedeAsociarNotificacion) {
+      <div class="pago-linea-banner pago-linea-banner--wait">
+        <mat-icon svgIcon="mat:link"></mat-icon>
+        <p class="pago-linea-msg">
+          Este egreso no tiene notificación asociada. Si el correo llegó tarde, puede ligarlo
+          y fusionar el movimiento «por identificar».
+        </p>
+        <button mat-stroked-button type="button" (click)="abrirAsociarNotificacion()">
+          Asociar notificación
+        </button>
+      </div>
+    }
+    <mat-form-field class="mt-6 flex-1" appearance="outline">
+      <mat-label>Fecha</mat-label>
+      <input
+        #fechaInput
+        matInput
+        [matDatepicker]="picker"
+        formControlName="fecha" />
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
+    <mat-form-field
+      class="flex-1 valor-field"
+      [class.valor-field--editando]="valorEditando">
+      <mat-label>Valor</mat-label>
+      <input
+        #valorInput
+        formControlName="valor"
+        matInput
+        type="text"
+        inputmode="numeric"
+        autocomplete="off"
+        (focus)="onValorFocus($event)"
+        (blur)="onValorBlur()"
+        (input)="onValorInput($event)" />
+      <mat-icon matIconPrefix svgIcon="mat:attach_money"></mat-icon>
+      @if (mostrarValorPreviewSuffix) {
+        <span class="valor-preview-suffix" matSuffix aria-hidden="true">{{
+          valorPreviewFormateado
+        }}</span>
+      }
+      @if (form.get("valor")?.hasError("required")) {
+        <mat-error>Requerido</mat-error>
+      }
+      @if (form.get("valor")?.hasError("min")) {
+        <mat-error>Debe ser mayor o igual a 0</mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field class="flex-1" appearance="outline">
+      <mat-label>A quién se pagó</mat-label>
+      <input
+        matInput
+        formControlName="beneficiario"
+        [matAutocomplete]="autoBeneficiario"
+        placeholder="Buscar por nombre"
+        (keydown.enter)="onBeneficiarioKeydown($any($event))" />
+      <mat-icon matIconPrefix svgIcon="mat:people"></mat-icon>
+      <mat-autocomplete
+        #autoBeneficiario="matAutocomplete"
+        [displayWith]="displayBeneficiario"
+        (optionSelected)="onBeneficiarioSelected($event)">
+        @for (opt of filteredBeneficiarios$ | async; track opt.kind + '-' + opt.id) {
+          <mat-option [value]="opt">
+            {{ etiquetaOpcionBeneficiario(opt) }}
+          </mat-option>
+        }
+      </mat-autocomplete>
+      @if (form.get("beneficiario")?.hasError("required")) {
+        <mat-error>Seleccione o cree a quién se pagó</mat-error>
+      }
+    </mat-form-field>
+    @if (mostrarBotonesCrearBeneficiario$ | async) {
+      <div class="beneficiario-crear">
+        <span class="beneficiario-crear-label">No está en el catálogo:</span>
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="crearProveedorDesdeBoton()">
+          Crear como empresa
+        </button>
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="crearPersonaDesdeBoton()">
+          Crear como persona
+        </button>
+      </div>
+    }
+    <mat-form-field
+      class="flex-1 tipo-egreso-field"
+      appearance="outline"
+      subscriptSizing="dynamic">
+      <mat-label>Tipo de egreso</mat-label>
+      <mat-select formControlName="tipoEgresoId">
+        @for (t of tiposEgreso; track t.id) {
+          <mat-option [value]="t.id">{{ t.nombre }}</mat-option>
+        }
+      </mat-select>
+      @if (form.get("tipoEgresoId")?.hasError("required")) {
+        <mat-error>Seleccione el tipo</mat-error>
+      }
+    </mat-form-field>
+    <div class="tipo-categoria-row" [class.tipo-categoria-row--empty]="!form.get('naturaleza')?.value">
+      @if (form.get("naturaleza")?.value) {
+        <span>Categoría: {{ labelNaturalezaSeleccionada }}</span>
+        <button mat-button type="button" (click)="abrirCatalogoTipos()">
+          Editar tipos
+        </button>
+      }
+    </div>
+    <mat-form-field class="flex-1" appearance="outline">
+      <mat-label>Origen del egreso</mat-label>
+      <mat-select
+        formControlName="origenCuentaIds"
+        multiple
+        (selectionChange)="onOrigenesSelection($event.value)">
+        <mat-select-trigger>{{ origenesTriggerLabel }}</mat-select-trigger>
+        @for (op of origenesArbol; track op.id) {
+          <mat-option [value]="op.id" [class.opcion-hijo]="op.nivel > 0">
+            {{ etiquetaOrigen(op) }}
+          </mat-option>
+        }
+      </mat-select>
+      <mat-icon matIconPrefix svgIcon="mat:account_balance_wallet"></mat-icon>
+      @if (formalizarData) {
+        <mat-hint>Fijado por el movimiento a formalizar</mat-hint>
+      } @else if (movimientoPagoLinea) {
+        <mat-hint>Al guardar, la salida será desde la bolsa identificada</mat-hint>
+      } @else {
+        <mat-hint>Puede elegir varios orígenes; el valor se reparte entre ellos</mat-hint>
+      }
+      @if (form.get("origenCuentaIds")?.hasError("required")) {
+        <mat-error>Seleccione al menos un origen</mat-error>
+      }
+    </mat-form-field>
+    @if (mostrarMontosOrigen) {
+      <div class="origenes-montos">
+        <p class="origenes-montos-title">¿Cuánto sale de cada origen?</p>
+        @for (row of origenesPagoRows; track row.id) {
+          <div class="origen-monto-row">
+            <span class="origen-monto-nombre">{{ row.nombre }}</span>
+            <mat-form-field
+              appearance="outline"
+              class="origen-monto-field"
+              [class.origen-monto-field--editando]="montoOrigenEditandoId === row.id">
+              <mat-label>Valor</mat-label>
+              <input
+                matInput
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                [value]="row.monto"
+                (focus)="onMontoOrigenFocus(row.id, $event)"
+                (blur)="onMontoOrigenBlur(row.id)"
+                (input)="onMontoOrigenInput(row.id, $event)" />
+            </mat-form-field>
+          </div>
+        }
+        @if (!origenesMontosValidos) {
+          <p class="origen-warning origen-warning--inline">
+            Cada origen debe ser mayor a 0 y sumar el valor del egreso
+            ({{ formatValorPreview(valorEgresoNumero) }}).
+          </p>
+        }
+      </div>
+    }
+    @if (advertenciaSaldoOrigen) {
+      <p class="origen-warning">{{ advertenciaSaldoOrigen }}</p>
+    }
+    <mat-form-field class="flex-1">
+      <mat-label>Observación</mat-label>
+      <input formControlName="descripcion" matInput />
+      <mat-icon matIconPrefix svgIcon="mat:description"></mat-icon>
+    </mat-form-field>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="cancel()">Cancelar</button>
+    <button
+      [color]="isEditMode ? 'accent' : 'primary'"
+      mat-flat-button
+      type="submit"
+      [disabled]="submitDisabled">
+      {{ buttonLabel }}
+    </button>
+  </mat-dialog-actions>
+</form>

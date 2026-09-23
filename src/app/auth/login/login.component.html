@@ -1,0 +1,114 @@
+<div class="w-full h-full bg-pattern flex flex-col items-center justify-center">
+  <div @fadeInUp class="card overflow-hidden w-full max-w-md">
+    <div class="p-6 pb-0 flex flex-col items-center justify-center">
+      <div class="fill-current text-center">
+        <img class="w-16" src="assets/img/logo/logo.png" />
+      </div>
+    </div>
+
+    <div class="text-center mt-4">
+      <h2 class="title m-0">Bienvenido de nuevo</h2>
+      <h4 class="body-2 text-secondary m-0">
+        Inicia sesión con tus credenciales.
+      </h4>
+    </div>
+
+    <form
+      [formGroup]="form"
+      class="p-6 flex flex-col gap-4"
+      (ngSubmit)="send()"
+      autocomplete="on"
+      novalidate>
+      <datalist [attr.id]="recentEmailsDatalistId">
+        @for (e of recentEmails; track e) {
+          <option [value]="e"></option>
+        }
+      </datalist>
+      <div class="flex flex-col">
+        <mat-form-field class="flex-1">
+          <mat-label>Correo Electrónico</mat-label>
+          <input
+            formControlName="email"
+            matInput
+            type="email"
+            name="username"
+            id="login-email"
+            required
+            autocomplete="username"
+            [attr.list]="recentEmails.length ? recentEmailsDatalistId : null" />
+          @if (form.controls.email.hasError("required")) {
+            <mat-error>Se requiere un correo electrónico </mat-error>
+          }
+          @if (form.controls.email.hasError("email")) {
+            <mat-error>Correo electrónico inválido </mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field class="flex-1">
+          <mat-label>Contraseña</mat-label>
+          <input
+            #passwordInput
+            [type]="passwordInputType"
+            formControlName="password"
+            matInput
+            required
+            autocomplete="chrome-off"
+            readonly
+            (focus)="onPasswordFocus($event)"
+            (input)="onPasswordInput($event)"
+            data-lpignore="true"
+            data-form-type="other"
+            id="login-password"
+            name="password" />
+          <button
+            type="button"
+            (click)="toggleVisibility($event)"
+            mat-icon-button
+            matIconSuffix
+            matTooltip="Mostrar/Ocultar contraseña">
+            @if (visible) {
+              <mat-icon svgIcon="mat:visibility"></mat-icon>
+            }
+            @if (!visible) {
+              <mat-icon svgIcon="mat:visibility_off"></mat-icon>
+            }
+          </button>
+          <mat-hint
+            >Haz clic en el ojo para mostrar/ocultar la contraseña</mat-hint
+          >
+          @if (form.controls.password.hasError("required")) {
+            <mat-error>Se requiere una contraseña </mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <mat-checkbox class="caption" color="primary">Recordarme</mat-checkbox>
+        <a [routerLink]="['/forgot-password']" class="caption"
+          >¿Olvidaste tu contraseña?</a
+        >
+      </div>
+
+      <button
+        color="primary"
+        mat-raised-button
+        type="submit"
+        [disabled]="loading">
+        @if (loading) {
+          <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+        }
+        @if (!loading) {
+          <span>INICIAR SESIÓN</span>
+        }
+        @if (loading) {
+          <span>Iniciando sesión...</span>
+        }
+      </button>
+
+      <p class="text-secondary text-center">
+        ¿No tienes una cuenta?<br />
+        <a [routerLink]="['/register']">Haz clic aquí para crear una</a>
+      </p>
+    </form>
+  </div>
+  <vex-bug-reporter-button></vex-bug-reporter-button>
+</div>

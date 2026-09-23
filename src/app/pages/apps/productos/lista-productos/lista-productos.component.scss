@@ -1,0 +1,1269 @@
+@use '../../../../core/table-viewport/table-viewport.scss' as *;
+
+img.h-10.w-10.object-cover.rounded {
+  transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+img.h-10.w-10.object-cover.rounded:hover {
+  transform: scale(2.5);
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  position: relative;
+}
+
+// Misma base que proveedor-list: host + página + card + sección tabla (.productos-table-section).
+// Centrado horizontal: admin-productos usa .container como financiero/proveedor-list.
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+.productos-page {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.products-card {
+  min-height: 0;
+}
+
+/* Misma barra gris que tickets (bg-app-bar): título + búsqueda */
+.products-card > .bg-app-bar,
+.products-card > .productos-active-filters,
+.products-card > .grupo-espejo-panel {
+  flex-shrink: 0;
+}
+
+:host ::ng-deep .products-card .bg-app-bar {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.productos-table-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.productos-table-section .table-scroll-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  height: 100%;
+}
+
+.loading-more {
+  padding: 12px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 14px;
+}
+
+// Scroll vertical (cabecera sticky vía table-viewport.scss). Misma idea que egreso/proveedor: flex + height 100%.
+.products-list.table-scroll-container {
+  flex: 1 1 auto !important;
+  align-self: stretch !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  scrollbar-gutter: stable !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 8px !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+// Antes 120px añadía gran franja vacía al final del scroll
+.products-list-spacer {
+  min-height: 12px;
+  flex-shrink: 0;
+}
+
+// Buscador con acciones (cámara + limpiar): overlay en grid, estable en cualquier viewport.
+.search-field-shell {
+  --search-actions-width: 2.5rem;
+  display: grid;
+  align-items: center;
+  width: clamp(16rem, 32vw, 22rem);
+  min-width: 16rem;
+  max-width: 100%;
+  flex: 0 1 auto;
+}
+
+.search-field-shell--has-clear {
+  --search-actions-width: 5rem;
+}
+
+.search-field-shell > .search-input,
+.search-field-shell > .search-field-actions {
+  grid-area: 1 / 1;
+}
+
+.search-field-actions {
+  z-index: 2;
+  justify-self: end;
+  align-self: center;
+  width: var(--search-actions-width);
+  max-width: var(--search-actions-width);
+  margin-right: 4px;
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+  pointer-events: none;
+}
+
+.search-field-action-btn {
+  pointer-events: auto;
+  flex: 0 0 auto;
+}
+
+// Búsqueda: altura fija; no poner padding-top/bottom a 0 en .mat-mdc-form-field-infix (rompe el label flotante).
+:host ::ng-deep {
+  .search-field-shell .search-input.mat-mdc-form-field {
+    width: 100%;
+    margin: 0;
+    font-size: 13px !important;
+
+    .mat-mdc-form-field-flex {
+      height: 40px !important;
+      min-height: 40px !important;
+      max-height: 40px !important;
+      align-items: center !important;
+      flex-wrap: nowrap !important;
+    }
+
+    .mat-mdc-form-field-infix {
+      min-height: 28px !important;
+      max-height: 40px !important;
+      width: auto !important;
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+    }
+
+    .mat-mdc-text-field-wrapper {
+      height: 40px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .mat-mdc-text-field-wrapper input,
+    .mat-mdc-floating-label {
+      font-size: 13px !important;
+    }
+
+    .mat-mdc-input-element,
+    .search-input-control {
+      font-size: 13px !important;
+      line-height: 1.25 !important;
+      padding-right: calc(var(--search-actions-width) + 0.35rem) !important;
+      box-sizing: border-box !important;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none !important;
+    }
+
+    .mat-mdc-form-field-flex {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+  }
+
+  .search-field-shell .search-field-action-btn.mat-mdc-icon-button {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    padding: 4px !important;
+    line-height: 32px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+  }
+}
+
+// Table font size
+// table-layout fixed + anchos en columnas: la tabla usa el ancho del contenedor (sin min-width:max-content que
+// repartía el espacio en columnas "vacías" y anulaba el ahorro al estrechar código barras / precios).
+table.mat-mdc-table {
+  font-size: 15px !important;
+  width: 100% !important;
+  table-layout: fixed !important;
+  min-width: 0 !important;
+  /* Alinear con fila de cabecera compacta (reduce hueco superior en MDC) */
+  --mat-table-header-container-height: 32px;
+  
+  // Encabezados: menos aire arriba (Material añade padding vertical al contenedor de sort)
+  th.mat-mdc-header-cell {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    padding: 0 10px 4px !important;
+    line-height: 1.2 !important;
+    height: 32px !important;
+    vertical-align: middle !important;
+    box-sizing: border-box !important;
+  }
+  
+  // Table data cells - min-height permite que filas crezcan cuando producto tiene 2 líneas
+  td.mat-mdc-cell {
+    font-size: 15px !important;
+    padding: 2px 10px !important;
+    line-height: 1.2 !important;
+    min-height: 36px !important;
+    height: auto !important;
+  }
+
+  // Código barras: 1 pt menor que el resto de celdas (15px → 13px)
+  td.mat-mdc-cell.col-barcode {
+    font-size: 13px !important;
+  }
+
+  th.mat-mdc-header-cell.col-barcode {
+    font-size: 15px !important;
+  }
+
+  // Menos espacio entre Código barras y Producto (evita scroll horizontal; antes ~12px+12px en la junta)
+  th.mat-mdc-header-cell.col-barcode,
+  td.mat-mdc-cell.col-barcode {
+    padding-right: 4px !important;
+  }
+  th.mat-mdc-header-cell.col-producto,
+  td.mat-mdc-cell.col-producto {
+    padding-left: 4px !important;
+  }
+
+  td.mat-mdc-cell.col-producto {
+    font-size: 14px !important;
+  }
+  
+  // Table rows - min-height permite filas más altas cuando producto hace wrap
+  tr.mat-mdc-row {
+    min-height: 36px !important;
+    height: auto !important;
+    cursor: pointer;
+    
+    // Zebra striping - even rows (almost white, very subtle)
+    &:nth-child(even) {
+      background-color: rgba(0, 0, 0, 0.005) !important;
+    }
+    
+    // Zebra striping - odd rows (default background)
+    &:nth-child(odd) {
+      background-color: transparent !important;
+    }
+    
+    &:hover {
+      background-color: var(--pos-mat-table-row-hover) !important;
+    }
+
+    // Selected row style
+    &.selected-row {
+      background-color: rgba(63, 81, 181, 0.15) !important; // Material blue with transparency
+      border-left: 3px solid #3f51b5;
+      
+      &:hover {
+        background-color: rgba(63, 81, 181, 0.2) !important;
+      }
+    }
+  }
+  
+  // Header row - sticky como Excel: siempre visible al hacer scroll vertical
+  // Nota: sticky debe aplicarse a cada th, no al tr (limitación CSS)
+  tr.mat-mdc-header-row {
+    height: 32px !important;
+    background-color: var(--vex-background-card, #fff) !important;
+
+    th.mat-mdc-header-cell {
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 2 !important;
+      background-color: var(--vex-background-card, #fff) !important;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06) !important;
+    }
+  }
+  
+  // Inactive row style - gray text for disabled products
+  tr.inactive-row {
+    opacity: 0.6;
+    
+    td.mat-mdc-cell {
+      color: rgba(0, 0, 0, 0.5) !important; // Gray text
+    }
+    
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.02) !important;
+    }
+  }
+}
+
+/* Cabeceras: el hueco superior suele venir del min-height ~48px del botón de sort (touch target). */
+:host ::ng-deep .products-list table.mat-mdc-table {
+  th.mat-mdc-header-cell,
+  th.mat-mdc-header-cell.mdc-data-table__header-cell {
+    padding-top: 0 !important;
+    padding-bottom: 2px !important;
+    vertical-align: middle !important;
+  }
+
+  th.mat-mdc-header-cell .mat-sort-header-container {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    align-items: center !important;
+  }
+
+  th.mat-mdc-header-cell .mat-sort-header-content {
+    align-items: center !important;
+  }
+
+  /* Causa principal del “gap” arriba del texto */
+  th.mat-mdc-header-cell .mat-sort-header-button {
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0 4px !important;
+    line-height: 1.15 !important;
+  }
+
+  th.mat-mdc-header-cell .mat-sort-header-arrow {
+    margin: 0 0 0 4px !important;
+  }
+}
+
+// Columna Edit (iconos de acción) - última columna, sticky a la derecha si hubiera overflow
+// 3–4 iconos 36px + flecha menú ~26px → ~140px cómodo
+$edit-col-width: 140px;
+
+.edit-col-header.edit-col-sticky {
+  position: sticky !important;
+  top: 0 !important;
+  right: 0 !important;
+  z-index: 3 !important;
+  background: var(--vex-background-card, #fff) !important;
+  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.04);
+  width: $edit-col-width !important;
+  min-width: $edit-col-width !important;
+  max-width: $edit-col-width !important;
+}
+
+:host ::ng-deep .products-list table td.edit-col-cell {
+  position: sticky !important;
+  right: 0 !important;
+  z-index: 2 !important;
+  background: var(--vex-background-card, #fff) !important;
+  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.04);
+  width: $edit-col-width !important;
+  min-width: $edit-col-width !important;
+  max-width: $edit-col-width !important;
+  overflow: visible !important;
+  padding: 0 2px !important;
+}
+
+.edit-col-icons {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0 !important;
+  flex-wrap: nowrap !important;
+  min-width: 100% !important;
+
+  > * {
+    flex-shrink: 0 !important;
+  }
+}
+
+// Reducir padding de botones de acción para acortar espacio entre ellos
+:host ::ng-deep .products-list .edit-col-icons button.mat-mdc-icon-button,
+:host ::ng-deep .products-list .edit-col-icons .mat-mdc-icon-button,
+:host ::ng-deep .products-list .edit-col-icons vex-google-search-button button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+  min-width: 36px !important;
+  width: 36px !important;
+  height: 36px !important;
+}
+
+:host ::ng-deep .products-list .edit-col-icons button.mat-mdc-icon-button .mat-icon,
+:host ::ng-deep .products-list .edit-col-icons .mat-mdc-icon-button .mat-icon,
+:host ::ng-deep .products-list .edit-col-icons vex-google-search-button button .mat-icon {
+  margin: 0 !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+}
+
+:host ::ng-deep .products-list .edit-col-icons .row-actions-more-btn {
+  min-width: 26px !important;
+  width: 26px !important;
+  height: 26px !important;
+  padding-left: 1px !important;
+  padding-right: 1px !important;
+
+  .mat-icon {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 18px !important;
+  }
+}
+
+:host ::ng-deep .products-list table tr.inactive-row td.edit-col-cell {
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+
+:host ::ng-deep .products-list table tr:hover td.edit-col-cell {
+  background: var(--pos-mat-table-row-hover) !important;
+}
+
+// Columna Precio: ancho suficiente para "$999,999.99" sin ellipsis en condiciones normales
+$col-precio-width: 112px;
+
+th.col-precio,
+td.col-precio {
+  background-color: rgba(76, 175, 80, 0.08) !important;
+  width: $col-precio-width !important;
+  min-width: $col-precio-width !important;
+  max-width: $col-precio-width !important;
+  box-sizing: border-box !important;
+  text-align: right !important;
+  padding-left: 4px !important;
+  padding-right: 6px !important;
+  vertical-align: middle !important;
+}
+
+th.col-precio {
+  overflow: visible !important;
+}
+
+td.col-precio {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+:host ::ng-deep .products-list table tr:hover td.col-precio {
+  background-color: rgba(76, 175, 80, 0.12) !important;
+}
+
+:host ::ng-deep .products-list table tr.inactive-row td.col-precio {
+  background-color: rgba(76, 175, 80, 0.05) !important;
+}
+
+// Dark mode: hover / sticky / Precio sin fondos claros “sucios”
+:host-context(.dark) {
+  ::ng-deep .products-list table.mat-mdc-table {
+    tr.mat-mdc-row {
+      &:nth-child(even) {
+        background-color: rgba(255, 255, 255, 0.02) !important;
+      }
+
+      &:hover {
+        background-color: var(--pos-mat-table-row-hover) !important;
+      }
+
+      &.selected-row {
+        background-color: rgba(121, 134, 203, 0.22) !important;
+        border-left-color: #9fa8da;
+
+        &:hover {
+          background-color: rgba(121, 134, 203, 0.3) !important;
+        }
+      }
+    }
+
+    tr.mat-mdc-header-row,
+    tr.mat-mdc-header-row th.mat-mdc-header-cell {
+      background-color: var(--vex-background-card, #1e1e1e) !important;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35) !important;
+    }
+
+    tr.inactive-row {
+      td.mat-mdc-cell {
+        color: rgba(255, 255, 255, 0.45) !important;
+      }
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.04) !important;
+      }
+    }
+  }
+
+  .edit-col-header.edit-col-sticky {
+    background: var(--vex-background-card, #1e1e1e) !important;
+    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.35);
+  }
+
+  ::ng-deep .products-list table td.edit-col-cell {
+    background: var(--vex-background-card, #1e1e1e) !important;
+    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.35);
+  }
+
+  ::ng-deep .products-list table tr.inactive-row td.edit-col-cell {
+    background: rgba(255, 255, 255, 0.03) !important;
+  }
+
+  ::ng-deep .products-list table tr:hover td.edit-col-cell {
+    background: var(--pos-mat-table-row-hover) !important;
+  }
+
+  ::ng-deep .products-list table tr.selected-row td.edit-col-cell {
+    background: rgba(121, 134, 203, 0.22) !important;
+  }
+
+  th.col-precio,
+  td.col-precio {
+    background-color: rgba(76, 175, 80, 0.14) !important;
+  }
+
+  ::ng-deep .products-list table tr:hover td.col-precio {
+    background-color: rgba(76, 175, 80, 0.22) !important;
+  }
+
+  ::ng-deep .products-list table tr.inactive-row td.col-precio {
+    background-color: rgba(76, 175, 80, 0.08) !important;
+  }
+
+  ::ng-deep .products-list table tr.selected-row td.col-precio {
+    background-color: rgba(76, 175, 80, 0.22) !important;
+  }
+}
+
+// Encabezados ordenables alineados a la derecha en columnas numéricas
+:host ::ng-deep .products-list table th.col-precio .mat-sort-header-container,
+:host ::ng-deep .products-list table th.col-precio-unidad .mat-sort-header-container,
+:host ::ng-deep .products-list table th.col-precio-compra .mat-sort-header-container,
+:host ::ng-deep .products-list table th.col-total-ventas .mat-sort-header-container,
+:host ::ng-deep .products-list table th.col-pct-ganancia .mat-sort-header-container {
+  justify-content: flex-end !important;
+}
+
+// Columna Código barras: ancho acotado + fuente compacta (evita scroll horizontal innecesario)
+.col-barcode {
+  width: 108px !important;
+  min-width: 108px !important;
+  max-width: 108px !important;
+}
+
+// Wrapper para código de barras con icono copiar al hover
+.barcode-cell-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  width: 100%;
+  position: relative;
+
+  .barcode-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .barcode-copy-btn {
+    position: absolute !important;
+    right: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    flex-shrink: 0;
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    padding: 0 !important;
+
+    .mat-icon {
+      font-size: 13px !important;
+      width: 13px !important;
+      height: 13px !important;
+    }
+  }
+
+  // Reservar espacio para el botón cuando está visible (evita truncar el código)
+  &:has(.barcode-copy-btn) .barcode-text {
+    padding-right: 28px !important;
+  }
+}
+
+// Columna Producto: ancho FIJO (no auto). En table-layout:fixed, width:auto + max-width no limita
+// bien la columna y absorbe todo el espacio sobrante; fijamos 210px como antes.
+.col-producto {
+  width: 210px !important;
+  min-width: 210px !important;
+  max-width: 210px !important;
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  line-height: 1.2 !important;
+  vertical-align: middle !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+
+  span {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
+    overflow: hidden;
+    word-wrap: break-word;
+  }
+}
+
+// Refuerzo frente a estilos de Material en mat-column-nombre
+:host ::ng-deep .products-list table th.mat-column-nombre,
+:host ::ng-deep .products-list table td.mat-column-nombre {
+  width: 210px !important;
+  min-width: 210px !important;
+  max-width: 210px !important;
+  box-sizing: border-box !important;
+}
+
+.add-product-btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+
+.grupo-espejo-bar-btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+
+.column-visibility-btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+
+// Celdas de fecha relativa: fecha arriba, descripción abajo, centrado
+.fecha-relativa-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 2px;
+
+  span:first-child {
+    font-size: inherit;
+  }
+
+  span:last-child {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+// Fecha creación
+.col-fecha {
+  width: 96px !important;
+  min-width: 96px !important;
+  max-width: 96px !important;
+}
+
+// Actualización precio y Última venta
+.col-fecha-wide {
+  width: 124px !important;
+  min-width: 124px !important;
+  max-width: 124px !important;
+}
+
+// Precio unidad: casi siempre "-" o monto corto — ancho mínimo real
+th.col-precio-unidad,
+td.col-precio-unidad {
+  width: 64px !important;
+  min-width: 64px !important;
+  max-width: 64px !important;
+  box-sizing: border-box !important;
+  text-align: right !important;
+  padding-left: 2px !important;
+  padding-right: 4px !important;
+  vertical-align: middle !important;
+}
+
+td.col-precio-unidad {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+th.col-precio-unidad {
+  white-space: normal !important;
+  line-height: 1.1 !important;
+  font-size: 12px !important;
+  hyphens: auto !important;
+  overflow: visible !important;
+}
+
+// Precio compra
+th.col-precio-compra,
+td.col-precio-compra {
+  width: 104px !important;
+  min-width: 104px !important;
+  max-width: 104px !important;
+  box-sizing: border-box !important;
+  text-align: right !important;
+  padding-left: 4px !important;
+  padding-right: 6px !important;
+  vertical-align: middle !important;
+}
+
+td.col-precio-compra {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+th.col-precio-compra {
+  white-space: normal !important;
+  line-height: 1.1 !important;
+  font-size: 12px !important;
+  overflow: visible !important;
+}
+
+// Total ventas / % ganancia: numéricos compactos
+th.col-total-ventas,
+td.col-total-ventas {
+  width: 68px !important;
+  min-width: 68px !important;
+  max-width: 68px !important;
+  box-sizing: border-box !important;
+  text-align: right !important;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+}
+
+td.col-total-ventas {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+th.col-total-ventas {
+  white-space: normal !important;
+  line-height: 1.1 !important;
+  font-size: 12px !important;
+  overflow: visible !important;
+}
+
+th.col-pct-ganancia,
+td.col-pct-ganancia {
+  width: 72px !important;
+  min-width: 72px !important;
+  max-width: 72px !important;
+  box-sizing: border-box !important;
+  text-align: right !important;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+}
+
+td.col-pct-ganancia {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+th.col-pct-ganancia {
+  white-space: normal !important;
+  line-height: 1.1 !important;
+  font-size: 12px !important;
+  overflow: visible !important;
+}
+
+.icon-placeholder {
+  display: inline-block;
+  width: 24px;
+  min-width: 24px;
+}
+
+.column-visibility-item {
+  text-align: left !important;
+  justify-content: flex-start !important;
+}
+
+// Bloques de filtro unificados (etiqueta + controles)
+.filter-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.filter-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+// Override max-width and compact styling for filters menu
+::ng-deep .filters-custom-menu {
+  max-width: 520px !important;
+  .mat-mdc-menu-content {
+    padding: 12px !important;
+  }
+  // Anchos fijos para Condición (evita extrapolación)
+  .filters-field-condicion {
+    flex: 0 0 auto;
+    width: 120px;
+    min-width: 120px;
+  }
+  .filters-field-condicion-adv {
+    flex: 0 0 auto;
+    width: 165px;
+    min-width: 165px;
+  }
+  // Form fields más compactos - centrar label y contenido verticalmente
+  .filters-field-dense {
+    min-width: 0;
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+    .mat-mdc-text-field-wrapper {
+      padding-top: 0;
+    }
+    .mat-mdc-form-field-flex {
+      min-width: 0;
+      align-items: center !important;
+    }
+    .mat-mdc-form-field-infix {
+      display: flex !important;
+      align-items: center !important;
+      padding-top: 6px !important;
+      padding-bottom: 6px !important;
+      min-height: 40px !important;
+      min-width: 0;
+    }
+    // Centrar contenido del input
+    .mat-mdc-input-element {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+    // Centrar select: trigger, valor y placeholder
+    .mat-mdc-select {
+      display: flex;
+      align-items: center;
+      min-height: 28px;
+    }
+    .mat-mdc-select .mat-mdc-select-trigger {
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+    .mat-mdc-select-value,
+    .mat-mdc-select-placeholder,
+    .mat-mdc-select-min-line {
+      display: flex !important;
+      align-items: center !important;
+    }
+  }
+}
+
+// Modo edición grupo espejo: tinte primario Vex
+.grupo-espejo-panel {
+  background: rgb(var(--vex-color-primary-500) / 0.09);
+  border-bottom: 1px solid rgb(var(--vex-color-primary-600) / 0.14) !important;
+}
+
+:host-context(.dark) .grupo-espejo-panel {
+  background: rgb(var(--vex-color-primary-400) / 0.12);
+  border-bottom-color: rgb(var(--vex-color-primary-300) / 0.2) !important;
+}
+
+.grupo-espejo-panel-toolbar {
+  width: 100%;
+  align-items: center;
+}
+
+.grupo-espejo-panel-toolbar-main {
+  align-items: center;
+}
+
+/** Una sola línea: título + nombre + iconos; ancho del nombre ampliable */
+.grupo-espejo-nombre-row {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: min(480px, 52vw);
+}
+
+@media (max-width: 900px) {
+  .grupo-espejo-nombre-row {
+    max-width: min(380px, 58vw);
+  }
+}
+
+@media (max-width: 720px) {
+  .grupo-espejo-nombre-row {
+    max-width: min(320px, 72vw);
+  }
+}
+
+@media (max-width: 520px) {
+  .grupo-espejo-panel-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .grupo-espejo-panel-toolbar-main {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .grupo-espejo-nombre-row {
+    max-width: 100%;
+  }
+
+  .grupo-espejo-panel-header-actions {
+    justify-content: flex-end;
+  }
+}
+
+:host ::ng-deep .grupo-espejo-nombre-field.mat-mdc-form-field {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+:host ::ng-deep .grupo-espejo-nombre-field .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+:host ::ng-deep .grupo-espejo-nombre-field .mat-mdc-text-field-wrapper {
+  padding-bottom: 0;
+}
+
+:host ::ng-deep .grupo-espejo-nombre-field .mat-mdc-form-field-infix {
+  min-height: 38px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.grupo-espejo-panel-header-actions {
+  align-items: center;
+}
+
+.grupo-espejo-productos-panel-wrap {
+  position: relative;
+}
+
+// Recuadro flotante pegado al borde superior del panel con scroll (sin ocupar fila extra en el flujo)
+.grupo-espejo-precio-homogeneo-float {
+  position: absolute;
+  right: 2px;
+  top: 0;
+  z-index: 2;
+  transform: translateY(calc(-100% - 0.8px));
+  pointer-events: auto;
+}
+
+.grupo-espejo-precio-homogeneo-box {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  padding: 2px 10px 2px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+:host-context(.dark) .grupo-espejo-precio-homogeneo-box {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.grupo-espejo-precio-homogeneo-label {
+  font-size: 0.8125rem;
+  color: var(--vex-text-secondary, rgba(0, 0, 0, 0.62));
+}
+
+.grupo-espejo-precio-homogeneo-valor {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.grupo-espejo-precio-homogeneo-lapiz {
+  margin-left: 0;
+  width: 30px !important;
+  height: 30px !important;
+  padding: 0 !important;
+}
+
+.grupo-espejo-agregar-seleccion-btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+
+// Estilo cercano a "Ticket rápido" (tickets): accent flat + icono + texto
+.grupo-espejo-corregir-precio-btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: auto;
+  padding-inline: 10px 12px;
+}
+
+.grupo-espejo-corregir-precio-icon {
+  margin: 0 !important;
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+:host ::ng-deep .grupo-espejo-corregir-precio-btn .mdc-button__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+// Productos con tupla de precios distinta al resto del grupo
+.grupo-espejo-prod-row--precio-conflicto {
+  border-color: rgba(211, 47, 47, 0.55) !important;
+  background: rgba(211, 47, 47, 0.09) !important;
+}
+
+:host-context(.dark) .grupo-espejo-prod-row--precio-conflicto {
+  border-color: rgba(239, 83, 80, 0.55) !important;
+  background: rgba(239, 83, 80, 0.12) !important;
+}
+
+// Grupo espejo: grid 4 columnas + scroll; iconos compactos como columna acciones tabla
+.grupo-espejo-productos-section {
+  width: 100%;
+  max-width: 100%;
+}
+
+.grupo-espejo-productos-scroll {
+  max-height: min(44vh, 320px);
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+  scrollbar-gutter: stable;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--vex-background-card, rgba(255, 255, 255, 0.5));
+  padding: 10px;
+}
+
+.grupo-espejo-productos {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  align-items: start;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (max-width: 820px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.grupo-espejo-prod-row {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 6px 3px !important;
+}
+
+// Bloque interno: detalle de precios (popover / menú flotante)
+.grupo-espejo-prod-precios-interno {
+  margin-top: 2px;
+  padding: 8px 8px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.grupo-espejo-prod-precios-interno--popover {
+  margin-top: 0;
+  min-width: 220px;
+  max-width: min(280px, 92vw);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+  background: var(--vex-background-card, #fff);
+}
+
+:host-context(.dark) .grupo-espejo-prod-precios-interno--popover {
+  box-shadow:
+    0 4px 18px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+// Menú Material: sin padding para que el recuadro llene el panel
+:host ::ng-deep .grupo-espejo-precio-mat-menu .mat-mdc-menu-content {
+  padding: 0 !important;
+}
+
+:host-context(.dark) .grupo-espejo-prod-precios-interno {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.grupo-espejo-prod-precios-interno-head {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--vex-text-secondary, rgba(0, 0, 0, 0.55));
+  margin-bottom: 2px;
+}
+
+.grupo-espejo-prod-precio-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  padding: 2px 0;
+  border-radius: 4px;
+  margin: 0 -4px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.grupo-espejo-prod-precio-line--principal {
+  margin-top: 2px;
+  padding: 6px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  background: rgba(var(--vex-color-primary-600-rgb, 25 118 210) / 0.1);
+  border: 1px solid rgba(var(--vex-color-primary-600-rgb, 25 118 210) / 0.22);
+}
+
+:host-context(.dark) .grupo-espejo-prod-precio-line--principal {
+  background: rgba(var(--vex-color-primary-400-rgb, 100 181 246) / 0.12);
+  border-color: rgba(var(--vex-color-primary-400-rgb, 100 181 246) / 0.28);
+}
+
+.grupo-espejo-prod-precio-line--principal .grupo-espejo-prod-precio-valor {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.grupo-espejo-prod-precio-line--principal.grupo-espejo-prod-precio-line--difiere {
+  border-color: rgba(211, 47, 47, 0.45);
+}
+
+.grupo-espejo-prod-precio-label {
+  flex: 0 1 auto;
+  color: var(--vex-text-secondary, rgba(0, 0, 0, 0.6));
+  min-width: 0;
+}
+
+.grupo-espejo-prod-precio-valor {
+  flex: 0 0 auto;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--vex-text-color, inherit);
+}
+
+.grupo-espejo-prod-precio-line--difiere {
+  background: rgba(211, 47, 47, 0.1);
+}
+
+.grupo-espejo-prod-precio-line--difiere .grupo-espejo-prod-precio-label,
+.grupo-espejo-prod-precio-line--difiere .grupo-espejo-prod-precio-valor {
+  color: #c62828;
+}
+
+:host-context(.dark) .grupo-espejo-prod-precio-line--difiere {
+  background: rgba(239, 83, 80, 0.15);
+}
+
+:host-context(.dark) .grupo-espejo-prod-precio-line--difiere .grupo-espejo-prod-precio-label,
+:host-context(.dark) .grupo-espejo-prod-precio-line--difiere .grupo-espejo-prod-precio-valor {
+  color: #ffab91;
+}
+
+// Una sola línea: nombre (izq.) + iconos (der.)
+.grupo-espejo-prod-top {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+  /* Menos “aire” vertical que el alto por defecto de fila + icon-buttons */
+  margin-block: -1px;
+}
+
+.grupo-espejo-prod-nombre {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.grupo-espejo-prod-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+// Compacto: más altura útil para la lista / tabla principal
+:host ::ng-deep .grupo-espejo-prod-actions button.mat-mdc-icon-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding-left: 1px !important;
+  padding-right: 1px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  min-width: 28px !important;
+  width: 28px !important;
+  height: 28px !important;
+  line-height: 1 !important;
+}
+
+:host ::ng-deep .grupo-espejo-prod-actions .mat-mdc-button-touch-target {
+  height: 28px !important;
+  width: 28px !important;
+}
+
+:host ::ng-deep .grupo-espejo-prod-actions button.mat-mdc-icon-button .mat-icon {
+  margin: 0 !important;
+  width: 18px !important;
+  height: 18px !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}

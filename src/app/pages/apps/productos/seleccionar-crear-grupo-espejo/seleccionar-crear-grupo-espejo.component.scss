@@ -1,0 +1,240 @@
+// Encabezado alineado a proveedor-edit (padding vertical lo ajusta Vex global en _dialog.scss)
+:host {
+  display: block;
+}
+
+.grupo-espejo-dialog-root {
+  display: block;
+}
+
+.grupo-espejo-dialog-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: move;
+}
+
+.headline {
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+/*
+ * Una sola barra vertical: el contenido del diálogo hace scroll (no duplicar con listas internas).
+ */
+:host ::ng-deep mat-dialog-content.dialog-body {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+  max-height: min(75vh, 660px) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+  font-size: 15px !important;
+  line-height: 1.45 !important;
+  color: rgba(0, 0, 0, 0.87) !important;
+}
+
+.producto-actual-line {
+  font-size: 15px !important;
+  line-height: 1.45 !important;
+}
+
+.producto-actual-label {
+  color: rgba(0, 0, 0, 0.6) !important;
+  margin-right: 6px;
+}
+
+.producto-actual-nombre {
+  color: rgba(0, 0, 0, 0.87) !important;
+  font-weight: 600 !important;
+}
+
+.producto-actual-barcode {
+  color: rgba(0, 0, 0, 0.55) !important;
+  font-size: 14px !important;
+  margin-left: 4px;
+}
+
+.section-divider {
+  margin: 8px 0 !important;
+  flex-shrink: 0;
+}
+
+.section-shrink {
+  flex-shrink: 0;
+}
+
+.section-grow {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.section-title {
+  margin: 0 0 6px;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: rgba(0, 0, 0, 0.75) !important;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+@media (max-width: 640px) {
+  .two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.list-caption {
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  margin-bottom: 4px;
+  color: rgba(0, 0, 0, 0.65) !important;
+}
+
+.scroll-list {
+  min-height: 56px;
+  overflow: visible;
+  background: var(--vex-background-card, #fff);
+}
+
+/**
+ * Listas con scroll: ~6 filas de datos visibles; fila ≈ 30px (padding 4+4 + texto compacto).
+ * Izquierda: solo filas de grupo.
+ * Derecha: cabecera de tabla (~24px) + hasta 6 filas de producto.
+ */
+.scroll-list--grupos,
+.scroll-list--productos {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.scroll-list--grupos {
+  max-height: calc(6 * 30px);
+}
+
+.scroll-list--productos {
+  max-height: calc(24px + 6 * 30px);
+}
+
+.buscando-row {
+  font-size: 14px !important;
+  color: rgba(0, 0, 0, 0.65) !important;
+}
+
+.empty-hint {
+  font-size: 14px !important;
+  color: rgba(0, 0, 0, 0.55) !important;
+}
+
+.grupo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 4px 8px;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px !important;
+  line-height: 1.25 !important;
+  color: rgba(0, 0, 0, 0.87) !important;
+}
+
+.grupo-row:last-child {
+  border-bottom: none;
+}
+
+.grupo-row:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.grupo-row.selected {
+  background: rgba(var(--vex-color-primary-rgb, 33, 150, 243), 0.12);
+}
+
+.grupo-nombre {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grupo-meta {
+  font-size: 12.5px !important;
+  color: rgba(0, 0, 0, 0.55) !important;
+  flex-shrink: 0;
+}
+
+.product-table {
+  font-size: 14.5px !important;
+  border-collapse: collapse;
+  color: rgba(0, 0, 0, 0.87) !important;
+}
+
+.product-table th,
+.product-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.product-table th {
+  font-weight: 600;
+  font-size: 12.5px !important;
+  color: rgba(0, 0, 0, 0.65) !important;
+}
+
+/** Misma densidad que .grupo-row en la columna izquierda */
+.product-table--dialog {
+  font-size: 14px !important;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.product-table--dialog th,
+.product-table--dialog td {
+  padding: 4px 8px;
+  line-height: 1.25 !important;
+  font-size: 14px !important;
+}
+
+.product-table--dialog td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-table--dialog tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.product-table--dialog th {
+  font-size: 12.5px !important;
+  line-height: 1.25 !important;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--vex-background-card, #fff);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+}
+
+:host-context(.dark) .product-table--dialog th {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
+}
