@@ -20,7 +20,7 @@
 - **Egreso prima O.F.**: Caja Menor/General sin `metodoPagoId`; BE no lanza si no hay MP; FE no envía `0`
 - **Reset v2** (`prompts-general-pos`): incluye `egreso` + stats; DBeaver Auto-commit ON; aserción `BASE_INICIAL=0`
 - **Monitor** (`src/app/core/bug-reporter/`): FAB + modales; Ver detalle; sanitize HAR
-- SQL `21`–`27` + `apply-migrate-prod-to-dian-v2.sh`
+- SQL `21`–`27` (migraciones del schema)
 
 ### Delta (2026-08-17) — núcleo ingresos / migración única
 
@@ -32,10 +32,10 @@
 - Raíz **Dueños** + **Cuenta del dueño** (`38_…`); no operativo del turno
 - DnD fila movimiento (+) → OF + clasificación; reporte «Por clasificación»
 - Schema CxC: `cuenta_por_cobrar` + `abono_cxc` (UI pendiente)
-- SQL `34`–`37` en `apply-migrate-prod-to-dian-v2.sh`
+- SQL `34`–`37` (migraciones del schema)
 
 Paths locales macOS: `/Users/carlosromero/Documents/dev/repos/...`  
-(Branches: BE `dian-v2`, FE `dian-version`.)  
+(Branches actuales: BE y FE en `develop`.)  
 Paths Linux históricos en el resto del doc (`/home/carlosr/...`) → mapear al path macOS de arriba.
 
 El resto de este documento sigue siendo útil para modelo, endpoints base y riesgos
