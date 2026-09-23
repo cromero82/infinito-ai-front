@@ -35,7 +35,6 @@
 - SQL `34`–`37` (migraciones del schema)
 
 Paths locales macOS: `/Users/carlosromero/Documents/dev/repos/...`  
-(Branches actuales: BE y FE en `develop`.)  
 Paths Linux históricos en el resto del doc (`/home/carlosr/...`) → mapear al path macOS de arriba.
 
 El resto de este documento sigue siendo útil para modelo, endpoints base y riesgos
