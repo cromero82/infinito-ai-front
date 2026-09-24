@@ -968,6 +968,33 @@ export class TicketsComponent
         delete this.splitCommentsByTicketId[Number(sourceTicketId)];
       }
     }
+
+    const paid = this.tickets[this.selectedIndex];
+    if (paid && !this.isTicketConCliente(paid)) {
+      const nextId = this.nextAnonymousTicketId(paid.id);
+      if (nextId != null) {
+        this.forcedSelectionTicketId = nextId;
+        sessionStorage.setItem(FORCED_SELECTION_TICKET_ID_KEY, String(nextId));
+      }
+    }
+  }
+
+  /** Siguiente tab anónimo de esta sesión (tras pagar uno no identificado). */
+  private nextAnonymousTicketId(paidId: number): number | null {
+    const anon = this.tickets.filter(
+      (t) =>
+        !this.isTicketConCliente(t) &&
+        (this.sessionId == null || t.sessionId === this.sessionId)
+    );
+    if (anon.length === 0) {
+      return null;
+    }
+    const idx = anon.findIndex((t) => t.id === paidId);
+    if (idx >= 0 && idx + 1 < anon.length) {
+      return anon[idx + 1].id;
+    }
+    const other = anon.find((t) => t.id !== paidId);
+    return other?.id ?? paidId;
   }
 
   /**
@@ -2278,11 +2305,11 @@ export class TicketsComponent
     });
   }
 
-  /** Selección inicial tras loadTickets (forzada / ultimoTicketId / fallback). */
+  /** Selección inicial tras loadTickets (forzada / ultimoTicketId / primer anónimo de esta sesión). */
   private selectTicketAfterTicketsLoaded(sessionId: number): void {
     this.sesionesService.getSesionById(sessionId).subscribe({
       next: (sesion: SesionDto) => {
-        let targetIndex = 0;
+        let targetIndex = this.firstCurrentSessionAnonymousIndex();
 
         if (this.forcedSelectionTicketId) {
           const forcedIndex = this.tickets.findIndex(
@@ -2297,9 +2324,8 @@ export class TicketsComponent
           const ultimoId = sesion?.ultimoTicketId ?? null;
           if (ultimoId) {
             const index = this.tickets.findIndex((t) => t.id === ultimoId);
-            targetIndex = index >= 0 ? index : 0;
-          } else {
-            targetIndex = 0;
+            targetIndex =
+              index >= 0 ? index : this.firstCurrentSessionAnonymousIndex();
           }
         }
 
@@ -2315,7 +2341,7 @@ export class TicketsComponent
       },
       error: (err) => {
         console.error('❌ Error cargando info de sesión:', err);
-        this.selectedIndex = 0;
+        this.selectedIndex = this.firstCurrentSessionAnonymousIndex();
         this.cxcRailExpanded = this.ticketMuestraPanelLateral(
           this.tickets[this.selectedIndex]
         );
@@ -2326,6 +2352,19 @@ export class TicketsComponent
         this.appRef.tick();
       }
     });
+  }
+
+  private firstCurrentSessionAnonymousIndex(): number {
+    const inSession = (t: TicketDto) =>
+      this.sessionId == null || t.sessionId === this.sessionId;
+    const anon = this.tickets.findIndex(
+      (t) => inSession(t) && !this.isTicketConCliente(t)
+    );
+    if (anon >= 0) {
+      return anon;
+    }
+    const sameSession = this.tickets.findIndex(inSession);
+    return sameSession >= 0 ? sameSession : 0;
   }
 
   private fetchReciboForTicket(
