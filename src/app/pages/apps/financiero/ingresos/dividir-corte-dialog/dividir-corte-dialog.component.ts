@@ -88,6 +88,9 @@ export class DividirCorteDialogComponent implements OnInit, OnDestroy {
 
   montoMenorOriginal = 0;
   montoGeneralOriginal = 0;
+  /** Límites del corte original: ninguna partición puede salirse de aquí. */
+  readonly minFecha: Date;
+  readonly maxFecha: Date;
   private metodos: MetodoPagoDto[] = [];
   private efectivoMetodoPagoId: number | null = null;
   /** Ventas en efectivo del corte completo, para prorratear proporcionalmente por partición. */
@@ -104,6 +107,8 @@ export class DividirCorteDialogComponent implements OnInit, OnDestroy {
     private snackBar: MatSnackBar
   ) {
     this.corte = data.corte;
+    this.minFecha = this.parseIso(this.corte.fechaIni);
+    this.maxFecha = this.parseIso(this.corte.fechaFin);
     this.form = this.fb.group({
       motivo: ['', [Validators.required, Validators.maxLength(500)]],
       particiones: this.fb.array([
@@ -459,16 +464,29 @@ export class DividirCorteDialogComponent implements OnInit, OnDestroy {
         return `Partición ${i + 1}: "Hasta" debe ser posterior a "Desde".`;
       }
       if (desde < iniOriginal) {
-        return `Partición ${i + 1}: no puede iniciar antes del corte original.`;
+        return `Partición ${i + 1}: no puede iniciar antes del corte original (${this.formatearLimite(
+          this.minFecha
+        )}).`;
       }
       if (hasta > finOriginal) {
-        return `Partición ${i + 1}: no puede terminar después del corte original.`;
+        return `Partición ${i + 1}: no puede terminar después del corte original (${this.formatearLimite(
+          this.maxFecha
+        )}).`;
       }
       if (i > 0 && desde < new Date(particiones[i - 1].fechaHasta).getTime()) {
         return `Partición ${i + 1}: se solapa con la anterior.`;
       }
     }
     return null;
+  }
+
+  /** dd/MM/yyyy HH:mm:ss — con segundos, que son los que deciden si cabe en el rango. */
+  private formatearLimite(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return (
+      `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ` +
+      `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+    );
   }
 
   /** Mismo día, 23:59:59. */

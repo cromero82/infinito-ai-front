@@ -14,7 +14,8 @@
 
   <div class="rango-original">
     <strong>Rango original (inmutable):</strong>
-    {{ corte.fechaIni | date: 'dd/MM/yyyy HH:mm' }} — {{ corte.fechaFin | date: 'dd/MM/yyyy HH:mm' }}
+    {{ corte.fechaIni | date: 'dd/MM/yyyy HH:mm:ss' }} —
+    {{ corte.fechaFin | date: 'dd/MM/yyyy HH:mm:ss' }}
   </div>
 
   @if (cargandoInicial) {
@@ -62,6 +63,8 @@
               <input
                 matInput
                 [matDatepicker]="pickerDesde"
+                [min]="minFecha"
+                [max]="maxFecha"
                 formControlName="fechaDesde"
                 (dateChange)="onFechaChange(i)"
               />
@@ -84,6 +87,8 @@
               <input
                 matInput
                 [matDatepicker]="pickerHasta"
+                [min]="minFecha"
+                [max]="maxFecha"
                 formControlName="fechaHasta"
                 (dateChange)="onFechaChange(i)"
               />
