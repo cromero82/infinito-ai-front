@@ -90,7 +90,7 @@ export interface VentaTipoSearchDto {
   corteVentaId?: number;
 }
 
-export type EstadoCorteVenta = 'creada' | 'revisada' | 'eliminado';
+export type EstadoCorteVenta = 'creada' | 'revisada' | 'eliminado' | 'dividido';
 export type ModoCapturaCorte =
   | 'DECLARADO_CAJERO'
   | 'SOLO_VISIBLE'
@@ -190,6 +190,34 @@ export interface DetalleRevisionRequest {
   motivoDesfaseId?: number | null;
   revisionEstado: 'OK' | 'SUGERENCIA';
   revisionComentario?: string | null;
+}
+
+export interface DividirCorteParticionDto {
+  fechaDesde: string;
+  fechaHasta: string;
+  montoCajaMenor?: number;
+  montoCajaGeneral?: number;
+}
+
+export interface DividirCorteRequestDto {
+  motivo: string;
+  particiones: DividirCorteParticionDto[];
+}
+
+export interface DividirCorteResultDto {
+  ok: boolean;
+  correccionId: number;
+  tipo: 'SPLIT' | 'EDICION';
+  corteOriginalId: number;
+  cortesNuevosIds: number[];
+}
+
+export interface DistribucionOriginalCorteDto {
+  corteVentaId: number;
+  cajaMenorId: number;
+  montoCajaMenor: number;
+  cajaGeneralId: number;
+  montoCajaGeneral: number;
 }
 
 /**
@@ -614,5 +642,26 @@ export class CorteVentaService {
       Accept: 'application/json'
     });
     return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers });
+  }
+
+  /**
+   * Divide (SPLIT) o edita (traza EDICION) un corte de ventas mal generado.
+   * 1 partición = editor (no toca el ledger); 2+ particiones = SPLIT completo.
+   */
+  dividir(id: number, request: DividirCorteRequestDto): Observable<DividirCorteResultDto> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    });
+    return this.http.post<DividirCorteResultDto>(`${this.apiUrl}/${id}/dividir`, request, {
+      headers
+    });
+  }
+
+  /** Monto originalmente distribuido a Caja Menor/General por este corte (para el asistente Dividir). */
+  obtenerDistribucionOriginal(id: number): Observable<DistribucionOriginalCorteDto> {
+    return this.http.get<DistribucionOriginalCorteDto>(
+      `${this.apiUrl}/${id}/distribucion-original`
+    );
   }
 }

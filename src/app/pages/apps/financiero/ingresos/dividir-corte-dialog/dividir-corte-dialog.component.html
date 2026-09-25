@@ -1,0 +1,190 @@
+<div class="dividir-draggable-root" cdkDrag cdkDragRootElement=".cdk-overlay-pane">
+  <div class="dividir-drag-header" mat-dialog-title cdkDragHandle>
+    <h2 class="dialog-title m-0">Dividir corte #{{ corte.id }}</h2>
+  </div>
+
+  <div mat-dialog-content class="dialog-content" [formGroup]="form">
+  <p class="intro">
+    Corrige un corte mal generado dividiéndolo en varias particiones (una por día/turno real) o,
+    si solo necesita dejar una nota de edición sin restructurar movimientos, deje una sola
+    partición. Ingresos agrupa por la <strong>fecha de inicio</strong> de cada corte: para que
+    cada partición quede en su propio día, termine una a las <strong>23:59:59</strong> y empiece
+    la siguiente a las <strong>00:00:00</strong> del día siguiente.
+  </p>
+
+  <div class="rango-original">
+    <strong>Rango original (inmutable):</strong>
+    {{ corte.fechaIni | date: 'dd/MM/yyyy HH:mm' }} — {{ corte.fechaFin | date: 'dd/MM/yyyy HH:mm' }}
+  </div>
+
+  @if (cargandoInicial) {
+    <div class="cargando-inicial">
+      <mat-spinner diameter="20"></mat-spinner>
+      <span>Cargando distribución original del corte…</span>
+    </div>
+  }
+
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Motivo de la corrección (obligatorio)</mat-label>
+    <textarea
+      matInput
+      formControlName="motivo"
+      rows="2"
+      maxlength="500"
+      placeholder="Ej: el corte agregó ventas de 2 días en uno solo"
+    ></textarea>
+  </mat-form-field>
+
+  <div class="particiones" formArrayName="particiones">
+    <div
+      class="particion-row"
+      *ngFor="let p of particiones.controls; let i = index"
+      [formGroupName]="i"
+    >
+      <div class="particion-header">
+        <span>Partición {{ i + 1 }}{{ esUltima(i) ? ' (hasta fin del corte)' : '' }}</span>
+        <button
+          mat-icon-button
+          type="button"
+          *ngIf="particiones.length > 1"
+          (click)="eliminarParticion(i)"
+          title="Quitar partición"
+        >
+          <mat-icon svgIcon="mat:close"></mat-icon>
+        </button>
+      </div>
+
+      <div class="particion-fechas">
+        <div class="fecha-grupo">
+          <span class="fecha-label">Desde</span>
+          <div class="fecha-input-group">
+            <mat-form-field appearance="outline" class="fecha-field" subscriptSizing="dynamic">
+              <input
+                matInput
+                [matDatepicker]="pickerDesde"
+                formControlName="fechaDesde"
+                (dateChange)="onFechaChange(i)"
+              />
+              <mat-datepicker-toggle matSuffix [for]="pickerDesde"></mat-datepicker-toggle>
+              <mat-datepicker #pickerDesde></mat-datepicker>
+            </mat-form-field>
+            <input
+              type="time"
+              step="1"
+              class="hora-input"
+              formControlName="horaDesde"
+              (change)="onFechaChange(i)"
+            />
+          </div>
+        </div>
+        <div class="fecha-grupo">
+          <span class="fecha-label">Hasta</span>
+          <div class="fecha-input-group">
+            <mat-form-field appearance="outline" class="fecha-field" subscriptSizing="dynamic">
+              <input
+                matInput
+                [matDatepicker]="pickerHasta"
+                formControlName="fechaHasta"
+                (dateChange)="onFechaChange(i)"
+              />
+              <mat-datepicker-toggle matSuffix [for]="pickerHasta"></mat-datepicker-toggle>
+              <mat-datepicker #pickerHasta></mat-datepicker>
+            </mat-form-field>
+            <input
+              type="time"
+              step="1"
+              class="hora-input"
+              formControlName="horaHasta"
+              (change)="onFechaChange(i)"
+            />
+          </div>
+        </div>
+        <button
+          mat-stroked-button
+          type="button"
+          class="btn-consultar"
+          [disabled]="previews[i].cargando"
+          (click)="consultarParticion(i)"
+        >
+          @if (previews[i].cargando) {
+            <mat-spinner diameter="16"></mat-spinner>
+          } @else {
+            <span>Consultar</span>
+          }
+        </button>
+      </div>
+
+      @if (previews[i].consultado) {
+        <div class="preview-tabla">
+          <div class="preview-row" *ngFor="let vt of previews[i].ventasTipo">
+            <span class="preview-metodo">{{ nombreMetodo(vt.metodoPagoId) }}</span>
+            <span class="preview-monto">{{ vt.totalVentasSistema | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+          </div>
+          <div class="preview-row preview-total">
+            <span>Total ventas partición</span>
+            <span>{{ previews[i].totalVentasSistema | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+          </div>
+        </div>
+      }
+
+      @if (esSplit && (mostrarMenor() || mostrarGeneral())) {
+        <div class="particion-montos">
+          <mat-form-field appearance="outline" *ngIf="mostrarMenor()">
+            <mat-label>Monto a Caja Menor</mat-label>
+            <input
+              matInput
+              type="number"
+              min="0"
+              formControlName="montoCajaMenor"
+              [readonly]="esUltima(i)"
+              (input)="onMontoTocado(i, 'montoCajaMenor')"
+            />
+          </mat-form-field>
+          <mat-form-field appearance="outline" *ngIf="mostrarGeneral()">
+            <mat-label>Monto a Caja General</mat-label>
+            <input
+              matInput
+              type="number"
+              min="0"
+              formControlName="montoCajaGeneral"
+              [readonly]="esUltima(i)"
+              (input)="onMontoTocado(i, 'montoCajaGeneral')"
+            />
+          </mat-form-field>
+        </div>
+        <p class="hint" *ngIf="esUltima(i)">
+          La última partición cierra por resta (lo que falte para cuadrar exacto).
+        </p>
+      }
+    </div>
+  </div>
+
+  <button mat-stroked-button type="button" (click)="agregarParticion()" class="btn-agregar">
+    <mat-icon svgIcon="mat:add"></mat-icon>
+    Agregar partición
+  </button>
+
+  @if (esSplit && (mostrarMenor() || mostrarGeneral())) {
+    <div class="resumen-prorrateo">
+      <div *ngIf="mostrarMenor()" [class.warn]="!menorCuadra">
+        Caja Menor: repartido {{ sumaMenor | currency: 'COP' : 'symbol-narrow' : '1.0-0' }} de
+        {{ montoMenorOriginal | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+        {{ menorCuadra ? '✓' : '' }}
+      </div>
+      <div *ngIf="mostrarGeneral()" [class.warn]="!generalCuadra">
+        Caja General: repartido {{ sumaGeneral | currency: 'COP' : 'symbol-narrow' : '1.0-0' }} de
+        {{ montoGeneralOriginal | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+        {{ generalCuadra ? '✓' : '' }}
+      </div>
+    </div>
+  }
+  </div>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="cerrar()" [disabled]="guardando">Cancelar</button>
+    <button mat-flat-button color="primary" type="button" (click)="confirmar()" [disabled]="guardando">
+      <mat-spinner *ngIf="guardando" diameter="18"></mat-spinner>
+      <span *ngIf="!guardando">{{ esSplit ? 'Confirmar división' : 'Confirmar edición' }}</span>
+    </button>
+  </mat-dialog-actions>
+</div>

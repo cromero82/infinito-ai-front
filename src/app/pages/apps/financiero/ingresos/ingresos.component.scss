@@ -68,6 +68,12 @@ table td {
   background: #fce8e6;
 }
 
+/* Corte original de un SPLIT: ya no cuenta en Ingresos, sus ventas las heredan los cortes nuevos. */
+.estado-dividido {
+  color: #4a148c;
+  background: #f3e5f5;
+}
+
 .ingresos-dia-header {
   background: rgba(25, 118, 210, 0.06);
   border-top: 1px solid rgba(0, 0, 0, 0.08);
@@ -484,6 +490,11 @@ table td {
   .estado-eliminado {
     color: #ef9a9a;
     background: rgba(244, 67, 54, 0.2);
+  }
+
+  .estado-dividido {
+    color: #ce93d8;
+    background: rgba(156, 39, 176, 0.2);
   }
 
   .ingresos-dia-header {

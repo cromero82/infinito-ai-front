@@ -24,6 +24,7 @@
             <mat-button-toggle value="creada">Creados</mat-button-toggle>
             <mat-button-toggle value="revisada">Revisados</mat-button-toggle>
             <mat-button-toggle value="eliminado">Eliminados</mat-button-toggle>
+            <mat-button-toggle value="dividido">Divididos</mat-button-toggle>
             <mat-button-toggle value="todos">Todos</mat-button-toggle>
           </mat-button-toggle-group>
         }
@@ -300,7 +301,8 @@
                       <tbody>
                         @for (
                           venta of ventasPorFechaVisibles;
-                          track venta.fechaKey
+                          track venta.fechaKey;
+                          let i = $index
                         ) {
                           <tr
                             class="border-b hover:bg-hover"
@@ -328,6 +330,48 @@
                                     <span class="btn-ver-count"
                                       >({{ venta.cantidadCortes }})</span
                                     >
+                                  }
+                                </button>
+                              }
+                              @if (
+                                esAdmin && i === 0 && venta.corteIds.length > 0
+                              ) {
+                                <button
+                                  type="button"
+                                  mat-icon-button
+                                  color="warn"
+                                  class="btn-eliminar-ultimo"
+                                  [disabled]="
+                                    eliminandoFechaKey === venta.fechaKey
+                                  "
+                                  (click)="eliminarUltimoRegistroDia(venta, $event)"
+                                  matTooltip="Eliminar último registro (revierte ventas y distribución de efectivo)">
+                                  @if (eliminandoFechaKey === venta.fechaKey) {
+                                    <mat-icon
+                                      class="animate-spin"
+                                      svgIcon="mat:hourglass_empty"></mat-icon>
+                                  } @else {
+                                    <mat-icon
+                                      svgIcon="mat:delete_forever"></mat-icon>
+                                  }
+                                </button>
+                                <button
+                                  type="button"
+                                  mat-icon-button
+                                  color="accent"
+                                  class="btn-dividir-ultimo"
+                                  [disabled]="
+                                    dividiendoFechaKey === venta.fechaKey
+                                  "
+                                  (click)="dividirUltimoRegistroDia(venta, $event)"
+                                  matTooltip="Dividir corte (corrige un corte mal generado en N cortes)">
+                                  @if (dividiendoFechaKey === venta.fechaKey) {
+                                    <mat-icon
+                                      class="animate-spin"
+                                      svgIcon="mat:hourglass_empty"></mat-icon>
+                                  } @else {
+                                    <mat-icon
+                                      svgIcon="mat:call_split"></mat-icon>
                                   }
                                 </button>
                               }
@@ -465,6 +509,9 @@
                                   "
                                   [class.estado-eliminado]="
                                     corte.estado === 'eliminado'
+                                  "
+                                  [class.estado-dividido]="
+                                    corte.estado === 'dividido'
                                   ">
                                   {{ corte.estado }}
                                 </span>

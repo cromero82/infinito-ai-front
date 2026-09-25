@@ -1388,7 +1388,8 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
       AJUSTE_SALDO: 'mat:tune',
       AJUSTE_CIERRE: 'mat:balance',
       REVERSO_AJUSTE_CIERRE: 'mat:undo',
-      REVERSO_ENTRADA_VENTA: 'mat:undo'
+      REVERSO_ENTRADA_VENTA: 'mat:undo',
+      REVERSO_TRASLADO_DISTRIBUCION: 'mat:undo'
     };
     return map[tipo] ?? 'mat:receipt_long';
   }
@@ -1410,7 +1411,8 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
       TRASLADO: 'Traslado',
       SALIDA_EGRESO: 'Egreso',
       AJUSTE_SALDO: 'Ajuste',
-      AJUSTE_CIERRE: 'Ajuste cierre'
+      AJUSTE_CIERRE: 'Ajuste cierre',
+      REVERSO_TRASLADO_DISTRIBUCION: 'Reverso distribución'
     };
     return map[tipo] ?? tipo;
   }
@@ -1440,7 +1442,8 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
       tipo === 'CORTE_VENTA' ||
       tipo === 'CORTE_VENTA_REVERSO' ||
       tipo === 'CIERRE' ||
-      tipo === 'CIERRE_REVERSO'
+      tipo === 'CIERRE_REVERSO' ||
+      tipo === 'DISTRIBUCION_REVERSO'
     );
   }
 

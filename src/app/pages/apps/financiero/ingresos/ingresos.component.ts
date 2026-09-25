@@ -42,6 +42,7 @@ import {
   DistribucionEfectivoDialogResult
 } from './distribucion-efectivo-dialog/distribucion-efectivo-dialog.component';
 import { MovimientoReferenciaDialogComponent } from '../origenes-fondos/movimiento-referencia-dialog/movimiento-referencia-dialog.component';
+import { DividirCorteDialogComponent, DividirCorteDialogResult } from './dividir-corte-dialog/dividir-corte-dialog.component';
 import {
   MovimientoOrigenFondosDto,
   MovimientoOrigenFondosService
@@ -124,10 +125,18 @@ export class IngresosComponent implements OnInit, OnDestroy {
   /** Cobranzas ENTRADA_COBRANZA indexadas por día YYYY-MM-DD → método → monto. */
   private cobranzasPorFecha = new Map<string, Map<number, number>>();
   estadoCorteCtrl = new FormControl<
-    'vigentes' | 'creada' | 'revisada' | 'eliminado' | 'todos'
+    'vigentes' | 'creada' | 'revisada' | 'eliminado' | 'dividido' | 'todos'
   >('vigentes');
+  /**
+   * Estados que sacan a un corte de circulación. 'dividido' es el corte original de un SPLIT:
+   * sus ventas ya las heredaron los cortes nuevos, contarlo otra vez las duplicaría.
+   */
+  private static readonly ESTADOS_NO_VIGENTES: ReadonlyArray<string> = ['eliminado', 'dividido'];
   esAdmin = false;
   eliminandoCorteId: number | null = null;
+  /** fechaKey del día que se está eliminando en "Detalles por Fecha" (último registro). */
+  eliminandoFechaKey: string | null = null;
+  dividiendoFechaKey: string | null = null;
   loading = false;
   error: string | null = null;
 
@@ -610,7 +619,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
     );
     this.aplicarFiltroEstadoCorte();
     this.procesarRespuestaDashboardDesdeCortes(
-      lista.filter((c) => c.estado !== 'eliminado')
+      lista.filter((c) => !IngresosComponent.ESTADOS_NO_VIGENTES.includes(c.estado))
     );
   }
 
@@ -650,7 +659,9 @@ export class IngresosComponent implements OnInit, OnDestroy {
     const filtro = this.estadoCorteCtrl.value ?? 'vigentes';
     this.cortesVentaListado = this.todosCortesVenta.filter((c) => {
       if (filtro === 'todos') return true;
-      if (filtro === 'vigentes') return c.estado !== 'eliminado';
+      if (filtro === 'vigentes') {
+        return !IngresosComponent.ESTADOS_NO_VIGENTES.includes(c.estado);
+      }
       return c.estado === filtro;
     });
     this.reconstruirCortesPorDia();
@@ -853,6 +864,99 @@ export class IngresosComponent implements OnInit, OnDestroy {
             'Cerrar',
             { duration: 5000 }
           );
+        }
+      });
+  }
+
+  /**
+   * Elimina el último registro de "Detalles por Fecha" (la fila más reciente).
+   * Un día puede tener varios cortes; se eliminan de más reciente a más antiguo
+   * porque el backend solo permite eliminar el último corte vigente a la vez.
+   * Cada eliminación revierte en Orígenes de fondos: ventas del corte y,
+   * si aplica, la distribución de efectivo hacia Caja Menor / Caja General.
+   */
+  eliminarUltimoRegistroDia(venta: VentasPorFecha, event?: Event): void {
+    event?.stopPropagation();
+    if (!this.esAdmin || !venta.corteIds?.length) {
+      return;
+    }
+    const cantidad = venta.corteIds.length;
+    const detalle =
+      cantidad > 1
+        ? `los ${cantidad} cortes del ${venta.fecha}`
+        : `el corte del ${venta.fecha}`;
+    if (
+      !confirm(
+        `¿Eliminar el último registro? Se eliminará ${detalle} y se revertirán sus movimientos en Orígenes de fondos (ventas y distribución de efectivo).`
+      )
+    ) {
+      return;
+    }
+    this.eliminandoFechaKey = venta.fechaKey;
+    const idsDesc = [...venta.corteIds].sort((a, b) => b - a);
+    this.eliminarCortesSecuencial(idsDesc, 0);
+  }
+
+  private eliminarCortesSecuencial(ids: number[], index: number): void {
+    if (index >= ids.length) {
+      this.eliminandoFechaKey = null;
+      this.snackBar.open('Último registro eliminado', 'Cerrar', {
+        duration: 3000
+      });
+      this.refrescarDatosIngresosMismoRango();
+      return;
+    }
+    this.corteVentaService
+      .eliminar(ids[index])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => this.eliminarCortesSecuencial(ids, index + 1),
+        error: (err) => {
+          this.eliminandoFechaKey = null;
+          console.error('Error eliminando corte', err);
+          const msg =
+            err?.error?.message ||
+            err?.error?.errores?.[0]?.descripcionError ||
+            'No se pudo eliminar el registro. Intente de nuevo.';
+          this.snackBar.open(msg, 'Cerrar', { duration: 7000 });
+        }
+      });
+  }
+
+  /**
+   * Abre el asistente "Dividir" para corregir el corte más reciente de la fila (el de mayor id
+   * entre los corteIds del día), habilitado solo si es el ÚLTIMO corte vigente del sistema.
+   */
+  dividirUltimoRegistroDia(venta: VentasPorFecha, event?: Event): void {
+    event?.stopPropagation();
+    if (!this.esAdmin || !venta.corteIds?.length) {
+      return;
+    }
+    const corteId = Math.max(...venta.corteIds);
+    this.dividiendoFechaKey = venta.fechaKey;
+    this.corteVentaService
+      .obtenerPorId(corteId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (corte) => {
+          this.dividiendoFechaKey = null;
+          const ref = this.dialog.open(DividirCorteDialogComponent, {
+            width: '720px',
+            maxWidth: '95vw',
+            autoFocus: false,
+            data: { corte }
+          });
+          ref.afterClosed().subscribe((result: DividirCorteDialogResult | undefined) => {
+            if (result?.confirmado) {
+              this.refrescarDatosIngresosMismoRango();
+            }
+          });
+        },
+        error: () => {
+          this.dividiendoFechaKey = null;
+          this.snackBar.open('No se pudo cargar el corte para dividir.', 'Cerrar', {
+            duration: 5000
+          });
         }
       });
   }
