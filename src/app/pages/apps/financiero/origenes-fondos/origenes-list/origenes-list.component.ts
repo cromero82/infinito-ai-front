@@ -20,7 +20,11 @@ import {
   ConfirmDialogData
 } from '../../../../../core/components/confirm-dialog/confirm-dialog.component';
 import { EstablecimientoService } from '../../../ventas/service/establecimiento.service';
-import { CorteVentaService } from '../../../ventas/service/corte-venta.service';
+import {
+  ConsultarRangoCorteDto,
+  CorteVentaService,
+  VentaTipoCorteDto
+} from '../../../ventas/service/corte-venta.service';
 import {
   MetodoPagoDto,
   MetodoPagoService
@@ -67,6 +71,7 @@ import {
 import { ClasificacionOperativaReporteDialogComponent } from '../clasificacion-operativa-reporte-dialog/clasificacion-operativa-reporte-dialog.component';
 import { FooterService } from '../../../../../layouts/services/footer.service';
 import { FooterItemDto } from '../../../../../layouts/components/footer/footer.component';
+import { TotalDisponibleService } from '../service/total-disponible.service';
 import { GestionNotificacionesMediosService } from '../../../ventas/service/gestion-notificaciones-medios.service';
 import type { PlantillaNotificacionPagoDto } from '../../../ventas/service/gestion-notificaciones-medios.service';
 import { AlertaEgresoSinVincularService } from '../../../ventas/service/alerta-egreso-sin-vincular.service';
@@ -158,9 +163,10 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
       }
     ]
   };
-  private readonly resumenPantalla = this.ayudaContenido.resumen;
   /** Ventas sin corte por metodoPagoId (mismo origen que Cierre de ventas). */
   private ventasSinCortePorMetodo = new Map<number, number>();
+  /** Detalle crudo del rango sin corte; lleva también las cobranzas CxC del turno. */
+  private ventasTipoSinCorte: VentaTipoCorteDto[] = [];
   /** Cache localStorage metodos_pago_v2_tickets (vía MetodoPagoService). */
   private metodosPagoPorId = new Map<number, MetodoPagoDto>();
   /** Raíces con hijos expandidos. Por defecto colapsados; se abren si una plantilla apunta a un hijo. */
@@ -193,7 +199,8 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private footerService: FooterService
+    private footerService: FooterService,
+    private totalDisponibleService: TotalDisponibleService
   ) {}
 
   ngOnInit(): void {
@@ -245,6 +252,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
         catchError(() => {
           this.periodoSinCorteLabel = null;
           this.ventasSinCortePorMetodo = new Map();
+          this.ventasTipoSinCorte = [];
           return of(null);
         })
       ),
@@ -259,6 +267,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
         this.expandirGruposPorDestinoPlantillas(plantillas);
         this.registrarDestinosAlertaEgreso(plantillas);
         this.loadingCuentas = false;
+        this.actualizarFooterSugerencia();
         if (this.arbol.length === 0) {
           this.cuentaSeleccionada = null;
           this.movimientos = [];
@@ -276,6 +285,7 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
         this.arbol = [];
         this.grupos = [];
         this.ventasSinCortePorMetodo = new Map();
+        this.ventasTipoSinCorte = [];
         this.periodoSinCorteLabel = null;
         const detalle =
           err?.error?.message ||
@@ -385,15 +395,9 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
   }
 
   private aplicarVentasSinCorte(
-    rango: {
-      fechaIni?: string;
-      fechaFin?: string;
-      ventasTipo?: {
-        metodoPagoId: number;
-        totalVentasSistema?: number;
-      }[];
-    } | null
+    rango: Partial<ConsultarRangoCorteDto> | null
   ): void {
+    this.ventasTipoSinCorte = rango?.ventasTipo ?? [];
     this.ventasSinCortePorMetodo = mapVentasSinCortePorMetodo(rango?.ventasTipo);
     if (!rango?.ventasTipo?.length) {
       this.periodoSinCorteLabel = null;
@@ -825,40 +829,38 @@ export class OrigenesListComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Texto base en la barra de estado (footer). Sin etiqueta «Sugerencia».
-   * Durante drag muestra pista; hover de controles usa mostrarTipFooter.
+   * Barra de estado (footer). En reposo muestra los cuatro indicadores del turno; durante
+   * un drag, la pista de arrastre. El hover de controles usa mostrarTipFooter.
    */
   private actualizarFooterSugerencia(mensajeDrag?: string): void {
     this.limpiarFooterWarningTimer();
-    const tip: FooterItemDto = mensajeDrag
-      ? {
-          tipo: 'sugerencia',
-          textoClave: 'Arrastrar',
-          valorClave: mensajeDrag,
-          estiloCssClave: 'footer-sugerencia-activa',
-          icono: 'mat:swap_horiz'
-        }
-      : {
-          tipo: 'sugerencia',
-          textoClave: '',
-          valorClave: this.resumenPantalla,
-          estiloCssClave: '',
-          icono: 'mat:info'
-        };
-    this.footerService.setFooterItems([tip]);
+    if (mensajeDrag) {
+      const tip: FooterItemDto = {
+        tipo: 'sugerencia',
+        textoClave: 'Arrastrar',
+        valorClave: mensajeDrag,
+        estiloCssClave: 'footer-sugerencia-activa',
+        icono: 'mat:swap_horiz'
+      };
+      this.footerService.setFooterItems([tip]);
+      return;
+    }
+    this.footerService.setFooterItems(this.itemsIndicadoresTurno());
+  }
+
+  /**
+   * Los cuatro indicadores del turno, calculados con los datos que esta pantalla ya tiene
+   * cargados (árbol + rango sin corte), sin pedirlos otra vez al backend.
+   */
+  private itemsIndicadoresTurno(): FooterItemDto[] {
+    return this.totalDisponibleService.footerItems(
+      this.totalDisponibleService.calcular(this.arbol, this.ventasTipoSinCorte)
+    );
   }
 
   abrirAyudaEnLinea(): void {
     this.ayudaAbierta = true;
-    this.footerService.setFooterItems([
-      {
-        tipo: 'sugerencia',
-        textoClave: '',
-        valorClave: this.resumenPantalla,
-        estiloCssClave: '',
-        icono: 'mat:info'
-      }
-    ]);
+    this.footerService.setFooterItems(this.itemsIndicadoresTurno());
   }
 
   cerrarAyudaEnLinea(): void {

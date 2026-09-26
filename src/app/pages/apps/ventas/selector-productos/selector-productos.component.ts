@@ -29,6 +29,7 @@ import {
   isLikelyProductBarcodeDigits,
   resolveProductSearchTerm
 } from '../util/barcode-scan.util';
+import { ordenarResultadosSelectorProductos } from '../util/ordenar-resultados-selector-productos';
 
 export interface SelectorProductosData {
   term: string;
@@ -390,31 +391,6 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
     });
   }
 
-  /**
-   * Por nombre: primero los que empiezan por el término, luego totalVentas desc.
-   * Por código de barras no se reordena por prefijo de nombre.
-   */
-  private ordenarResultadosSelector(items: Producto[], term: string): Producto[] {
-    const q = term.trim().toLowerCase();
-    const porNombre = q.length > 0 && !isLikelyProductBarcodeDigits(term);
-    return [...items].sort((a, b) => {
-      if (porNombre) {
-        const aPrefijo = (a.nombre ?? '').toLowerCase().startsWith(q);
-        const bPrefijo = (b.nombre ?? '').toLowerCase().startsWith(q);
-        if (aPrefijo !== bPrefijo) {
-          return aPrefijo ? -1 : 1;
-        }
-      }
-      const ventasDiff = (b.totalVentas ?? 0) - (a.totalVentas ?? 0);
-      if (ventasDiff !== 0) {
-        return ventasDiff;
-      }
-      return (a.nombre ?? '').localeCompare(b.nombre ?? '', 'es', {
-        sensitivity: 'base'
-      });
-    });
-  }
-
   private fetchProducts(term: string, reset: boolean): void {
     const resolved = this.resolveSearchTerm(term);
     if (resolved === null) {
@@ -466,7 +442,7 @@ export class SelectorProductosComponent implements OnInit, AfterViewInit, OnDest
         this.page = pageToLoad;
 
         const merged = reset ? content : this.products.concat(content);
-        this.products = this.ordenarResultadosSelector(merged, term);
+        this.products = ordenarResultadosSelectorProductos(merged, term);
         if (reset) {
           this.selectedProductIndex =
             this.products.length > 0 ? 0 : -1;

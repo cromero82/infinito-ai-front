@@ -87,17 +87,30 @@
           matInput
           [formControl]="productoFilterCtrl"
           [matAutocomplete]="autoProducto"
-          placeholder="Buscar producto..." />
-        @if (productoIdSeleccionado) {
+          placeholder="Ej. código de barras o nombre"
+          autocomplete="off" />
+        <div matSuffix class="search-suffix-actions">
           <button
-            matSuffix
             mat-icon-button
             type="button"
-            (click)="clearProductoFilter()"
-            aria-label="Limpiar filtro producto">
-            <mat-icon svgIcon="mat:close"></mat-icon>
+            class="whole-word-toggle"
+            [class.whole-word-toggle--active]="coincidirTodaPalabraIndividual"
+            [attr.aria-pressed]="coincidirTodaPalabraIndividual"
+            aria-label="Coincidir toda la palabra"
+            matTooltip="Coincidir toda la palabra"
+            (click)="toggleCoincidirTodaPalabra($event)">
+            <span class="whole-word-glyph" aria-hidden="true">Ab</span>
           </button>
-        }
+          @if (productoFilterCtrl.value || productoIdSeleccionado) {
+            <button
+              mat-icon-button
+              type="button"
+              (click)="clearProductoFilter()"
+              aria-label="Limpiar filtro producto">
+              <mat-icon svgIcon="mat:close"></mat-icon>
+            </button>
+          }
+        </div>
         <mat-autocomplete
           #autoProducto="matAutocomplete"
           (optionSelected)="onProductoSelected($event)"

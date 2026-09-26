@@ -11,6 +11,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule, MatSelectChange } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -24,6 +25,13 @@ import {
   MotivoMovimientoService
 } from '../../origenes-fondos/service/motivo-movimiento.service';
 import { OrigenFondosService } from '../../origenes-fondos/service/origen-fondos.service';
+import {
+  LABEL_EFECTIVO_DISPONIBLE,
+  LABEL_MEDIOS_ELECTRONICOS,
+  LABEL_TOTAL_DISPONIBLE,
+  LABEL_VENTAS_TURNO,
+  TotalDisponibleService
+} from '../../origenes-fondos/service/total-disponible.service';
 import {
   OrigenMovimientoDialogComponent
 } from '../../origenes-fondos/origen-movimiento-dialog/origen-movimiento-dialog.component';
@@ -58,6 +66,8 @@ interface CorteVentaRow {
   totalVentasSistema: number;
   totalEgresosSistema: number;
   totalMovimientosSistema: number;
+  /** Cobranzas CxC del periodo (subconjunto de movimientos). */
+  totalCobranzasSistema: number;
   totalSistema: number;
   totalRealCtrl: FormControl<number | null>;
   desfase: number;
@@ -78,6 +88,7 @@ interface CorteVentaRow {
         MatTableModule,
         MatProgressSpinnerModule,
         MatSnackBarModule,
+        MatButtonToggleModule,
         MatCheckboxModule,
         MatSelectModule,
         MatTooltipModule,
@@ -97,7 +108,23 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
   hastaActualmenteCtrl = new FormControl<boolean>(true);
   observacionCtrl = new FormControl<string>('', [Validators.maxLength(200)]);
 
+  /** Texto de ayuda del botón (?) del encabezado; antes ocupaba un párrafo fijo. */
+  readonly ayudaCierre =
+    'La columna Ventas (tickets cobrados) es la que se reporta en Ingresos. ' +
+    'El Real y las diferencias se guardan para el arqueo; más adelante se verán ' +
+    'como afectación a las cuentas (OF) o caja. Efectivo: cuente billetes y monedas. ' +
+    'Nequi / transferencia: indique el total según su aplicación.';
+
   corteVentasRows: CorteVentaRow[] = [];
+  /** Vista compacta: solo lo que el cajero necesita para cuadrar. Es el valor por defecto. */
+  vistaTablaCtrl = new FormControl<'compacta' | 'extendida'>('compacta');
+  /** Compacta: sin Base, Ventas, Egresos ni Movimientos. */
+  private readonly columnasCompacta: string[] = [
+    'metodoPago',
+    'totalSistema',
+    'totalReal',
+    'desfase'
+  ];
   /** Columnas base (cajero). Admin añade Base + Movimientos. */
   private readonly columnasCajero: string[] = [
     'metodoPago',
@@ -117,7 +144,7 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
     'totalReal',
     'desfase'
   ];
-  displayedColumns: string[] = [...this.columnasCajero];
+  displayedColumns: string[] = [...this.columnasCompacta];
   esAdmin = false;
 
   loading = false;
@@ -129,6 +156,7 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
   totalVentasSistema = 0;
   totalEgresosSistema = 0;
   totalMovimientosSistema = 0;
+  totalCobranzasSistema = 0;
   totalSistema = 0;
   totalReal = 0;
   totalDesfases = 0;
@@ -158,6 +186,7 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
     private corteVentaService: CorteVentaService,
     private motivoMovimientoService: MotivoMovimientoService,
     private origenFondosService: OrigenFondosService,
+    private totalDisponibleService: TotalDisponibleService,
     private dialog: MatDialog,
     private authService: AuthService,
     private snackBar: MatSnackBar,
@@ -166,9 +195,10 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.esAdmin = this.authService.isAdmin();
-    this.displayedColumns = this.esAdmin
-      ? [...this.columnasAdmin]
-      : [...this.columnasCajero];
+    this.aplicarColumnasVista();
+    this.vistaTablaCtrl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.aplicarColumnasVista());
 
     this.motivoMovimientoService.findActivos().subscribe({
       next: (motivos) => {
@@ -343,6 +373,7 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
       totalVentasSistema: number;
       totalEgresosSistema: number;
       totalMovimientosSistema: number;
+      totalCobranzasSistema: number;
       totalSistema: number;
     }>();
     (respuesta.ventasTipo ?? []).forEach((vt) => {
@@ -354,6 +385,7 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
       const ventas = this.toPesosEnteros(vt.totalVentasSistema ?? 0);
       const egresos = this.toPesosEnteros(vt.totalEgresosSistema ?? 0);
       const movimientos = this.toPesosEnteros(vt.totalMovimientosSistema ?? 0);
+      const cobranzas = this.toPesosEnteros(vt.totalCobranzasSistema ?? 0);
       const neto = this.toPesosEnteros(
         vt.totalSistema ?? base + ventas - egresos + movimientos
       );
@@ -362,6 +394,7 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
         totalVentasSistema: ventas,
         totalEgresosSistema: egresos,
         totalMovimientosSistema: movimientos,
+        totalCobranzasSistema: cobranzas,
         totalSistema: neto
       });
     });
@@ -416,6 +449,9 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
       const totalMovimientosSistema = this.toPesosEnteros(
         resumen?.totalMovimientosSistema ?? 0
       );
+      const totalCobranzasSistema = this.toPesosEnteros(
+        resumen?.totalCobranzasSistema ?? 0
+      );
       const totalSistema = this.toPesosEnteros(
         resumen?.totalSistema ??
           base + totalVentasSistema - totalEgresosSistema + totalMovimientosSistema
@@ -442,6 +478,7 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
         totalVentasSistema,
         totalEgresosSistema,
         totalMovimientosSistema,
+        totalCobranzasSistema,
         totalSistema,
         totalRealCtrl,
         desfase: 0,
@@ -750,10 +787,132 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Columnas según la vista elegida; en extendida, el admin ve además Base y Movimientos. */
+  private aplicarColumnasVista(): void {
+    if (this.vistaTablaCtrl.value === 'extendida') {
+      this.displayedColumns = this.esAdmin
+        ? [...this.columnasAdmin]
+        : [...this.columnasCajero];
+    } else {
+      this.displayedColumns = [...this.columnasCompacta];
+    }
+    // Cambiar de vista cambia lo que muestra el input de Real (con o sin base):
+    // descartar cualquier edición en curso para no arrastrar el valor de la otra vista.
+    this.editingMetodoId = null;
+    this.editingRaw = '';
+    this.cdr.markForCheck();
+  }
+
+  get esVistaCompacta(): boolean {
+    return this.vistaTablaCtrl.value !== 'extendida';
+  }
+
+  // --- Indicadores del encabezado -------------------------------------------------
+
+  /** Todo lo recibido en el turno: ventas de tickets + cobranzas CxC, todos los medios. */
+  get kpiVentasTurno(): number {
+    return this.corteVentasRows.reduce(
+      (acc, row) =>
+        acc +
+        Math.round(row.totalVentasSistema || 0) +
+        Math.round(row.totalCobranzasSistema || 0),
+      0
+    );
+  }
+
+  /**
+   * Dinero que de verdad hay: el Real de la fila. Equivale a Esperado menos el faltante
+   * (o más el sobrante), porque `desfase = Real − Esperado`.
+   */
+  private realDeFila(row: CorteVentaRow): number {
+    return Math.round(this.asMonto(row.totalRealCtrl.value) ?? 0);
+  }
+
+  /**
+   * Todo el efectivo de la tienda: lo contado en la caja registradora más el saldo de las
+   * demás cajas físicas (Caja Menor, Caja General y cualquier otra que exista). Se toma el
+   * Real de la fila para la registradora —es lo que de verdad hay— y el saldo de la OF para
+   * las otras, que no se cuentan en el cierre.
+   */
+  get kpiEfectivoDisponible(): number {
+    const enRegistradora = this.corteVentasRows
+      .filter((row) => this.esFilaEfectivo(row))
+      .reduce((acc, row) => acc + this.realDeFila(row), 0);
+    return enRegistradora + this.saldoOtrasCajasFisicas;
+  }
+
+  /** Medios electrónicos (Bancolombia QR, Nequi, …) según la naturaleza de su OF. */
+  get kpiMediosElectronicos(): number {
+    return this.corteVentasRows
+      .filter((row) => this.esFilaElectronica(row))
+      .reduce((acc, row) => acc + this.realDeFila(row), 0);
+  }
+
+  /** Etiquetas únicas de los indicadores, compartidas con el footer de otras pantallas. */
+  readonly labelVentasTurno = LABEL_VENTAS_TURNO;
+  readonly labelEfectivoDisponible = LABEL_EFECTIVO_DISPONIBLE;
+  readonly labelMediosElectronicos = LABEL_MEDIOS_ELECTRONICOS;
+  readonly labelTotalDisponible = LABEL_TOTAL_DISPONIBLE;
+
+  get kpiTotalDisponible(): number {
+    return this.kpiEfectivoDisponible + this.kpiMediosElectronicos;
+  }
+
+  /**
+   * Cajas físicas que no son medio de pago: Caja Menor, Caja General y cualquiera que se
+   * agregue después. Se excluyen las de dueños (no operativo) y las cuentas de medios de
+   * pago, que ya entran por su fila de la tabla.
+   */
+  private get saldoOtrasCajasFisicas(): number {
+    return this.totalDisponibleService.saldoOtrasCajasFisicas(this.origenArbol);
+  }
+
+  /**
+   * Electrónico = su OF no es efectivo físico (mismo criterio que TotalDisponibleService).
+   * Si el árbol no cargó, cae en «todo lo que no es efectivo» para no dejar el indicador
+   * en cero.
+   */
+  esFilaElectronica(row: CorteVentaRow): boolean {
+    if (this.esFilaEfectivo(row)) {
+      return false;
+    }
+    const mpId = Number(row.metodoPago.id);
+    const of = this.origenArbol.find(
+      (o) => o.metodoPagoId != null && Number(o.metodoPagoId) === mpId
+    );
+    if (!of) {
+      return true;
+    }
+    return !this.totalDisponibleService.esEfectivo(of);
+  }
+
   esFilaEfectivo(row: CorteVentaRow): boolean {
     const sigla = (row.metodoPago.sigla || '').trim().toUpperCase();
     const nombre = (row.metodoPago.descripcion || '').trim().toLowerCase();
     return sigla === 'EF' || nombre === 'efectivo';
+  }
+
+  /**
+   * Base que la vista compacta oculta en la fila de efectivo. Al restarse por igual en
+   * Sistema y en Real, la Diferencia no cambia entre vistas.
+   */
+  private baseOculta(row: CorteVentaRow): number {
+    return this.esVistaCompacta && this.esFilaEfectivo(row)
+      ? Math.round(Number(row.base) || 0)
+      : 0;
+  }
+
+  /** Columna Sistema (compacta) / Esperado (extendida), tal como se muestra. */
+  sistemaMostrado(row: CorteVentaRow): number {
+    return Math.round(Number(row.totalSistema) || 0) - this.baseOculta(row);
+  }
+
+  /** Total de la columna Sistema: suma de lo que se ve en cada fila. */
+  get totalSistemaMostrado(): number {
+    return this.corteVentasRows.reduce(
+      (acc, row) => acc + this.sistemaMostrado(row),
+      0
+    );
   }
 
   /** Contado del input menos la base de efectivo. */
@@ -1016,7 +1175,12 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
     const input = event.target as HTMLInputElement;
     this.editingMetodoId = row.metodoPago.id;
     this.editingRaw = input.value;
-    row.totalRealCtrl.setValue(this.parseCurrency(input.value), { emitEvent: false });
+    // El control guarda SIEMPRE el contado completo; en compacta el input muestra el
+    // valor sin la base, así que se vuelve a sumar antes de guardar.
+    row.totalRealCtrl.setValue(
+      this.parseCurrency(input.value) + this.baseOculta(row),
+      { emitEvent: false }
+    );
     this.actualizarTotales();
   }
 
@@ -1028,24 +1192,25 @@ export class CierreVentasComponent implements OnInit, OnDestroy {
     if (monto === null) {
       return '';
     }
-    return this.formatMontoInput(monto);
+    return this.formatMontoInput(monto - this.baseOculta(row));
   }
 
   onTotalRealFocus(event: Event, row: CorteVentaRow): void {
     const input = event.target as HTMLInputElement;
     const monto = this.asMonto(row.totalRealCtrl.value);
     this.editingMetodoId = row.metodoPago.id;
-    this.editingRaw = monto !== null ? String(monto) : '';
+    this.editingRaw =
+      monto !== null ? String(monto - this.baseOculta(row)) : '';
     input.value = this.editingRaw;
   }
 
   onTotalRealBlur(event: Event, row: CorteVentaRow): void {
     const input = event.target as HTMLInputElement;
-    const monto = this.parseCurrency(input.value);
-    row.totalRealCtrl.setValue(monto, { emitEvent: false });
+    const visible = this.parseCurrency(input.value);
+    row.totalRealCtrl.setValue(visible + this.baseOculta(row), { emitEvent: false });
     this.editingMetodoId = null;
     this.editingRaw = '';
-    input.value = this.formatMontoInput(monto);
+    input.value = this.formatMontoInput(visible);
     this.actualizarTotales();
   }
 

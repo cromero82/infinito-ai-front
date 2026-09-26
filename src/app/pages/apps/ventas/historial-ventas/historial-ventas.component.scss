@@ -28,7 +28,7 @@
 .split-pane-left.left-side {
   flex-shrink: 0;
   min-width: 280px;
-  border-right: none;
+  border-right: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 .split-pane-divider {
@@ -40,7 +40,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, width 0.3s ease;
 
   &:hover {
     background-color: rgba(0, 0, 0, 0.05);
@@ -306,6 +306,50 @@
 .filter-field {
   flex: 1 1 140px;
   min-width: 120px;
+}
+
+.search-suffix-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.whole-word-toggle.mat-mdc-icon-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.whole-word-toggle .whole-word-glyph {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  opacity: 0.55;
+}
+
+.whole-word-toggle--active .whole-word-glyph {
+  opacity: 1;
+  color: var(--mat-sys-primary, #1976d2);
+  border-color: var(--mat-sys-primary, #1976d2);
+  background: color-mix(in srgb, var(--mat-sys-primary, #1976d2) 12%, transparent);
 }
 
 ::ng-deep .mat-mdc-autocomplete-panel .mat-mdc-option {
@@ -830,6 +874,10 @@
 
 // —— Dark mode ——
 :host-context(.dark) {
+  .split-pane-left.left-side {
+    border-right-color: rgba(255, 255, 255, 0.12);
+  }
+
   .split-pane-divider {
     &:hover {
       background-color: rgba(255, 255, 255, 0.06);
@@ -838,10 +886,6 @@
     .divider-handle {
       background-color: rgba(255, 255, 255, 0.28);
     }
-  }
-
-  .left-side {
-    border-right-color: rgba(255, 255, 255, 0.12);
   }
 
   .imprimir-button {

@@ -42,7 +42,7 @@ import {
   MetodoPagoDto
 } from '../service/metodo-pago.service';
 import { Subject, of, Observable, EMPTY } from 'rxjs';
-import { takeUntil, debounceTime, switchMap, catchError, skip } from 'rxjs/operators';
+import { takeUntil, debounceTime, distinctUntilChanged, switchMap, catchError, skip, map } from 'rxjs/operators';
 import { AuthService } from '../../../../auth/service/auth.service';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { AsyncPipe } from '@angular/common';
@@ -67,6 +67,11 @@ import {
   esNotificacionConfirmada,
   labelNotificacionElectronica
 } from '../util/notificacion-electronica-ticket.util';
+import {
+  isLikelyProductBarcodeDigits,
+  resolveProductSearchTerm
+} from '../util/barcode-scan.util';
+import { ordenarResultadosSelectorProductos } from '../util/ordenar-resultados-selector-productos';
 
 @Component({
   selector: 'vex-historial-ventas',
@@ -112,6 +117,9 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   productoFilterCtrl = new FormControl<string>('', { nonNullable: true });
   productosFiltrados: Producto[] = [];
   productoIdSeleccionado: number | null = null;
+  coincidirTodaPalabraIndividual = false;
+  private nombreProductoSeleccionado = '';
+  private readonly productoSearchSize = 20;
   historialRecibos: HistorialReciboDto[] = [];
   loading = false;
   loadingMore = false;
@@ -260,21 +268,59 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
     this.productoFilterCtrl.valueChanges
       .pipe(
         takeUntil(this.destroy$),
-        debounceTime(300),
+        debounceTime(400),
+        distinctUntilChanged(),
         switchMap((query) => {
-          const q = (typeof query === 'string' ? query : '').trim();
-          if (q.length < 2) {
+          if (typeof query !== 'string') {
             return of([]);
           }
-          return this.relationalProductService.getProducts(q, 0, 15, true).pipe(
-            catchError(() => of({ content: [] }))
-          );
+          if (
+            this.productoIdSeleccionado &&
+            query !== this.nombreProductoSeleccionado
+          ) {
+            this.productoIdSeleccionado = null;
+            this.nombreProductoSeleccionado = '';
+            this.reloadFromFilters();
+          }
+          const resolved = resolveProductSearchTerm(query);
+          if (resolved.rejected || !resolved.term) {
+            return of([]);
+          }
+          return this.consultarProductosFiltro(resolved.term);
         })
       )
-      .subscribe((result) => {
-        const content = Array.isArray(result) ? result : (result as any)?.content ?? [];
+      .subscribe((content) => {
         this.productosFiltrados = content;
       });
+  }
+
+  private consultarProductosFiltro(term: string): Observable<Producto[]> {
+    const porCodigoBarras = isLikelyProductBarcodeDigits(term);
+    const consulta$ =
+      !porCodigoBarras && !this.coincidirTodaPalabraIndividual
+        ? this.relationalProductService.busquedaPorFiltros(
+            {
+              filtros: [],
+              page: 0,
+              size: this.productoSearchSize,
+              campoOrdenamiento: 'totalVentas',
+              orden: 'desc'
+            },
+            term
+          )
+        : this.relationalProductService.getProducts(
+            term,
+            0,
+            this.productoSearchSize,
+            false,
+            this.coincidirTodaPalabraIndividual
+          );
+    return consulta$.pipe(
+      map((resp) =>
+        ordenarResultadosSelectorProductos(resp?.content ?? [], term)
+      ),
+      catchError(() => of([]))
+    );
   }
 
   private reloadFromFilters(): void {
@@ -452,6 +498,7 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
   onProductoSelected(event: any): void {
     const producto: Producto = event.option.value;
     this.productoIdSeleccionado = producto.id ?? null;
+    this.nombreProductoSeleccionado = producto.nombre ?? '';
     this.productoFilterCtrl.setValue(producto.nombre, { emitEvent: false });
     this.reloadFromFilters();
   }
@@ -463,8 +510,28 @@ export class HistorialVentasComponent implements OnInit, OnDestroy {
 
   clearProductoFilter(): void {
     this.productoIdSeleccionado = null;
+    this.nombreProductoSeleccionado = '';
+    this.productosFiltrados = [];
     this.productoFilterCtrl.setValue('', { emitEvent: false });
     this.reloadFromFilters();
+  }
+
+  toggleCoincidirTodaPalabra(event?: Event): void {
+    event?.stopPropagation();
+    event?.preventDefault();
+    this.coincidirTodaPalabraIndividual = !this.coincidirTodaPalabraIndividual;
+    const raw = this.productoFilterCtrl.value ?? '';
+    if (typeof raw !== 'string') {
+      return;
+    }
+    const resolved = resolveProductSearchTerm(raw);
+    if (!resolved.rejected && resolved.term) {
+      this.consultarProductosFiltro(resolved.term)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((content) => {
+          this.productosFiltrados = content;
+        });
+    }
   }
 
   /** Etiqueta corta del medio en la lista (Mixto o nombre del dominio). */

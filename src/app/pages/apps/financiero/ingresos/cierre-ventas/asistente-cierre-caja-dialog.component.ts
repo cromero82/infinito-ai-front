@@ -11,14 +11,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import {
-  ConfigurationService,
-  KEY_CORTE_VENTA_BASE_EFECTIVO
-} from '../../../../../auth/service/configuration.service';
+import { ConfigurationService } from '../../../../../auth/service/configuration.service';
 import {
   BILLETES_COP,
   BilleteOption
@@ -77,10 +74,7 @@ export class AsistenteCierreCajaDialogComponent implements OnInit, OnDestroy {
   cargandoBase = true;
   baseCargada = false;
   guardando = false;
-  baseOriginal = 0;
   baseSugerida = 0;
-  editingBase = false;
-  editingBaseRaw = '';
   readonly esperado: number;
 
   private readonly conteosPrevios: ConteoBilletes;
@@ -91,10 +85,6 @@ export class AsistenteCierreCajaDialogComponent implements OnInit, OnDestroy {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   });
-  private readonly montoFormatter = new Intl.NumberFormat('es-CO', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  });
 
   constructor(
     private dialogRef: MatDialogRef<
@@ -102,8 +92,7 @@ export class AsistenteCierreCajaDialogComponent implements OnInit, OnDestroy {
       AsistenteCierreCajaResultado | null
     >,
     @Inject(MAT_DIALOG_DATA) data: AsistenteCierreCajaData | null,
-    private configurationService: ConfigurationService,
-    private snackBar: MatSnackBar
+    private configurationService: ConfigurationService
   ) {
     this.conteosPrevios = { ...(data?.conteosPrevios ?? {}) };
     this.esperado = Math.round(Number(data?.esperado) || 0);
@@ -116,13 +105,11 @@ export class AsistenteCierreCajaDialogComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: ({ valor, encontrada }) => {
-          this.baseOriginal = valor;
           this.baseSugerida = valor;
           this.baseCargada = encontrada;
           this.cargandoBase = false;
         },
         error: () => {
-          this.baseOriginal = 0;
           this.baseSugerida = 0;
           this.baseCargada = false;
           this.cargandoBase = false;
@@ -149,13 +136,13 @@ export class AsistenteCierreCajaDialogComponent implements OnInit, OnDestroy {
   }
 
   /** Total físico de caja: lo que Cierre de turno llama Contado. */
+  /**
+   * Contado que se asocia al cierre: el cajero deja la base en la caja y cuenta el resto,
+   * así que se vuelve a sumar para entregar el efectivo completo del cajón, que es lo que
+   * guarda el corte y con lo que se compara el Esperado.
+   */
   get contado(): number {
-    return this.totalBilletes;
-  }
-
-  /** Equivalente a Ventas − Egresos + Movimientos (total billetes − base). */
-  get ventasMenosMovimientos(): number {
-    return Math.max(0, this.totalBilletes - this.baseSugerida);
+    return this.totalBilletes + this.baseSugerida;
   }
 
   get hayConteo(): boolean {
@@ -177,39 +164,6 @@ export class AsistenteCierreCajaDialogComponent implements OnInit, OnDestroy {
 
   tieneDesfase(desfase: number): boolean {
     return tieneDesfaseCierre(desfase);
-  }
-
-  displayBase(): string {
-    if (this.editingBase) {
-      return this.editingBaseRaw;
-    }
-    if (this.cargandoBase) {
-      return '';
-    }
-    return this.montoFormatter.format(this.baseSugerida);
-  }
-
-  onBaseFocus(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.editingBase = true;
-    this.editingBaseRaw =
-      this.baseSugerida > 0 ? String(this.baseSugerida) : '';
-    input.value = this.editingBaseRaw;
-  }
-
-  onBaseInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.editingBase = true;
-    this.editingBaseRaw = input.value;
-    this.baseSugerida = this.parsePesos(input.value);
-  }
-
-  onBaseBlur(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.baseSugerida = this.parsePesos(input.value);
-    this.editingBase = false;
-    this.editingBaseRaw = '';
-    input.value = this.montoFormatter.format(this.baseSugerida);
   }
 
   onCantidadCambio(fila: FilaBillete): void {
@@ -234,30 +188,8 @@ export class AsistenteCierreCajaDialogComponent implements OnInit, OnDestroy {
     if (!this.hayConteo || this.guardando) {
       return;
     }
-    const resultado = this.armarResultado();
-    if (this.baseSugerida === this.baseOriginal) {
-      this.dialogRef.close(resultado);
-      return;
-    }
-
-    this.guardando = true;
-    this.configurationService
-      .actualizarPorKey(KEY_CORTE_VENTA_BASE_EFECTIVO, String(this.baseSugerida))
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.guardando = false;
-          this.dialogRef.close(resultado);
-        },
-        error: () => {
-          this.guardando = false;
-          this.snackBar.open(
-            'No se pudo guardar la base sugerida en configuracion_app (corte-venta.base-efectivo).',
-            'Cerrar',
-            { duration: 5000 }
-          );
-        }
-      });
+    // La base ya no se edita aquí, así que no hay nada que persistir.
+    this.dialogRef.close(this.armarResultado());
   }
 
   private aplicarConteosPrevios(): void {
@@ -284,17 +216,5 @@ export class AsistenteCierreCajaDialogComponent implements OnInit, OnDestroy {
       baseSugerida: this.baseSugerida,
       conteos
     };
-  }
-
-  private parsePesos(value: string | null | undefined): number {
-    if (!value) {
-      return 0;
-    }
-    const digits = String(value).replace(/[^\d]/g, '');
-    if (!digits) {
-      return 0;
-    }
-    const n = Number(digits);
-    return Number.isFinite(n) ? Math.round(n) : 0;
   }
 }

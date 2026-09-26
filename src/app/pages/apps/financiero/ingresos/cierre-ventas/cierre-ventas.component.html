@@ -7,16 +7,33 @@
     mat-dialog-title
     cdkDragHandle>
     <h2 class="dialog-title m-0">Cierre de turno — medios de pago</h2>
+    <button
+      mat-icon-button
+      type="button"
+      class="cierre-ayuda-btn"
+      aria-label="Cómo se usa esta pantalla"
+      [matTooltip]="ayudaCierre"
+      matTooltipClass="cierre-ayuda-tooltip"
+      matTooltipPosition="below"
+      (click)="$event.stopPropagation()"
+      (mousedown)="$event.stopPropagation()"
+      (touchstart)="$event.stopPropagation()">
+      <mat-icon svgIcon="mat:help_outline"></mat-icon>
+    </button>
+    <mat-button-toggle-group
+      [formControl]="vistaTablaCtrl"
+      appearance="legacy"
+      class="vista-tabla-toggle"
+      aria-label="Vista de la tabla"
+      (click)="$event.stopPropagation()"
+      (mousedown)="$event.stopPropagation()"
+      (touchstart)="$event.stopPropagation()">
+      <mat-button-toggle value="compacta">Compacta</mat-button-toggle>
+      <mat-button-toggle value="extendida">Extendida</mat-button-toggle>
+    </mat-button-toggle-group>
   </div>
 
   <div mat-dialog-content class="dialog-content">
-  <p class="cierre-disclaimer">
-    La columna <strong>Ventas</strong> (tickets cobrados) es la que se reporta en
-    Ingresos. El Contado y las diferencias se guardan para el arqueo; más adelante
-    se verán como afectación a las cuentas (OF) o caja.
-    Efectivo: cuente billetes y monedas. Nequi / transferencia: indique el total
-    según su aplicación.
-  </p>
   <div class="fechas-container">
     <div class="fecha-grupo">
       <span class="fecha-label">Desde:</span>
@@ -95,6 +112,25 @@
     </div>
   </div>
 
+  <div class="cierre-kpis">
+    <div class="kpi-card">
+      <span class="kpi-label">{{ labelVentasTurno }}</span>
+      <span class="kpi-valor">{{ formatCurrency(kpiVentasTurno) }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">{{ labelEfectivoDisponible }}</span>
+      <span class="kpi-valor">{{ formatCurrency(kpiEfectivoDisponible) }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">{{ labelMediosElectronicos }}</span>
+      <span class="kpi-valor">{{ formatCurrency(kpiMediosElectronicos) }}</span>
+    </div>
+    <div class="kpi-card kpi-card--total">
+      <span class="kpi-label">{{ labelTotalDisponible }}</span>
+      <span class="kpi-valor">{{ formatCurrency(kpiTotalDisponible) }}</span>
+    </div>
+  </div>
+
   <div class="table-container">
     <div class="table-scroll-wrap">
       <div
@@ -116,13 +152,15 @@
           [class.corte-table--cajero]="!esAdmin">
         <colgroup>
           <col class="col-metodo" />
-          @if (esAdmin) {
-            <col class="col-base" />
-          }
-          <col class="col-ventas" />
-          <col class="col-egresos" />
-          @if (esAdmin) {
-            <col class="col-movimientos" />
+          @if (!esVistaCompacta) {
+            @if (esAdmin) {
+              <col class="col-base" />
+            }
+            <col class="col-ventas" />
+            <col class="col-egresos" />
+            @if (esAdmin) {
+              <col class="col-movimientos" />
+            }
           }
           <col class="col-neto" />
           <col class="col-real" />
@@ -142,7 +180,7 @@
                   mat-icon-button
                   type="button"
                   class="btn-asistente-caja"
-                  matTooltip="ver asistente para cierre de caja"
+                  matTooltip="Asistente contar billetes"
                   (click)="abrirAsistenteCierreCaja(row)">
                   <mat-icon svgIcon="mat:help"></mat-icon>
                 </button>
@@ -186,19 +224,19 @@
         </ng-container>
         <ng-container matColumnDef="totalSistema">
           <th mat-header-cell *matHeaderCellDef class="header-cell">
-            Esperado
+            {{ esVistaCompacta ? 'Sistema' : 'Esperado' }}
           </th>
           <td mat-cell *matCellDef="let row" class="cell total-sistema-cell">
             <div class="total-sistema-container">
               <span class="total-sistema-value">{{
-                formatCurrency(row.totalSistema)
+                formatCurrency(sistemaMostrado(row))
               }}</span>
             </div>
           </td>
         </ng-container>
         <ng-container matColumnDef="totalReal">
           <th mat-header-cell *matHeaderCellDef class="header-cell">
-            Contado
+            Real
           </th>
           <td
             mat-cell
@@ -218,7 +256,7 @@
                   (blur)="onTotalRealBlur($event, row)"
                   (keydown)="onTotalRealKeydown($event, row, i)" />
               </mat-form-field>
-              @if (esFilaEfectivo(row)) {
+              @if (esFilaEfectivo(row) && !esVistaCompacta) {
                 <div class="efectivo-base-hint">
                   <span class="efectivo-base-label">Efectivo - Base</span>
                   <span class="efectivo-base-valor">{{
@@ -316,13 +354,15 @@
           [class.totales-table--cajero]="!esAdmin">
           <colgroup>
             <col class="col-metodo" />
-            @if (esAdmin) {
-              <col class="col-base" />
-            }
-            <col class="col-ventas" />
-            <col class="col-egresos" />
-            @if (esAdmin) {
-              <col class="col-movimientos" />
+            @if (!esVistaCompacta) {
+              @if (esAdmin) {
+                <col class="col-base" />
+              }
+              <col class="col-ventas" />
+              <col class="col-egresos" />
+              @if (esAdmin) {
+                <col class="col-movimientos" />
+              }
             }
             <col class="col-neto" />
             <col class="col-real" />
@@ -330,22 +370,24 @@
           </colgroup>
           <tr class="total-row">
             <td class="total-cell total-label">TOTAL</td>
-            @if (esAdmin) {
-              <td class="total-cell total-value">{{ formatCurrency(totalBase) }}</td>
-            }
-            <td class="total-cell total-value">
-              {{ formatCurrency(totalVentasSistema) }}
-            </td>
-            <td class="total-cell total-value">
-              {{ formatCurrencyEgreso(totalEgresosSistema) }}
-            </td>
-            @if (esAdmin) {
+            @if (!esVistaCompacta) {
+              @if (esAdmin) {
+                <td class="total-cell total-value">{{ formatCurrency(totalBase) }}</td>
+              }
               <td class="total-cell total-value">
-                {{ formatCurrency(totalMovimientosSistema) }}
+                {{ formatCurrency(totalVentasSistema) }}
               </td>
+              <td class="total-cell total-value">
+                {{ formatCurrencyEgreso(totalEgresosSistema) }}
+              </td>
+              @if (esAdmin) {
+                <td class="total-cell total-value">
+                  {{ formatCurrency(totalMovimientosSistema) }}
+                </td>
+              }
             }
             <td class="total-cell total-value">
-              {{ formatCurrency(totalSistema) }}
+              {{ formatCurrency(totalSistemaMostrado) }}
             </td>
             <td class="total-cell total-value total-real-final">
               {{ formatCurrency(totalContadoSinBaseEfectivo) }}
@@ -354,13 +396,15 @@
           </tr>
           <tr class="total-row desfases-row">
             <td class="total-cell total-label">TOTAL DIFERENCIAS</td>
-            @if (esAdmin) {
+            @if (!esVistaCompacta) {
+              @if (esAdmin) {
+                <td class="total-cell" aria-hidden="true"></td>
+              }
               <td class="total-cell" aria-hidden="true"></td>
-            }
-            <td class="total-cell" aria-hidden="true"></td>
-            <td class="total-cell" aria-hidden="true"></td>
-            @if (esAdmin) {
               <td class="total-cell" aria-hidden="true"></td>
+              @if (esAdmin) {
+                <td class="total-cell" aria-hidden="true"></td>
+              }
             }
             <td class="total-cell" aria-hidden="true"></td>
             <td class="total-cell" aria-hidden="true"></td>

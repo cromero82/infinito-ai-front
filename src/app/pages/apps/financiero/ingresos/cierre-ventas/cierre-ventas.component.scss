@@ -159,7 +159,7 @@
   background: white;
   height: auto;
   min-height: 0;
-  max-height: min(460px, 52vh);
+  max-height: min(520px, 58vh);
   overflow: hidden;
   flex: 0 1 auto;
 }
@@ -176,7 +176,7 @@
 .table-scroll {
   flex: 1 1 auto;
   min-height: 140px;
-  max-height: 340px;
+  max-height: 400px;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-gutter: stable;
@@ -577,17 +577,6 @@
   text-align: right;
 }
 
-.cierre-disclaimer {
-  margin: 0;
-  padding: 8px 12px;
-  font-size: 12px;
-  line-height: 1.35;
-  color: rgba(0, 0, 0, 0.72);
-  background: rgba(33, 150, 243, 0.08);
-  border-left: 3px solid #2196f3;
-  border-radius: 4px;
-}
-
 .total-label {
   font-size: 12px;
   font-weight: 700;
@@ -673,12 +662,6 @@
 
 // —— Dark mode (template Vex `.dark`) ——
 :host-context(.dark) {
-  .cierre-disclaimer {
-    color: rgba(255, 255, 255, 0.78);
-    background: rgba(33, 150, 243, 0.16);
-    border-left-color: #64b5f6;
-  }
-
   .fechas-container {
     background-color: rgba(255, 255, 255, 0.05);
   }
@@ -841,3 +824,101 @@
   }
 }
 
+
+
+/* --- Ayuda (?), toggle de vista e indicadores ----------------------------------- */
+
+/* Título + (?) + toggle en una sola fila: libera alto para la tabla. */
+.cierre-ventas-drag-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cierre-ayuda-btn {
+  flex: 0 0 auto;
+  cursor: help;
+  opacity: 0.65;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+::ng-deep .cierre-ayuda-tooltip {
+  max-width: 420px !important;
+  white-space: normal;
+  line-height: 1.45;
+}
+
+/* El toggle vive en el encabezado, pegado a la derecha. */
+.vista-tabla-toggle {
+  margin-left: auto;
+  flex: 0 0 auto;
+  /* El header es el drag handle; sobre el toggle debe verse clickeable. */
+  cursor: default;
+
+  ::ng-deep .mat-button-toggle-label-content {
+    line-height: 28px;
+    font-size: 12px;
+    padding: 0 14px;
+  }
+}
+
+.cierre-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px;
+  /* Sin margen propio: la separación con la tabla la da el gap de .dialog-content. */
+  margin: 0;
+}
+
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 5px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.kpi-card--total {
+  border-color: rgb(var(--vex-color-primary-500) / 0.45);
+  background: rgb(var(--vex-color-primary-500) / 0.06);
+}
+
+.kpi-label {
+  font-size: 0.72rem;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.72);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kpi-valor {
+  font-size: 1.05rem;
+  line-height: 1.3;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.kpi-card--total .kpi-valor {
+  color: rgb(var(--vex-color-primary-600));
+}
+
+:host-context(.dark) {
+  .kpi-card {
+    border-color: rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .kpi-label {
+    color: rgba(255, 255, 255, 0.82);
+  }
+}

@@ -12,6 +12,8 @@ export interface VentaTipoCorteDto {
   totalVentasSistema?: number;
   totalEgresosSistema?: number;
   totalMovimientosSistema?: number;
+  /** Cobranzas CxC del periodo. Subconjunto de totalMovimientosSistema, expuesto aparte. */
+  totalCobranzasSistema?: number;
   totalSistema: number;
 }
 

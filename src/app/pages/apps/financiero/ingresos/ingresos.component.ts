@@ -48,6 +48,8 @@ import {
   MovimientoOrigenFondosService
 } from '../origenes-fondos/service/movimiento-origen-fondos.service';
 import { SesionesService } from '../../ventas/service/sesiones.service';
+import { FooterService } from '../../../../layouts/services/footer.service';
+import { TotalDisponibleService } from '../origenes-fondos/service/total-disponible.service';
 import { Router } from '@angular/router';
 
 interface MontoPorMetodo {
@@ -263,7 +265,9 @@ export class IngresosComponent implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private sesionesService: SesionesService,
     private router: Router,
-    private configService: VexConfigService
+    private configService: VexConfigService,
+    private footerService: FooterService,
+    private totalDisponibleService: TotalDisponibleService
   ) {}
 
   ngOnInit(): void {
@@ -293,6 +297,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
       .subscribe(() => this.aplicarFiltroEstadoCorte());
 
     this.cargarMetodosPagoYVentas();
+    this.actualizarFooterTotalDisponible();
   }
 
   obtenerDiasPorPeriodo(periodo: string): number {
@@ -401,6 +406,7 @@ export class IngresosComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.footerService.clearFooterItems();
     this.destroy$.next();
     this.destroy$.complete();
     if (this.isResizing) {
@@ -549,6 +555,25 @@ export class IngresosComponent implements OnInit, OnDestroy {
     } else {
       this.cargarVentasUltimos7Dias();
     }
+    this.actualizarFooterTotalDisponible();
+  }
+
+  /**
+   * Los cuatro indicadores del turno en la barra de estado, en el mismo orden que encabeza
+   * el Cierre de turno: Ventas turno, Efectivo disponible, Dinero medios electrónicos y
+   * Total dinero disponible.
+   */
+  private actualizarFooterTotalDisponible(): void {
+    this.totalDisponibleService
+      .consultar()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (detalle) =>
+          this.footerService.setFooterItems(
+            this.totalDisponibleService.footerItems(detalle)
+          ),
+        error: () => this.footerService.clearFooterItems()
+      });
   }
 
   private cargarVentasPorRango(fechaInicio: Date, fechaFin: Date): void {
